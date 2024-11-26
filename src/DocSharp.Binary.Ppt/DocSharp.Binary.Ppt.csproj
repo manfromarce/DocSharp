@@ -2,12 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DocSharp.Binary.Common\DocSharp.Binary.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="PresentationMLMapping\" />
+    <Folder Include="PptFileFormat\" />
   </ItemGroup>
 
 </Project>
