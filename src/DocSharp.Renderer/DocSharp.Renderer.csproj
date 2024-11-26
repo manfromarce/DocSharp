@@ -8,10 +8,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.649" />
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
+    <PackageReference Include="ExCSS" Version="4.3.0" />
     <PackageReference Include="Oxage.Wmf" Version="0.6.1" />
-    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+    <PackageReference Include="SixLabors.Fonts" Version="2.0.6" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
+    <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
+    <PackageReference Include="System.Memory" Version="4.6.0" />
+    <PackageReference Include="VectSharp" Version="2.6.0" />
+    <PackageReference Include="VectSharp.ImageSharpUtils" Version="2.0.1" />
+    <PackageReference Include="VectSharp.PDF" Version="3.1.0" />
+    <PackageReference Include="VectSharp.Raster.ImageSharp" Version="2.1.0" />
+    <PackageReference Include="VectSharp.SVG" Version="1.10.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
   </ItemGroup>
 
 </Project>
