@@ -7,7 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Renderer", "DocSha
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DocSharp.Binary", "DocSharp.Binary", "{C9824610-1947-4901-A29A-32A29E081568}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Common", "DocSharp.Binary.Common\DocSharp.Binary.Common.csproj", "{78726ECC-48FE-4258-B49F-738BEB7ACB78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Common", "DocSharp.Binary\DocSharp.Binary.Common\DocSharp.Binary.Common.csproj", "{78726ECC-48FE-4258-B49F-738BEB7ACB78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Doc", "DocSharp.Binary\DocSharp.Binary.Doc\DocSharp.Binary.Doc.csproj", "{32D22261-6D2A-4964-BC1B-301DAD591C92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Xls", "DocSharp.Binary\DocSharp.Binary.Xls\DocSharp.Binary.Xls.csproj", "{07464BE5-0B31-4180-897A-B2630C102CA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Ppt", "DocSharp.Binary\DocSharp.Binary.Ppt\DocSharp.Binary.Ppt.csproj", "{6329AD0D-68E2-438A-B73B-BC5003EB9765}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "Elementi di soluzione", "{EE9BC5FA-5C1C-48ED-88FF-871018D08DD2}"
 	ProjectSection(SolutionItems) = preProject
@@ -16,12 +22,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "El
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Doc", "DocSharp.Binary.Doc\DocSharp.Binary.Doc.csproj", "{32D22261-6D2A-4964-BC1B-301DAD591C92}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Xls", "DocSharp.Binary.Xls\DocSharp.Binary.Xls.csproj", "{07464BE5-0B31-4180-897A-B2630C102CA2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Binary.Ppt", "DocSharp.Binary.Ppt\DocSharp.Binary.Ppt.csproj", "{6329AD0D-68E2-438A-B73B-BC5003EB9765}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
