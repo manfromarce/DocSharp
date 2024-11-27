@@ -38,7 +38,8 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                DocxToMdConverter.DocxToMarkdown(ofd.FileName, sfd.FileName);
+                var converter = new DocxToMarkdownConverter();
+                converter.Convert(ofd.FileName, sfd.FileName);
             }
         }
     }
