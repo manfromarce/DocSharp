@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35431.56
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Renderer", "DocSharp.Renderer\DocSharp.Renderer.csproj", "{4BDDA04F-D6A3-488F-833D-A84962778772}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DocSharp.Binary", "DocSharp.Binary", "{C9824610-1947-4901-A29A-32A29E081568}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Binary.Common", "DocSharp.Binary\DocSharp.Binary.Common\DocSharp.Binary.Common.csproj", "{78726ECC-48FE-4258-B49F-738BEB7ACB78}"
@@ -23,11 +21,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "El
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Docx", "DocSharp.Docx\DocSharp.Docx.csproj", "{07194405-C613-4F89-ABD4-DE4A23B786B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Docx", "DocSharp.Docx\DocSharp.Docx.csproj", "{07194405-C613-4F89-ABD4-DE4A23B786B8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{D4B9A0DF-568D-43A8-BEFD-858AAEA41838}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfApp1", "samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +33,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4BDDA04F-D6A3-488F-833D-A84962778772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4BDDA04F-D6A3-488F-833D-A84962778772}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4BDDA04F-D6A3-488F-833D-A84962778772}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4BDDA04F-D6A3-488F-833D-A84962778772}.Release|Any CPU.Build.0 = Release|Any CPU
 		{78726ECC-48FE-4258-B49F-738BEB7ACB78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{78726ECC-48FE-4258-B49F-738BEB7ACB78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78726ECC-48FE-4258-B49F-738BEB7ACB78}.Release|Any CPU.ActiveCfg = Release|Any CPU
