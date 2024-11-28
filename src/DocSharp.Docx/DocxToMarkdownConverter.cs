@@ -93,22 +93,22 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }
 
         if (hasText)
-        {
-            if (isItalic)
-                sb.Append("*");
-
-            if (isBold)
-                sb.Append("**");
-
-            if (isStrikethrough)
-                sb.Append("~~");
+        {            
+            if (isHighlight)
+                sb.Append("</mark>");
 
             if (isUnderline)
                 sb.Append("</u>");
 
-            if (isHighlight)
-                sb.Append("</mark>");
+            if (isStrikethrough)
+                sb.Append("~~");
 
+            if (isBold)
+                sb.Append("**");
+
+            if (isItalic)
+                sb.Append("*");
+                
             sb.Append(trailingSpaces);
         }
     }
@@ -275,6 +275,5 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 }
             }
         }
-        
     }
 }
