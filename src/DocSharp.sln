@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "samples\WpfApp1\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Rtf", "DocSharp.Rtf\DocSharp.Rtf.csproj", "{E42443F2-49FD-43F1-9F3F-2F376895C179}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Markdig", "DocSharp.Markdig\DocSharp.Markdig.csproj", "{0B574B71-53DC-466E-89DA-76C3D8878A8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{E42443F2-49FD-43F1-9F3F-2F376895C179}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E42443F2-49FD-43F1-9F3F-2F376895C179}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E42443F2-49FD-43F1-9F3F-2F376895C179}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B574B71-53DC-466E-89DA-76C3D8878A8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B574B71-53DC-466E-89DA-76C3D8878A8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B574B71-53DC-466E-89DA-76C3D8878A8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B574B71-53DC-466E-89DA-76C3D8878A8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
