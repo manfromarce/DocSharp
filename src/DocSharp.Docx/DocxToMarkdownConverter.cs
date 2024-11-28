@@ -5,12 +5,40 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
 public class DocxToMarkdownConverter : DocxConverterBase
 {
+    /// <summary>
+    /// If this property is set to an existing directory, images will be exported to that folder
+    /// and a reference will be added in Markdown syntax,
+    /// otherwise images are not converted.
+    /// </summary>
+    public string? ImagesOutputFolder { get; set; } = string.Empty;
+
+    /// <summary>
+    /// This property is used in combination with ImagesOutputFolder to determine 
+    /// how the image files are specified in Markdown.
+    /// 
+    /// If this property is set to null, an absolute path such as "file:///c:/.../image.jpg" 
+    /// will be created using the ImagesOutputFolder value and the image file name.
+    /// 
+    /// Otherwise, the base path (exluding the image file name) is replaced by this value.
+    /// Possible values:
+    /// - empty string or "." : images are expected to be in the same folder as the Markdown file.
+    /// - relative paths such as "images" or "../images": images are expected to be in a subfolder or parent folder.
+    /// - "/server/user/files/" or "C:\images": replaces the file path entirely
+    /// (the image file name is still appended and Windows paths are converted to the file URI scheme).
+    /// 
+    /// This property does not affect where the images are actually saved, and can be useful if
+    /// the Markdown document is not saved to file, or in environments with limited file system access.
+    /// </summary>
+    public string? ImagesBaseUriOverride { get; set; } = null;
+
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
         base.ProcessParagraph(paragraph, sb);
@@ -20,7 +48,9 @@ public class DocxToMarkdownConverter : DocxConverterBase
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
         var properties = run.GetFirstChild<RunProperties>();
-        bool hasText = !string.IsNullOrWhiteSpace(run.GetFirstChild<Text>()?.InnerText);
+        var text = run.GetFirstChild<Text>()?.InnerText;
+        bool hasText = !string.IsNullOrWhiteSpace(text);
+
         bool isBold, isItalic, isUnderline, isStrikethrough, isHighlight;
         isBold = isItalic = isUnderline = isStrikethrough = isHighlight = false;
 
@@ -29,13 +59,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
         if (hasText)
         {
-            string text = run.GetFirstChild<Text>()?.InnerText!;
-
-            leadingSpaces = StringHelpers.GetLeadingSpaces(text);
+            leadingSpaces = StringHelpers.GetLeadingSpaces(text!);
             sb.Append(leadingSpaces);
 
             // TODO: consider last child for trailing spaces
-            trailingSpaces = StringHelpers.GetTrailingSpaces(text);
+            trailingSpaces = StringHelpers.GetTrailingSpaces(text!);
 
             isBold = properties?.Bold != null;
             isItalic = properties?.Italic != null;
@@ -61,14 +89,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
         foreach (var element in run.Elements())
         {
-            if (element is Text text)
-            {
-                ProcessText(text, sb);
-            }
-            else if (element is Picture picture)
-            {
-                ProcessPicture(picture, sb);
-            }
+            ProcessRunCore(element, sb);              
         }
 
         if (hasText)
@@ -92,6 +113,35 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }
     }
 
+    internal bool ProcessRunCore(OpenXmlElement? element, StringBuilder sb)
+    {
+        switch (element)
+        {
+            case Text textElement:
+                ProcessText(textElement, sb);
+                return true;
+            case Picture picture:
+                ProcessPicture(picture, sb);
+                return true;
+            case Break br:
+                ProcessBreak(br, sb);
+                return true;
+            case AlternateContent alternateContent:
+                if (!ProcessRunCore(alternateContent.GetFirstChild<AlternateContentChoice>()?.FirstChild, sb))
+                {
+                    return ProcessRunCore(alternateContent.GetFirstChild<AlternateContentFallback>()?.FirstChild, sb);
+                }
+                break;
+        }        
+        return false;
+    }
+
+    private void ProcessBreak(Break br, StringBuilder sb)
+    {
+        sb.AppendLine();
+        sb.AppendLine("-----");
+    }
+
     internal void ProcessText(Text text, StringBuilder sb)
     {
         sb.Append(text.InnerText.Trim());
@@ -99,6 +149,68 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
+        sb.AppendLine();
+        int rowCount = 0;
+        foreach(var element in table.Elements())
+        {
+            switch (element)
+            {
+                case TableRow row:
+                    if (rowCount == 0)
+                    {
+                        AddTableHeader(3, sb);
+                    }
+                    ProcessRow(row, sb);
+                    ++rowCount;
+                    break;
+            }
+        }
+        sb.AppendLine();
+    }
+
+    private void AddTableHeader(int columnCount, StringBuilder sb)
+    {
+        sb.Append("|");
+        for (int i = 0; i < columnCount; ++i)
+        {
+            sb.Append(" |");
+        }
+        sb.AppendLine();
+        for (int i = 0; i < columnCount; ++i)
+        {
+            sb.Append("| --- ");
+        }
+        sb.AppendLine("|");
+    }
+
+    internal void ProcessRow(TableRow tableRow, StringBuilder sb)
+    {
+        sb.Append("| ");
+        foreach (var element in tableRow.Elements())
+        {
+            switch (element)
+            {
+                case TableCell cell:
+                    ProcessCell(cell, sb);
+                    break;
+            }
+        }
+        sb.AppendLine();
+    }
+
+    internal void ProcessCell(TableCell cell, StringBuilder sb)
+    {
+        var cellBuilder = new StringBuilder();
+        foreach (var paragraph in cell.Elements<Paragraph>())
+        {
+            // Join paragraphs as Markdown doesn't support multiple lines per cell
+            if (paragraph != null)
+                base.ProcessParagraph(paragraph, cellBuilder);
+
+            cellBuilder.Append(' ');
+        }
+        sb.Append(cellBuilder.ToString());
+        sb.Append(" | ");
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
@@ -107,5 +219,45 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
     {
+        if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)) && Directory.Exists(ImagesOutputFolder))
+        {
+            if (picture.Descendants<ImageData>().FirstOrDefault() is ImageData imageData && 
+                imageData.RelationshipId?.Value is string relId)
+            {
+                var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
+                if (maindDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
+                {
+                    string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
+                    string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
+                    Uri uri;
+                    if (ImagesBaseUriOverride is null)
+                    {
+                        uri = new Uri(actualFilePath, UriKind.Absolute);
+                    }
+                    else
+                    {
+                        ImagesBaseUriOverride = ImagesBaseUriOverride.Trim('"');
+                        ImagesBaseUriOverride = ImagesBaseUriOverride.Replace('\\', '/');
+                        if (ImagesBaseUriOverride != string.Empty)
+                        {
+                            ImagesBaseUriOverride = System.IO.Path.TrimEndingDirectorySeparator(ImagesBaseUriOverride);
+                            ImagesBaseUriOverride = ImagesBaseUriOverride + "/";
+                        }
+                        ImagesBaseUriOverride = ImagesBaseUriOverride + fileName;
+                        uri = new Uri(ImagesBaseUriOverride, UriKind.RelativeOrAbsolute);
+                    }
+
+                    using (var stream = imagePart.GetStream())
+                    using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
+                    {
+                        stream.CopyTo(fileStream);
+                    }
+                    sb.Append(' ');
+                    sb.Append($"![{relId}]({uri})");
+                    sb.Append(' ');
+                }
+            }
+        }
+        
     }
 }
