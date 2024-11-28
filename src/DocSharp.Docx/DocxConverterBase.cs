@@ -17,10 +17,7 @@ public abstract class DocxConverterBase
             var body = wordDocument.MainDocumentPart?.Document.Body;
             if (body != null)
             {
-                foreach (var element in body.Elements())
-                {
-                    ProcessBodyElement(element, sb);                                      
-                }
+                ProcessBody(body, sb);
             }
             return sb.ToString();
         }
@@ -44,6 +41,14 @@ public abstract class DocxConverterBase
         using (var streamWriter = new StreamWriter(outputStream))
         {
             streamWriter.Write(ConvertToString(inputStream));
+        }
+    }
+
+    internal virtual void ProcessBody(Body body, StringBuilder sb)
+    {
+        foreach (var element in body.Elements())
+        {
+            ProcessBodyElement(element, sb);
         }
     }
 
