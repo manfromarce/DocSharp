@@ -1,6 +1,7 @@
-namespace DocSharp.Binary.CommonTranslatorLib;
-
-public interface IVisitable
+namespace b2xtranslator.CommonTranslatorLib
 {
-    void Convert<T>(T mapping);
+    public interface IVisitable
+    {
+        void Convert<T>(T mapping);
+    }
 }

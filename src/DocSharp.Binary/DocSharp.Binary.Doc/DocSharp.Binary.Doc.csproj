@@ -11,9 +11,4 @@
     <ProjectReference Include="..\DocSharp.Binary.Common\DocSharp.Binary.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DocFileFormat\" />
-    <Folder Include="WordprocessingMLMapping\" />
-  </ItemGroup>
-
 </Project>
