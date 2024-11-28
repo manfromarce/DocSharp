@@ -30,7 +30,7 @@ To manipulate Office Open XML documents, you can use the [Open XML SDK](https://
 
 - Publish NuGet packages
 - Support more elements and attributes
-- Documentation (for now you can refer to the sample app)
+- Documentation (for now you can refer to the sample app). When ready, any documentation will be available in the project Wiki.
 
 ### Credits
 
