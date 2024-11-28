@@ -28,9 +28,9 @@ To manipulate Office Open XML documents, you can use the [Open XML SDK](https://
 
 ### Roadmap
 
+- Publish NuGet packages
 - Support more elements and attributes
 - Documentation (for now you can refer to the sample app)
-- Implement an OpenXML renderer as a separate package. It can be useful for various conversions, as Office-specific features need to be rasterized or drawn as SVG when converting to other formats.
 
 ### Credits
 
