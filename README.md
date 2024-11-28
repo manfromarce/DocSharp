@@ -15,11 +15,15 @@ The following packages are currently available:
     - Bold, italic, underline, strikethrough
     - Any highlight color (except none) is converted to `<mark>`
   - Inline images
+    - `ImagesOutputFolder` needs to be set to an existing directory. An absolute URI is added by default; to produce a relative URI set `ImagesBaseUriOverride` to ".", an empty string or any desired relative path.
+    - Only `Pict` elements are currently recognized, other image types are not implemented (e.g. WordPad embeds images in a different way).
+  - External hyperlinks
   - Tables (values only)
   - Page breaks are converted to horizontal lines
-  - TODO: H1-H6 header, hyperlinks, bookmarks, lists, special chars, math formulas, charts
+  - TODO: H1-H6 headers, bookmarks (internal hyperlinks), lists, special chars, math formulas, charts
 
 ### Roadmap
 
-- Improve existing packages
-- Implement OpenXML renderer, which can be useful for various conversions (Office-specific features can be rasterized or drawn as SVG when converting to other formats).
+- Support more elements and attributes.
+- Consider other conversions such as RTF to DOCX and DOCX to RTF.
+- Implement an OpenXML renderer as a separate package. It can be useful for various conversions, as Office-specific features need to be rasterized or drawn as SVG when converting to other formats.

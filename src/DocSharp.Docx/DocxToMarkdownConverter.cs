@@ -215,6 +215,23 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
     {
+        var displayTextBuilder = new StringBuilder();
+        foreach (var run in hyperlink.Elements<Run>())
+        {
+            if (run != null && run.GetFirstChild<Text>() is Text runText)
+                ProcessText(runText, displayTextBuilder);
+
+            displayTextBuilder.Append(' ');
+        }
+        if (hyperlink.Id?.Value is string rId)
+        {
+            var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
+            if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+            {
+                string url = relationship.Uri.ToString();             
+                sb.Append($" [{displayTextBuilder.ToString().Trim()}]({url}) ");
+            }
+        }
     }
 
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
@@ -241,9 +258,9 @@ public class DocxToMarkdownConverter : DocxConverterBase
                         if (ImagesBaseUriOverride != string.Empty)
                         {
                             ImagesBaseUriOverride = System.IO.Path.TrimEndingDirectorySeparator(ImagesBaseUriOverride);
-                            ImagesBaseUriOverride = ImagesBaseUriOverride + "/";
+                            ImagesBaseUriOverride += "/";
                         }
-                        ImagesBaseUriOverride = ImagesBaseUriOverride + fileName;
+                        ImagesBaseUriOverride += fileName;
                         uri = new Uri(ImagesBaseUriOverride, UriKind.RelativeOrAbsolute);
                     }
 
