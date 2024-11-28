@@ -38,7 +38,19 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var converter = new DocxToMarkdownConverter();
+                var converter = new DocxToMarkdownConverter()
+                {
+                    ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                    ImagesBaseUriOverride = "",
+                    //ImagesBaseUriOverride = "..",
+                    //ImagesBaseUriOverride = "../images",
+                    //ImagesBaseUriOverride = "../images/",
+                    //ImagesBaseUriOverride = @"..\images\",
+                    //ImagesBaseUriOverride = "images",
+                    //ImagesBaseUriOverride = "images/",
+                    //ImagesBaseUriOverride = @"images\",
+                    //ImagesBaseUriOverride = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+                };
                 converter.Convert(ofd.FileName, sfd.FileName);
             }
         }
