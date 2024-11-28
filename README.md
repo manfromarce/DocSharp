@@ -4,7 +4,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 
 The following packages are currently available:
 
-- DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned b2xtranslator project which provides critical fixes.
+- DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.
 - DocSharp.Docx: convert DOCX to Markdown (and possibly others in the future).
 
 ### Supported features
@@ -14,15 +14,10 @@ The following packages are currently available:
   - Text and basic formatting
     - Bold, italic, underline, strikethrough
     - Any highlight color (except none) is converted to `<mark>`
-    - H1-H6 headings
   - Inline images
-  - Bulleted and numbered lists
-  - Paragraph left indent
   - Tables (values only)
-  - Hyperlinks
-    - Bookmarks are converted to anchors if possible
   - Page breaks are converted to horizontal lines
-  - TODO: special chars, math formulas, charts
+  - TODO: H1-H6 header, hyperlinks, bookmarks, lists, special chars, math formulas, charts
 
 ### Roadmap
 
