@@ -5,9 +5,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.
-- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown or LaTex
-- DocSharp.Rtf: convert RTF to DOCX, HTML or Markdown.
-- DocSharp.Markdig: convert Markdown to DOCX or RTF
+- DocSharp.Docx: convert DOCX to Markdown (and possibly other formats in the future). This project is still in early development.
 
 There is no common DOM to manipulate documents or generate them from scatch, this library is for conversion only.
 
@@ -38,7 +36,6 @@ To manipulate Office Open XML documents, you can use the [Open XML SDK](https://
 
 Dependencies: 
 - [Open XML SDK](https://github.com/dotnet/Open-XML-SDK)
-- [Markdig](https://github.com/xoofx/markdig)
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
