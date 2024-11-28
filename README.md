@@ -5,25 +5,37 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.
-- DocSharp.Docx: convert DOCX to Markdown (and possibly others in the future).
+- DocSharp.Docx: convert DOCX to Markdown (and possibly other formats in the future). This project is still in early development.
+
+There is no common DOM to manipulate documents or generate them from scatch, this library is for conversion only.
+
+To manipulate Office Open XML documents, you can use the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) or other libraries built on top of it: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler).
 
 ### Supported features
 
-- Binary formats: almost all features are supported, but bugs and exceptions may occur for complex documents. The most obvious and frequent issues from the original project have been fixed, as they were mostly related to using .NET rather than .NET Framework, in particular code pages-based encodings and closed stream / null reference exception for PowerPoint presentations. A wider range of DOC / XLS / PPT documents should now be converted properly, but there are still issues for specific documents I tested. More work is needed to make this library reliable.
+- Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
 - DOCX to Markdown:
-  - Text and basic formatting
+  * Text and basic formatting
     - Bold, italic, underline, strikethrough
     - Any highlight color (except none) is converted to `<mark>`
-  - Inline images
-    - `ImagesOutputFolder` needs to be set to an existing directory. An absolute URI is added by default; to produce a relative URI set `ImagesBaseUriOverride` to ".", an empty string or any desired relative path.
+  * Inline images
+    - `ImagesOutputFolder` needs to be set to an existing directory, otherwise images are skipped. An absolute URI is used by default; to produce a relative URI set `ImagesBaseUriOverride` to any not-null folder path (empty string or "." means same folder as the Markdown file, "../images" means images subfolder in the parent folder).
     - Only `Pict` elements are currently recognized, other image types are not implemented (e.g. WordPad embeds images in a different way).
-  - External hyperlinks
-  - Tables (values only)
-  - Page breaks are converted to horizontal lines
-  - TODO: H1-H6 headers, bookmarks (internal hyperlinks), lists, special chars, math formulas, charts
+  * Tables (values only)
+  * External hyperlinks
+  * Page breaks are converted to horizontal lines
+  * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, special chars, math formulas, charts
 
 ### Roadmap
 
-- Support more elements and attributes.
-- Consider other conversions such as RTF to DOCX and DOCX to RTF.
+- Support more elements and attributes
+- Documentation (for now you can refer to the sample app)
 - Implement an OpenXML renderer as a separate package. It can be useful for various conversions, as Office-specific features need to be rasterized or drawn as SVG when converting to other formats.
+
+### Credits
+
+Dependencies: 
+- [Open XML SDK](https://github.com/dotnet/Open-XML-SDK)
+
+Forked: 
+- [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
