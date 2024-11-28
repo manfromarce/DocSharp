@@ -9,12 +9,19 @@
     Width="800"
     Height="450"
     mc:Ignorable="d">
-    <Grid>
+    <WrapPanel
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Orientation="Vertical">
         <Button
+            Margin="2"
             Padding="3"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Click="DocxToMdTest_Click"
+            Click="BinaryToOpenXml_Click"
+            Content="Binary to Open XML" />
+        <Button
+            Margin="2"
+            Padding="3"
+            Click="DocxToMarkdown_Click"
             Content="Docx to Markdown" />
-    </Grid>
+    </WrapPanel>
 </Window>

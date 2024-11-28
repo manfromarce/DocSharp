@@ -8,12 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocSharp.Binary.Ppt\DocSharp.Binary.Ppt.csproj" />
+    <Compile Remove="Records\NumberChart.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="SpreadsheetMLMapping\" />
-    <Folder Include="XlsFileFormat\" />
+    <ProjectReference Include="..\DocSharp.Binary.Common\DocSharp.Binary.Common.csproj" />
   </ItemGroup>
 
 </Project>

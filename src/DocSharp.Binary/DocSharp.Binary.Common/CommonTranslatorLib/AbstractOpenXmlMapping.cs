@@ -1,15 +1,16 @@
 using System.Xml;
 
-namespace DocSharp.Binary.CommonTranslatorLib;
-
-public abstract class AbstractOpenXmlMapping
+namespace b2xtranslator.CommonTranslatorLib
 {
-    protected XmlWriter _writer;
-    protected XmlDocument _nodeFactory;
-
-    public AbstractOpenXmlMapping(XmlWriter writer)
+    public abstract class AbstractOpenXmlMapping
     {
-        this._writer = writer;
-        this._nodeFactory = new XmlDocument();
+        protected XmlWriter _writer;
+        protected XmlDocument _nodeFactory;
+
+        public AbstractOpenXmlMapping(XmlWriter writer)
+        {
+            this._writer = writer;
+            this._nodeFactory = new XmlDocument();
+        }
     }
 }

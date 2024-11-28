@@ -1,6 +1,7 @@
-namespace DocSharp.Binary.CommonTranslatorLib;
-
-public interface IMapping<T> where T : IVisitable
+namespace b2xtranslator.CommonTranslatorLib
 {
-    void Apply(T visited);
+    public interface IMapping<T> where T : IVisitable
+    {
+        void Apply(T visited);
+    }
 }

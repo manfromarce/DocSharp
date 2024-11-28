@@ -1,10 +1,11 @@
-namespace DocSharp.Binary.CommonTranslatorLib;
-
-public abstract class BinaryDocument : IVisitable
+namespace b2xtranslator.CommonTranslatorLib
 {
-    #region IVisitable Members
+    public abstract class BinaryDocument : IVisitable
+    {
+        #region IVisitable Members
 
-    public abstract void Convert<T>(T mapping);
-    
-    #endregion
+        public abstract void Convert<T>(T mapping);
+        
+        #endregion
+    }
 }
