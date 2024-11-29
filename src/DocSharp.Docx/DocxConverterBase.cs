@@ -36,7 +36,7 @@ public abstract class DocxConverterBase
         File.WriteAllText(outputFilePath, ConvertToString(inputFilePath));
     }
 
-    public void Convert(Stream inputStream, string outputStream)
+    public void Convert(Stream inputStream, Stream outputStream)
     {
         using (var streamWriter = new StreamWriter(outputStream))
         {
