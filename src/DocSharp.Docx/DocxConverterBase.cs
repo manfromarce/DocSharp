@@ -9,6 +9,11 @@ namespace DocSharp.Docx;
 
 public abstract class DocxConverterBase
 {
+    static DocxConverterBase()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    }
+
     public string ConvertToString(Stream inputStream)
     {
         using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
