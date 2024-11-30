@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\DocSharp.Binary\DocSharp.Binary.Ppt\DocSharp.Binary.Ppt.csproj" />
     <ProjectReference Include="..\..\DocSharp.Binary\DocSharp.Binary.Xls\DocSharp.Binary.Xls.csproj" />
     <ProjectReference Include="..\..\DocSharp.Docx\DocSharp.Docx.csproj" />
+    <ProjectReference Include="..\..\DocSharp.Markdig\DocSharp.Markdown.csproj" />
   </ItemGroup>
 
 </Project>
