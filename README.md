@@ -24,7 +24,7 @@ To manipulate Office Open XML documents, you can use the [Open XML SDK](https://
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines
-  * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, special chars, math formulas, charts
+  * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, math formulas, charts
 
 ### Roadmap
 

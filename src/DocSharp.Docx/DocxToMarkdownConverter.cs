@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
@@ -38,6 +38,14 @@ public class DocxToMarkdownConverter : DocxConverterBase
     /// the Markdown document is not saved to file, or in environments with limited file system access.
     /// </summary>
     public string? ImagesBaseUriOverride { get; set; } = null;
+
+    private char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
+                                     '#', '+', '-', '!', '|', '~' }; // '.'
+
+    internal static string Escape(string value)
+    {
+        return '\\' + value;
+    }
 
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
@@ -144,7 +152,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal void ProcessText(Text text, StringBuilder sb)
     {
-        sb.Append(text.InnerText.Trim());
+        sb.Append(Escape(text.InnerText.Trim()));
     }
 
     internal override void ProcessTable(Table table, StringBuilder sb)
