@@ -8,9 +8,7 @@ The following packages are currently available:
 - DocSharp.Docx: convert DOCX to Markdown (and possibly other formats in the future). This project is still in early development.
 - DocSharp.Markdown: convert Markdown to DOCX using a custom Markdig renderer.
 
-There is no common DOM to manipulate documents or generate them from scatch, this library is for conversion only.
-
-To manipulate Office Open XML documents, you can use the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) or other libraries built on top of it: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler).
+There is no common DOM to manipulate documents or generate them from scatch, this library is for conversion only. Additional features which allow easier creation and manipulation of OpenXML documents may be added in the future, for now you can use the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) directly or other libraries built on top of it: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler).
 
 ### Supported features
 
@@ -41,7 +39,12 @@ To manipulate Office Open XML documents, you can use the [Open XML SDK](https://
 
 Dependencies: 
 - [Open XML SDK](https://github.com/dotnet/Open-XML-SDK)
+- [Markdig](https://github.com/xoofx/markdig)
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
 - [markdig.docx](https://github.com/morincer/markdig.docx)
+
+### License
+
+DocSharp is licensed under MIT license and can be used for both open source and commercial projects.
