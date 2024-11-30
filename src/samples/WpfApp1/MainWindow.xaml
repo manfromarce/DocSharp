@@ -23,5 +23,10 @@
             Padding="3"
             Click="DocxToMarkdown_Click"
             Content="Docx to Markdown" />
+        <Button
+            Margin="2"
+            Padding="3"
+            Click="MarkdownToDocx_Click"
+            Content="Markdown to Docx" />
     </WrapPanel>
 </Window>

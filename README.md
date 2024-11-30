@@ -6,6 +6,7 @@ The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.
 - DocSharp.Docx: convert DOCX to Markdown (and possibly other formats in the future). This project is still in early development.
+- DocSharp.Markdown: convert Markdown to DOCX using a custom Markdig renderer.
 
 There is no common DOM to manipulate documents or generate them from scatch, this library is for conversion only.
 
@@ -21,10 +22,14 @@ To manipulate Office Open XML documents, you can use the [Open XML SDK](https://
   * Inline images
     - `ImagesOutputFolder` needs to be set to an existing directory, otherwise images are skipped. An absolute URI is used by default; to produce a relative URI set `ImagesBaseUriOverride` to any not-null folder path (empty string or "." means same folder as the Markdown file, "../images" means images subfolder in the parent folder).
     - Only `Pict` elements are currently recognized, other image types are not implemented (e.g. WordPad embeds images in a different way).
+    - Images should be in JPEG, PNG or GIF format to be supported by browsers; BMP is partially supported but not recommended. There is currently no automatic conversion implemented.
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines
   * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, math formulas, charts
+- Markdown to DOCX:
+  * Basic Markdown features (no extensions)
+  * TODO: bookmarks (internal hyperlinks), images, tables, math
 
 ### Roadmap
 
@@ -39,3 +44,4 @@ Dependencies:
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
+- [markdig.docx](https://github.com/morincer/markdig.docx)

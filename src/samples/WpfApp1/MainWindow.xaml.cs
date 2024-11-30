@@ -17,6 +17,7 @@ using PresentationDocument = b2xtranslator.OpenXmlLib.PresentationML.Presentatio
 using b2xtranslator.DocFileFormat;
 using b2xtranslator.Spreadsheet.XlsFileFormat;
 using b2xtranslator.PptFileFormat;
+using DocSharp.Markdown;
 
 namespace WpfApp1;
 /// <summary>
@@ -27,40 +28,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-    }
-
-    private void DocxToMarkdown_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "Word OpenXML document|*.docx",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "Markdown|*.md;*.markdown",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                var converter = new DocxToMarkdownConverter()
-                {
-                    ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
-                    ImagesBaseUriOverride = "",
-                    //ImagesBaseUriOverride = "..",
-                    //ImagesBaseUriOverride = "../images",
-                    //ImagesBaseUriOverride = "../images/",
-                    //ImagesBaseUriOverride = @"..\images\",
-                    //ImagesBaseUriOverride = "images",
-                    //ImagesBaseUriOverride = "images/",
-                    //ImagesBaseUriOverride = @"images\",
-                    //ImagesBaseUriOverride = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
-                };
-                converter.Convert(ofd.FileName, sfd.FileName);
-            }
-        }
     }
 
     private void BinaryToOpenXml_Click(object sender, RoutedEventArgs e)
@@ -130,6 +97,62 @@ public partial class MainWindow : Window
                         //MessageBox.Show("Conversion failed: " + Environment.NewLine + ex.Message);
                     }
                 }
+            }
+        }
+    }
+
+    private void DocxToMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Markdown|*.md;*.markdown",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                var converter = new DocxToMarkdownConverter()
+                {
+                    ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                    ImagesBaseUriOverride = "",
+                    //ImagesBaseUriOverride = "..",
+                    //ImagesBaseUriOverride = "../images",
+                    //ImagesBaseUriOverride = "../images/",
+                    //ImagesBaseUriOverride = @"..\images\",
+                    //ImagesBaseUriOverride = "images",
+                    //ImagesBaseUriOverride = "images/",
+                    //ImagesBaseUriOverride = @"images\",
+                    //ImagesBaseUriOverride = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+                };
+                converter.Convert(ofd.FileName, sfd.FileName);
+            }
+        }
+    }
+
+    private void MarkdownToDocx_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Markdown|*.md;*.markdown",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Word OpenXML document|*.docx",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                var markdown = MarkdownSource.FromFile(ofd.FileName);
+                MarkdownConverter.ToDocx(markdown, sfd.FileName);
             }
         }
     }

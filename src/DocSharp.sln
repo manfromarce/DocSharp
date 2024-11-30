@@ -27,7 +27,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{D4B9
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp", "DocSharp.Core\DocSharp.csproj", "{3204B129-A408-437A-A69F-6B8BC5210A14}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Core", "DocSharp.Core\DocSharp.Core.csproj", "{3204B129-A408-437A-A69F-6B8BC5210A14}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Markdown", "DocSharp.Markdig\DocSharp.Markdown.csproj", "{3136E496-6EB0-4098-97D4-C771D772CAE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{3204B129-A408-437A-A69F-6B8BC5210A14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3204B129-A408-437A-A69F-6B8BC5210A14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3204B129-A408-437A-A69F-6B8BC5210A14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3136E496-6EB0-4098-97D4-C771D772CAE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3136E496-6EB0-4098-97D4-C771D772CAE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3136E496-6EB0-4098-97D4-C771D772CAE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3136E496-6EB0-4098-97D4-C771D772CAE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

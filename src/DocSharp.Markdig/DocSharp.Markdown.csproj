@@ -8,7 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Docx\Resources\markdown-template.docx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Docx\Resources\markdown-template.docx" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
+    <PackageReference Include="Markdig" Version="0.38.0" />
   </ItemGroup>
 
   <ItemGroup>
