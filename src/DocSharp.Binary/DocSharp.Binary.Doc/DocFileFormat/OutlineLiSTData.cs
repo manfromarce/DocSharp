@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using b2xtranslator.Tools;
 
 namespace b2xtranslator.DocFileFormat

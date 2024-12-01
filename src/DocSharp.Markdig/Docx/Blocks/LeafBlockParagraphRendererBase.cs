@@ -1,4 +1,4 @@
-﻿using Markdig.Syntax;
+using Markdig.Syntax;
 
 namespace Markdig.Renderers.Docx.Blocks;
 

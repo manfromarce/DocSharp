@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Math;
+using DocumentFormat.OpenXml.Math;
 using Markdig.Syntax.Inlines;
 
 namespace Markdig.Renderers.Docx.Inlines;

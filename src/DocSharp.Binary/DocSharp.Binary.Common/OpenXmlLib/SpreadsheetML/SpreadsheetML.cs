@@ -1,4 +1,4 @@
-﻿namespace b2xtranslator.OpenXmlLib.SpreadsheetML
+namespace b2xtranslator.OpenXmlLib.SpreadsheetML
 {
     public class Sml
     {

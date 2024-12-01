@@ -1,4 +1,4 @@
-﻿namespace b2xtranslator.OpenXmlLib
+namespace b2xtranslator.OpenXmlLib
 {
     public static class OpenXmlContentTypes
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax.Inlines;

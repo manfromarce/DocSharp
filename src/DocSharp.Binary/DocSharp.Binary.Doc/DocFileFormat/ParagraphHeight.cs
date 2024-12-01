@@ -1,4 +1,4 @@
-﻿using b2xtranslator.Tools;
+using b2xtranslator.Tools;
 
 namespace b2xtranslator.DocFileFormat
 {

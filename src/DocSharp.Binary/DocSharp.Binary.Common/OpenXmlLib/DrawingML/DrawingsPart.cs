@@ -1,4 +1,4 @@
-﻿namespace b2xtranslator.OpenXmlLib.DrawingML
+namespace b2xtranslator.OpenXmlLib.DrawingML
 {
 
     public class DrawingsPart : OpenXmlPart
