@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
 
 namespace Markdig.Renderers.Docx.Blocks;

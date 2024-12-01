@@ -1,4 +1,4 @@
-﻿using b2xtranslator.CommonTranslatorLib;
+using b2xtranslator.CommonTranslatorLib;
 using b2xtranslator.PptFileFormat;
 using b2xtranslator.OpenXmlLib;
 

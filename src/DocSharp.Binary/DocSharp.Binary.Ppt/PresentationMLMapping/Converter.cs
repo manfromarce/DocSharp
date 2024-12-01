@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using b2xtranslator.OpenXmlLib;
 using b2xtranslator.PptFileFormat;

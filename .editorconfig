@@ -3,23 +3,16 @@ root = true
 # All files
 [*]
 indent_style = space
+end_of_line = lf
+charset = utf-8
 
 # Xml files
-[*.xml]
+[*.{xml,csproj}]
 indent_size = 2
-
-# C# files
-[*.cs]
-
-#### Core EditorConfig Options ####
-
-# Indentation and spacing
-indent_size = 4
-tab_width = 4
-
-# New line preferences
+tab_width = 2
 end_of_line = lf
 insert_final_newline = true
+charset = utf-8
 
 #### .NET Coding Conventions ####
 [*.{cs,vb}]
@@ -361,7 +354,8 @@ dotnet_naming_style.s_camelcase.required_prefix = s_
 dotnet_naming_style.s_camelcase.required_suffix = 
 dotnet_naming_style.s_camelcase.word_separator = 
 dotnet_naming_style.s_camelcase.capitalization = camel_case
-end_of_line = lf
 tab_width = 4
 indent_size = 4
-
+insert_final_newline = true
+end_of_line = lf
+charset = utf-8

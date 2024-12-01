@@ -1,4 +1,4 @@
-﻿
+
 
 using System.Diagnostics;
 using b2xtranslator.StructuredStorage.Reader;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using b2xtranslator.CommonTranslatorLib;
 using b2xtranslator.Tools;
