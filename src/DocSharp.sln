@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Binary.Xls", "DocS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Binary.Ppt", "DocSharp.Binary\DocSharp.Binary.Ppt\DocSharp.Binary.Ppt.csproj", "{6329AD0D-68E2-438A-B73B-BC5003EB9765}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "Elementi di soluzione", "{EE9BC5FA-5C1C-48ED-88FF-871018D08DD2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{EE9BC5FA-5C1C-48ED-88FF-871018D08DD2}"
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
 		..\.gitignore = ..\.gitignore
@@ -21,15 +21,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "El
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Core", "DocSharp.Core\DocSharp.Core.csproj", "{3204B129-A408-437A-A69F-6B8BC5210A14}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Markdown", "DocSharp.Markdown\DocSharp.Markdown.csproj", "{3136E496-6EB0-4098-97D4-C771D772CAE2}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Docx", "DocSharp.Docx\DocSharp.Docx.csproj", "{07194405-C613-4F89-ABD4-DE4A23B786B8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{D4B9A0DF-568D-43A8-BEFD-858AAEA41838}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Core", "DocSharp.Core\DocSharp.Core.csproj", "{3204B129-A408-437A-A69F-6B8BC5210A14}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Markdown", "DocSharp.Markdig\DocSharp.Markdown.csproj", "{3136E496-6EB0-4098-97D4-C771D772CAE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
