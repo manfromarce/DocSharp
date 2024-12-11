@@ -51,7 +51,7 @@ public class MarkdownSource
     /// <summary>
     /// Implicitly convert a <see cref="MarkdownDocument"/> to a <see cref="MarkdownSource"/>
     /// </summary>
-    /// <param name="document">Text reader to use</param>
+    /// <param name="document">Markdown document to use</param>
     public static implicit operator MarkdownSource(MarkdownDocument document)
     {
         return new MarkdownSource(document);

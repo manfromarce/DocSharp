@@ -1,3 +1,4 @@
+using System.Xml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax.Inlines;
@@ -13,8 +14,12 @@ public class LineBreakInlineRenderer : DocxObjectRenderer<LineBreakInline>
             renderer.Cursor.Write(new Run(new Break()));
         }
         else
-        {
-            renderer.Cursor.Write(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
+        {           
+            renderer.Cursor.Write(new Run(new Text() 
+            {
+                Text = '\u0020'.ToString(),
+                Space = SpaceProcessingModeValues.Preserve,
+            }));
         }
     }
 }

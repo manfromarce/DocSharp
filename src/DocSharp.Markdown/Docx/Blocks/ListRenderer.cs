@@ -14,6 +14,7 @@ public class ListInfo
     
     public int Level { get; set; }
 }
+
 public class ListRenderer : DocxObjectRenderer<ListBlock>
 {
     private AbstractNum? _bulletListAbstractNum = null;
@@ -34,7 +35,7 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
             
             // Find or create abstract numbering associated with this style
             var numbering = renderer.Document.GetOrCreateNumbering().NumberingDefinitionsPart!.Numbering;
-            
+
             var abstractNum = numbering
                 .Elements<AbstractNum>().FirstOrDefault(e => e.StyleLink?.Val == listStyle);
 
