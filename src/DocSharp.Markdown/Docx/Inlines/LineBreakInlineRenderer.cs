@@ -8,7 +8,7 @@ public class LineBreakInlineRenderer : DocxObjectRenderer<LineBreakInline>
 {
     protected override void WriteObject(DocxDocumentRenderer renderer, LineBreakInline obj)
     {
-        if (obj.IsHard || renderer.SoftBreaksAsHard)
+        if (obj.IsHard)
         {
             renderer.Cursor.Write(new Run(new Break()));
         }
@@ -16,6 +16,5 @@ public class LineBreakInlineRenderer : DocxObjectRenderer<LineBreakInline>
         {
             renderer.Cursor.Write(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
         }
-
     }
 }

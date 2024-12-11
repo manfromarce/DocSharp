@@ -7,10 +7,6 @@ using Markdig.Syntax.Inlines;
 
 namespace Markdig.Renderers.Docx.Inlines
 {
-    /// <summary>
-    /// A XAML renderer for a <see cref="LiteralInline"/>.
-    /// </summary>
-    /// <seealso cref="XamlObjectRenderer{TObject}" />
     public class LiteralInlineRenderer : DocxObjectRenderer<LiteralInline>
     {
         protected override void WriteObject(DocxDocumentRenderer renderer, LiteralInline obj)

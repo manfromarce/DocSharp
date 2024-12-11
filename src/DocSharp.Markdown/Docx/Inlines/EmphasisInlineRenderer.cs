@@ -29,19 +29,29 @@ public class EmphasisInlineRenderer : DocxObjectRenderer<EmphasisInline>
                 }
                 else
                 {
-                    props.VerticalTextAlignment = new VerticalTextAlignment {Val = VerticalPositionValues.Subscript};
+                    props.VerticalTextAlignment = new VerticalTextAlignment 
+                    {
+                        Val = VerticalPositionValues.Subscript
+                    };
                 }
                 break;
             case '^':
                 props.VerticalTextAlignment = new VerticalTextAlignment()
-                    {Val = VerticalPositionValues.Superscript};
-
+                {
+                    Val = VerticalPositionValues.Superscript
+                };
                 break;
             case '+':
-                props.Highlight = new Highlight {Val = HighlightColorValues.Green};
+                if (obj.DelimiterCount == 2)
+                {
+                    props.Highlight = new Highlight {Val = HighlightColorValues.Green};
+                }
                 break;
             case '=':
-                props.Highlight = new Highlight {Val = HighlightColorValues.Yellow};
+                if (obj.DelimiterCount == 2)
+                {
+                    props.Highlight = new Highlight {Val = HighlightColorValues.Yellow};
+                }
                 break;
             default:
                 props = null;
@@ -58,7 +68,6 @@ public class EmphasisInlineRenderer : DocxObjectRenderer<EmphasisInline>
         if (props != null)
         {
             renderer.TextFormat.Pop();
-        }
-        
+        }        
     }
 }

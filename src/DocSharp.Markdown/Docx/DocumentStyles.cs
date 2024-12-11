@@ -34,5 +34,5 @@ public class DocumentStyles
 
     public string? HorizontalLine { get; set; } = "MDHorizontalLine";
 
-    public string? CodeInline { get; set; } = "MDSourceText";
+    public string? CodeInline { get; set; } = "MDPreformattedText0";
 }
