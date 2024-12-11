@@ -11,13 +11,11 @@ public class ListItemRenderer : ContainerBlockParagraphRendererBase<ListItemBloc
         renderer.ForceCloseParagraph();
 
         var listInfo = renderer.ActiveList.Peek();
-
         var p = WriteAsParagraph(renderer, obj, listInfo.StyleId);
         p.GetOrCreateProperties().NumberingProperties = new NumberingProperties
         {
             NumberingId = new NumberingId() { Val = listInfo.NumberingInstance.NumberID },
             NumberingLevelReference = new NumberingLevelReference { Val = listInfo.Level }
         };
-
-    }
+    } 
 }

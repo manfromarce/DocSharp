@@ -10,6 +10,12 @@ public abstract class ParagraphRendererBase<T> : DocxObjectRenderer<T> where T :
 {
     protected Paragraph WriteAsParagraph(DocxDocumentRenderer renderer, T obj, string? styleId)
     {
+        if ((obj.Parent is ListItemBlock) && !renderer.IsFirstInContainer)
+        {
+            // In DOCX list items cannot contain multiple paragraphs.            
+            renderer.ForceCloseParagraph();            
+        }
+
         var p = new Paragraph();
         p.SetStyle(styleId);
 
@@ -18,7 +24,7 @@ public abstract class ParagraphRendererBase<T> : DocxObjectRenderer<T> where T :
             renderer.Cursor.Write(p);
             renderer.Cursor.GoInto(p);
         }
-            
+
         renderer.NoParagraph++;
 
         RenderContents(renderer, obj);

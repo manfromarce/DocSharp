@@ -45,57 +45,64 @@ public partial class MainWindow : Window
             };
             if (folderDlg.ShowDialog(this) == true)
             {
-                string outputDir = folderDlg.FolderName;
-                foreach (string file in ofd.FileNames)
+                try
                 {
-                    string inputExt = Path.GetExtension(file).ToLower();
-                    try
+                    string outputDir = folderDlg.FolderName;
+                    foreach (string file in ofd.FileNames)
                     {
-                        using (var reader = new StructuredStorageReader(file))
+                        string inputExt = Path.GetExtension(file).ToLower();
+                        try
                         {
-                            string outputExt = inputExt + "x";
-                            string baseName = Path.GetFileNameWithoutExtension(file);
-                            string outputFile = Path.Join(outputDir, baseName + outputExt);
-                            var outputType = b2xtranslator.OpenXmlLib.OpenXmlDocumentType.Document;
-                            if (inputExt == ".dot" || inputExt == ".xlt" || inputExt == ".pot")
+                            using (var reader = new StructuredStorageReader(file))
                             {
-                                outputType = b2xtranslator.OpenXmlLib.OpenXmlDocumentType.Template;
-                            }
-                            switch (inputExt)
-                            {
-                                case ".doc":
-                                case ".dot":
-                                    var doc = new WordDocument(reader);
-                                    using (var docx = WordprocessingDocument.Create(outputFile, outputType))
-                                    {
-                                        b2xtranslator.WordprocessingMLMapping.Converter.Convert(doc, docx);
-                                    }
-                                    break;
-                                case ".xls":
-                                case ".xlt":
-                                    var xls = new XlsDocument(reader);
-                                    using (var xlsx = SpreadsheetDocument.Create(outputFile, outputType))
-                                    {
-                                        b2xtranslator.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
-                                    }
-                                    break;
-                                case ".ppt":
-                                case ".pps":
-                                case ".pot":
-                                    var ppt = new PowerpointDocument(reader);
-                                    using (var pptx = PresentationDocument.Create(outputFile, outputType))
-                                    {
-                                        b2xtranslator.PresentationMLMapping.Converter.Convert(ppt, pptx);
-                                    }
-                                    break;
+                                string outputExt = inputExt + "x";
+                                string baseName = Path.GetFileNameWithoutExtension(file);
+                                string outputFile = Path.Join(outputDir, baseName + outputExt);
+                                var outputType = b2xtranslator.OpenXmlLib.OpenXmlDocumentType.Document;
+                                if (inputExt == ".dot" || inputExt == ".xlt" || inputExt == ".pot")
+                                {
+                                    outputType = b2xtranslator.OpenXmlLib.OpenXmlDocumentType.Template;
+                                }
+                                switch (inputExt)
+                                {
+                                    case ".doc":
+                                    case ".dot":
+                                        var doc = new WordDocument(reader);
+                                        using (var docx = WordprocessingDocument.Create(outputFile, outputType))
+                                        {
+                                            b2xtranslator.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                                        }
+                                        break;
+                                    case ".xls":
+                                    case ".xlt":
+                                        var xls = new XlsDocument(reader);
+                                        using (var xlsx = SpreadsheetDocument.Create(outputFile, outputType))
+                                        {
+                                            b2xtranslator.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
+                                        }
+                                        break;
+                                    case ".ppt":
+                                    case ".pps":
+                                    case ".pot":
+                                        var ppt = new PowerpointDocument(reader);
+                                        using (var pptx = PresentationDocument.Create(outputFile, outputType))
+                                        {
+                                            b2xtranslator.PresentationMLMapping.Converter.Convert(ppt, pptx);
+                                        }
+                                        break;
+                                }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            throw;
+                            //MessageBox.Show("Conversion failed: " + Environment.NewLine + ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        throw;
-                        //MessageBox.Show("Conversion failed: " + Environment.NewLine + ex.Message);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
                 }
             }
         }
@@ -117,20 +124,27 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var converter = new DocxToMarkdownConverter()
+                try
                 {
-                    ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
-                    ImagesBaseUriOverride = "",
-                    //ImagesBaseUriOverride = "..",
-                    //ImagesBaseUriOverride = "../images",
-                    //ImagesBaseUriOverride = "../images/",
-                    //ImagesBaseUriOverride = @"..\images\",
-                    //ImagesBaseUriOverride = "images",
-                    //ImagesBaseUriOverride = "images/",
-                    //ImagesBaseUriOverride = @"images\",
-                    //ImagesBaseUriOverride = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
-                };
-                converter.Convert(ofd.FileName, sfd.FileName);
+                    var converter = new DocxToMarkdownConverter()
+                    {
+                        ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                        ImagesBaseUriOverride = "",
+                        //ImagesBaseUriOverride = "..",
+                        //ImagesBaseUriOverride = "../images",
+                        //ImagesBaseUriOverride = "../images/",
+                        //ImagesBaseUriOverride = @"..\images\",
+                        //ImagesBaseUriOverride = "images",
+                        //ImagesBaseUriOverride = "images/",
+                        //ImagesBaseUriOverride = @"images\",
+                        //ImagesBaseUriOverride = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+                    };
+                    converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
         }
     }
@@ -151,8 +165,15 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var markdown = MarkdownSource.FromFile(ofd.FileName);
-                MarkdownConverter.ToDocx(markdown, sfd.FileName);
+                try
+                {
+                    var markdown = MarkdownSource.FromFile(ofd.FileName);
+                    MarkdownConverter.ToDocx(markdown, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }                
             }
         }
     }

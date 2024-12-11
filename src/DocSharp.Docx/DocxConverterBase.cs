@@ -14,20 +14,40 @@ public abstract class DocxConverterBase
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
+    /// <summary>
+    /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
+    /// </summary>
+    /// <param name="inputDocument">The DOCX document to use.</param>
+    /// <returns>A string in the output format</returns>
+    public string ConvertToString(WordprocessingDocument inputDocument)
+    {
+        var sb = new StringBuilder();
+        var body = inputDocument.MainDocumentPart?.Document.Body;
+        if (body != null)
+        {
+            ProcessBody(body, sb);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Convert a DOCX <see cref="Stream"/> to a string in the output format.
+    /// </summary>
+    /// <param name="inputStream">The DOCX Stream to use.</param>
+    /// <returns>A string in the output format</returns>
     public string ConvertToString(Stream inputStream)
     {
         using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
         {
-            var sb = new StringBuilder();
-            var body = wordDocument.MainDocumentPart?.Document.Body;
-            if (body != null)
-            {
-                ProcessBody(body, sb);
-            }
-            return sb.ToString();
+            return ConvertToString(wordDocument);
         }
     }
 
+    /// <summary>
+    /// Convert a DOCX file to a string in the output format.
+    /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <returns>A string in the output format</returns>
     public string ConvertToString(string inputFilePath)
     {
         using (var fileStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
@@ -36,11 +56,67 @@ public abstract class DocxConverterBase
         }
     }
 
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public void Convert(WordprocessingDocument inputDocument, string outputFilePath)
+    {
+        File.WriteAllText(outputFilePath, ConvertToString(inputDocument));
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public void Convert(WordprocessingDocument inputDocument, Stream outputStream)
+    {
+        using (var streamWriter = new StreamWriter(outputStream))
+        {
+            streamWriter.Write(ConvertToString(inputDocument));
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <param name="outputFilePath">The output file path.</param>
     public void Convert(string inputFilePath, string outputFilePath)
     {
         File.WriteAllText(outputFilePath, ConvertToString(inputFilePath));
     }
 
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public void Convert(string inputFilePath, Stream outputStream)
+    {
+        using (var streamWriter = new StreamWriter(outputStream))
+        {
+            streamWriter.Write(ConvertToString(inputFilePath));
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputStream">The input DOCX stream to use.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public void Convert(Stream inputStream, string outputFilePath)
+    {
+        File.WriteAllText(outputFilePath, ConvertToString(inputStream));
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputStream">The input DOCX stream to use.</param>
+    /// <param name="outputStream">The output stream.</param>
     public void Convert(Stream inputStream, Stream outputStream)
     {
         using (var streamWriter = new StreamWriter(outputStream))

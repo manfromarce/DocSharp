@@ -18,13 +18,14 @@ public class DocxDocumentRenderer : RendererBase
     
     public DocumentTreeCursor Cursor { get; set; }
 
-    internal int NoParagraph { get; set; }= 0;
-    
+    internal int NoParagraph { get; set; } = 0;
+
     internal HashSet<string> UsedStyles { get; private set; } = new();
     
     public DocumentStyles Styles { get; }
 
     internal Stack<RunProperties> TextFormat { get; } = new();
+
     internal Stack<string> TextStyle { get; } = new();
     
     internal Stack<ListInfo> ActiveList { get; } = new();
@@ -66,6 +67,7 @@ public class DocxDocumentRenderer : RendererBase
         ObjectRenderers.Add(new LiteralInlineRenderer());
 
         //ObjectRenderers.Add(new CustomHtmlInlineRenderer());
+        //ObjectRenderers.Add(new TableRenderer());
     }
 
     public void ForceCloseParagraph()
