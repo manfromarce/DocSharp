@@ -69,6 +69,7 @@ public class DocumentTreeCursor
         throw new ConstraintException(
             $"Wrong container type: expected anything except {typeof(T).Name}, got {Container.GetType().Name}");
     }
+
     public void Write(OpenXmlElement element)
     {
         if (InsertAfter == null)

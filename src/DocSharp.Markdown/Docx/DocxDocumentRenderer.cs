@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Renderers.Docx.Blocks;
+using Markdig.Renderers.Docx.Extensions;
 using Markdig.Renderers.Docx.Inlines;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -65,9 +66,10 @@ public class DocxDocumentRenderer : RendererBase
         ObjectRenderers.Add(new HtmlEntityInlineRenderer());
         ObjectRenderers.Add(new LinkInlineRenderer());
         ObjectRenderers.Add(new LiteralInlineRenderer());
-
         //ObjectRenderers.Add(new CustomHtmlInlineRenderer());
-        //ObjectRenderers.Add(new TableRenderer());
+
+        // Extensions renderers
+        ObjectRenderers.Add(new TableRenderer());
     }
 
     public void ForceCloseParagraph()
