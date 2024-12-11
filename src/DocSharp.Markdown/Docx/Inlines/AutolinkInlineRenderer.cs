@@ -28,7 +28,6 @@ public class AutolinkInlineRenderer : DocxObjectRenderer<AutolinkInline>
             Uri.TryCreate(uriString, UriKind.Relative, out uri);
         }
 
-
         if (uri == null) return;
         
         var linkId = $"AL{_hyperlinkIdCounter++}";

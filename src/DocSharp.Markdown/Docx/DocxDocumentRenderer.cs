@@ -29,12 +29,10 @@ public class DocxDocumentRenderer : RendererBase
     
     internal Stack<ListInfo> ActiveList { get; } = new();
 
-    public bool SoftBreaksAsHard { get; set; }
-
     public DocxDocumentRenderer(WordprocessingDocument document) : this(document, new DocumentStyles())
     {
-        
     }
+
     public DocxDocumentRenderer(WordprocessingDocument document, DocumentStyles styles)
     {
         Document = document;
@@ -63,10 +61,11 @@ public class DocxDocumentRenderer : RendererBase
         ObjectRenderers.Add(new DelimiterInlineRenderer());
         ObjectRenderers.Add(new EmphasisInlineRenderer());
         ObjectRenderers.Add(new LineBreakInlineRenderer());
-        // ObjectRenderers.Add(new HtmlInlineRenderer());
         ObjectRenderers.Add(new HtmlEntityInlineRenderer());
         ObjectRenderers.Add(new LinkInlineRenderer());
         ObjectRenderers.Add(new LiteralInlineRenderer());
+
+        //ObjectRenderers.Add(new CustomHtmlInlineRenderer());
     }
 
     public void ForceCloseParagraph()

@@ -18,7 +18,7 @@ public abstract class DocxObjectRenderer<T> : MarkdownObjectRenderer<DocxDocumen
     
     public void WriteText(DocxDocumentRenderer renderer, string text)
     {
-        var run = new Run(new Text(text) {Space = SpaceProcessingModeValues.Preserve});
+        var run = new Run(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
 
         if (renderer.TextFormat.TryPeek(out var props))
         {

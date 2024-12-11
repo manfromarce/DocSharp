@@ -41,7 +41,10 @@ public class MarkdownSource
     /// <param name="markdown">The Markdown content as string</param>
     public static MarkdownSource FromMarkdownString(string markdown)
     {
-        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseEmojiAndSmiley().Build();
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions()
+                                                    .UseEmojiAndSmiley()
+                                                    .Build();
+
         return Markdig.Markdown.Parse(markdown, pipeline);
     }
 

@@ -1,5 +1,8 @@
+using System;
+using System.Linq;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
+using Markdig.Syntax.Inlines;
 
 namespace Markdig.Renderers.Docx.Blocks;
 
