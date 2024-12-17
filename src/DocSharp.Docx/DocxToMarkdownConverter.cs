@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DrawingML = DocumentFormat.OpenXml.Drawing;
 
 namespace DocSharp.Docx;
 
@@ -131,6 +132,9 @@ public class DocxToMarkdownConverter : DocxConverterBase
             case Picture picture:
                 ProcessPicture(picture, sb);
                 return true;
+            case Drawing drawing:
+                ProcessDrawing(drawing, sb);
+                return true;
             case Break br:
                 ProcessBreak(br, sb);
                 return true;
@@ -240,6 +244,20 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 sb.Append($" [{displayTextBuilder.ToString().Trim()}]({url}) ");
             }
         }
+        //else if (hyperlink.Anchor?.Value is string anchor) // TODO
+    }
+
+    internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
+    {
+        if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)) && Directory.Exists(ImagesOutputFolder))
+        {
+            if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip &&
+                blip.Embed?.Value is string relId)
+            {
+                var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
+                ProcessImagePart(mainDocumentPart, relId, sb);
+            }
+        }
     }
 
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
@@ -249,39 +267,44 @@ public class DocxToMarkdownConverter : DocxConverterBase
             if (picture.Descendants<ImageData>().FirstOrDefault() is ImageData imageData && 
                 imageData.RelationshipId?.Value is string relId)
             {
-                var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
-                if (maindDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
-                {
-                    string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
-                    string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
-                    Uri uri;
-                    if (ImagesBaseUriOverride is null)
-                    {
-                        uri = new Uri(actualFilePath, UriKind.Absolute);
-                    }
-                    else
-                    {
-                        ImagesBaseUriOverride = ImagesBaseUriOverride.Trim('"');
-                        ImagesBaseUriOverride = ImagesBaseUriOverride.Replace('\\', '/');
-                        if (ImagesBaseUriOverride != string.Empty)
-                        {
-                            ImagesBaseUriOverride = System.IO.Path.TrimEndingDirectorySeparator(ImagesBaseUriOverride);
-                            ImagesBaseUriOverride += "/";
-                        }
-                        ImagesBaseUriOverride += fileName;
-                        uri = new Uri(ImagesBaseUriOverride, UriKind.RelativeOrAbsolute);
-                    }
-
-                    using (var stream = imagePart.GetStream())
-                    using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
-                    {
-                        stream.CopyTo(fileStream);
-                    }
-                    sb.Append(' ');
-                    sb.Append($"![{relId}]({uri})");
-                    sb.Append(' ');
-                }
+                var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
+                ProcessImagePart(mainDocumentPart, relId, sb);
             }
+        }
+    }
+
+    internal void ProcessImagePart(MainDocumentPart? mainDocumentPart, string relId, StringBuilder sb)
+    {
+        if (mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
+        {
+            string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
+            string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
+            Uri uri;
+            if (ImagesBaseUriOverride is null)
+            {
+                uri = new Uri(actualFilePath, UriKind.Absolute);
+            }
+            else
+            {
+                ImagesBaseUriOverride = ImagesBaseUriOverride.Trim('"');
+                ImagesBaseUriOverride = ImagesBaseUriOverride.Replace('\\', '/');
+                if (ImagesBaseUriOverride != string.Empty)
+                {
+                    ImagesBaseUriOverride = System.IO.Path.TrimEndingDirectorySeparator(ImagesBaseUriOverride);
+                    ImagesBaseUriOverride += "/";
+                }
+                ImagesBaseUriOverride += fileName;
+                uri = new Uri(ImagesBaseUriOverride, UriKind.RelativeOrAbsolute);
+            }
+
+            using (var stream = imagePart.GetStream())
+            using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
+            {
+                stream.CopyTo(fileStream);
+            }
+            sb.Append(' ');
+            sb.Append($"![{relId}]({uri})");
+            sb.Append(' ');
         }
     }
 }

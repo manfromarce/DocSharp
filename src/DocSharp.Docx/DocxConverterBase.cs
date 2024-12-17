@@ -50,9 +50,25 @@ public abstract class DocxConverterBase
     /// <returns>A string in the output format</returns>
     public string ConvertToString(string inputFilePath)
     {
-        using (var fileStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
         {
-            return ConvertToString(fileStream);
+            return ConvertToString(wordDocument);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to a string in the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <returns>A string in the output format</returns>
+    public string ConvertToString(byte[] inputBytes)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+        {
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                return ConvertToString(wordDocument);
+            }
         }
     }
 
@@ -78,7 +94,7 @@ public abstract class DocxConverterBase
             streamWriter.Write(ConvertToString(inputDocument));
         }
     }
-
+    
     /// <summary>
     /// Convert a DOCX file to the output format.
     /// </summary>
@@ -125,6 +141,29 @@ public abstract class DocxConverterBase
         }
     }
 
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public void Convert(byte[] inputBytes, string outputFilePath)
+    {
+        File.WriteAllText(outputFilePath, ConvertToString(inputBytes));
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public void Convert(byte[] inputBytes, Stream outputStream)
+    {
+        using (var streamWriter = new StreamWriter(outputStream))
+        {
+            streamWriter.Write(ConvertToString(inputBytes));
+        }
+    }
+
     internal virtual void ProcessBody(Body body, StringBuilder sb)
     {
         foreach (var element in body.Elements())
@@ -161,6 +200,9 @@ public abstract class DocxConverterBase
                 case Picture picture:
                     ProcessPicture(picture, sb);
                     break;
+                case Drawing drawing:
+                    ProcessDrawing(drawing, sb);
+                    break;
             }
         }
     }
@@ -170,6 +212,8 @@ public abstract class DocxConverterBase
     internal abstract void ProcessRun(Run run, StringBuilder sb);
 
     internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
+    
+    internal abstract void ProcessDrawing(Drawing picture, StringBuilder sb);
 
     internal abstract void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb);
 
