@@ -15,6 +15,10 @@ namespace Markdig.Renderers.Docx;
 
 public class DocxDocumentRenderer : RendererBase
 {
+    public string? BaseUri { get; set; } = null;
+
+    public bool SkipImages { get; set; } = false;
+
     public WordprocessingDocument Document { get; }
     
     public DocumentTreeCursor Cursor { get; set; }

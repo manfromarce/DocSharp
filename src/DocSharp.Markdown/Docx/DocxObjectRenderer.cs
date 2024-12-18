@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
+using DocSharp.Docx;
 
 namespace Markdig.Renderers.Docx;
 

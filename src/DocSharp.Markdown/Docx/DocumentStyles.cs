@@ -4,6 +4,25 @@ namespace Markdig.Renderers.Docx;
 
 public class DocumentStyles
 {
+    public Dictionary<string, string> MarkdownStyles = new()
+    {
+        ["UndefinedHeading"] = "MDHeading5", 
+        ["UnknownFormatting"] = "MDNormal",
+        
+        ["Paragraph"] = "MDParagraphTextBody", 
+        ["CodeBlock"] = "MDPreformattedText", 
+        ["Quote"] = "MDQuotations", 
+        ["HorizontalLine"] = "MDHorizontalLine", 
+
+        ["ListOrdered"] = "MDListNumber", 
+        ["ListOrderedItem"] = "MDListNumberItem", 
+        ["ListBullet"] = "MDListBullet", 
+        ["ListBulletItem"] = "MDListBulletItem", 
+
+        ["Hyperlink"] = "MDHyperlink", 
+        ["CodeInline"] = "CodeInline", 
+    };
+
     public Dictionary<int, string?> Headings { get; } = new()
     {
         [0] = "Title",
@@ -15,24 +34,8 @@ public class DocumentStyles
         [6] = "MDHeading6",
     };
 
-    public string UndefinedHeading { get; set; } = "MDHeading5";
-
-    public string Paragraph { get; set; } = "MDParagraphTextBody";
-
-    public string CodeBlock { get; set; } = "MDPreformattedText";
-
-    public string UnknownFormatting { get; set; } = "MDNormal";
-    public string Hyperlink { get; set; } = "MDHyperlink";
-
-    public string ListOrdered { get; set; } = "MDListNumber";
-
-    public string ListOrderedItem { get; set; } = "MDListNumberItem";
-    public string ListBullet { get; set; } = "MDListBullet";
-    public string ListBulletItem { get; set; } = "MDListBulletItem";
-    
-    public string? Quote { get; set; } = "MDQuotations";
-
-    public string? HorizontalLine { get; set; } = "MDHorizontalLine";
-
-    public string? CodeInline { get; set; } = "MDPreformattedText0";
+    public bool Contains(string styleName)
+    {
+        return MarkdownStyles.ContainsValue(styleName) || Headings.ContainsValue(styleName);
+    }
 }

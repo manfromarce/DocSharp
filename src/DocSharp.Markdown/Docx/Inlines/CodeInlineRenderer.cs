@@ -7,6 +7,6 @@ public class CodeInlineRenderer : DocxObjectRenderer<CodeInline>
 {
     protected override void WriteObject(DocxDocumentRenderer renderer, CodeInline obj)
     {
-        WriteText(renderer, obj.Content, renderer.Styles.CodeInline);
+        WriteText(renderer, obj.Content, renderer.Styles.MarkdownStyles["CodeInline"]);
     }
 }

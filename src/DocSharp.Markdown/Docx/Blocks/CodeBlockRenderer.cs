@@ -8,7 +8,7 @@ public class CodeBlockRenderer : LeafBlockParagraphRendererBase<CodeBlock>
 {
     protected override void WriteObject(DocxDocumentRenderer renderer, CodeBlock obj)
     {
-        WriteAsParagraph(renderer, obj, renderer.Styles.CodeBlock);
+        WriteAsParagraph(renderer, obj, renderer.Styles.MarkdownStyles["CodeBlock"]);
     }
 
     protected override void RenderContents(DocxDocumentRenderer renderer, CodeBlock obj)

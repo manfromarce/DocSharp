@@ -42,7 +42,7 @@ public class AutolinkInlineRenderer : DocxObjectRenderer<AutolinkInline>
         renderer.Cursor.Write(hl);
         renderer.Cursor.GoInto(hl);
         
-        WriteText(renderer, title,renderer.Styles.Hyperlink);
+        WriteText(renderer, title,renderer.Styles.MarkdownStyles["Hyperlink"]);
 
         renderer.Cursor.PopAndAdvanceAfter(hl);
     }
