@@ -8,7 +8,7 @@ public class ThematicBreakRenderer : LeafBlockParagraphRendererBase<ThematicBrea
 {
     protected override void WriteObject(DocxDocumentRenderer renderer, ThematicBreakBlock obj)
     {
-        var p = WriteAsParagraph(renderer, obj, renderer.Styles.HorizontalLine);
+        var p = WriteAsParagraph(renderer, obj, renderer.Styles.MarkdownStyles["HorizontalLine"]);
         if (!p.Elements<Run>().Any())
         {
             p.AppendChild(new Run(new Text("")));

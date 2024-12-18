@@ -27,8 +27,8 @@ There is no common DOM to manipulate or generate documents, this library is for 
   * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, math formulas, charts
 - Markdown to DOCX:
   * Basic Markdown features
-  * Tables (experimental)
-  * TODO: bookmarks (internal hyperlinks), images, math, extensions
+  * Images and tables (experimental)
+  * TODO: bookmarks (internal hyperlinks), math, extensions
 
 ### Roadmap
 
@@ -46,6 +46,9 @@ Dependencies:
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
 - [markdig.docx](https://github.com/morincer/markdig.docx)
+
+Others:
+- [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
 
 ### License
 

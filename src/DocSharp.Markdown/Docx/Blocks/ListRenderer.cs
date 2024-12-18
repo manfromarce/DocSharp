@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
+using DocSharp.Docx;
 
 namespace Markdig.Renderers.Docx.Blocks;
 
@@ -27,8 +28,8 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
         if (renderer.ActiveList.Count == 0)
         {
             // We're creating new numbering for the list so item can reference it
-            var listStyle = obj.IsOrdered ? renderer.Styles.ListOrdered : renderer.Styles.ListBullet;
-            var listItemStyle = obj.IsOrdered ? renderer.Styles.ListOrderedItem : renderer.Styles.ListBulletItem;
+            var listStyle = obj.IsOrdered ? renderer.Styles.MarkdownStyles["ListOrdered"] : renderer.Styles.MarkdownStyles["ListBullet"];
+            var listItemStyle = obj.IsOrdered ? renderer.Styles.MarkdownStyles["ListOrderedItem"] : renderer.Styles.MarkdownStyles["ListBulletItem"];
 
             listInfo.StyleId = listItemStyle;
             listInfo.Level = 1;

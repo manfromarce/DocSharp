@@ -1,4 +1,5 @@
 using Markdig.Syntax;
+using DocSharp.Docx;
 
 namespace Markdig.Renderers.Docx.Blocks;
 
@@ -13,7 +14,7 @@ public class QuoteBlockRenderer : ContainerBlockParagraphRendererBase<QuoteBlock
         foreach (var paragraph in obj)
         {
             var p = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
-            p.SetStyle(renderer.Styles.Quote);
+            p.SetStyle(renderer.Styles.MarkdownStyles["Quote"]);
 
             if (renderer.NoParagraph == 0)
             {

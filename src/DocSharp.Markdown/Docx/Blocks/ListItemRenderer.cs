@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
+using DocSharp.Docx;
 
 namespace Markdig.Renderers.Docx.Blocks;
 

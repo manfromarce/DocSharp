@@ -18,6 +18,7 @@ using b2xtranslator.DocFileFormat;
 using b2xtranslator.Spreadsheet.XlsFileFormat;
 using b2xtranslator.PptFileFormat;
 using DocSharp.Markdown;
+using DocSharp.IO;
 
 namespace WpfApp1;
 /// <summary>
@@ -168,7 +169,8 @@ public partial class MainWindow : Window
                 try
                 {
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
-                    MarkdownConverter.ToDocx(markdown, sfd.FileName);
+                    var converter = new MarkdownConverter();
+                    converter.ToDocx(markdown, sfd.FileName);
                 }
                 catch (Exception ex)
                 {

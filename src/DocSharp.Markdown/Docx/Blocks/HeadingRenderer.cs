@@ -8,7 +8,7 @@ public class HeadingRenderer : LeafBlockParagraphRendererBase<HeadingBlock>
 {
     protected override void WriteObject(DocxDocumentRenderer renderer, HeadingBlock obj)
     {
-        var styleId = renderer.Styles.Headings.GetValueOrDefault(obj.Level, renderer.Styles.UndefinedHeading);
+        var styleId = renderer.Styles.Headings.GetValueOrDefault(obj.Level, renderer.Styles.MarkdownStyles["UndefinedHeading"]);
         WriteAsParagraph(renderer, obj, styleId);
     }
 }
