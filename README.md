@@ -27,8 +27,13 @@ There is no common DOM to manipulate or generate documents, this library is for 
   * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, math formulas, charts
 - Markdown to DOCX:
   * Basic Markdown features
-  * Images and tables (experimental)
-  * TODO: bookmarks (internal hyperlinks), math, extensions
+  * External hyperlinks
+  * Images   
+    - The converter attempts to read local images and download online images. If this behavior is not desired, set `SkipImages` to true.
+    - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute directory path or online URL, which will be combined with the image URL at runtime, such as: `C:\Data` + `./images/image1.jpg` (all kind of URIs should be recognized).
+    - WEBP and AVIF images are ignored as they are not supported in DOCX documents; base64 is also ignored as it is rarely used and not supported by many Markdown processors.
+  * Tables (experimental)
+  * TODO: bookmarks (internal hyperlinks), common HTML tags (<u>, <sup>, <sub>, <mark>, <a>), math, other extensions
 
 ### Roadmap
 
