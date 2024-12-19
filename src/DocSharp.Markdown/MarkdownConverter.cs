@@ -82,7 +82,7 @@ public class MarkdownConverter
         }
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
-            BaseUri = this.BaseUri,
+            ImagesBaseUri = this.BaseUri,
             SkipImages = this.SkipImages
         };
         renderer.Render(markdown.Document);
@@ -114,7 +114,7 @@ public class MarkdownConverter
         }
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
-            BaseUri = this.BaseUri,
+            ImagesBaseUri = this.BaseUri,
             SkipImages = this.SkipImages
         };
         renderer.Render(markdown.Document);
@@ -171,7 +171,7 @@ public class MarkdownConverter
         DocxTemplateHelper.AddStylesIfRequired(styles, outputDocument);
         var renderer = new DocxDocumentRenderer(outputDocument, styles)
         {
-            BaseUri = this.BaseUri,
+            ImagesBaseUri = this.BaseUri,
             SkipImages = this.SkipImages
         };
         renderer.Render(markdown.Document);

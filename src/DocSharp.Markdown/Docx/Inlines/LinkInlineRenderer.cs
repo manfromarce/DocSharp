@@ -128,11 +128,14 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
 
         if (!isAbsoluteUri)
         {
-            // Relative URL
-            if (Uri.TryCreate(url, UriKind.Relative, out uri) && !string.IsNullOrEmpty(renderer.BaseUri))
+            // Could be a relative URL
+            if (Uri.TryCreate(url, UriKind.Relative, out uri) && !string.IsNullOrEmpty(renderer.ImagesBaseUri))
             {
-                var baseUri = new Uri(renderer.BaseUri, UriKind.Absolute);
-                uri = new Uri(baseUri, uri);
+                // Relative URI is well formatted, check ImagesBaseUri
+                if (Uri.TryCreate(renderer.ImagesBaseUri, UriKind.Absolute, out Uri? baseUri) && baseUri != null)
+                {
+                    uri = new Uri(baseUri, uri);
+                }
             }
         } // else the URI can be directly processed as absolute
 

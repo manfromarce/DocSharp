@@ -15,7 +15,7 @@ namespace Markdig.Renderers.Docx;
 
 public class DocxDocumentRenderer : RendererBase
 {
-    public string? BaseUri { get; set; } = null;
+    public string? ImagesBaseUri { get; set; } = null;
 
     public bool SkipImages { get; set; } = false;
 
