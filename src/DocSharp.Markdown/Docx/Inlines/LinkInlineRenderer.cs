@@ -73,7 +73,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         if (isExternal && uri != null && ((!isAbsoluteUri) || uri.IsFile))
         {
             // Remove anchor (if any) from local file URLs, as it does not work in Word.
-            // Note that IsFile throws exception for relative URIs, but relative URIs are always files.
+            // Note that IsFile throws exception for relative URIs, it should be called only if URI is absolute
             int i = obj.Url.LastIndexOf('#');
             if (i >= 0)
             {
@@ -131,8 +131,12 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
             // Could be a relative URL
             if (Uri.TryCreate(url, UriKind.Relative, out uri) && !string.IsNullOrEmpty(renderer.ImagesBaseUri))
             {
-                // Relative URI is well formatted, check ImagesBaseUri
-                if (Uri.TryCreate(renderer.ImagesBaseUri, UriKind.Absolute, out Uri? baseUri) && baseUri != null)
+                // Relative URI is well formatted, check ImagesBaseUri and add a final slash,
+                // otherwise it is interpreted as file and relative links starting with . or .. won't work properly.
+                // Note that ImagesPathUri should not be a file path.
+                string normalizedBaseUri = renderer.ImagesBaseUri.Trim('\\', '/') + @"\";
+                if (Uri.TryCreate(Path.TrimEndingDirectorySeparator(normalizedBaseUri) + '/', 
+                                  UriKind.Absolute, out Uri? baseUri) && baseUri != null)
                 {
                     uri = new Uri(baseUri, uri);
                 }
@@ -141,22 +145,29 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
 
         if (uri != null)
         {
-            if (uri.IsFile)
+            try
             {
-                InsertImage(renderer, uri.LocalPath, label, title);
-            }
-            else if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-            {
-                // Only HTTP and HTTPS are supported for automatic download
-                var bytes = DownloadImage(url);
-                if (bytes != null)
+                if (uri.IsFile)
                 {
-                    using (var ms = new MemoryStream(bytes))
+                    InsertImage(renderer, uri.LocalPath, label, title);
+                }
+                else if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                {
+                    // Only HTTP and HTTPS are supported for automatic download
+                    var bytes = DownloadImage(url);
+                    if (bytes != null)
                     {
-                        InsertImage(renderer, ms, label, title);
+                        InsertImage(renderer, bytes, label, title);
                     }
                 }
-            }      
+            }
+            catch (Exception ex)
+            {
+                //Probably non-existent file or permission issue, do not stop the conversion
+                #if DEBUG
+                Console.WriteLine("InsertImage exception: " + ex.Message);
+                #endif
+            }
         }
     }
 
@@ -165,6 +176,14 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
         {
             InsertImage(renderer, fs, label, title);
+        }
+    }
+
+    private void InsertImage(DocxDocumentRenderer renderer, byte[] bytes, string? label, string? title)
+    {
+        using (var ms = new MemoryStream(bytes))
+        {
+            InsertImage(renderer, ms, label, title);
         }
     }
 
@@ -261,6 +280,8 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
     {
         using (var client = new System.Net.Http.HttpClient())
         {
+            // Fix issue with servers refusing connections from clients without a user agent
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0");
             var response = client.GetAsync(url).Result;
             if (response.IsSuccessStatusCode)
             {

@@ -18,7 +18,7 @@ public class MarkdownConverter
     /// To prevent this, set the SkipImages property to true (false by default).
     /// Note: base64 images are not supported.
     /// </summary>
-    public string? BaseUri { get; set; } = null;
+    public string? ImagesBaseUri { get; set; } = null;
 
     /// <summary>
     /// If set to true, the converter will not try to download online images or access local images.
@@ -82,7 +82,7 @@ public class MarkdownConverter
         }
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
-            ImagesBaseUri = this.BaseUri,
+            ImagesBaseUri = this.ImagesBaseUri,
             SkipImages = this.SkipImages
         };
         renderer.Render(markdown.Document);
@@ -114,7 +114,7 @@ public class MarkdownConverter
         }
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
-            ImagesBaseUri = this.BaseUri,
+            ImagesBaseUri = this.ImagesBaseUri,
             SkipImages = this.SkipImages
         };
         renderer.Render(markdown.Document);
@@ -171,7 +171,7 @@ public class MarkdownConverter
         DocxTemplateHelper.AddStylesIfRequired(styles, outputDocument);
         var renderer = new DocxDocumentRenderer(outputDocument, styles)
         {
-            ImagesBaseUri = this.BaseUri,
+            ImagesBaseUri = this.ImagesBaseUri,
             SkipImages = this.SkipImages
         };
         renderer.Render(markdown.Document);
