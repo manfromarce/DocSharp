@@ -24,23 +24,23 @@ There is no common DOM to manipulate or generate documents, this library is for 
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines
-  * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, math formulas, charts
+  * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, math formulas, charts; support for encrypted Word documents
 - Markdown to DOCX:
   * Basic Markdown features
   * External hyperlinks
-  * Images   
-    - The converter attempts to read local images and download online images. If this behavior is not desired, set `SkipImages` to true.
-    - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute directory path or online URL, which will be combined with the image URL at runtime, such as: `C:\Data` + `./images/image1.jpg` (all kind of URIs should be recognized).
+  * Images
+    - The converter attempts to read local images and download online images (http/https URLs only). If this behavior is not desired, set `SkipImages` to true.
+    - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute local directory path or http(s) URL, which will be combined with the image URL at runtime, such as: `C:\Data` + `./images/image1.jpg` (all kind of URIs should be recognized).
     - WEBP and AVIF images are ignored as they are not supported in DOCX documents; base64 is also ignored as it is rarely used and not supported by many Markdown processors.
   * Tables (experimental)
-  * TODO: bookmarks (internal hyperlinks), common HTML tags (<u>, <sup>, <sub>, <mark>, <a>), math, other extensions
+  * TODO: bookmarks (internal hyperlinks), HTML tags (`<u>`, `<sup>`, `<sub>`, `<mark>`, ...), math and other extensions
 
 ### Roadmap
 
 - Publish NuGet packages
 - Support more elements and attributes, and fix issues on edge cases
 - RTF to DOCX and DOCX to RTF
-- Documentation (for now you can refer to the sample app). When ready, any documentation will be available in the project [Wiki](https://github.com/manfromarce/DocSharp/wiki).
+- Documentation: for now you can refer to the sample app. When ready, any documentation will be available in the project [Wiki](https://github.com/manfromarce/DocSharp/wiki).
 
 ### Credits
 
