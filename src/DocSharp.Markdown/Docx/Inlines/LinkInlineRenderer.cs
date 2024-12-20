@@ -62,11 +62,10 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
             }
             else
             {
-                // Note: bookmarks are not created by this function,
-                // it should be done in HeadingRenderer (for headings)
-                // and HtmlInline/HtmlBlock renderer (for <a> tags),
+                // Note: bookmarks are currently created in HeadingRenderer (for headings).
+                // It should be done in HtmlInline/HtmlBlock renderer too (for <a> tags),
                 // but it's not implemented yet.
-                anchorName = TryGetBookmark(renderer, obj.Url);
+                anchorName = TryGetBookmark(renderer, obj.Url.Trim('#'));
             }
         }
 
@@ -294,8 +293,9 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
 
     private string TryGetBookmark(DocxDocumentRenderer renderer, string anchorId)
     {
+        // To be improved
         var bookmarkName = renderer.Document.MainDocumentPart?.Document.Body?
-                           .Elements<BookmarkStart>()
+                           .Descendants<BookmarkStart>()
                            .Select(bs => bs.Name)
                            .Where(name => name != null && 
                                           name.Value != null && 
