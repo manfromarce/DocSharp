@@ -169,7 +169,10 @@ public partial class MainWindow : Window
                 try
                 {
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
-                    var converter = new MarkdownConverter();
+                    var converter = new MarkdownConverter()
+                    {
+                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName)
+                    };
                     converter.ToDocx(markdown, sfd.FileName);
                 }
                 catch (Exception ex)
