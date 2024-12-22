@@ -74,6 +74,12 @@ public class DocxDocumentRenderer : RendererBase
 
         // Extensions renderers
         ObjectRenderers.Add(new TableRenderer());
+        //ObjectRenderers.Add(new MathInlineRenderer());
+        //ObjectRenderers.Add(new MathBlockRenderer());
+        //ObjectRenderers.Add(new FooterBlockRenderer());
+        //ObjectRenderers.Add(new FigureRenderer());
+        //ObjectRenderers.Add(new TaskListRenderer());
+        //ObjectRenderers.Add(new DefinitionListRenderer());
     }
 
     public void ForceCloseParagraph()

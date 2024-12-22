@@ -49,8 +49,6 @@ public static class ImageHeader
         Jxl, 
         Jxr,
         Dds,
-        Exr,
-        Bpg,
         Pcx,
         Xml 
     }
@@ -79,12 +77,10 @@ public static class ImageHeader
         { new byte[] { 0x1, 0, 0, 0 }, FileType.Emf },
         { new byte[] { 0, 0, 0x1, 0 }, FileType.Ico }, 
         { new byte[] { 0, 0, 0x2, 0 }, FileType.Cur },
-        { new byte[] { 0x76, 0x2F, 0x31, 0x01 }, FileType.Exr },
-        { new byte[] { 0x42, 0x50, 0x47, 0xFB }, FileType.Bpg },
         { new byte[] { 0x0A }, FileType.Pcx }, // needs further analysis
         { Encoding.UTF8.GetBytes("DDS "), FileType.Dds },
         
-        // Note: signatures for AVIF and HEIF start from the 5th byte (the first 4 specify brand and can be skipped)
+        // Signatures for AVIF and HEIF start from the 5th byte (the first 4 can be skipped)
         { Encoding.UTF8.GetBytes("ftypavif"), FileType.Avif },
         { Encoding.UTF8.GetBytes("ftypavis"), FileType.Avif }, // Avif image sequence
         { Encoding.UTF8.GetBytes("ftypmif1"), FileType.Avif },
@@ -185,20 +181,19 @@ public static class ImageHeader
                 case FileType.Xml: return DecodeXml(stream);
 
                 // Other formats are not supported by web browsers or DOCX or neither,
-                // so reading their dimensions is not actually useful for conversions.
+                // so reading their dimensions is not needed anywhere in the library.
                 // However, the following are handled for the sake of completeness and possible future use.
                 case FileType.Webp: return DecodeWebP(reader); // supported by web browsers
                 case FileType.Avif: // supported by web browsers
                 case FileType.Heif: // supported by Safari
                     return DecodeAvifOrHeif(reader);
-                //case FileType.Jxl: return DecodeJxl(reader); // supported by Safari and Firefox
                 case FileType.Jxr: return DecodeJxr(reader); // supported by IE 11
                 case FileType.Tiff: return DecodeTiff(reader); // supported in DOCX and Safari
                 case FileType.Jpeg2000: return DecodeJpeg2000(reader); // supported in DOCX and previous Safari versions
-                case FileType.Wmf: return DecodeWmf(reader); // supported in DOCX and RTF
                 case FileType.Emf: return DecodeEmf(reader); // supported in DOCX and RTF
+                case FileType.Wmf: return DecodeWmf(reader); // supported in DOCX and RTF
                 // Note: WMF size is in inches, all the others are in pixels.
-
+                
                 default: return Size.Empty;
             }
         }
