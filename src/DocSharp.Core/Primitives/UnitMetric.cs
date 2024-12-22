@@ -30,8 +30,12 @@ public enum UnitMetric
     Pica,
     Pixel,
 
-    // this value is not parsed but can be used internally
+    // These values are not parsed but can be used internally
     Emus,
+    Twip, // 1/20th of point = 1/1440 of inch, also known as Dxa (used by Open XML, RTF, WMF)
+    Himetric, // 1/100th of millimeter
+    Diu, // 1/96th of inch, used by WPF
+    HundrethsOfInch, // 1/100th of inch, used by Windows Forms
 
     /// <summary>Not convertible to any other units.</summary>
     Auto,
