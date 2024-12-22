@@ -143,7 +143,7 @@ public class MarkdownConverter
     /// </summary>
     /// <param name="markdown">The markdown source.</param>
     /// <returns>The FlatOPC document as <see cref="string"/></returns>
-    public string ToFlatOpcString(MarkdownDocument markdown)
+    public string ToFlatOpcString(MarkdownSource markdown)
     {
         using (var ms = new MemoryStream())
         {

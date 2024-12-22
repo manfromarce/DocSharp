@@ -109,16 +109,22 @@ readonly struct Unit
             case UnitMetric.Percent: return 0L; // not applicable
             case UnitMetric.Emus: return (long) value;
             case UnitMetric.Inch: return (long) (value * 914400L);
+            case UnitMetric.Diu: return (long) (value * 9525L);
+            case UnitMetric.HundrethsOfInch: return (long) (value * 9144L);
+            case UnitMetric.Twip: return (long) (value * 45720L);
             case UnitMetric.Centimeter: return (long) (value * 360000L);
             case UnitMetric.Millimeter: return (long) (value * 36000L);
+            case UnitMetric.Himetric: return (long) (value * 360L);
+            case UnitMetric.Point: return (long) (value * 12700L); // 1 point = 1/72 inch
+            case UnitMetric.Pica: return (long) (value * 152400L); // 1 pica = 1/6 inch
             case UnitMetric.EM:
-                // well this is a rough conversion but considering 1em = 12pt (http://sureshjain.wordpress.com/2007/07/06/53/)    
-                return (long) (value / 72 * 914400L * 12);
+                // Considering 1em = 12pt (http://sureshjain.wordpress.com/2007/07/06/53/)    
+                return (long) (value / (12700L * 12));
             case UnitMetric.Ex:
-                return (long) (value / 72 * 914400L * 12) / 2;
-            case UnitMetric.Point: return (long) (value * 12700L);
-            case UnitMetric.Pica: return (long) (value / 72 * 914400L) * 12;
-            case UnitMetric.Pixel: return (long) (value / 96 * 914400L);
+                return (long) (value / (12700L * 12)) / 2;
+            case UnitMetric.Pixel:
+                // Considering 96 DPI
+                return (long) (value / 96 * 914400L);
             default: goto case UnitMetric.Pixel;
         }
     }
