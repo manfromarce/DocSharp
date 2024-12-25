@@ -36,6 +36,19 @@ public class MarkdownSource
     }
 
     /// <summary>
+    /// Create a Markdown source from a stream
+    /// </summary>
+    /// <param name="stream">The stream to use</param>
+    public static MarkdownSource FromStream(Stream stream)
+    {
+        using (var streamReader = new StreamReader(stream))
+        {
+            string markdown = streamReader.ReadToEnd();
+            return MarkdownSource.FromMarkdownString(markdown);
+        }
+    }
+
+    /// <summary>
     /// Create a Markdown source from a Markdown string
     /// </summary>
     /// <param name="markdown">The Markdown content as string</param>
@@ -63,11 +76,7 @@ public class MarkdownSource
     /// <param name="stream">Markdown content stream</param>
     public static implicit operator MarkdownSource(Stream stream)
     {
-        using (var streamReader = new StreamReader(stream))
-        {
-            string markdown = streamReader.ReadToEnd();
-            return MarkdownSource.FromMarkdownString(markdown);
-        }
+        return MarkdownSource.FromStream(stream);
     }
 }
 

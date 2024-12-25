@@ -43,14 +43,15 @@ public class DocxToMarkdownConverter : DocxConverterBase
     private char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
                                      '#', '+', '-', '!', '|', '~' }; // '.'
 
-    internal static string Escape(string value)
+    internal static string Escape(char value)
     {
-        return '\\' + value;
+        return @"\" + value;
     }
 
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
         base.ProcessParagraph(paragraph, sb);
+        sb.AppendLine();
         sb.AppendLine();
     }
 
@@ -98,7 +99,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
         foreach (var element in run.Elements())
         {
-            ProcessRunCore(element, sb);              
+            ProcessRunElement(element, sb);              
         }
 
         if (hasText)
@@ -122,7 +123,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }
     }
 
-    internal bool ProcessRunCore(OpenXmlElement? element, StringBuilder sb)
+    internal override bool ProcessRunElement(OpenXmlElement? element, StringBuilder sb)
     {
         switch (element)
         {
@@ -139,29 +140,38 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 ProcessBreak(br, sb);
                 return true;
             case AlternateContent alternateContent:
-                if (!ProcessRunCore(alternateContent.GetFirstChild<AlternateContentChoice>()?.FirstChild, sb))
+                if (!ProcessRunElement(alternateContent.GetFirstChild<AlternateContentChoice>()?.FirstChild, sb))
                 {
-                    return ProcessRunCore(alternateContent.GetFirstChild<AlternateContentFallback>()?.FirstChild, sb);
+                    return ProcessRunElement(alternateContent.GetFirstChild<AlternateContentFallback>()?.FirstChild, sb);
                 }
                 break;
         }        
         return false;
     }
 
-    private void ProcessBreak(Break br, StringBuilder sb)
+    internal override void ProcessBreak(Break br, StringBuilder sb)
     {
         sb.AppendLine();
         sb.AppendLine("-----");
     }
 
-    internal void ProcessText(Text text, StringBuilder sb)
+    internal override void ProcessText(Text text, StringBuilder sb)
     {
-        sb.Append(Escape(text.InnerText.Trim()));
+        foreach(char c in text.InnerText.Trim())
+        {
+            if (_specialChars.Contains(c))
+            {
+                sb.Append(Escape(c));
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
     }
 
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        sb.AppendLine();
         int rowCount = 0;
         foreach(var element in table.Elements())
         {
@@ -177,6 +187,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
                     break;
             }
         }
+        sb.AppendLine();
         sb.AppendLine();
     }
 
@@ -306,5 +317,10 @@ public class DocxToMarkdownConverter : DocxConverterBase
             sb.Append($"![{relId}]({uri})");
             sb.Append(' ');
         }
+    }
+
+    internal override void ProcessBookmark(BookmarkStart bookmark, StringBuilder sb)
+    {
+        // TODO
     }
 }
