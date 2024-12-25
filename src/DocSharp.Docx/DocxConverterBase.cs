@@ -194,6 +194,9 @@ public abstract class DocxConverterBase
                 case Run run:
                     ProcessRun(run, sb);
                     break;
+                case BookmarkStart bookmark:
+                    ProcessBookmark(bookmark, sb);
+                    break;
                 case Hyperlink hyperlink:
                     ProcessHyperlink(hyperlink, sb);
                     break;
@@ -207,14 +210,14 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal abstract void ProcessTable(Table table, StringBuilder sb);
-
-    internal abstract void ProcessRun(Run run, StringBuilder sb);
-
-    internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
-    
+    internal abstract void ProcessBookmark(BookmarkStart bookmark, StringBuilder sb);
+    internal abstract void ProcessBreak(Break picture, StringBuilder sb);
     internal abstract void ProcessDrawing(Drawing picture, StringBuilder sb);
-
     internal abstract void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb);
+    internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
+    internal abstract void ProcessRun(Run run, StringBuilder sb);
+    internal abstract bool ProcessRunElement(OpenXmlElement? run, StringBuilder sb);
+    internal abstract void ProcessTable(Table table, StringBuilder sb);
+    internal abstract void ProcessText(Text text, StringBuilder sb);
 
 }
