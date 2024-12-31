@@ -61,8 +61,8 @@ public class DocxToMarkdownConverter : DocxConverterBase
         var text = run.GetFirstChild<Text>()?.InnerText;
         bool hasText = !string.IsNullOrWhiteSpace(text);
 
-        bool isBold, isItalic, isUnderline, isStrikethrough, isHighlight;
-        isBold = isItalic = isUnderline = isStrikethrough = isHighlight = false;
+        bool isBold, isItalic, isUnderline, isStrikethrough, isHighlight, isSubscript, isSuperscript;
+        isBold = isItalic = isUnderline = isStrikethrough = isHighlight = isSubscript = isSuperscript = false;
 
         string leadingSpaces = string.Empty;
         string trailingSpaces = string.Empty;
@@ -80,6 +80,8 @@ public class DocxToMarkdownConverter : DocxConverterBase
             isUnderline = properties?.Underline != null;
             isStrikethrough = (properties?.Strike != null || properties?.DoubleStrike != null);
             isHighlight = (properties?.Highlight != null && properties.Highlight.Val != null && properties.Highlight.Val != HighlightColorValues.None);
+            isSubscript = (properties?.VerticalTextAlignment != null && properties.VerticalTextAlignment.Val != null && properties.VerticalTextAlignment.Val == "subscript");
+            isSuperscript = (properties?.VerticalTextAlignment != null && properties.VerticalTextAlignment.Val != null && properties.VerticalTextAlignment.Val == "superscript");
 
             if (isItalic)
                 sb.Append("*");
@@ -95,6 +97,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
             if (isHighlight)
                 sb.Append("<mark>");
+
+            if (isSubscript)
+                sb.Append("<sub>");
+            else if (isSuperscript)
+                sb.Append("<sup>");
         }
 
         foreach (var element in run.Elements())
@@ -103,7 +110,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }
 
         if (hasText)
-        {            
+        {
+            if (isSubscript)
+                sb.Append("</sub>");
+            else if (isSuperscript)
+                sb.Append("</sup>");
+
             if (isHighlight)
                 sb.Append("</mark>");
 
@@ -118,7 +130,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
             if (isItalic)
                 sb.Append("*");
-                
+
             sb.Append(trailingSpaces);
         }
     }
