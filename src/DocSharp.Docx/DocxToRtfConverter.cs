@@ -102,24 +102,34 @@ public class DocxToRtfConverter : DocxConverterBase
         }
 
         var ind = properties?.Indentation ??
-                       paragraphStyle?.Indentation ??
-                       defaultParagraphStyle?.Indentation;
+                  paragraphStyle?.Indentation ??
+                  defaultParagraphStyle?.Indentation;
         if (ind?.Left != null)
-        {
             sb.Append($"\\li{ind.Left}");
-        }
         if (ind?.Right != null)
-        {
             sb.Append($"\\ri{ind.Right}");
-        }
         if (ind?.FirstLine != null)
-        {
             sb.Append($"\\fi{ind.FirstLine}");
-        }
         else if (ind?.Hanging != null)
-        {
             sb.Append($"\\fi-{ind.Hanging}");
-        }
+
+        var contextualSpacing = properties?.ContextualSpacing ?? 
+                                paragraphStyle?.ContextualSpacing ?? 
+                                defaultParagraphStyle?.ContextualSpacing;
+        if (contextualSpacing != null)
+            sb.Append(@"\contextualspace");
+
+        var keepLines = properties?.KeepLines ??
+                               paragraphStyle?.KeepLines ??
+                               defaultParagraphStyle?.KeepLines;
+        if (keepLines != null)
+            sb.Append(@"\keep");
+
+        var keepNext = properties?.KeepNext ??
+                               paragraphStyle?.KeepNext ??
+                               defaultParagraphStyle?.KeepNext;
+        if (keepNext != null)
+            sb.Append(@"\keepn");
 
         sb.Append(" ");
         base.ProcessParagraph(paragraph, sb);
