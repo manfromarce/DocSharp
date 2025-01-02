@@ -26,6 +26,11 @@
         <Button
             Margin="2"
             Padding="3"
+             Click="DocxToRtf_Click"
+             Content="Docx to Rtf" /> 
+        <Button
+            Margin="2"
+            Padding="3"
             Click="MarkdownToDocx_Click"
             Content="Markdown to Docx" />
     </WrapPanel>

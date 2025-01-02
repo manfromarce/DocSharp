@@ -132,14 +132,39 @@ public partial class MainWindow : Window
                         ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
                         ImagesBaseUriOverride = "",
                         //ImagesBaseUriOverride = "..",
-                        //ImagesBaseUriOverride = "../images",
-                        //ImagesBaseUriOverride = "../images/",
-                        //ImagesBaseUriOverride = @"..\images\",
-                        //ImagesBaseUriOverride = "images",
                         //ImagesBaseUriOverride = "images/",
                         //ImagesBaseUriOverride = @"images\",
                         //ImagesBaseUriOverride = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
                     };
+                    converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void DocxToRtf_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Rich Text Format|*.rtf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".rtf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToRtfConverter();
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)

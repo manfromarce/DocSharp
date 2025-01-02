@@ -5,7 +5,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.
-- DocSharp.Docx: convert DOCX to Markdown (and possibly other formats in the future).
+- DocSharp.Docx: convert DOCX to Markdown and RTF.
 - DocSharp.Markdown: convert Markdown to DOCX using a custom Markdig renderer.
 
 There is no common DOM to manipulate or generate documents, this library is for conversion only. Additional features which allow easier creation and manipulation of OpenXML documents may be added in the future, for now you can use the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) or other libraries built on top of it: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler).
@@ -13,6 +13,7 @@ There is no common DOM to manipulate or generate documents, this library is for 
 ### Supported features
 
 - Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
+- DOCX to RTF: only text and basic formatting
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough
@@ -40,14 +41,14 @@ There is no common DOM to manipulate or generate documents, this library is for 
 
 - Publish NuGet packages
 - Support more elements and attributes, and fix issues on edge cases
-- RTF to DOCX and DOCX to RTF
+- RTF to DOCX
 - Documentation: for now you can refer to the sample app. When ready, any documentation will be available in the project [Wiki](https://github.com/manfromarce/DocSharp/wiki).
 
 ### Credits
 
 Dependencies: 
 - [Open XML SDK](https://github.com/dotnet/Open-XML-SDK)
-- [Markdig](https://github.com/xoofx/markdig)
+- [Markdig](https://github.com/xoofx/markdig) - for DocSharp.Markdown only
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
