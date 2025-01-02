@@ -210,13 +210,38 @@ public abstract class DocxConverterBase
         }
     }
 
+    internal virtual bool ProcessRunElement(OpenXmlElement? element, StringBuilder sb)
+    {
+        switch (element)
+        {
+            case Text textElement:
+                ProcessText(textElement, sb);
+                return true;
+            case Picture picture:
+                ProcessPicture(picture, sb);
+                return true;
+            case Drawing drawing:
+                ProcessDrawing(drawing, sb);
+                return true;
+            case Break br:
+                ProcessBreak(br, sb);
+                return true;
+            case AlternateContent alternateContent:
+                if (!ProcessRunElement(alternateContent.GetFirstChild<AlternateContentChoice>()?.FirstChild, sb))
+                {
+                    return ProcessRunElement(alternateContent.GetFirstChild<AlternateContentFallback>()?.FirstChild, sb);
+                }
+                break;
+        }
+        return false;
+    }
+
     internal abstract void ProcessBookmark(BookmarkStart bookmark, StringBuilder sb);
     internal abstract void ProcessBreak(Break picture, StringBuilder sb);
     internal abstract void ProcessDrawing(Drawing picture, StringBuilder sb);
     internal abstract void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb);
     internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
     internal abstract void ProcessRun(Run run, StringBuilder sb);
-    internal abstract bool ProcessRunElement(OpenXmlElement? run, StringBuilder sb);
     internal abstract void ProcessTable(Table table, StringBuilder sb);
     internal abstract void ProcessText(Text text, StringBuilder sb);
 

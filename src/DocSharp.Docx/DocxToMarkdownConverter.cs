@@ -106,7 +106,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
         foreach (var element in run.Elements())
         {
-            ProcessRunElement(element, sb);              
+            base.ProcessRunElement(element, sb);              
         }
 
         if (hasText)
@@ -133,32 +133,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
             sb.Append(trailingSpaces);
         }
-    }
-
-    internal override bool ProcessRunElement(OpenXmlElement? element, StringBuilder sb)
-    {
-        switch (element)
-        {
-            case Text textElement:
-                ProcessText(textElement, sb);
-                return true;
-            case Picture picture:
-                ProcessPicture(picture, sb);
-                return true;
-            case Drawing drawing:
-                ProcessDrawing(drawing, sb);
-                return true;
-            case Break br:
-                ProcessBreak(br, sb);
-                return true;
-            case AlternateContent alternateContent:
-                if (!ProcessRunElement(alternateContent.GetFirstChild<AlternateContentChoice>()?.FirstChild, sb))
-                {
-                    return ProcessRunElement(alternateContent.GetFirstChild<AlternateContentFallback>()?.FirstChild, sb);
-                }
-                break;
-        }        
-        return false;
     }
 
     internal override void ProcessBreak(Break br, StringBuilder sb)
