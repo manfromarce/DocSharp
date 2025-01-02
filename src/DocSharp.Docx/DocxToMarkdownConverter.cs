@@ -137,8 +137,15 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessBreak(Break br, StringBuilder sb)
     {
-        sb.AppendLine();
-        sb.AppendLine("-----");
+        if (br.Type != null && br.Type == BreakValues.Page)
+        {
+            sb.AppendLine();
+            sb.AppendLine("-----"); // rendered as horizontal rule
+        }
+        else
+        {
+            sb.AppendLine("  "); // soft break
+        }
     }
 
     internal override void ProcessText(Text text, StringBuilder sb)

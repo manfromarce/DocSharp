@@ -237,7 +237,7 @@ public abstract class DocxConverterBase
     }
 
     internal abstract void ProcessBookmark(BookmarkStart bookmark, StringBuilder sb);
-    internal abstract void ProcessBreak(Break picture, StringBuilder sb);
+    internal abstract void ProcessBreak(Break @break, StringBuilder sb);
     internal abstract void ProcessDrawing(Drawing picture, StringBuilder sb);
     internal abstract void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb);
     internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
