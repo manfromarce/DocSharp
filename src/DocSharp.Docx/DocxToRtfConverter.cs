@@ -1,13 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using DocSharp.Collections;
 using DocSharp.Helpers;
-using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
@@ -86,7 +83,7 @@ public class DocxToRtfConverter : DocxConverterBase
         }
         if (spacing?.After != null)
         {
-            sb.Append($"\\sb{spacing.After}");
+            sb.Append($"\\sa{spacing.After}");
         }
         if (spacing?.LineRule != null && spacing?.Line != null)
         {
@@ -131,23 +128,7 @@ public class DocxToRtfConverter : DocxConverterBase
     }
 
     internal override void ProcessTable(Table table, StringBuilder sb)
-    {
-        //sb.AppendLine(@"{\trowd \trgaph108\trleft-108");
-
-        //foreach (var row in table.Elements<TableRow>())
-        //{
-        //    foreach (var cell in row.Elements<TableCell>())
-        //    {
-        //        sb.Append(@"\cellx" + (cell.Descendants<Paragraph>().Count() * 1000)); // esempio di calcolo dimensione cella
-        //        foreach (var paragraph in cell.Elements<Paragraph>())
-        //        {
-        //            ProcessParagraph(paragraph, sb);
-        //        }
-        //    }
-        //    sb.AppendLine(@"\row");
-        //}
-
-        //sb.AppendLine(@"\pard \par}");
+    {      
     }
 
     internal override void ProcessRun(Run run, StringBuilder sb)
@@ -484,19 +465,14 @@ public class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
     {
-        //sb.Append(@"{\pict\wmetafile8\picwgoal100\pichgoal100 }");
     }
 
     internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
     {
-        //sb.Append(@"{\shp{\*\shpinst\shpleft0\shptop0\shpbottom0\shpright0 }}");
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
-    {
-        //var text = hyperlink.InnerText;
-        //var uri = hyperlink.GetAttribute("anchor", "").Value;
-        //sb.Append($@"{{\field{{\*\fldinst HYPERLINK ""{uri}"" }}{{\fldrslt {text}}}}}");
+    {        
     }
 
     internal override void ProcessBookmark(BookmarkStart bookmark, StringBuilder sb)
@@ -506,12 +482,10 @@ public class DocxToRtfConverter : DocxConverterBase
     internal override void ProcessBreak(Break @break, StringBuilder sb)
     {
         if (@break.Type != null && @break.Type == BreakValues.Page)
-        {
-            
-        }
+            sb.Append(@"\page ");
+        else if (@break.Type != null && @break.Type == BreakValues.Column)
+            sb.Append(@"\column ");
         else
-        {
             sb.Append(@"\line ");
-        }
     }
 }
