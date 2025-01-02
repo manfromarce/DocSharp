@@ -133,8 +133,6 @@ public partial class MainWindow : Window
                         ImagesBaseUriOverride = "",
                         //ImagesBaseUriOverride = "..",
                         //ImagesBaseUriOverride = "images/",
-                        //ImagesBaseUriOverride = @"images\",
-                        //ImagesBaseUriOverride = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -204,6 +202,39 @@ public partial class MainWindow : Window
                 {
                     MessageBox.Show(ex.Message);
                 }                
+            }
+        }
+    }
+
+    private void MarkdownToDocxAppend_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Markdown|*.md;*.markdown",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var ofd2 = new OpenFileDialog()
+            {
+                Filter = "Word OpenXML document|*.docx",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
+            };
+            if (ofd2.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var markdown = MarkdownSource.FromFile(ofd.FileName);
+                    var converter = new MarkdownConverter()
+                    {
+                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName)
+                    };
+                    converter.ToDocx(markdown, ofd2.FileName, append: true);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
         }
     }
