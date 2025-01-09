@@ -21,6 +21,36 @@ public static class OpenXmlHelpers
         return document?.MainDocumentPart;
     }
 
+    public static StyleRunProperties? GetRunStyle(RunProperties? properties, Styles? stylesPart)
+    {
+        StyleRunProperties? runStyle = null;
+        if (properties?.RunStyle?.Val?.Value is string styleId)
+        {
+            runStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleName?.Val == styleId)?.StyleRunProperties;
+        }
+        return runStyle;
+    }
+
+    public static StyleParagraphProperties? GetParagraphStyle(ParagraphProperties? properties, Styles? stylesPart)
+    {
+        StyleParagraphProperties? runStyle = null;
+        if (properties?.ParagraphStyleId?.Val?.Value is string styleId)
+        {
+            runStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleName?.Val == styleId)?.StyleParagraphProperties;
+        }
+        return runStyle;
+    }
+
+    public static RunPropertiesBaseStyle? GetDefaultRunStyle(this Styles? stylesPart)
+    { 
+        return stylesPart?.DocDefaults?.RunPropertiesDefault?.RunPropertiesBaseStyle;
+    }
+
+    public static ParagraphPropertiesBaseStyle? GetDefaultParagraphStyle(this Styles? stylesPart)
+    {
+        return stylesPart?.DocDefaults?.ParagraphPropertiesDefault?.ParagraphPropertiesBaseStyle;
+    }
+
     public static ImagePart AddImagePart(this MainDocumentPart mainDocumentPart, Stream imageData, PartTypeInfo imageFormat)
     {
         ImagePart imagePart = mainDocumentPart.AddImagePart(imageFormat);

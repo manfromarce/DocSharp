@@ -57,7 +57,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
+        var stylesPart = OpenXmlHelpers.GetMainDocumentPart(run)?.StyleDefinitionsPart?.Styles;
+        var defaultRunStyle = stylesPart?.GetDefaultRunStyle();
         var properties = run.GetFirstChild<RunProperties>();
+        var runStyle = OpenXmlHelpers.GetRunStyle(properties, stylesPart);
+
         var text = run.GetFirstChild<Text>()?.InnerText;
         bool hasText = !string.IsNullOrWhiteSpace(text);
 
@@ -75,13 +79,19 @@ public class DocxToMarkdownConverter : DocxConverterBase
             // TODO: consider last child for trailing spaces
             trailingSpaces = StringHelpers.GetTrailingSpaces(text!);
 
-            isBold = properties?.Bold != null;
-            isItalic = properties?.Italic != null;
-            isUnderline = properties?.Underline != null;
-            isStrikethrough = (properties?.Strike != null || properties?.DoubleStrike != null);
+            isBold = (properties?.Bold ?? runStyle?.Bold ?? defaultRunStyle?.Bold) != null;
+            isItalic = (properties?.Italic ?? runStyle?.Italic ?? defaultRunStyle?.Italic) != null;
+            isUnderline = (properties?.Underline ?? runStyle?.Underline ?? defaultRunStyle?.Underline) != null;           
+            isStrikethrough = (properties?.Strike != null || properties?.DoubleStrike != null || 
+                               runStyle?.Strike != null || runStyle?.DoubleStrike != null ||
+                               defaultRunStyle?.Strike != null || defaultRunStyle?.DoubleStrike != null);
             isHighlight = (properties?.Highlight != null && properties.Highlight.Val != null && properties.Highlight.Val != HighlightColorValues.None);
-            isSubscript = (properties?.VerticalTextAlignment != null && properties.VerticalTextAlignment.Val != null && properties.VerticalTextAlignment.Val == "subscript");
-            isSuperscript = (properties?.VerticalTextAlignment != null && properties.VerticalTextAlignment.Val != null && properties.VerticalTextAlignment.Val == "superscript");
+            isSubscript = (runStyle?.VerticalTextAlignment?.Val != null && runStyle.VerticalTextAlignment.Val == "subscript") ||
+                          (defaultRunStyle?.VerticalTextAlignment?.Val != null && defaultRunStyle.VerticalTextAlignment.Val == "subscript") ||
+                          (properties?.VerticalTextAlignment?.Val != null && properties.VerticalTextAlignment.Val == "subscript");
+            isSuperscript = (!isSubscript) && ((runStyle?.VerticalTextAlignment?.Val != null && runStyle.VerticalTextAlignment.Val == "superscript") ||
+                                              (defaultRunStyle?.VerticalTextAlignment?.Val != null && defaultRunStyle.VerticalTextAlignment.Val == "superscript") ||
+                                              (properties?.VerticalTextAlignment?.Val != null && properties.VerticalTextAlignment.Val == "superscript"));
 
             if (isItalic)
                 sb.Append("*");

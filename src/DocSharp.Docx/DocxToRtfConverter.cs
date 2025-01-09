@@ -41,13 +41,9 @@ public class DocxToRtfConverter : DocxConverterBase
     {
         sb.Append(@"\pard");
         var stylesPart = OpenXmlHelpers.GetMainDocumentPart(paragraph)?.StyleDefinitionsPart?.Styles;
-        var defaultParagraphStyle = stylesPart?.DocDefaults?.ParagraphPropertiesDefault?.ParagraphPropertiesBaseStyle;
+        var defaultParagraphStyle = stylesPart?.GetDefaultParagraphStyle();
         var properties = paragraph.GetFirstChild<ParagraphProperties>();
-        StyleParagraphProperties? paragraphStyle = null;
-        if (properties?.ParagraphStyleId?.Val?.Value is string styleId)
-        {
-            paragraphStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleName?.Val == styleId)?.StyleParagraphProperties;
-        }
+        var paragraphStyle = OpenXmlHelpers.GetParagraphStyle(properties, stylesPart);       
 
         var alignment = properties?.Justification ??
                         paragraphStyle?.Justification ??
@@ -144,9 +140,10 @@ public class DocxToRtfConverter : DocxConverterBase
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
         var stylesPart = OpenXmlHelpers.GetMainDocumentPart(run)?.StyleDefinitionsPart?.Styles;
-        var defaultRunStyle = stylesPart?.DocDefaults?.RunPropertiesDefault?.RunPropertiesBaseStyle;
-
+        var defaultRunStyle = stylesPart?.GetDefaultRunStyle();
         var properties = run.GetFirstChild<RunProperties>();
+        var runStyle = OpenXmlHelpers.GetRunStyle(properties, stylesPart);
+
         var text = run.GetFirstChild<Text>()?.InnerText;
         bool hasText = !string.IsNullOrEmpty(text);
 
@@ -164,12 +161,6 @@ public class DocxToRtfConverter : DocxConverterBase
 
         if (hasText)
         {
-            StyleRunProperties? runStyle = null;
-            if (properties?.RunStyle?.Val?.Value is string styleId)
-            {
-                runStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleName?.Val == styleId)?.StyleRunProperties;               
-            }
-
             isBold = runStyle?.Bold != null || 
                      defaultRunStyle?.Bold != null ||
                      properties?.Bold != null;

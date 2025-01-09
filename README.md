@@ -25,7 +25,7 @@ There is no common DOM to manipulate or generate documents, this library is for 
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines
-  * TODO: styles (including H1-H6 headers), bookmarks (internal hyperlinks), lists, math formulas, charts; support for encrypted Word documents
+  * TODO: H1-H6 headers (Word styles), bookmarks (internal hyperlinks), lists, math formulas, charts; support for encrypted Word documents
 - Markdown to DOCX:
   * Basic Markdown features
   * External hyperlinks
