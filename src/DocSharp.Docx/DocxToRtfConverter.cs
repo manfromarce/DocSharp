@@ -21,6 +21,7 @@ public class DocxToRtfConverter : DocxConverterBase
         var bodySb = new StringBuilder();
         base.ProcessBody(body, bodySb);
 
+        // Insert fonts and color table before body
         foreach (var font in fonts)
         {
             sb.Append(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
@@ -30,9 +31,10 @@ public class DocxToRtfConverter : DocxConverterBase
         foreach (var color in colors)
         {
             // Use black a last resort
-            sb.Append(StringHelpers.ConvertToRtfColor(color.Key) ?? @"\red255\green255\blue255;");
+            sb.Append(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red255\green255\blue255;");
         }
         sb.AppendLine("}");
+
         sb.Append(bodySb.ToString());
         sb.AppendLine("}");
     }
@@ -71,8 +73,8 @@ public class DocxToRtfConverter : DocxConverterBase
         }
 
         var spacing = properties?.SpacingBetweenLines ??
-                        paragraphStyle?.SpacingBetweenLines ??
-                        defaultParagraphStyle?.SpacingBetweenLines;
+                      paragraphStyle?.SpacingBetweenLines ??
+                      defaultParagraphStyle?.SpacingBetweenLines;
         if (spacing?.Before != null)
         {
             sb.Append($"\\sb{spacing.Before}");
@@ -116,21 +118,20 @@ public class DocxToRtfConverter : DocxConverterBase
             sb.Append(@"\contextualspace");
 
         var keepLines = properties?.KeepLines ??
-                               paragraphStyle?.KeepLines ??
-                               defaultParagraphStyle?.KeepLines;
+                        paragraphStyle?.KeepLines ??
+                        defaultParagraphStyle?.KeepLines;
         if (keepLines != null)
             sb.Append(@"\keep");
 
         var keepNext = properties?.KeepNext ??
-                               paragraphStyle?.KeepNext ??
-                               defaultParagraphStyle?.KeepNext;
+                       paragraphStyle?.KeepNext ??
+                       defaultParagraphStyle?.KeepNext;
         if (keepNext != null)
             sb.Append(@"\keepn");
 
         sb.Append(" ");
         base.ProcessParagraph(paragraph, sb);
-        sb.Append(@"\par ");
-        sb.AppendLine();
+        sb.AppendLine(@"\par ");
     }
 
     internal override void ProcessTable(Table table, StringBuilder sb)
@@ -153,22 +154,19 @@ public class DocxToRtfConverter : DocxConverterBase
         UnderlineValues? underlineValue = null;
         HighlightColorValues? highlightValue = null;
 
-        bool isShadow, isOutline, isEmboss, isEngraveImprint;
-        isShadow = isOutline = isEmboss = isEngraveImprint = false;
+        bool isShadow, isOutline, isEmboss, isImprint;
+        isShadow = isOutline = isEmboss = isImprint = false;
 
         bool isSmallCaps, isAllCaps, isHidden;
         isSmallCaps = isAllCaps = isHidden = false;
 
         if (hasText)
         {
-            isBold = runStyle?.Bold != null || 
-                     defaultRunStyle?.Bold != null ||
-                     properties?.Bold != null;
-            isItalic = runStyle?.Italic != null ||
-                       defaultRunStyle?.Italic != null ||
-                       properties?.Italic != null;
+            // Run properties take precedence over style and default style
 
-            // Run properties takes precedence over style
+            isBold = (runStyle?.Bold ?? defaultRunStyle?.Bold ?? properties?.Bold) != null;
+            isItalic = (runStyle?.Italic ?? defaultRunStyle?.Italic ?? properties?.Italic) != null;
+
             underlineValue = properties?.Underline?.Val ??
                              runStyle?.Underline?.Val ?? 
                              defaultRunStyle?.Underline?.Val ?? 
@@ -177,15 +175,12 @@ public class DocxToRtfConverter : DocxConverterBase
             highlightValue = properties?.Highlight?.Val ?? HighlightColorValues.None;
 
             //underlineColor = properties?.Underline?.Color ??
-            //                runStyle?.Underline?.Color ??
-            //                defaultRunStyle?.Underline?.Color;
+            //                 runStyle?.Underline?.Color ??
+            //                 defaultRunStyle?.Underline?.Color;
 
-            isDoubleStrike =  runStyle?.DoubleStrike != null ||
-                              defaultRunStyle?.DoubleStrike != null ||
-                              properties?.DoubleStrike != null;
-            isSingleStrike = !isDoubleStrike && (runStyle?.Strike != null ||
-                                                defaultRunStyle?.Strike != null ||
-                                                properties?.Strike != null);
+            isDoubleStrike = (runStyle?.DoubleStrike ?? defaultRunStyle?.DoubleStrike ?? properties?.DoubleStrike) != null;
+            isSingleStrike = !isDoubleStrike && 
+                             (runStyle?.Strike ?? defaultRunStyle?.Strike ?? properties?.Strike) != null;
 
             isSubscript = (runStyle?.VerticalTextAlignment?.Val != null && runStyle.VerticalTextAlignment.Val == "subscript") ||
                           (defaultRunStyle?.VerticalTextAlignment?.Val != null && defaultRunStyle.VerticalTextAlignment.Val == "subscript") ||
@@ -194,18 +189,12 @@ public class DocxToRtfConverter : DocxConverterBase
                                               (defaultRunStyle?.VerticalTextAlignment?.Val != null && defaultRunStyle.VerticalTextAlignment.Val == "superscript") ||
                                               (properties?.VerticalTextAlignment?.Val != null && properties.VerticalTextAlignment.Val == "superscript"));
             
-            isSmallCaps = runStyle?.SmallCaps != null ||
-                          defaultRunStyle?.SmallCaps != null ||
-                          properties?.SmallCaps != null;
-            isAllCaps = (!isSmallCaps) && (runStyle?.Caps != null ||
-                                           defaultRunStyle?.Caps != null ||
-                                           properties?.Caps != null);
-            isEmboss = runStyle?.Emboss != null ||
-                       defaultRunStyle?.Emboss != null ||
-                       properties?.Emboss != null;
-            isEngraveImprint = runStyle?.Imprint != null ||
-                               defaultRunStyle?.Imprint != null ||
-                               properties?.Imprint != null;
+            isSmallCaps = (properties?.SmallCaps ?? runStyle?.SmallCaps ?? defaultRunStyle?.SmallCaps) != null;
+            isAllCaps = (!isSmallCaps) && 
+                        (properties?.Caps ?? runStyle?.Caps ?? defaultRunStyle?.Caps) != null;
+
+            isEmboss = (properties?.Emboss ?? runStyle?.Emboss ?? defaultRunStyle?.Emboss) != null;
+            isImprint = (properties?.Imprint ?? runStyle?.Imprint ?? defaultRunStyle?.Imprint) != null;
             isShadow = runStyle?.Shadow != null ||
                        defaultRunStyle?.Shadow != null ||
                        properties?.Shadow != null ||
@@ -214,9 +203,7 @@ public class DocxToRtfConverter : DocxConverterBase
                         defaultRunStyle?.Outline != null ||
                         properties?.Outline != null ||
                         properties?.TextOutlineEffect != null;
-            isHidden = runStyle?.Vanish != null ||
-                        defaultRunStyle?.Vanish != null ||
-                        properties?.Vanish != null;
+            isHidden = (properties?.Vanish ?? runStyle?.Vanish ?? defaultRunStyle?.Vanish) != null;            
 
             // To be improved (Ascii value may not be present, although rare)
             string? font = properties?.RunFonts?.Ascii?.Value ??
@@ -250,8 +237,8 @@ public class DocxToRtfConverter : DocxConverterBase
             }
 
             string? fontSize = properties?.FontSize?.Val ??
-                            runStyle?.FontSize?.Val ??
-                            defaultRunStyle?.FontSize?.Val;
+                               runStyle?.FontSize?.Val ??
+                               defaultRunStyle?.FontSize?.Val;
             if (int.TryParse(fontSize, out int fs))
             {
                 sb.Append($"\\fs{fs} ");
@@ -379,7 +366,7 @@ public class DocxToRtfConverter : DocxConverterBase
                 }
                 if (highlightIndex > 0)
                 {
-                    sb.Append($"\\highlight{highlightIndex}");
+                    sb.Append($"\\highlight{highlightIndex} ");
                 }
             }
 
@@ -391,7 +378,7 @@ public class DocxToRtfConverter : DocxConverterBase
             if (isEmboss)
                 sb.Append(@"\embo ");
 
-            if (isEngraveImprint)
+            if (isImprint)
                 sb.Append(@"\impr ");
 
             if (isShadow)
@@ -430,7 +417,7 @@ public class DocxToRtfConverter : DocxConverterBase
             if (isShadow)
                 sb.Append(@"\shad0 ");
 
-            if (isEngraveImprint)
+            if (isImprint)
                 sb.Append(@"\impr0 ");
 
             if (isEmboss)
@@ -460,7 +447,7 @@ public class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessText(Text text, StringBuilder sb)
     {
-        string escapedText = StringHelpers.ConvertToRtfUnicode(text.InnerText);
+        string escapedText = RtfHelpers.ConvertToRtfUnicode(text.InnerText);
         sb.Append(escapedText);
     }
 
