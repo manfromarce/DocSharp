@@ -46,7 +46,21 @@ public class DocxToRtfConverter : DocxConverterBase
         var stylesPart = OpenXmlHelpers.GetMainDocumentPart(paragraph)?.StyleDefinitionsPart?.Styles;
         var defaultParagraphStyle = stylesPart?.GetDefaultParagraphStyle();
         var properties = paragraph.GetFirstChild<ParagraphProperties>();
-        var paragraphStyle = OpenXmlHelpers.GetParagraphStyle(properties, stylesPart);       
+        var paragraphStyle = OpenXmlHelpers.GetParagraphStyle(properties, stylesPart);
+
+        ProcessParagraphProperties(properties, paragraphStyle, defaultParagraphStyle, sb);
+
+        sb.Append(" ");
+        base.ProcessParagraph(paragraph, sb);
+        sb.AppendLine(@"\par ");
+    }
+
+    internal void ProcessParagraphProperties(ParagraphProperties? properties, StyleParagraphProperties? paragraphStyle, ParagraphPropertiesBaseStyle? defaultParagraphStyle, StringBuilder sb)
+    {
+        if (properties?.SectionProperties != null)
+        {
+            ProcessSectionProperties(properties.SectionProperties, sb);
+        }
 
         var alignment = properties?.Justification ??
                         paragraphStyle?.Justification ??
@@ -112,8 +126,8 @@ public class DocxToRtfConverter : DocxConverterBase
         else if (ind?.Hanging != null)
             sb.Append($"\\fi-{ind.Hanging}");
 
-        var contextualSpacing = properties?.ContextualSpacing ?? 
-                                paragraphStyle?.ContextualSpacing ?? 
+        var contextualSpacing = properties?.ContextualSpacing ??
+                                paragraphStyle?.ContextualSpacing ??
                                 defaultParagraphStyle?.ContextualSpacing;
         if (contextualSpacing != null)
             sb.Append(@"\contextualspace");
@@ -130,9 +144,30 @@ public class DocxToRtfConverter : DocxConverterBase
         if (keepNext != null)
             sb.Append(@"\keepn");
 
-        sb.Append(" ");
-        base.ProcessParagraph(paragraph, sb);
-        sb.AppendLine(@"\par ");
+        ParagraphBorders? borders = properties?.ParagraphBorders ?? paragraphStyle?.ParagraphBorders ?? defaultParagraphStyle?.ParagraphBorders;
+        if (borders != null)
+        {            
+            if (borders?.TopBorder != null)
+            {
+                sb.Append(@"\pgbrdrt");
+                ProcessBorder(borders.TopBorder, sb);
+            }
+            if (borders?.LeftBorder != null)
+            {
+                sb.Append(@"\pgbrdrl");
+                ProcessBorder(borders.LeftBorder, sb);
+            }
+            if (borders?.BottomBorder != null)
+            {
+                sb.Append(@"\pgbrdrb");
+                ProcessBorder(borders.BottomBorder, sb);
+            }
+            if (borders?.RightBorder != null)
+            {
+                sb.Append(@"\pgbrdrr");
+                ProcessBorder(borders.RightBorder, sb);
+            }
+        }
     }
 
     internal override void ProcessTable(Table table, StringBuilder sb)
@@ -505,8 +540,142 @@ public class DocxToRtfConverter : DocxConverterBase
             sb.Append(@"\line ");
     }
 
-    internal void ProcessPageSetup(StringBuilder sb)
+    internal override void ProcessSectionProperties(SectionProperties sectionProperties, StringBuilder sb)
     {
+        sb.Append(@"\sect ");
+        if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
+        {
+            if (size.Width != null)
+            {
+                sb.Append($"\\paperw{size.Width.Value}");
+            }
+            if (size.Height != null)
+            {
+                sb.Append($"\\paperh{size.Height.Value}");
+            }
+            if (size.Orient != null && size.Orient.Value == PageOrientationValues.Landscape)
+            {
+                sb.Append($"\\landscape");
+            }
+            if (size.Code != null)
+            {
+                sb.Append($"\\psz{size.Code.Value}");
+            }
+        }
+        if (sectionProperties.GetFirstChild<PageMargin>() is PageMargin margins)
+        {
+            if (margins.Top != null)
+            {
+                sb.Append($"\\margt{margins.Top.Value}");
+            }
+            if (margins.Bottom != null)
+            {
+                sb.Append($"\\margb{margins.Bottom.Value}");
+            }
+            if (margins.Left != null)
+            {
+                sb.Append($"\\margl{margins.Left.Value}");
+            }
+            if (margins.Right != null)
+            {
+                sb.Append($"\\margr{margins.Right.Value}");
+            }
+            if (margins.Gutter != null)
+            {
+                sb.Append($"\\gutter{margins.Gutter.Value}");
+            }
+        }
+        if (sectionProperties.GetFirstChild<PageBorders>() is PageBorders borders)
+        {
+            int pageBorderOptions = 0;
+            if (borders?.Display != null)
+            {
+                //PageBorderDisplayValues.AllPages --> 0
+                if (borders.Display.Value == PageBorderDisplayValues.FirstPage) 
+                {
+                    pageBorderOptions |= 1;
+                }
+                else if (borders.Display.Value == PageBorderDisplayValues.NotFirstPage)
+                {
+                    pageBorderOptions |= 2;
+                }
+            }
+            if (borders?.ZOrder != null && borders.ZOrder == PageBorderZOrderValues.Back)
+            {
+                pageBorderOptions |= 1 << 3;
+            }
+            else
+            {
+                pageBorderOptions |= 0 << 3; // Front (default)
+            }
+            if (borders?.OffsetFrom != null && borders.OffsetFrom.Value == PageBorderOffsetValues.Page)
+            {
+                pageBorderOptions |= 1 << 5;
+            }
+            else
+            {
+                pageBorderOptions |= 0 << 5; // Offset from text
+            }
+            sb.Append(@"\pgbrdropt" + pageBorderOptions);
+            if (borders?.TopBorder != null)
+            {
+                sb.Append(@"\pgbrdrt");
+                ProcessBorder(borders.TopBorder, sb);
+            }
+            if (borders?.LeftBorder != null)
+            {
+                sb.Append(@"\pgbrdrl");
+                ProcessBorder(borders.LeftBorder, sb);
+            }
+            if (borders?.BottomBorder != null)
+            {
+                sb.Append(@"\pgbrdrb");
+                ProcessBorder(borders.BottomBorder, sb);
+            }
+            if (borders?.RightBorder != null)
+            {
+                sb.Append(@"\pgbrdrr");
+                ProcessBorder(borders.RightBorder, sb);
+            }
+        }
+        if (sectionProperties.GetFirstChild<Columns>() is Columns cols)
+        {
+            if (cols.ColumnCount != null)
+            {
+                sb.Append($"\\cols{cols.ColumnCount.Value}");
+            }
+            if (cols.Space != null)
+            {
+                sb.Append($"\\colsx{cols.Space.Value}");
+            }          
+            if (cols.Separator != null && cols.Separator.HasValue && cols.Separator.Value)
+            {
+                sb.Append($"\\linebetcol");
+            }
+        }
+        sb.AppendLine(" ");
+    }
 
+    internal static void ProcessBorder(BorderType border, StringBuilder sb)
+    {
+        if (border.Val != null)
+        {
+            sb.Append(RtfBorderMapper.GetBorderType(border.Val.Value));
+        }
+        if (border.Size != null)
+        {
+            double twipsSize = border.Size.Value * 2.5;
+            sb.Append($"\\brdrw{twipsSize}");
+        }
+        if (border.Space != null)
+        {
+            // Open XML uses points for border width, while RTF uses twips.
+            uint twipsSize = border.Space.Value * 20;
+            sb.Append($"\\brsp{twipsSize}");
+        }
+        if (border.Color != null)
+        {
+
+        }
     }
 }

@@ -166,6 +166,11 @@ public abstract class DocxConverterBase
 
     internal virtual void ProcessBody(Body body, StringBuilder sb)
     {
+        // Check section properties before actual content
+        if (body.GetFirstChild<SectionProperties>() is SectionProperties sectionProperties)
+        {
+            ProcessSectionProperties(sectionProperties, sb);
+        }
         foreach (var element in body.Elements())
         {
             ProcessBodyElement(element, sb);
@@ -249,4 +254,5 @@ public abstract class DocxConverterBase
     internal abstract void ProcessTable(Table table, StringBuilder sb);
     internal abstract void ProcessText(Text text, StringBuilder sb);
 
+    internal abstract void ProcessSectionProperties(SectionProperties properties, StringBuilder sb);
 }

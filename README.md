@@ -16,7 +16,8 @@ There is no common DOM to manipulate or generate documents, this library is for 
 - DOCX to RTF: 
   * Text and most font/parapraph formatting (RTF does not support all DOCX features)
   * Hyperlinks and bookmarks
-  * TODO: lists, images, tables, math formulas, drawings, charts, OLE objects
+  * Basic page setup (size, orientation, margins)
+  * TODO: lists, images, tables, math formulas, drawings, charts, OLE objects, header/footer
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough
