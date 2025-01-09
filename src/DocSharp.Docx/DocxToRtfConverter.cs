@@ -149,24 +149,30 @@ public class DocxToRtfConverter : DocxConverterBase
         {            
             if (borders?.TopBorder != null)
             {
-                sb.Append(@"\pgbrdrt");
+                sb.Append(@"\brdrt");
                 ProcessBorder(borders.TopBorder, sb);
             }
             if (borders?.LeftBorder != null)
             {
-                sb.Append(@"\pgbrdrl");
+                sb.Append(@"\brdrl");
                 ProcessBorder(borders.LeftBorder, sb);
             }
             if (borders?.BottomBorder != null)
             {
-                sb.Append(@"\pgbrdrb");
+                sb.Append(@"\brdrb");
                 ProcessBorder(borders.BottomBorder, sb);
             }
             if (borders?.RightBorder != null)
             {
-                sb.Append(@"\pgbrdrr");
+                sb.Append(@"\brdrr");
                 ProcessBorder(borders.RightBorder, sb);
             }
+        }
+
+        var shading = properties?.Shading ?? paragraphStyle?.Shading ?? defaultParagraphStyle?.Shading;
+        if (shading != null)
+        {
+            // TODO
         }
     }
 
