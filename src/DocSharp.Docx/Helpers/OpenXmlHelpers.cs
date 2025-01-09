@@ -686,6 +686,12 @@ public static class OpenXmlHelpers
         root.Save(part);
         return part;
     }
+    
+    public static string? GetBookmarkName(BookmarkEnd bookmarkEnd)
+    {
+        return GetMainDocumentPart(bookmarkEnd)?.Document.Descendants<BookmarkStart>()
+                .FirstOrDefault(b => b.Id == bookmarkEnd.Id)?.Name;
+    }
 }
 
 public enum CellBorderType

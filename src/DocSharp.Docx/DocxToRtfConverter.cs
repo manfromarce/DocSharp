@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using DocSharp.Collections;
 using DocSharp.Helpers;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
@@ -461,10 +462,37 @@ public class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
     {        
+        sb.Append(@"{\field{\*\fldinst{HYPERLINK }");
+        if (hyperlink.Id?.Value is string rId)
+        {
+            var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
+            if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+            {
+                string url = relationship.Uri.ToString();
+                sb.Append(@"""" + url + @"""}}");
+            }           
+        }
+        else if (hyperlink.Anchor?.Value is string anchor)
+        {
+
+            sb.Append(@"\| """ + anchor + @"""}}");
+        }
+        sb.Append(@"{\fldrslt{");
+        foreach (var element in hyperlink.Elements())
+        {
+            base.ProcessRunElement(element, sb);
+        }
+        sb.Append(@"}}}"); // final space?
     }
 
-    internal override void ProcessBookmark(BookmarkStart bookmark, StringBuilder sb)
+    internal override void ProcessBookmarkStart(BookmarkStart bookmarkStart, StringBuilder sb)
     {
+        sb.Append(@"{\*\bkmkstart " + bookmarkStart.Name + "}");
+    }
+
+    internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, StringBuilder sb) 
+    { 
+        sb.Append(@"{\*\bkmkend " + OpenXmlHelpers.GetBookmarkName(bookmarkEnd) + "}");
     }
 
     internal override void ProcessBreak(Break @break, StringBuilder sb)
@@ -475,5 +503,10 @@ public class DocxToRtfConverter : DocxConverterBase
             sb.Append(@"\column ");
         else
             sb.Append(@"\line ");
+    }
+
+    internal void ProcessPageSetup(StringBuilder sb)
+    {
+
     }
 }

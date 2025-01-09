@@ -322,8 +322,10 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }
     }
 
-    internal override void ProcessBookmark(BookmarkStart bookmark, StringBuilder sb)
+    internal override void ProcessBookmarkStart(BookmarkStart bookmark, StringBuilder sb)
     {
         // TODO
     }
+
+    internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
 }
