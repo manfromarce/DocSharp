@@ -183,9 +183,12 @@ public abstract class DocxConverterBase
         {
             case Paragraph paragraph:
                 ProcessParagraph(paragraph, sb);
-                break;           
+                break;
             case Table table:
                 ProcessTable(table, sb);
+                break;
+            case BookmarkStart bookmark:
+                ProcessBookmarkStart(bookmark, sb);
                 break;
         }
     }
@@ -194,27 +197,33 @@ public abstract class DocxConverterBase
     {
         foreach(var element in paragraph.Elements())
         {
-            switch (element)
-            {
-                case Run run:
-                    ProcessRun(run, sb);
-                    break;
-                case BookmarkStart bookmarkStart:
-                    ProcessBookmarkStart(bookmarkStart, sb);
-                    break;
-                case BookmarkEnd bookmarkEnd:
-                    ProcessBookmarkEnd(bookmarkEnd, sb);
-                    break;
-                case Hyperlink hyperlink:
-                    ProcessHyperlink(hyperlink, sb);
-                    break;
-                case Picture picture:
-                    ProcessPicture(picture, sb);
-                    break;
-                case Drawing drawing:
-                    ProcessDrawing(drawing, sb);
-                    break;
-            }
+            ProcessParagraphElement(element, sb);
+        }
+    }
+
+    // Used for paragraph content and hyperlink content
+    internal virtual void ProcessParagraphElement(OpenXmlElement element, StringBuilder sb)
+    {
+        switch (element)
+        {
+            case Run run:
+                ProcessRun(run, sb);
+                break;
+            case BookmarkStart bookmarkStart:
+                ProcessBookmarkStart(bookmarkStart, sb);
+                break;
+            case BookmarkEnd bookmarkEnd:
+                ProcessBookmarkEnd(bookmarkEnd, sb);
+                break;
+            case Hyperlink hyperlink:
+                ProcessHyperlink(hyperlink, sb);
+                break;
+            case Picture picture:
+                ProcessPicture(picture, sb);
+                break;
+            case Drawing drawing:
+                ProcessDrawing(drawing, sb);
+                break;
         }
     }
 

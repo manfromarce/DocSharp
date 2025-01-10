@@ -15,6 +15,22 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlHelpers
 {
+    public static T? GetFirstAncestor<T>(this OpenXmlElement? element) where T : OpenXmlElement
+    {
+        if (element != null && element.Parent != null)
+        {
+            if (element.Parent is T result)
+            {
+                return result;
+            }
+            else
+            {
+                return GetFirstAncestor<T>(element.Parent);
+            }
+        }
+        return null;
+    }
+
     public static MainDocumentPart? GetMainDocumentPart(OpenXmlElement element)
     {
         var document = element.Ancestors<Document>().FirstOrDefault();
@@ -26,7 +42,7 @@ public static class OpenXmlHelpers
         StyleRunProperties? runStyle = null;
         if (properties?.RunStyle?.Val?.Value is string styleId)
         {
-            runStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleName?.Val == styleId)?.StyleRunProperties;
+            runStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleId == styleId)?.StyleRunProperties;
         }
         return runStyle;
     }

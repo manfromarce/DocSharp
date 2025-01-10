@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,6 +51,19 @@ public static class RtfHelpers
             default:
                 // Unknown format
                 return null;
+        }
+    }
+
+    public static int GetLanguageCode(string langId)
+    {
+        try
+        {
+            var culture = new CultureInfo(langId);
+            return culture.LCID;
+        }
+        catch
+        {
+            return 1024; // None/unspecified
         }
     }
 }
