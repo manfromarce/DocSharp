@@ -2,14 +2,66 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
-    internal override void ProcessSectionProperties(SectionProperties sectionProperties, StringBuilder sb)
+    private bool firstSection = true;
+    private SectionProperties? currentSectionProperties = null;
+    private bool noSections = false;
+
+    internal override void ProcessBodyElement(OpenXmlElement element, StringBuilder sb)
     {
+        if (currentSectionProperties == null && !noSections)
+        {
+            // Search the next SectionProperties element, which may also be a child of the current element.
+            currentSectionProperties = element.NextElement<SectionProperties>();
+            if (currentSectionProperties != null)
+            {
+                ProcessSectionProperties(currentSectionProperties, sb);
+            }
+            else
+            {
+                // If no SectionProperties is found
+                // (very unlikely, at least default section properties are usually at the end of document),
+                // insert a default section and stop looking for them.
+                ProcessSectionProperties(new SectionProperties(), sb);
+                noSections = true;
+            }
+        }
+        
+        if (currentSectionProperties != null &&
+            element.Descendants<SectionProperties>().FirstOrDefault() is SectionProperties newSectionProperties)
+        {
+            if (newSectionProperties == currentSectionProperties)
+            {
+                // We reached the last paragraph of the section.
+                // A new section will be created for the next item.
+                currentSectionProperties = null;
+            }
+            else
+            {
+                // If there is an open section but a new section is found, 
+                // replace the section starting at the current item.
+                // This may happen when there are e.g. two consecutive paragraphs with different
+                // section properties (the first section consists of only one paragraph).
+                currentSectionProperties = newSectionProperties;
+                ProcessSectionProperties(currentSectionProperties, sb);
+            }
+        }
+        base.ProcessBodyElement(element, sb);
+    }
+
+    internal void ProcessSectionProperties(SectionProperties sectionProperties, StringBuilder sb)
+    {
+        // Create new section
+        sb.Append(firstSection ? @"\sectd" : @"\sect");
+        firstSection = false;
+        firstParagraph = true;
+
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {
             if (size.Width != null)

@@ -157,8 +157,8 @@ public partial class DocxToRtfConverter
             if (!string.IsNullOrEmpty(lang))
             {
                 int code = RtfHelpers.GetLanguageCode(lang);
-                sb.Append(@"\lang" + code);
-                sb.Append(@"\langnp" + code);
+                sb.Append(@"\lang" + code + " ");
+                sb.Append(@"\langnp" + code + " ");
             }
 
             if (isItalic)

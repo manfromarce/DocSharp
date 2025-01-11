@@ -329,6 +329,4 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
 
-    // Not applicable to Markdown
-    internal override void ProcessSectionProperties(SectionProperties table, StringBuilder sb) { }
 }

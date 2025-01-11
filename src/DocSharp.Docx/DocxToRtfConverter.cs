@@ -18,11 +18,15 @@ public partial class DocxToRtfConverter : DocxConverterBase
     internal override void ProcessBody(Body body, StringBuilder sb)
     {
         sb.Append(@"{\rtf1\ansi\deff0");
+        
+        // Prepare fonts table 
         sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 Arial;}");        
+        
+        // Process content
         var bodySb = new StringBuilder();
         base.ProcessBody(body, bodySb);
 
-        // Insert fonts and color table before body
+        // Insert fonts and colors table
         foreach (var font in fonts)
         {
             sb.Append(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
@@ -31,12 +35,15 @@ public partial class DocxToRtfConverter : DocxConverterBase
         sb.Append(@"{\colortbl ;");
         foreach (var color in colors)
         {
-            // Use black a last resort
+            // Use black as last resort
             sb.Append(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red255\green255\blue255;");
         }
         sb.AppendLine("}");
 
+        // Add body content
         sb.Append(bodySb.ToString());
+        
+        // Close RTF document
         sb.AppendLine("}");
     }
 
@@ -52,7 +59,6 @@ public partial class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
     {
-
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)

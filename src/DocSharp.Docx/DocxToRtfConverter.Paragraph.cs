@@ -8,9 +8,13 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
+    bool firstParagraph = true;
+
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
-        sb.Append(@"\pard");
+        sb.Append(firstParagraph ? @"\pard" : @"\par");
+        firstParagraph = false;
+
         var stylesPart = OpenXmlHelpers.GetMainDocumentPart(paragraph)?.StyleDefinitionsPart?.Styles;
         var defaultParagraphStyle = stylesPart?.GetDefaultParagraphStyle();
         var properties = paragraph.GetFirstChild<ParagraphProperties>();
@@ -18,19 +22,13 @@ public partial class DocxToRtfConverter
 
         ProcessParagraphProperties(properties, paragraphStyle, defaultParagraphStyle, sb);
 
-        sb.Append(" ");
+        sb.Append(' ');
         base.ProcessParagraph(paragraph, sb);
         sb.AppendLine();
     }
 
     internal void ProcessParagraphProperties(ParagraphProperties? properties, StyleParagraphProperties? paragraphStyle, ParagraphPropertiesBaseStyle? defaultParagraphStyle, StringBuilder sb)
     {
-        if (properties?.SectionProperties != null)
-        {
-            sb.Append(@"\sect ");
-            ProcessSectionProperties(properties.SectionProperties, sb);
-        }
-
         var alignment = properties?.Justification ??
                         paragraphStyle?.Justification ??
                         defaultParagraphStyle?.Justification;

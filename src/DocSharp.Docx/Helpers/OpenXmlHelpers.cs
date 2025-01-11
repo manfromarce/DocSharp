@@ -15,6 +15,40 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlHelpers
 {
+    public static T? NextElement<T>(this OpenXmlElement? element) where T : OpenXmlElement
+    {
+        if (element != null && element.GetFirstAncestor<Document>() is Document document)
+        {
+            return document.Descendants<T>().FirstOrDefault(x => x.IsAfter(element));           
+        }
+        return null;
+
+        //if (element is null)
+        //{
+        //    return null;
+        //}
+        //var currentElement = element;
+        //while (currentElement != null)
+        //{
+        //    if (currentElement is T)
+        //    {
+        //        return (T)element;
+        //    }
+        //    var descendant = currentElement.Descendants<T>().FirstOrDefault();
+        //    if (descendant != null)
+        //    {
+        //        return descendant;
+        //    }
+        //    currentElement = element.NextSibling();
+        //    while (currentElement == null && element.Parent != null)
+        //    {
+        //        element = element.Parent;
+        //        currentElement = element.NextSibling();
+        //    }
+        //}
+        //return null;
+    }
+
     public static T? GetFirstAncestor<T>(this OpenXmlElement? element) where T : OpenXmlElement
     {
         if (element != null && element.Parent != null)

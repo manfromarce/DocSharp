@@ -10,13 +10,11 @@ public partial class DocxToRtfConverter
 {
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        //sb.Append(@"\pard\intbl ");
-        sb.Append(" ");       
+        sb.AppendLine();
         foreach (var row in table.Elements<TableRow>())
         {
             ProcessTableRow(row, sb);
         }
-        sb.Append(@"\pard");
         sb.AppendLine();
     }
 
@@ -53,7 +51,7 @@ public partial class DocxToRtfConverter
         sb.Append(@"\clbrdrl\brdrs\brdrw10");
         sb.Append(@"\clbrdrb\brdrs\brdrw10");
         sb.Append(@"\clbrdrr\brdrs\brdrw10");
-        sb.Append(@" ");
+        sb.Append(' ');
         var cellWidth = cell.GetFirstChild<TableCellProperties>()?.GetFirstChild<TableCellWidth>();
         if (cellWidth != null && cellWidth.Width != null)
         {
@@ -93,8 +91,10 @@ public partial class DocxToRtfConverter
             // Paragraphs cover most cases (text, inline images, math ...) for cell content.
             // Other elements (such as nested tables) can cause issues and are ignored for now.
             sb.Append(@"\intbl");
+            this.firstParagraph = true; // \pard should be used for tables and for the first subsequent paragraph.
             ProcessParagraph(element, sb);
         }
+        this.firstParagraph = true;
         sb.Append(@"\cell");
     }
 }
