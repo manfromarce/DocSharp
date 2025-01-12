@@ -22,31 +22,6 @@ public static class OpenXmlHelpers
             return document.Descendants<T>().FirstOrDefault(x => x.IsAfter(element));           
         }
         return null;
-
-        //if (element is null)
-        //{
-        //    return null;
-        //}
-        //var currentElement = element;
-        //while (currentElement != null)
-        //{
-        //    if (currentElement is T)
-        //    {
-        //        return (T)element;
-        //    }
-        //    var descendant = currentElement.Descendants<T>().FirstOrDefault();
-        //    if (descendant != null)
-        //    {
-        //        return descendant;
-        //    }
-        //    currentElement = element.NextSibling();
-        //    while (currentElement == null && element.Parent != null)
-        //    {
-        //        element = element.Parent;
-        //        currentElement = element.NextSibling();
-        //    }
-        //}
-        //return null;
     }
 
     public static T? GetFirstAncestor<T>(this OpenXmlElement? element) where T : OpenXmlElement
@@ -65,30 +40,186 @@ public static class OpenXmlHelpers
         return null;
     }
 
+    /// <summary>
+    /// Helper function to retrieve main document part from an Open XML element.
+    /// </summary>
+    /// <returns></returns>
     public static MainDocumentPart? GetMainDocumentPart(OpenXmlElement element)
     {
-        var document = element.Ancestors<Document>().FirstOrDefault();
+        var document = (element as Document) ?? element.Ancestors<Document>().FirstOrDefault();
         return document?.MainDocumentPart;
     }
 
-    public static StyleRunProperties? GetRunStyle(RunProperties? properties, Styles? stylesPart)
+    /// <summary>
+    /// Helper function to retrieve styles part from an Open XML element.
+    /// </summary>
+    /// <returns></returns>
+    public static Styles? GetStylesPart(OpenXmlElement element)
     {
-        StyleRunProperties? runStyle = null;
-        if (properties?.RunStyle?.Val?.Value is string styleId)
-        {
-            runStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleId == styleId)?.StyleRunProperties;
-        }
-        return runStyle;
+        return GetMainDocumentPart(element)?.StyleDefinitionsPart?.Styles;
     }
 
-    public static StyleParagraphProperties? GetParagraphStyle(ParagraphProperties? properties, Styles? stylesPart)
+    /// <summary>
+    /// Helper function to retrieve Numbering part from an Open XML element.
+    /// </summary>
+    /// <returns></returns>
+    public static Numbering? GetNumberingPart(OpenXmlElement element)
     {
-        StyleParagraphProperties? runStyle = null;
-        if (properties?.ParagraphStyleId?.Val?.Value is string styleId)
+        return GetMainDocumentPart(element)?.NumberingDefinitionsPart?.Numbering;
+    }
+
+    // Helper function to get paragraph formatting from paragraph properties, style or default style.
+    public static T? GetEffectiveProperty<T>(Paragraph paragraph) where T : OpenXmlElement
+    {
+        var stylesPart = GetStylesPart(paragraph);
+
+        // Check paragraph properties
+        T? propertyValue = paragraph.ParagraphProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
         {
-            runStyle = stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleName?.Val == styleId)?.StyleParagraphProperties;
+            return propertyValue;
         }
-        return runStyle;
+
+        // Check paragraph style
+        var paragraphStyle = GetStyle(stylesPart, paragraph.ParagraphProperties?.ParagraphStyleId?.Val);
+        while (paragraphStyle != null)
+        {
+            propertyValue = paragraphStyle.StyleParagraphProperties?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            paragraphStyle = GetBaseStyle(stylesPart, paragraphStyle);
+        }
+
+        // Check default paragraph style for the current document
+        return GetDefaultParagraphStyle(stylesPart)?.GetFirstChild<T>();
+    }
+
+
+    // Helper function to get run formatting from run/paragraph properties, style or default style.
+    public static T? GetEffectiveProperty<T>(Run run) where T : OpenXmlElement
+    {
+        var stylesPart = GetStylesPart(run);
+
+        // Check run properties
+        T? propertyValue = run.RunProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check paragraph properties
+        var paragraphRunProperties = run.GetFirstAncestor<Paragraph>()?.ParagraphProperties?.ParagraphMarkRunProperties;
+        propertyValue = paragraphRunProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check run style
+        var runStyle = GetStyle(stylesPart, run.RunProperties?.RunStyle?.Val);
+        while (runStyle != null)
+        {
+            propertyValue = runStyle.StyleRunProperties?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            runStyle = GetBaseStyle(stylesPart, runStyle);
+        }
+
+        // Check default run style for the current document
+        return GetDefaultParagraphStyle(stylesPart)?.GetFirstChild<T>();
+    }
+
+    // Helper function to get table formatting from table properties or style.
+    public static T? GetEffectiveProperty<T>(Table table) where T : OpenXmlElement
+    {
+        var stylesPart = GetStylesPart(table);
+
+        // Check table properties
+        var tableProperties = table.GetFirstChild<TableProperties>();
+        T? propertyValue = tableProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check table style
+        var tableStyle = GetStyle(stylesPart, tableProperties?.TableStyle?.Val);
+        while (tableStyle != null)
+        {
+            propertyValue = tableStyle.StyleTableProperties?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = GetBaseStyle(stylesPart, tableStyle);
+        }
+
+        return null;
+    }
+
+    // Helper function to get cell formatting from cell/table properties or style.
+    public static T? GetEffectiveProperty<T>(TableCell cell) where T : OpenXmlElement
+    {
+        var stylesPart = GetStylesPart(cell);
+
+        // Check cell properties        
+        T? propertyValue = cell.TableCellProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check table properties (properties such as borders are of different type between cell and table,
+        // but other properties like shading may be found).
+        var tableProperties = cell.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
+        propertyValue = tableProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check table style
+        var tableStyle = GetStyle(stylesPart, tableProperties?.TableStyle?.Val);
+        while (tableStyle != null)
+        {
+            propertyValue = tableStyle.StyleTableCellProperties?.GetFirstChild<T>() ?? 
+                            tableStyle.StyleTableProperties?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = GetBaseStyle(stylesPart, tableStyle);
+        }
+
+        return null;
+    }
+
+    public static Style? GetStyle(Styles? stylesPart, string? id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+
+        return stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleId == id);        
+    }
+
+    public static Style? GetBaseStyle(Styles? stylesPart, Style? style)
+    {
+        if (stylesPart is null || style is null || style.BasedOn is null)
+            return null;
+
+        return stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleId == style.BasedOn.Val);
     }
 
     public static RunPropertiesBaseStyle? GetDefaultRunStyle(this Styles? stylesPart)

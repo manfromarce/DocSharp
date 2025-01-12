@@ -11,43 +11,43 @@ internal static class RtfUnderlineMapper
 {
     internal static string? GetUnderlineType(UnderlineValues? underlineValue)
     {
-        if (!underlineValue.HasValue)
+        if (underlineValue is null || !underlineValue.HasValue)
             return null;
 
         if (underlineValue.Value == UnderlineValues.Single)
-            return @"\ul ";
+            return @"\ul";
         else if (underlineValue.Value == UnderlineValues.Dash)
-            return @"\uldash ";
+            return @"\uldash";
         else if (underlineValue.Value == UnderlineValues.Dotted)
-            return @"\uld ";
+            return @"\uld";
         else if (underlineValue.Value == UnderlineValues.DotDash)
-            return @"\uldashd ";
+            return @"\uldashd";
         else if (underlineValue.Value == UnderlineValues.DotDotDash)
-            return @"\uldashdd ";
+            return @"\uldashdd";
         else if (underlineValue.Value == UnderlineValues.DashLong)
-            return @"\ulldash ";
+            return @"\ulldash";
         else if (underlineValue.Value == UnderlineValues.Double)
-            return @"\uldb ";
+            return @"\uldb";
         else if (underlineValue.Value == UnderlineValues.Thick)
-            return @"\ulth ";
+            return @"\ulth";
         else if (underlineValue.Value == UnderlineValues.DashedHeavy)
-            return @"\ulthdash ";
+            return @"\ulthdash";
         else if (underlineValue.Value == UnderlineValues.DottedHeavy)
-            return @"\ulthd ";
+            return @"\ulthd";
         else if (underlineValue.Value == UnderlineValues.DashDotHeavy)
-            return @"\ulthdashd ";
+            return @"\ulthdashd";
         else if (underlineValue.Value == UnderlineValues.DashDotDotHeavy)
-            return @"\ulthdashdd ";
+            return @"\ulthdashdd";
         else if (underlineValue.Value == UnderlineValues.DashLongHeavy)
-            return @"\ulthldash ";
+            return @"\ulthldash";
         else if (underlineValue.Value == UnderlineValues.Words)
-            return @"\ulw ";
+            return @"\ulw";
         else if (underlineValue.Value == UnderlineValues.Wave)
-            return @"\ulwave ";
+            return @"\ulwave";
         else if (underlineValue.Value == UnderlineValues.WavyDouble)
-            return @"\ululdbwave ";
+            return @"\ululdbwave";
         else if (underlineValue.Value == UnderlineValues.WavyHeavy)
-            return @"\ulhwave ";
+            return @"\ulhwave";
         else 
             return null;
     }

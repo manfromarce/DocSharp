@@ -10,7 +10,7 @@ public partial class DocxToRtfConverter
 {
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        sb.AppendLine();
+        sb.AppendLine();       
         foreach (var row in table.Elements<TableRow>())
         {
             ProcessTableRow(row, sb);
@@ -21,17 +21,11 @@ public partial class DocxToRtfConverter
     internal void ProcessTableRow(TableRow row, StringBuilder sb)
     {
         sb.Append(@"\trowd");
-        //for (int i = 1; i < 5; i++)
-        //{
-        //    sb.Append($@"\cellx{i}000");
-        //}
-        //sb.Append(@"\intbl \cell \row");
-
+        
         long totalWidth = 0;
-
         foreach (var cell in row.Elements<TableCell>())
         {
-            ProcessTableCellWidth(cell, sb, ref totalWidth);
+            ProcessTableCellProperties(cell, sb, ref totalWidth);
             sb.AppendLine();
         }
 
@@ -44,15 +38,38 @@ public partial class DocxToRtfConverter
         sb.Append(@"\row");
     }
 
-    internal void ProcessTableCellWidth(TableCell cell, StringBuilder sb, ref long totalWidth)
+    internal void ProcessTableCellProperties(TableCell cell, StringBuilder sb, ref long totalWidth)
     {
-        // Borders
-        sb.Append(@"\clbrdrt\brdrs\brdrw10");
-        sb.Append(@"\clbrdrl\brdrs\brdrw10");
-        sb.Append(@"\clbrdrb\brdrs\brdrw10");
-        sb.Append(@"\clbrdrr\brdrs\brdrw10");
-        sb.Append(' ');
-        var cellWidth = cell.GetFirstChild<TableCellProperties>()?.GetFirstChild<TableCellWidth>();
+        var cellBorders = OpenXmlHelpers.GetEffectiveProperty<TableCellBorders>(cell);
+        var tableBorders = OpenXmlHelpers.GetEffectiveProperty<TableBorders>(cell);
+
+        var topBorder = cellBorders?.TopBorder ?? tableBorders?.TopBorder;
+        var leftBorder = cellBorders?.LeftBorder ?? tableBorders?.LeftBorder;
+        var bottomBorder = cellBorders?.BottomBorder ?? tableBorders?.BottomBorder;
+        var rightBorder = cellBorders?.RightBorder ?? tableBorders?.RightBorder;
+
+        if (topBorder != null)
+        {
+            sb.Append(@"\clbrdrt");
+            ProcessBorder(topBorder, sb);
+        }
+        if (leftBorder != null)
+        {
+            sb.Append(@"\clbrdrl");
+            ProcessBorder(leftBorder, sb);
+        }
+        if (bottomBorder != null)
+        {
+            sb.Append(@"\clbrdrb");
+            ProcessBorder(bottomBorder, sb);
+        }
+        if (rightBorder != null)
+        {
+            sb.Append(@"\clbrdrr");
+            ProcessBorder(rightBorder, sb);
+        }
+
+        var cellWidth = OpenXmlHelpers.GetEffectiveProperty<TableCellWidth>(cell);
         if (cellWidth != null && cellWidth.Width != null)
         {
             if (cellWidth.Type is null ||

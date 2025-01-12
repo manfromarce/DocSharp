@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,51 @@ namespace DocSharp.Helpers;
 
 public static class StringHelpers
 {
+    public static string ToStringInvariant(int i)
+    {
+        return i.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(double d)
+    {
+        return d.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(decimal d)
+    {
+        return d.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(float f)
+    {
+        return f.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(long l)
+    {
+        return l.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(short s)
+    {
+        return s.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(ushort us)
+    {
+        return us.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(uint ui)
+    {
+        return ui.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(ulong ul)
+    {
+        return ul.ToString(CultureInfo.InvariantCulture);
+    }
+
     public static string GetLeadingSpaces(string s)
     {
         for (int i = 0; i < s.Length; i++)

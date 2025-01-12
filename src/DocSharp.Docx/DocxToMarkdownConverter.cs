@@ -57,10 +57,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
-        var stylesPart = OpenXmlHelpers.GetMainDocumentPart(run)?.StyleDefinitionsPart?.Styles;
-        var defaultRunStyle = stylesPart?.GetDefaultRunStyle();
-        var properties = run.GetFirstChild<RunProperties>();
-        var runStyle = OpenXmlHelpers.GetRunStyle(properties, stylesPart);
+        
 
         var text = run.GetFirstChild<Text>()?.InnerText;
         bool hasText = !string.IsNullOrWhiteSpace(text);
@@ -79,19 +76,26 @@ public class DocxToMarkdownConverter : DocxConverterBase
             // TODO: consider last child for trailing spaces
             trailingSpaces = StringHelpers.GetTrailingSpaces(text!);
 
-            isBold = (properties?.Bold ?? runStyle?.Bold ?? defaultRunStyle?.Bold) != null;
-            isItalic = (properties?.Italic ?? runStyle?.Italic ?? defaultRunStyle?.Italic) != null;
-            isUnderline = (properties?.Underline ?? runStyle?.Underline ?? defaultRunStyle?.Underline) != null;           
-            isStrikethrough = (properties?.Strike != null || properties?.DoubleStrike != null || 
-                               runStyle?.Strike != null || runStyle?.DoubleStrike != null ||
-                               defaultRunStyle?.Strike != null || defaultRunStyle?.DoubleStrike != null);
-            isHighlight = (properties?.Highlight != null && properties.Highlight.Val != null && properties.Highlight.Val != HighlightColorValues.None);
-            isSubscript = (runStyle?.VerticalTextAlignment?.Val != null && runStyle.VerticalTextAlignment.Val == "subscript") ||
-                          (defaultRunStyle?.VerticalTextAlignment?.Val != null && defaultRunStyle.VerticalTextAlignment.Val == "subscript") ||
-                          (properties?.VerticalTextAlignment?.Val != null && properties.VerticalTextAlignment.Val == "subscript");
-            isSuperscript = (!isSubscript) && ((runStyle?.VerticalTextAlignment?.Val != null && runStyle.VerticalTextAlignment.Val == "superscript") ||
-                                              (defaultRunStyle?.VerticalTextAlignment?.Val != null && defaultRunStyle.VerticalTextAlignment.Val == "superscript") ||
-                                              (properties?.VerticalTextAlignment?.Val != null && properties.VerticalTextAlignment.Val == "superscript"));
+            // Formatting options of type OnOffValue such as bold and italic are considered enabled
+            // if the element is present, unless value is explicitly set to false.
+            // (e.g. <w:b /> without value means bold is enabled, otherwise it would not be present at all)
+            isBold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run) is Bold b && (b.Val is null || b.Val);
+            isItalic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run) is Italic i && (i.Val is null || i.Val);
+
+            isUnderline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run) is Underline u && 
+                          u.Val != null && u.Val != UnderlineValues.None;
+
+            isStrikethrough = (OpenXmlHelpers.GetEffectiveProperty<DoubleStrike>(run) is DoubleStrike ds &&
+                          (ds.Val is null || ds.Val)) ||
+                          (OpenXmlHelpers.GetEffectiveProperty<Strike>(run) is Strike s &&
+                          (s.Val is null || s.Val));
+
+            isHighlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run) is Highlight h &&
+                          h.Val != null && h.Val != HighlightColorValues.None;
+
+            var vta = OpenXmlHelpers.GetEffectiveProperty<VerticalTextAlignment>(run);
+            isSubscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Subscript;
+            isSuperscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Superscript;           
 
             if (isItalic)
                 sb.Append("*");

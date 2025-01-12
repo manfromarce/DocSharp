@@ -11,7 +11,7 @@ internal class RtfHighlightMapper
 {
     internal static string? GetHexColor(HighlightColorValues? value)
     {
-        if (!value.HasValue)
+        if (value is null || !value.HasValue)
         {
             return null;
         }

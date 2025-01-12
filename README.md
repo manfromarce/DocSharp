@@ -14,10 +14,10 @@ There is no common DOM to manipulate or generate documents, this library is for 
 
 - Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
 - DOCX to RTF: 
-  * Text and most font/parapraph formatting
-  * Tables (borders, shading and other properties are not supported yet; content formatting works as in standard paragraphs)
+  * Text and most font formatting
+  * Paragraph options, lists and tables. Many properties are not supported yet, but should be sufficient for simple to medium documents.
   * Hyperlinks and bookmarks
-  * Basic page setup (size, orientation, margins)
+  * Page setup (size, orientation, margins, borders)
   * TODO: images and drawings, math formulas, OLE objects and more
 - DOCX to Markdown:
   * Text and basic formatting

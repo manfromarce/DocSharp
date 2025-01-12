@@ -15,23 +15,22 @@ public partial class DocxToRtfConverter
         sb.Append(firstParagraph ? @"\pard" : @"\par");
         firstParagraph = false;
 
-        var stylesPart = OpenXmlHelpers.GetMainDocumentPart(paragraph)?.StyleDefinitionsPart?.Styles;
-        var defaultParagraphStyle = stylesPart?.GetDefaultParagraphStyle();
-        var properties = paragraph.GetFirstChild<ParagraphProperties>();
-        var paragraphStyle = OpenXmlHelpers.GetParagraphStyle(properties, stylesPart);
-
-        ProcessParagraphProperties(properties, paragraphStyle, defaultParagraphStyle, sb);
-
+        ProcessParagraphFormatting(paragraph, sb);
         sb.Append(' ');
+
         base.ProcessParagraph(paragraph, sb);
         sb.AppendLine();
     }
 
-    internal void ProcessParagraphProperties(ParagraphProperties? properties, StyleParagraphProperties? paragraphStyle, ParagraphPropertiesBaseStyle? defaultParagraphStyle, StringBuilder sb)
+    internal void ProcessParagraphFormatting(Paragraph paragraph, StringBuilder sb)
     {
-        var alignment = properties?.Justification ??
-                        paragraphStyle?.Justification ??
-                        defaultParagraphStyle?.Justification;
+        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        if (numberingProperties != null)
+        {
+            ProcessListItem(numberingProperties, sb);
+        }
+
+        var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph);
         if (alignment?.Val != null)
         {
             if (alignment.Val == JustificationValues.Left || alignment.Val == JustificationValues.Start)
@@ -54,9 +53,7 @@ public partial class DocxToRtfConverter
                 sb.Append(@"\qk20");
         }
 
-        var spacing = properties?.SpacingBetweenLines ??
-                      paragraphStyle?.SpacingBetweenLines ??
-                      defaultParagraphStyle?.SpacingBetweenLines;
+        var spacing = OpenXmlHelpers.GetEffectiveProperty<SpacingBetweenLines>(paragraph);
         if (spacing?.Before != null)
         {
             sb.Append($"\\sb{spacing.Before}");
@@ -81,9 +78,7 @@ public partial class DocxToRtfConverter
             }
         }
 
-        var ind = properties?.Indentation ??
-                  paragraphStyle?.Indentation ??
-                  defaultParagraphStyle?.Indentation;
+        var ind = OpenXmlHelpers.GetEffectiveProperty<Indentation>(paragraph);
         if (ind?.Left != null)
             sb.Append($"\\li{ind.Left}");
         if (ind?.Right != null)
@@ -93,25 +88,19 @@ public partial class DocxToRtfConverter
         else if (ind?.Hanging != null)
             sb.Append($"\\fi-{ind.Hanging}");
 
-        var contextualSpacing = properties?.ContextualSpacing ??
-                                paragraphStyle?.ContextualSpacing ??
-                                defaultParagraphStyle?.ContextualSpacing;
+        var contextualSpacing = OpenXmlHelpers.GetEffectiveProperty<ContextualSpacing>(paragraph);
         if (contextualSpacing != null)
             sb.Append(@"\contextualspace");
 
-        var keepLines = properties?.KeepLines ??
-                        paragraphStyle?.KeepLines ??
-                        defaultParagraphStyle?.KeepLines;
+        var keepLines = OpenXmlHelpers.GetEffectiveProperty<KeepLines>(paragraph);
         if (keepLines != null)
             sb.Append(@"\keep");
 
-        var keepNext = properties?.KeepNext ??
-                       paragraphStyle?.KeepNext ??
-                       defaultParagraphStyle?.KeepNext;
+        var keepNext = OpenXmlHelpers.GetEffectiveProperty<KeepNext>(paragraph);
         if (keepNext != null)
             sb.Append(@"\keepn");
 
-        ParagraphBorders? borders = properties?.ParagraphBorders ?? paragraphStyle?.ParagraphBorders ?? defaultParagraphStyle?.ParagraphBorders;
+        ParagraphBorders? borders = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);
         if (borders != null)
         {
             if (borders?.TopBorder != null)
@@ -136,7 +125,7 @@ public partial class DocxToRtfConverter
             }
         }
 
-        var shading = properties?.Shading ?? paragraphStyle?.Shading ?? defaultParagraphStyle?.Shading;
+        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph);
         if (shading != null)
         {
             // TODO
