@@ -94,6 +94,24 @@ public static class OpenXmlHelpers
             paragraphStyle = GetBaseStyle(stylesPart, paragraphStyle);
         }
 
+        // Check table paragraph style
+        if (paragraph.GetFirstAncestor<Table>() is Table table && 
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = GetStyle(stylesPart, tableProperties?.TableStyle?.Val);
+            while (tableStyle != null)
+            {
+                propertyValue = tableStyle.StyleParagraphProperties?.GetFirstChild<T>();
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+
+                // Check styles from which the current style inherits
+                tableStyle = GetBaseStyle(stylesPart, tableStyle);
+            }
+        }
+
         // Check default paragraph style for the current document
         return GetDefaultParagraphStyle(stylesPart)?.GetFirstChild<T>();
     }

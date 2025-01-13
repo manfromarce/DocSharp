@@ -60,7 +60,6 @@ public partial class DocxToRtfConverter
         // Create new section
         sb.Append(firstSection ? @"\sectd" : @"\sect");
         firstSection = false;
-        firstParagraph = true;
 
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {

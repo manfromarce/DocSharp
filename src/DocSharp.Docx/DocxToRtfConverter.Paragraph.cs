@@ -8,17 +8,24 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
-    bool firstParagraph = true;
-
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
-        sb.Append(firstParagraph ? @"\pard" : @"\par");
-        firstParagraph = false;
+        sb.Append("\\pard");
+        if (isInTable)
+        {
+            sb.Append(@"\intbl");
+        }
 
         ProcessParagraphFormatting(paragraph, sb);
         sb.Append(' ');
 
         base.ProcessParagraph(paragraph, sb);
+        //bool last = false;
+        //if (!last)
+        if (paragraph.NextSibling() != null)
+        {
+            sb.Append("\\par");
+        }
         sb.AppendLine();
     }
 
@@ -128,7 +135,7 @@ public partial class DocxToRtfConverter
         var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph);
         if (shading != null)
         {
-            // TODO
+            ProcessShading(shading, sb);            
         }
     }
 }

@@ -8,9 +8,10 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
+    private bool isInTable = false;
+
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        sb.AppendLine();       
         foreach (var row in table.Elements<TableRow>())
         {
             ProcessTableRow(row, sb);
@@ -103,15 +104,14 @@ public partial class DocxToRtfConverter
 
     internal void ProcessTableCell(TableCell cell, StringBuilder sb)
     {
+        this.isInTable = true;
         foreach (var element in cell.Elements<Paragraph>())
         {
             // Paragraphs cover most cases (text, inline images, math ...) for cell content.
             // Other elements (such as nested tables) can cause issues and are ignored for now.
-            sb.Append(@"\intbl");
-            this.firstParagraph = true; // \pard should be used for tables and for the first subsequent paragraph.
             ProcessParagraph(element, sb);
         }
-        this.firstParagraph = true;
+        this.isInTable = false;
         sb.Append(@"\cell");
     }
 }

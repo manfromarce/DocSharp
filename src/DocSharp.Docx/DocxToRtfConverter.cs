@@ -36,7 +36,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
         foreach (var color in colors)
         {
             // Use black as last resort
-            sb.Append(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red255\green255\blue255;");
+            sb.Append(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red0\green0\blue0;");
         }
         sb.AppendLine("}");
 

@@ -51,7 +51,8 @@ public partial class DocxToRtfConverter
         }
 
         string? color = OpenXmlHelpers.GetEffectiveProperty<Color>(run)?.Val;
-        if ((!string.IsNullOrEmpty(color)) && !color.Equals("auto", StringComparison.OrdinalIgnoreCase))
+        if ((!string.IsNullOrEmpty(color)) && 
+             !color.Equals("auto", StringComparison.OrdinalIgnoreCase))
         {
             colors.TryAddAndGetIndex(color, out int colorIndex);
             sb.Append($"\\cf{colorIndex}");
