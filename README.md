@@ -15,13 +15,14 @@ There is no common DOM to manipulate or generate documents, this library is for 
 - Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
 - DOCX to RTF: 
   * Text and most font formatting
-  * Paragraph options, lists and tables. Many properties are not supported yet, but should be sufficient for simple to medium documents.
+  * Paragraph options, lists and tables: many properties are not supported yet, but should be sufficient for medium documents.
   * Hyperlinks and bookmarks
-  * Page setup (size, orientation, margins, borders)
+  * Page setup: size, orientation, margins, borders
+  * Header and footer
   * TODO: images and drawings, math formulas, OLE objects and more
 - DOCX to Markdown:
   * Text and basic formatting
-    - Bold, italic, underline, strikethrough
+    - Bold, italic, underline, strikethrough, superscript, subscript
     - Any highlight color (except none) is converted to `<mark>`
   * Inline images
     - `ImagesOutputFolder` needs to be set to an existing directory, otherwise images are skipped. An absolute URI is used by default; to produce a relative URI set `ImagesBaseUriOverride` to any not-null folder path (empty string or "." means same folder as the Markdown file, "../images" means images subfolder in the parent folder).

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
@@ -169,6 +170,24 @@ public partial class DocxToRtfConverter
             if (cols.Separator != null && cols.Separator.HasValue && cols.Separator.Value)
             {
                 sb.Append($"\\linebetcol");
+            }
+        }
+
+        var mainPart = OpenXmlHelpers.GetMainDocumentPart(sectionProperties);
+        if (mainPart != null)
+        {
+            var headerReference = sectionProperties.GetFirstChild<HeaderReference>();
+            if (headerReference?.Id?.Value is string headerId &&
+                mainPart.GetPartById(headerId) is HeaderPart headerPart)
+            {
+                ProcessHeader(headerPart.Header, sb);
+            }
+
+            var footerReference = sectionProperties.GetFirstChild<FooterReference>();
+            if (footerReference?.Id?.Value is string footerId &&
+                mainPart.GetPartById(footerId) is FooterPart footerPart)
+            {
+                ProcessFooter(footerPart.Footer, sb);
             }
         }
         sb.AppendLine(" ");

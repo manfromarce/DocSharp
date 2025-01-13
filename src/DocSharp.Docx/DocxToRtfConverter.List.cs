@@ -57,9 +57,8 @@ public partial class DocxToRtfConverter
                         int.TryParse(level.PreviousParagraphProperties.Indentation.Hanging?.Value, out int hanging))
                     {
                         sb.Append(@"\pnindent" + hanging);
+                        //sb.Append(@"\pnsp");
                     }
-
-                    //sb.Append(@"\pnsp");
 
                     var start = level.StartNumberingValue?.Val ?? 1;
                     sb.Append(@"\pnstart" + start);
@@ -199,7 +198,6 @@ public partial class DocxToRtfConverter
                     }
                     else if (listType == NumberFormatValues.JapaneseLegal)
                     {
-                        sb.Append(@"\pngbnumd"); // ?
                     }
                     else if (listType == NumberFormatValues.KoreanCounting)
                     {
