@@ -135,7 +135,7 @@ public partial class DocxToRtfConverter
         var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph);
         if (shading != null)
         {
-            ProcessShading(shading, sb);            
+            ProcessShading(shading, sb, ShadingType.Paragraph);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
-    internal void ProcessShading(Shading shading, StringBuilder sb)
+    internal void ProcessShading(Shading shading, StringBuilder sb, ShadingType shadingType)
     {
         if (shading.Val != null && shading.Val != ShadingPatternValues.Nil)
         {
@@ -19,147 +19,147 @@ public partial class DocxToRtfConverter
             }
             else if (shading.Val == ShadingPatternValues.HorizontalCross)
             {
-                sb.Append("\\bgdkcross");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgdkcross" : "\\clbgdkcross");
             }
             else if (shading.Val == ShadingPatternValues.ThinHorizontalCross)
             {
-                sb.Append("\\bgcross");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgcross" : "\\clbgcross");
             }
             else if (shading.Val == ShadingPatternValues.HorizontalStripe)
             {
-                sb.Append("\\bgdkhoriz");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgdkhoriz" : "\\clbgdkhor");
             }
             else if (shading.Val == ShadingPatternValues.ThinHorizontalStripe)
             {
-                sb.Append("\\bghoriz");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bghoriz" : "\\clbghoriz");
             }
             else if (shading.Val == ShadingPatternValues.VerticalStripe)
             {
-                sb.Append("\\bgdkvert");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgdkvert" : "\\clbgdkvert");
             }
             else if (shading.Val == ShadingPatternValues.ThinVerticalStripe)
             {
-                sb.Append("\\bgvert");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgvert" : "\\clbgvert");
             }
             else if (shading.Val == ShadingPatternValues.DiagonalCross)
             {
-                sb.Append("\\bgdkdcross");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgdkdcross" : "\\clbgdkdcross");
             }
             else if (shading.Val == ShadingPatternValues.ThinDiagonalCross)
             {
-                sb.Append("\\bgdcross");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgdcross" : "\\clbgdcross");
             }
             else if (shading.Val == ShadingPatternValues.DiagonalStripe)
             {
-                sb.Append("\\bgdkbdiag");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgdkbdiag" : "\\clbgdkbdiag");
             }
             else if (shading.Val == ShadingPatternValues.ThinDiagonalStripe)
             {
-                sb.Append("\\bgbdiag");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgbdiag" : "\\clbgbdiag");
             }            
             else if (shading.Val == ShadingPatternValues.ReverseDiagonalStripe)
             {
-                sb.Append("\\bgdkfdiag");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgdkfdiag" : "\\clbgdkfdiag");
             }
             else if (shading.Val == ShadingPatternValues.ThinReverseDiagonalStripe)
             {
-                sb.Append("\\bgfdiag");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\bgfdiag" : "\\clbgfdiag");
             }
             else if (shading.Val == ShadingPatternValues.Percent5)
             {
-                sb.Append("\\shading500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading500" : "\\clshdng500");
             }
             else if (shading.Val == ShadingPatternValues.Percent10)
             {
-                sb.Append("\\shading1000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading1000" : "\\clshdng1000");
             }
             else if (shading.Val == ShadingPatternValues.Percent12)
             {
-                sb.Append("\\shading1250");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading1250" : "\\clshdng1250");
             }
             else if (shading.Val == ShadingPatternValues.Percent15)
             {
-                sb.Append("\\shading2000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading1500" : "\\clshdng1500");
             }
             else if (shading.Val == ShadingPatternValues.Percent20)
             {
-                sb.Append("\\shading2000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading2000" : "\\clshdng2000");
             }
             else if (shading.Val == ShadingPatternValues.Percent25)
             {
-                sb.Append("\\shading2500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading2500" : "\\clshdng2500");
             }
             else if (shading.Val == ShadingPatternValues.Percent30)
             {
-                sb.Append("\\shading3000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading3000" : "\\clshdng3000");
             }
             else if (shading.Val == ShadingPatternValues.Percent35)
             {
-                sb.Append("\\shading3500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading3500" : "\\clshdng3500");
             }
             else if (shading.Val == ShadingPatternValues.Percent37)
             {
-                sb.Append("\\shading3750");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading3750" : "\\clshdng3750");
             }
             else if (shading.Val == ShadingPatternValues.Percent40)
             {
-                sb.Append("\\shading4000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading4000" : "\\clshdng4000");
             }
             else if (shading.Val == ShadingPatternValues.Percent45)
             {
-                sb.Append("\\shading4500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading4500" : "\\clshdng4500");
             }
             else if (shading.Val == ShadingPatternValues.Percent50)
             {
-                sb.Append("\\shading5000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading5000" : "\\clshdng5000");
             }
             else if (shading.Val == ShadingPatternValues.Percent55)
             {
-                sb.Append("\\shading5500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading5500" : "\\clshdng5500");
             }
             else if (shading.Val == ShadingPatternValues.Percent60)
             {
-                sb.Append("\\shading6000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading6000" : "\\clshdng6000");
             }
             else if (shading.Val == ShadingPatternValues.Percent62)
             {
-                sb.Append("\\shading6250");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading6250" : "\\clshdng6250");
             }
             else if (shading.Val == ShadingPatternValues.Percent65)
             {
-                sb.Append("\\shading6500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading6500" : "\\clshdng6500");
             }
             else if (shading.Val == ShadingPatternValues.Percent70)
             {
-                sb.Append("\\shading7000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading7000" : "\\clshdng7000");
             }
             else if (shading.Val == ShadingPatternValues.Percent75)
             {
-                sb.Append("\\shading7500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading7500" : "\\clshdng7500");
             }
             else if (shading.Val == ShadingPatternValues.Percent80)
             {
-                sb.Append("\\shading8000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading8000" : "\\clshdng8000");
             }
             else if (shading.Val == ShadingPatternValues.Percent85)
             {
-                sb.Append("\\shading8500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading8500" : "\\clshdng8500");
             }
             else if (shading.Val == ShadingPatternValues.Percent87)
             {
-                sb.Append("\\shading8750");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading8750" : "\\clshdng8750");
             }
             else if (shading.Val == ShadingPatternValues.Percent90)
             {
-                sb.Append("\\shading9000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading9000" : "\\clshdng9000");
             }
             else if (shading.Val == ShadingPatternValues.Percent95)
             {
-                sb.Append("\\shading9500");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading9500" : "\\clshdng9500");
             }
             else if (shading.Val == ShadingPatternValues.Solid)
             {
-                sb.Append("\\shading10000");
+                sb.Append(shadingType == ShadingType.Paragraph ? "\\shading10000" : "\\clshdng10000");
             }
 
             // If shading is not a solid color, check the second/foreground solor
@@ -173,7 +173,8 @@ public partial class DocxToRtfConverter
                 else
                 {
                     colors.TryAddAndGetIndex(shading.Color.Value, out int colorIndex);
-                    sb.Append($"\\cfpat{colorIndex}");
+                    sb.Append(shadingType == ShadingType.Paragraph ? $"\\cfpat{colorIndex}" :
+                              $"\\clcfpat{colorIndex}");
                 }
             }
 
@@ -187,7 +188,8 @@ public partial class DocxToRtfConverter
                 else
                 {
                     colors.TryAddAndGetIndex(shading.Fill.Value, out int colorIndex);
-                    sb.Append($"\\cbpat{colorIndex}");
+                    sb.Append(shadingType == ShadingType.Paragraph ? $"\\cbpat{colorIndex}" :
+                              $"\\clcbpat{colorIndex}");
                 }
             }
         }

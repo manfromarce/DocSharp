@@ -40,7 +40,7 @@ public partial class DocxToRtfConverter
     }
 
     internal void ProcessTableCellProperties(TableCell cell, StringBuilder sb, ref long totalWidth)
-    {
+    {       
         var cellBorders = OpenXmlHelpers.GetEffectiveProperty<TableCellBorders>(cell);
         var tableBorders = OpenXmlHelpers.GetEffectiveProperty<TableBorders>(cell);
 
@@ -68,6 +68,12 @@ public partial class DocxToRtfConverter
         {
             sb.Append(@"\clbrdrr");
             ProcessBorder(rightBorder, sb);
+        }
+
+        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(cell);
+        if (shading != null)
+        {
+            ProcessShading(shading, sb, ShadingType.TableCell);
         }
 
         var cellWidth = OpenXmlHelpers.GetEffectiveProperty<TableCellWidth>(cell);
