@@ -152,7 +152,7 @@ public static class OpenXmlHelpers
         }
 
         // Check default run style for the current document
-        return GetDefaultParagraphStyle(stylesPart)?.GetFirstChild<T>();
+        return GetDefaultRunStyle(stylesPart)?.GetFirstChild<T>();
     }
 
     // Helper function to get table formatting from table properties or style.

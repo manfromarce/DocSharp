@@ -18,6 +18,9 @@ public class FastStringCollection
 
     public void Add(string value)
     {
+        // "Value" will actually be the dictionary key, while the item index + 1 will be the value. 
+        // This allows to search for strings faster in cases where items removal
+        // and a custom numeric key are not needed.
         if (!_dictionary.Contains(value))
         {
             _dictionary.Add(value, _dictionary.Count + 1);
@@ -35,6 +38,30 @@ public class FastStringCollection
         {
             return (int)index;
         }
+    }
+
+    public string? First()
+    {
+        return Any() ? ElementAt(0) : null;
+    }
+
+    public string? Last()
+    {
+        return Any() ? ElementAt(Count - 1) : null;
+    }
+
+    public bool Any()
+    {
+        return Count > 0;
+    }
+
+    public string? ElementAt(int zeroBasedIndex)
+    {
+        if (_dictionary[zeroBasedIndex] is DictionaryEntry entry)
+        {
+            return entry.Key as string;
+        }
+        return null;
     }
 
     public void TryAddAndGetIndex(string value, out int index)
