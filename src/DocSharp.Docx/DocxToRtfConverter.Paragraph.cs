@@ -81,7 +81,7 @@ public partial class DocxToRtfConverter
             }
             else if (spacing.LineRule == LineSpacingRuleValues.Auto)
             {
-                sb.Append($"\\sl-{spacing.Line}\\slmult1");
+                sb.Append($"\\sl{spacing.Line}\\slmult1");
             }
         }
 
@@ -95,16 +95,28 @@ public partial class DocxToRtfConverter
         else if (ind?.Hanging != null)
             sb.Append($"\\fi-{ind.Hanging}");
 
+        var mirrorIndent = OpenXmlHelpers.GetEffectiveProperty<MirrorIndents>(paragraph);
+        if (mirrorIndent != null && (mirrorIndent.Val is null || mirrorIndent.Val))
+        {
+            sb.Append(@"\indmirror");
+        }
+
+        var wControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
+        if (wControl != null && (wControl.Val is null || wControl.Val))
+        {
+            sb.Append(@"\widowctrl");
+        }
+
         var contextualSpacing = OpenXmlHelpers.GetEffectiveProperty<ContextualSpacing>(paragraph);
-        if (contextualSpacing != null)
+        if (contextualSpacing != null && (contextualSpacing.Val is null || contextualSpacing.Val))
             sb.Append(@"\contextualspace");
 
         var keepLines = OpenXmlHelpers.GetEffectiveProperty<KeepLines>(paragraph);
-        if (keepLines != null)
+        if (keepLines != null && (keepLines.Val is null || keepLines.Val))
             sb.Append(@"\keep");
 
         var keepNext = OpenXmlHelpers.GetEffectiveProperty<KeepNext>(paragraph);
-        if (keepNext != null)
+        if (keepNext != null && (keepNext.Val is null || keepNext.Val))
             sb.Append(@"\keepn");
 
         ParagraphBorders? borders = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);

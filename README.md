@@ -16,10 +16,12 @@ There is no common DOM to manipulate or generate documents, this library is for 
 - DOCX to RTF: 
   * Text and most font formatting
   * Paragraph options, lists and tables: many properties are not supported yet, but should be sufficient for medium documents.
+  * Images:
+    - JPEG, PNG and EMF are supported.
   * Hyperlinks and bookmarks
   * Page setup: size, orientation, margins, borders
   * Header and footer
-  * TODO: images and drawings, math formulas, OLE objects and more
+  * TODO: math formulas, drawings, OLE objects and more
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough, superscript, subscript
@@ -28,6 +30,7 @@ There is no common DOM to manipulate or generate documents, this library is for 
     - `ImagesOutputFolder` needs to be set to an existing directory, otherwise images are skipped. An absolute URI is used by default; to produce a relative URI set `ImagesBaseUriOverride` to any not-null folder path (empty string or "." means same folder as the Markdown file, "../images" means images subfolder in the parent folder).
     - Some image types are not recognized (e.g. WordPad embeds images in a different way compared to MS Word and other word processors).
     - Images should be in JPEG, PNG or GIF format to be supported by browsers; BMP is partially supported but not recommended. There is currently no automatic image conversion implemented.
+    - Crop and effects are not supported.
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines

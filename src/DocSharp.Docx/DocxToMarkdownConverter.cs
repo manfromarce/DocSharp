@@ -57,8 +57,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
-        
-
         var text = run.GetFirstChild<Text>()?.InnerText;
         bool hasText = !string.IsNullOrWhiteSpace(text);
 

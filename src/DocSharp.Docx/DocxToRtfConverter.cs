@@ -7,6 +7,11 @@ using DocSharp.Collections;
 using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DrawingML = DocumentFormat.OpenXml.Drawing;
+using ImageData = DocumentFormat.OpenXml.Vml.ImageData;
+using Extent = DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent;
+using ShapeProperties = DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties;
+using BlipFill = DocumentFormat.OpenXml.Drawing.Pictures.BlipFill;
 
 namespace DocSharp.Docx;
 
@@ -17,7 +22,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessBody(Body body, StringBuilder sb)
     {
-        sb.Append(@"{\rtf1\ansi\deff0");
+        sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
         
         // Prepare fonts table 
         sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 Arial;}");        
@@ -55,10 +60,13 @@ public partial class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
     {
-    }
-
-    internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
-    {
+        //var properties = new PictureProperties();
+        //if (picture.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
+        //        imageData.RelationshipId?.Value is string relId)
+        //{
+        //    var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
+        //    ProcessImagePart(mainDocumentPart, relId, properties, sb);
+        //}
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
@@ -82,7 +90,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
         {
             base.ProcessParagraphElement(element, sb);
         }
-        sb.Append(@"}}}"); // final space?
+        sb.Append(@"}}}");
     }
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmarkStart, StringBuilder sb)

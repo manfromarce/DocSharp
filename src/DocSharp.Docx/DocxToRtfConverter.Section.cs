@@ -62,6 +62,31 @@ public partial class DocxToRtfConverter
         sb.Append(firstSection ? @"\sectd" : @"\sect");
         firstSection = false;
 
+        if (sectionProperties.GetFirstChild<SectionType>() is SectionType sectionType && 
+            sectionType.Val != null)
+        {
+            if (sectionType.Val == SectionMarkValues.Continuous)
+            {
+                sb.Append(@"\sbknone");
+            }
+            else if (sectionType.Val == SectionMarkValues.NextColumn)
+            {
+                sb.Append(@"\sbkcol");
+            }
+            else if (sectionType.Val == SectionMarkValues.OddPage)
+            {
+                sb.Append(@"\sbkodd");
+            }
+            else if (sectionType.Val == SectionMarkValues.EvenPage)
+            {
+                sb.Append(@"\sbkeven");
+            }
+            else
+            {
+                sb.Append(@"\sbkpage");
+            }
+        }
+
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {
             if (size.Width != null)
@@ -102,6 +127,14 @@ public partial class DocxToRtfConverter
             if (margins.Gutter != null)
             {
                 sb.Append($"\\gutter{margins.Gutter.Value}");
+            }
+            if (margins.Header != null)
+            {
+                sb.Append($"\\headery{margins.Header.Value}");
+            }
+            if (margins.Footer != null)
+            {
+                sb.Append($"\\footery{margins.Footer.Value}");
             }
         }
         if (sectionProperties.GetFirstChild<PageBorders>() is PageBorders borders)
@@ -172,24 +205,46 @@ public partial class DocxToRtfConverter
                 sb.Append($"\\linebetcol");
             }
         }
+        if (sectionProperties.GetFirstChild<TitlePage>() is TitlePage titlePage && 
+            (titlePage.Val is null || titlePage.Val == true))
+        {
+            sb.Append($"\\titlepg");
+        }        
 
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(sectionProperties);
         if (mainPart != null)
         {
-            var headerReference = sectionProperties.GetFirstChild<HeaderReference>();
-            if (headerReference?.Id?.Value is string headerId &&
-                mainPart.GetPartById(headerId) is HeaderPart headerPart)
-            {
-                ProcessHeader(headerPart.Header, sb);
-            }
+            var headers = sectionProperties.Elements<HeaderReference>();
+            var footers = sectionProperties.Elements<FooterReference>();
 
-            var footerReference = sectionProperties.GetFirstChild<FooterReference>();
-            if (footerReference?.Id?.Value is string footerId &&
-                mainPart.GetPartById(footerId) is FooterPart footerPart)
+            if ((headers != null && headers.Count() > 0) || 
+                (footers != null && footers.Count() > 0))
             {
-                ProcessFooter(footerPart.Footer, sb);
+                sb.Append($"\\facingp");
+                if (headers != null)
+                {
+                    foreach (var headerReference in headers)
+                    {
+                        if (headerReference?.Id?.Value is string headerId &&
+                            mainPart.GetPartById(headerId) is HeaderPart headerPart)
+                        {
+                            ProcessHeader(headerPart.Header, sb, headerReference);
+                        }
+                    }
+                }
+                if (footers != null)
+                {
+                    foreach(var footerReference in footers)
+                    {
+                        if (footerReference?.Id?.Value is string footerId &&
+                            mainPart.GetPartById(footerId) is FooterPart footerPart)
+                        {
+                            ProcessFooter(footerPart.Footer, sb, footerReference);
+                        }
+                    }
+                }
             }
         }
-        sb.AppendLine(" ");
+        sb.AppendLine();
     }
 }
