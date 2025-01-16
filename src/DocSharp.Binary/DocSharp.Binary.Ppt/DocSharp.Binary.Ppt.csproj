@@ -7,6 +7,16 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <!-- NuGet package -->
+  <PropertyGroup>
+    <AssemblyName>DocSharp.Binary.Ppt</AssemblyName>
+    <AssemblyTitle>DocSharp.Binary.Ppt</AssemblyTitle>
+    <PackageId>DocSharp.Binary.Ppt</PackageId>
+    <Title>DocSharp.Binary.Ppt</Title>
+    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
+    <PackageTags>ppt pptx convert powerpoint</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\DocSharp.Binary.Common\DocSharp.Binary.Common.csproj" />
   </ItemGroup>

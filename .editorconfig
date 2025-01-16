@@ -7,7 +7,7 @@ end_of_line = lf
 charset = utf-8
 
 # Xml files
-[*.{xml,csproj}]
+[*.{xml,csproj,props}]
 indent_size = 2
 tab_width = 2
 end_of_line = lf

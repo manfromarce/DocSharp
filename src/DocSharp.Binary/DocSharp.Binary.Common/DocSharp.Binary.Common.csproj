@@ -7,6 +7,15 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AssemblyName>DocSharp.Binary.Common</AssemblyName>
+    <AssemblyTitle>DocSharp.Binary.Common</AssemblyTitle>
+    <PackageId>DocSharp.Binary.Common</PackageId>
+    <Title>DocSharp.Binary.Common</Title>
+    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
+    <PackageTags>doc xls ppt convert</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
   </ItemGroup>

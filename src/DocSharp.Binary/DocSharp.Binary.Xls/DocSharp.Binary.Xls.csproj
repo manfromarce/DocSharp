@@ -7,6 +7,16 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <!-- NuGet package -->
+  <PropertyGroup>
+    <AssemblyName>DocSharp.Binary.Xls</AssemblyName>
+    <AssemblyTitle>DocSharp.Binary.Xls</AssemblyTitle>
+    <PackageId>DocSharp.Binary.Xls</PackageId>
+    <Title>DocSharp.Binary.Xls</Title>
+    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
+    <PackageTags>xls xlsx convert excel</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Records\NumberChart.cs" />
   </ItemGroup>

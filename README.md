@@ -5,14 +5,15 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.
-- DocSharp.Docx: convert DOCX to Markdown and RTF. Possible applications include generating Open XML documents in C# and exporting for other editors / services, or loading Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Docx: convert DOCX to Markdown and RTF. Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX using a custom Markdig renderer.
 
-There is no common DOM to manipulate or generate documents, this library is for conversion only. Additional features which allow easier creation and manipulation of OpenXML documents may be added in the future, for now you can use the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) or other libraries built on top of it: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler).
+There is no common DOM to manipulate or generate documents, this library is mainly for conversion. However, the Docx package provides some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) that may be extended in the future.  
+If your main purpose is creating documents from scratch you can consider the following libraries: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler).
 
 ### Supported features
 
-- Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
+- Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents/encodings. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
 - DOCX to RTF: 
   * Text and most font formatting
   * Paragraph options, lists and tables: many properties are not supported yet, but should be sufficient for medium documents.
@@ -49,9 +50,8 @@ There is no common DOM to manipulate or generate documents, this library is for 
 
 ### Roadmap
 
-- Publish NuGet packages
 - Support more elements and attributes, and fix issues on edge cases
-- RTF to DOCX
+- Reverse RTF to DOCX conversion
 - Documentation: for now you can refer to the sample app. When ready, any documentation will be available in the project [Wiki](https://github.com/manfromarce/DocSharp/wiki).
 
 ### Credits

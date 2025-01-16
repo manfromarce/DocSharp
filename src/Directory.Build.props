@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Product>DocSharp</Product>
+    <Authors>Manfredi Marceca</Authors>
+    <Copyright>Copyright © Manfredi Marceca $([System.DateTime]::Now.Year)</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/manfromarce/DocSharp</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/manfromarce/DocSharp</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>    
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="$(SolutionDir)..\README.md" Pack="true" PackagePath="$(PackageReadmeFile)"/>
+  </ItemGroup>
+</Project>

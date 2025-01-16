@@ -7,6 +7,16 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <!-- NuGet package -->
+  <PropertyGroup>
+    <AssemblyName>DocSharp.Markdown</AssemblyName>
+    <AssemblyTitle>DocSharp.Markdown</AssemblyTitle>
+    <PackageId>DocSharp.Markdown</PackageId>
+    <Title>DocSharp.Markdown</Title>
+    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
+    <PackageTags>docx doc rtf markdown convert</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Docx\Resources\markdown-template.docx" />
   </ItemGroup>

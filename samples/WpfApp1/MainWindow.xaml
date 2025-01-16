@@ -9,34 +9,30 @@
     Width="800"
     Height="450"
     mc:Ignorable="d">
-    <WrapPanel
+    <UniformGrid 
+        Columns="2"
         HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        Orientation="Vertical">
+        VerticalAlignment="Center">
+        <UniformGrid.Resources>
+            <Style TargetType="Button">
+                <Setter Property="Padding" Value="3,5,3,5"/>
+                <Setter Property="Margin" Value="2"/>
+            </Style>
+        </UniformGrid.Resources>
         <Button
-            Margin="2"
-            Padding="3"
             Click="BinaryToOpenXml_Click"
             Content="Binary to Open XML" />
         <Button
-            Margin="2"
-            Padding="3"
             Click="DocxToMarkdown_Click"
             Content="Docx to Markdown" />
         <Button
-            Margin="2"
-            Padding="3"
             Click="DocxToRtf_Click"
-            Content="Docx to Rtf" /> 
+            Content="Docx to Rtf" />
         <Button
-            Margin="2"
-            Padding="3"
             Click="MarkdownToDocx_Click"
             Content="Markdown to Docx" />
         <Button
-            Margin="2"
-            Padding="3"
             Click="MarkdownToDocxAppend_Click"
             Content="Markdown to Docx (Append)" />
-    </WrapPanel>
+    </UniformGrid>
 </Window>

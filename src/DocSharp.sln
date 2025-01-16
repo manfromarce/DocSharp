@@ -16,7 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
 		..\.gitignore = ..\.gitignore
-		..\LICENSE = ..\LICENSE
+		Directory.Build.props = Directory.Build.props
+		..\LICENSE.txt = ..\LICENSE.txt
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -28,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocSharp.Docx", "DocSharp.D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{D4B9A0DF-568D-43A8-BEFD-858AAEA41838}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "..\samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
