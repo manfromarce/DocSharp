@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocSharp.Core\DocSharp.Core.csproj" />
+    <ProjectReference Include="..\DocSharp.Common\DocSharp.Common.csproj" />
     <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
   </ItemGroup>
 

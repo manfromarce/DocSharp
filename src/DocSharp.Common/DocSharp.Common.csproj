@@ -5,14 +5,15 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <RootNamespace>DocSharp</RootNamespace>
   </PropertyGroup>
 
   <!-- NuGet package -->
   <PropertyGroup>
-    <AssemblyName>DocSharp.Core</AssemblyName>
-    <AssemblyTitle>DocSharp.Core</AssemblyTitle>
-    <PackageId>DocSharp.Core</PackageId>
-    <Title>DocSharp.Core</Title>
+    <AssemblyName>DocSharp.Common</AssemblyName>
+    <AssemblyTitle>DocSharp.Common</AssemblyTitle>
+    <PackageId>DocSharp.Common</PackageId>
+    <Title>DocSharp.Common</Title>
     <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
     <PackageTags>docx doc rtf markdown convert</PackageTags>
   </PropertyGroup>
