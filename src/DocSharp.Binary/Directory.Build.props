@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ItemGroup>
+    <None Include="../../../README.md" Pack="true" PackagePath="$(PackageReadmeFile)"/>
+  </ItemGroup>
+  <Import Project="../Directory.Build.props" />
+</Project>
