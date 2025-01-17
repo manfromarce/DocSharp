@@ -9,6 +9,17 @@ namespace DocSharp.Helpers;
 
 public static class StringHelpers
 {
+    public static void AppendLineCrLf(this StringBuilder sb)
+    {
+        sb.Append("\r\n");
+    }
+
+    public static void AppendLineCrLf(this StringBuilder sb, string val)
+    {
+        sb.Append(val);
+        sb.Append("\r\n");
+    }
+
     public static string ToStringInvariant(int i)
     {
         return i.ToString(CultureInfo.InvariantCulture);

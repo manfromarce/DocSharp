@@ -10,7 +10,6 @@
     <RepositoryUrl>https://github.com/manfromarce/DocSharp</RepositoryUrl>
     <PackageProjectUrl>https://github.com/manfromarce/DocSharp</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>    
   </PropertyGroup>
   
   <ItemGroup>

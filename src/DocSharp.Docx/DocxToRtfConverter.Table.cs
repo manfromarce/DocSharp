@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
@@ -16,7 +17,7 @@ public partial class DocxToRtfConverter
         {
             ProcessTableRow(row, sb);
         }
-        sb.AppendLine();
+        sb.AppendLineCrLf();
     }
 
     internal void ProcessTableRow(TableRow row, StringBuilder sb)
@@ -27,13 +28,13 @@ public partial class DocxToRtfConverter
         foreach (var cell in row.Elements<TableCell>())
         {
             ProcessTableCellProperties(cell, sb, ref totalWidth);
-            sb.AppendLine();
+            sb.AppendLineCrLf();
         }
 
         foreach (var cell in row.Elements<TableCell>())
         {
             ProcessTableCell(cell, sb);
-            sb.AppendLine();
+            sb.AppendLineCrLf();
         }
 
         sb.Append(@"\row");

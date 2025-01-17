@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -38,7 +39,7 @@ public partial class DocxToRtfConverter
                     default:
                         return;
                 }
-                sb.AppendLine(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
+                sb.AppendLineCrLf(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
                 sb.Append(format);
                 sb.Append("\\picw");
                 sb.Append(properties.Width);
@@ -56,13 +57,13 @@ public partial class DocxToRtfConverter
                 sb.Append(properties.CropTop);
                 sb.Append("\\piccropb");
                 sb.Append(properties.CropBottom);
-                sb.AppendLine();
+                sb.AppendLineCrLf();
                 int byteValue;
                 while ((byteValue = stream.ReadByte()) != -1)
                 {
                     sb.AppendFormat("{0:X2}", byteValue);
                 }
-                sb.AppendLine("}");
+                sb.AppendLineCrLf("}");
             }
         }
     }

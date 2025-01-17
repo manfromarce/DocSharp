@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -245,6 +246,6 @@ public partial class DocxToRtfConverter
                 }
             }
         }
-        sb.AppendLine();
+        sb.AppendLineCrLf();
     }
 }

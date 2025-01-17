@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
@@ -20,13 +21,12 @@ public partial class DocxToRtfConverter
         sb.Append(' ');
 
         base.ProcessParagraph(paragraph, sb);
-        //bool last = false;
-        //if (!last)
+
         if (paragraph.NextSibling() != null)
         {
             sb.Append("\\par");
         }
-        sb.AppendLine();
+        sb.AppendLineCrLf();
     }
 
     internal void ProcessParagraphFormatting(Paragraph paragraph, StringBuilder sb)

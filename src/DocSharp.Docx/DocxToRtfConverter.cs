@@ -36,20 +36,20 @@ public partial class DocxToRtfConverter : DocxConverterBase
         {
             sb.Append(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
         }
-        sb.AppendLine("}");
+        sb.AppendLineCrLf("}");
         sb.Append(@"{\colortbl ;");
         foreach (var color in colors)
         {
             // Use black as last resort
             sb.Append(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red0\green0\blue0;");
         }
-        sb.AppendLine("}");
+        sb.AppendLineCrLf("}");
 
         // Add body content
         sb.Append(bodySb.ToString());
         
         // Close RTF document
-        sb.AppendLine("}");
+        sb.AppendLineCrLf("}");
     }
 
     internal override void ProcessText(Text text, StringBuilder sb)
