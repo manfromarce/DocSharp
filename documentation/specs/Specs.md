@@ -1,0 +1,14 @@
+This is a list of file format specifications which may be useful for this project.
+- DOCX: <https://msopenspecs.azureedge.net/files/MS-DOCX/%5bMS-DOCX%5d.pdf>
+- XLSX: <https://msopenspecs.azureedge.net/files/MS-XLSX/%5bMS-XLSX%5d.pdf>
+- PPTX: <https://msopenspecs.azureedge.net/files/MS-PPTX/%5bMS-PPTX%5d.pdf>
+- Office implementation of Open XML: <https://msopenspecs.azureedge.net/files/MS-OI29500/%5bMS-OI29500%5d.pdf>
+- DrawingML: <https://msopenspecs.azureedge.net/files/MS-ODRAWXML/%5bMS-ODRAWXML%5d.pdf>
+- Office binary formats (shared): <https://msopenspecs.azureedge.net/files/MS-OSHARED/%5bMS-OSHARED%5d.pdf>
+- DOC: <https://msopenspecs.azureedge.net/files/MS-DOC/%5bMS-DOC%5d.pdf>
+- XLS: <https://msopenspecs.azureedge.net/files/MS-XLS/%5bMS-XLS%5d.pdf>
+- PPT: <https://msopenspecs.azureedge.net/files/MS-PPT/%5bMS-PPT%5d.pdf>
+- Drawings (Office binary formats): <https://msopenspecs.azureedge.net/files/MS-ODRAW/%5bMS-ODRAW%5d.pdf>
+- Charts (Office binary formats): <https://msopenspecs.azureedge.net/files/MS-OGRAPH/%5bMS-OGRAPH%5d.pdf>
+- ODF (Open Document Format): <https://docs.oasis-open.org/office/OpenDocument/>
+- RTF: available in this repo
