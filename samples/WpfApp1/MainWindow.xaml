@@ -34,5 +34,11 @@
         <Button
             Click="MarkdownToDocxAppend_Click"
             Content="Markdown to Docx (Append)" />
+        <Button
+            Click="HtmlToRtf_Click"
+            Content="Html to Docx/Rtf (via Html2OpenXml)" />
+        <Button
+            Click="ViewDocx_Click"
+            Content="View Docx document" />
     </UniformGrid>
 </Window>

@@ -89,7 +89,7 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(WordprocessingDocument inputDocument, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream))
+        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
         {
             streamWriter.Write(ConvertToString(inputDocument));
         }
@@ -112,7 +112,7 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(string inputFilePath, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream))
+        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
         {
             streamWriter.Write(ConvertToString(inputFilePath));
         }
@@ -135,7 +135,7 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(Stream inputStream, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream))
+        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
         {
             streamWriter.Write(ConvertToString(inputStream));
         }
@@ -158,7 +158,7 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(byte[] inputBytes, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream))
+        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
         {
             streamWriter.Write(ConvertToString(inputBytes));
         }

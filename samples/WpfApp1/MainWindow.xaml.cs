@@ -18,6 +18,7 @@ using b2xtranslator.DocFileFormat;
 using b2xtranslator.Spreadsheet.XlsFileFormat;
 using b2xtranslator.PptFileFormat;
 using DocSharp.Markdown;
+using HtmlToOpenXml;
 
 namespace WpfApp1;
 /// <summary>
@@ -234,6 +235,96 @@ public partial class MainWindow : Window
                 {
                     MessageBox.Show(ex.Message);
                 }
+            }
+        }
+    }
+
+    private async void HtmlToRtf_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "HTML|*.html;*.htm",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Rich Text Format|*.rtf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".rtf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    string html = File.ReadAllText(ofd.FileName);
+                    // Move styles inline for better results.
+                    var result = PreMailer.Net.PreMailer.MoveCssInline(html);
+                    string normalizedHtml = result.Html;
+
+                    string docxFilePath = Path.ChangeExtension(sfd.FileName, ".docx");
+                    using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(docxFilePath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+                    {
+                        var mainPart = package.AddMainDocumentPart();
+                        mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
+                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());                        
+                        var htmlConverter = new HtmlConverter(mainPart);
+                        await htmlConverter.ParseBody(normalizedHtml);
+                        package.Save();
+                    }
+
+                    var converter = new DocxToRtfConverter();
+                    converter.Convert(docxFilePath, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void ViewDocx_Click(object sender, RoutedEventArgs e)
+    {
+        // Please note that the WPF RichTextBox supports a subset of RTF features.
+        // To test the DOCX --> RTF conversion provided by DocSharp,
+        // the RTF document should be opened in MS Word.
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            try
+            {
+                using (var ms = new MemoryStream())
+                {
+                    var converter = new DocxToRtfConverter();
+                    converter.Convert(ofd.FileName, ms);
+                    var rtbWindow = new Window()
+                    {
+                        Owner = this,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+                    var rtb = new RichTextBox()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        VerticalAlignment = VerticalAlignment.Stretch,
+                        IsInactiveSelectionHighlightEnabled = true,
+                        AutoWordSelection = false,
+                        AcceptsReturn = true,
+                        AcceptsTab = true,
+                    };
+                    rtbWindow.Content = rtb;
+                    rtb.SelectAll();
+                    rtb.Selection.Load(ms, DataFormats.Rtf);
+                    rtbWindow.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
             }
         }
     }
