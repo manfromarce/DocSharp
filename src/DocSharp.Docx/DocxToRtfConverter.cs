@@ -100,7 +100,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, StringBuilder sb) 
     { 
-        sb.Append(@"{\*\bkmkend " + OpenXmlHelpers.GetBookmarkName(bookmarkEnd) + "}");
+        sb.Append(@"{\*\bkmkend " + bookmarkEnd.GetBookmarkName() + "}");
     }
 
     internal override void ProcessBreak(Break @break, StringBuilder sb)

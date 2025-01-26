@@ -20,6 +20,11 @@ public static class StringHelpers
         sb.Append("\r\n");
     }
 
+    public static string NormalizeNewLines(this string s)
+    {
+        return s.Replace("\r\n", "\n").Replace("\r", "\n");
+    }
+
     public static string ToStringInvariant(int i)
     {
         return i.ToString(CultureInfo.InvariantCulture);

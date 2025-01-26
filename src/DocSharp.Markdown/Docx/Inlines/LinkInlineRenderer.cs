@@ -248,7 +248,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 int maxHeight = 9972000;
                 ScaleImageSize(ref width, ref height, maxWidth, maxHeight);
 
-                var imageElement = OpenXmlHelpers.CreateImage(rId, width, height, _imageIdCounter, label, title);
+                var imageElement = ImageHelpers.CreateImage(rId, width, height, _imageIdCounter, label, title);
                 ++_imageIdCounter;
                 if (renderer.Cursor.Container is Run run)
                 {
