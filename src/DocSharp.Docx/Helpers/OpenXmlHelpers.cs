@@ -130,8 +130,8 @@ public static class OpenXmlHelpers
         }
 
         // Check paragraph properties
-        var paragraphRunProperties = run.GetFirstAncestor<Paragraph>()?.ParagraphProperties?.ParagraphMarkRunProperties;
-        propertyValue = paragraphRunProperties?.GetFirstChild<T>();
+        var paragraphProperties = run.GetFirstAncestor<Paragraph>()?.ParagraphProperties;
+        propertyValue = paragraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<T>();
         if (propertyValue != null)
         {
             return propertyValue;
@@ -150,6 +150,20 @@ public static class OpenXmlHelpers
 
             // Check styles from which the current style inherits
             runStyle = stylesPart.GetBaseStyle(runStyle);
+        }
+
+        // Check paragraph style
+        var paragraphStyle = stylesPart.GetStyleFromId(paragraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
+        while (paragraphStyle != null)
+        {
+            propertyValue = paragraphStyle.StyleRunProperties?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
         }
 
         // Check default run style for the current document
