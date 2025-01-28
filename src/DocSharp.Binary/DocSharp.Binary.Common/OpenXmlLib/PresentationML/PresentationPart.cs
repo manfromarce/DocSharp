@@ -18,7 +18,7 @@ namespace b2xtranslator.OpenXmlLib.PresentationML
 
         private string _type;
 
-        protected VbaProjectPart? _vbaProjectPart;
+        protected VbaProjectPart _vbaProjectPart;
         
         public PresentationPart(OpenXmlPartContainer parent, string contentType)
             : base(parent, 0)

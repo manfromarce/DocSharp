@@ -13,7 +13,7 @@ namespace b2xtranslator.PresentationMLMapping
     class AnimationMapping : AbstractOpenXmlMapping
     {
         protected ConversionContext _ctx;
-        private ShapeTreeMapping? _stm;
+        private ShapeTreeMapping _stm;
         private List<Point> TextAreasForAnimation = new List<Point>();
 
         public AnimationMapping(ConversionContext ctx, XmlWriter writer)
@@ -48,7 +48,7 @@ namespace b2xtranslator.PresentationMLMapping
              }
         }
 
-        private PresentationMapping<RegularContainer>? _parentMapping;
+        private PresentationMapping<RegularContainer> _parentMapping;
 
         private int lastID = 0;
         private void writeTiming(Dictionary<AnimationInfoAtom, int> blindAtoms, ProgBinaryTagDataBlob blob)
@@ -95,7 +95,7 @@ namespace b2xtranslator.PresentationMLMapping
                         {
 
                             int counter = 0;
-                            AnimationInfoAtom? a;
+                            AnimationInfoAtom a;
                             var atoms = new List<AnimationInfoAtom>();
                             foreach (var key in blindAtoms.Keys) atoms.Add(key);
 
@@ -260,7 +260,7 @@ namespace b2xtranslator.PresentationMLMapping
         }
 
 
-        private void writePar(ExtTimeNodeContainer container, AnimationInfoAtom? animinfo)
+        private void writePar(ExtTimeNodeContainer container, AnimationInfoAtom animinfo)
         {
 
             this._writer.WriteStartElement("p", "par", OpenXmlNamespaces.PresentationML);
@@ -525,7 +525,7 @@ namespace b2xtranslator.PresentationMLMapping
             var attrName = tbc.FirstChildWithType<TimeStringListContainer>().FirstChildWithType<TimeVariantValue>();
             var vsa = tbc.FirstChildWithType<ClientVisualElementContainer>().FirstChildWithType<VisualShapeAtom>();
 
-            TimeConditionAtom? tca = null;
+            TimeConditionAtom tca = null;
             if (c.FirstChildWithType<TimeConditionContainer>() != null)
             tca = c.FirstChildWithType<TimeConditionContainer>().FirstChildWithType<TimeConditionAtom>();
 
@@ -912,7 +912,7 @@ namespace b2xtranslator.PresentationMLMapping
 
                 TimeAnimationValueAtom tava;
                 TimeVariantValue tvv;
-                TimeVariantValue? tvv2 = null;
+                TimeVariantValue tvv2 = null;
                 while (lst.Count > 0)
                 {
                     tava = (TimeAnimationValueAtom)lst[0];

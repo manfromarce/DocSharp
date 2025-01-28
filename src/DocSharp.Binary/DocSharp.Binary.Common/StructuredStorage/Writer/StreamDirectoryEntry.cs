@@ -32,7 +32,7 @@ namespace b2xtranslator.StructuredStorage.Writer
         /// </summary>
         internal override void writeReferencedStream()
         {
-            VirtualStream? vStream = null;
+            VirtualStream vStream = null;
             if (this._stream.Length < this.Context.Header.MiniSectorCutoff)
             {
                 vStream = new VirtualStream(this._stream, this.Context.MiniFat, this.Context.Header.MiniSectorSize, this.Context.RootDirectoryEntry.MiniStream);

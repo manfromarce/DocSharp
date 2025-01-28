@@ -6,7 +6,7 @@ namespace b2xtranslator.PptFileFormat
     [OfficeRecord(4082)]
     public class MouseClickInteractiveInfoContainer : RegularContainer
     {
-        public MouseClickTextInteractiveInfoAtom? Range;
+        public MouseClickTextInteractiveInfoAtom Range;
 
         public MouseClickInteractiveInfoContainer(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance) {

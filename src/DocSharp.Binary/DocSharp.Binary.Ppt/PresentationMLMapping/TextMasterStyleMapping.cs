@@ -71,7 +71,7 @@ namespace b2xtranslator.PresentationMLMapping
 
             this._writer.WriteStartElement("p", "titleStyle", OpenXmlNamespaces.PresentationML);
 
-            ParagraphRun9? pr9 = null;
+            ParagraphRun9 pr9 = null;
             foreach (var atom in this.titleAtoms)
             {
                 this.lastSpaceBefore = 0;
@@ -137,7 +137,7 @@ namespace b2xtranslator.PresentationMLMapping
 
             this._writer.WriteStartElement("p", "notesStyle", OpenXmlNamespaces.PresentationML);
 
-            ParagraphRun9? pr9 = null;
+            ParagraphRun9 pr9 = null;
             foreach (var atom in this.noteAtoms)
             {
                 this.lastSpaceBefore = 0;
@@ -173,7 +173,7 @@ namespace b2xtranslator.PresentationMLMapping
 
             this._writer.WriteStartElement("p", "handoutStyle", OpenXmlNamespaces.PresentationML);
 
-            ParagraphRun9? pr9 = null;
+            ParagraphRun9 pr9 = null;
             foreach (var atom in this.noteAtoms)
             {
                 this.lastSpaceBefore = 0;
@@ -368,7 +368,7 @@ namespace b2xtranslator.PresentationMLMapping
                                 {
                                     if (blips.Children.Count > pr9.bulletblipref & pr9.bulletblipref > -1)
                                     {
-                                        ImagePart? imgPart = null;
+                                        ImagePart imgPart = null;
 
                                         var b = ((BlipEntityAtom)blips.Children[pr9.bulletblipref]).blip;
 

@@ -67,7 +67,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat
                             var bs = new BoundSheet8(this.StreamReader, bh.id, bh.length);
                             TraceLogger.DebugInternal(bs.ToString());
 
-                            SheetData? sheetData = null;
+                            SheetData sheetData = null;
 
                             switch (bs.dt)
                             {

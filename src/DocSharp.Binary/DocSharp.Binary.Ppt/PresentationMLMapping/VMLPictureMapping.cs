@@ -16,7 +16,7 @@ namespace b2xtranslator.PresentationMLMapping
         : AbstractOpenXmlMapping
     {
         ContentPart _targetPart;
-        private ConversionContext? _ctx;
+        private ConversionContext _ctx;
 
         public VMLPictureMapping(VmlPart vmlPart, XmlWriterSettings xws)
             : base(XmlWriter.Create(vmlPart.GetStream(), xws))

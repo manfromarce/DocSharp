@@ -1,6 +1,3 @@
-
-
-
 namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
 {
     public class BorderPartData
@@ -19,7 +16,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             if (obj is BorderPartData bpd)
             {
@@ -34,7 +31,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
         /// </summary>
         /// <param name="fd"></param>
         /// <returns></returns>
-        public bool Equals(BorderPartData? bpd)
+        public bool Equals(BorderPartData bpd)
         {
             // If parameter is null return false:
             if (bpd == null)

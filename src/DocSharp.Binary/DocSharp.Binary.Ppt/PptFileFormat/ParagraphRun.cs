@@ -23,7 +23,7 @@ namespace b2xtranslator.PptFileFormat
         public ushort IndentLevel;
         public ParagraphMask Mask;
 
-        public TabStop[]? TabStops;
+        public TabStop[] TabStops;
 
         #region Presence flag getters
         public bool BulletFlagsFieldPresent
@@ -128,7 +128,7 @@ namespace b2xtranslator.PptFileFormat
         public char? BulletChar;
         public ushort? BulletTypefaceIdx;
         public short? BulletSize;
-        public GrColorAtom? BulletColor;
+        public GrColorAtom BulletColor;
         public short? Alignment;
         public short? LineSpacing;
         public short? SpaceBefore;

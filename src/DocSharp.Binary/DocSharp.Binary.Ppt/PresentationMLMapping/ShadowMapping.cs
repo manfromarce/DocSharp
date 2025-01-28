@@ -14,7 +14,7 @@ namespace b2xtranslator.PresentationMLMapping
         IMapping<ShapeOptions>
     {
         protected ConversionContext _ctx;
-        private ShapeOptions? so;
+        private ShapeOptions so;
 
         public ShadowMapping(ConversionContext ctx, XmlWriter writer)
             : base(writer)

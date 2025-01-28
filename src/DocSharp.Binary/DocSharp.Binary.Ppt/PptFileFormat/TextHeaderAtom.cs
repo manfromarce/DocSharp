@@ -24,9 +24,9 @@ namespace b2xtranslator.PptFileFormat
     {
         public TextType TextType;
 
-        public TextAtom? TextAtom;
+        public TextAtom TextAtom;
 
-        public TextStyleAtom? TextStyleAtom;
+        public TextStyleAtom TextStyleAtom;
 
         public TextHeaderAtom(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance)

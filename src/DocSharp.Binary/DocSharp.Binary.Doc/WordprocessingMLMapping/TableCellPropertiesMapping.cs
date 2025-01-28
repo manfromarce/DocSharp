@@ -19,13 +19,13 @@ namespace b2xtranslator.WordprocessingMLMapping
         private XmlElement _tcMar;
         private XmlElement _tcBorders;
         private List<short> _grid;
-        private short[]? _tGrid;
+        private short[] _tGrid;
 
         private short _width;
         private Global.CellWidthType _ftsWidth;
         private TC80 _tcDef;
 
-        private BorderCode? _brcTop, _brcLeft, _brcRight, _brcBottom;
+        private BorderCode _brcTop, _brcLeft, _brcRight, _brcBottom;
 
         /// <summary>
         /// The grind span of this cell

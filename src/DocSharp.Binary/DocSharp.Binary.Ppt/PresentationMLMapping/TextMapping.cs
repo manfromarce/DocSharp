@@ -17,7 +17,7 @@ namespace b2xtranslator.PresentationMLMapping
         protected ConversionContext _ctx;
         private string lang = "";
         private string altLang = "";
-        private ShapeTreeMapping? parentShapeTreeMapping = null;
+        private ShapeTreeMapping parentShapeTreeMapping = null;
 
         public TextMapping(ConversionContext ctx, XmlWriter writer)
             : base(writer)
@@ -31,7 +31,7 @@ namespace b2xtranslator.PresentationMLMapping
         /// <param name="style">style to use</param>
         /// <param name="forIdx">index to use</param>
         /// <returns>ParagraphRun or null in case no run was found</returns>
-        protected static ParagraphRun? GetParagraphRun(TextStyleAtom style, uint forIdx, ref int runCount)
+        protected static ParagraphRun GetParagraphRun(TextStyleAtom style, uint forIdx, ref int runCount)
         {
             if (style == null)
                 return null;
@@ -81,7 +81,7 @@ namespace b2xtranslator.PresentationMLMapping
         /// <param name="style">style to use</param>
         /// <param name="forIdx">index to use</param>
         /// <returns>CharacterRun or null in case no run was found</returns>
-        protected static CharacterRun? GetCharacterRun(TextStyleAtom style, uint forIdx)
+        protected static CharacterRun GetCharacterRun(TextStyleAtom style, uint forIdx)
         {
             if (style == null)
                 return null;
@@ -122,19 +122,19 @@ namespace b2xtranslator.PresentationMLMapping
             Apply(null, textbox, "", "", "", false);
         }
 
-        public void Apply(ShapeTreeMapping? pparentShapeTreeMapping, ClientTextbox textbox, string footertext, string headertext, string datetext, bool insideTable)
+        public void Apply(ShapeTreeMapping pparentShapeTreeMapping, ClientTextbox textbox, string footertext, string headertext, string datetext, bool insideTable)
         {
             this.parentShapeTreeMapping = pparentShapeTreeMapping;
             var ms = new System.IO.MemoryStream(textbox.Bytes);
             var rec = Record.ReadRecord(ms);
-            TextHeaderAtom? thAtom = null;
-            TextStyleAtom? style = null;
-            FooterMCAtom? mca = null;
-            TextSpecialInfoAtom? sia = null;
-            TextSpecialInfoAtom? siaDefaults = null;
-            TextRulerAtom? ruler = null;
+            TextHeaderAtom thAtom = null;
+            TextStyleAtom style = null;
+            FooterMCAtom mca = null;
+            TextSpecialInfoAtom sia = null;
+            TextSpecialInfoAtom siaDefaults = null;
+            TextRulerAtom ruler = null;
             var mciics = new List<MouseClickInteractiveInfoContainer>();
-            MasterTextPropAtom? masterTextProp = null;
+            MasterTextPropAtom masterTextProp = null;
             string text = "";
             string origText = "";
             var so = textbox.FirstAncestorWithType<ShapeContainer>().FirstChildWithType<ShapeOptions>();

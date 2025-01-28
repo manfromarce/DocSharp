@@ -38,7 +38,7 @@ namespace b2xtranslator.PresentationMLMapping
 
         public static string SlideSizeTypeToXMLValue(SlideSizeType sst)
         {
-            // OOXML Spec ง 4.8.22
+            // OOXML Spec ยง 4.8.22
             switch (sst)
             {
                 case SlideSizeType.A4Paper:
@@ -306,7 +306,7 @@ namespace b2xtranslator.PresentationMLMapping
             //{
             //    if (color.Instance == 1) MasterScheme = color;
             //}
-            ColorSchemeAtom? MasterScheme = colors.Where(c => c.Instance == 1).FirstOrDefault();
+            ColorSchemeAtom MasterScheme = colors.Where(c => c.Instance == 1).FirstOrDefault();
 
             if (fSysIndex)
             {

@@ -86,7 +86,7 @@ namespace b2xtranslator.PptFileFormat
         /// 
         /// It MAY be omitted.
         /// </summary>
-        public string? UserNameUnicode;
+        public string UserNameUnicode;
 
         /// <summary>
         /// UserNameUnicode if present, else UserNameANSI.

@@ -7,8 +7,8 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
 {
     public class FontData
     {
-        public string? fontName;
-        public TwipsValue? size;
+        public string fontName;
+        public TwipsValue size;
         public Font.FontFamily fontFamily;
         public byte charSet;
 

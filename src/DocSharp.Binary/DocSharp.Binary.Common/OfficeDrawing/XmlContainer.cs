@@ -13,16 +13,6 @@ namespace b2xtranslator.OfficeDrawing
         public XmlContainer(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance)
         {
-            // Note: XmlContainers contain the data of a partial "unfinished" OOXML file (.zip based) as their body.
-            //
-            // I really don't like writing the data to a temp file just to be able to open it via ZipUtils.
-            //
-            // Possible alternatives:
-            // 1) Using System.IO.Compression -- supports inflation, but can't parse Zip header data
-            // 2) Modifying zlib + minizlib + ZipLib so I can pass in bytes, possible, but not worth the effort       
-            
-            // KH - I've left the original comment above, but I've ported this to use option (1) as the IZipLib result can't read headers anyway - it can only open entries.
-
             using (var zipReader = ZipFactory.OpenArchive(this.Reader.BaseStream))
                 this.XmlDocumentElement = ExtractDocumentElement(zipReader, GetRelations(zipReader, ""));
         }

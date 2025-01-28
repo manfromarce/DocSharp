@@ -16,12 +16,12 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
         /// <summary>
         /// Getter Setter from Row 
         /// </summary>
-	    public int Row
-	    {
-		    get { return this.row;}
-		    set { this.row = value;}
-	    }
-	
+        public int Row
+        {
+            get { return this.row;}
+            set { this.row = value;}
+        }
+    
         /// <summary>
         /// The column of the object 
         /// </summary>
@@ -29,11 +29,11 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
         /// <summary>
         /// Getter Setter from col 
         /// </summary>
-	    public int Col
-	    {
-		    get { return this.col;}
-		    set { this.col = value;}
-	    }
+        public int Col
+        {
+            get { return this.col;}
+            set { this.col = value;}
+        }
 
         /// <summary>
         /// TemplateID from this object 
@@ -89,7 +89,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public int CompareTo(object? obj)
+        public int CompareTo(object obj)
         {
             if (obj is AbstractCellData cell)
             {

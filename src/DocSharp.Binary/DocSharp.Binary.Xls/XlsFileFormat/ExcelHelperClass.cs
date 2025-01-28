@@ -179,7 +179,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat
                     {
                         ptgtype -= 0x20;
                     }
-                    AbstractPtg? ptg = null;
+                    AbstractPtg ptg = null;
                     if (ptgtype == PtgNumber.Ptg0x19Sub)
                     {
                         var ptgtype2 = (Ptg0x19Sub)reader.ReadByte();

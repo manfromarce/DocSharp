@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -216,13 +216,12 @@ namespace b2xtranslator.OpenXmlLib
                             }
                             else
                             {
-                                writer.WriteAttributeString("Target", rel.Target.ToString());
+                                writer.WriteAttributeString("Target", rel.Target);
                             }
                         }
                         else
                         {
-
-                            writer.WriteAttributeString("Target", Uri.EscapeUriString(rel.Target.ToString()));
+                            writer.WriteAttributeString("Target", Uri.EscapeUriString(rel.Target));
                         }
                     }
                     else

@@ -1,8 +1,7 @@
 
-
 namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
 {
-    public class FillData : System.Object
+    public class FillData
     {
         /// <summary>
         /// Type from this filldata object 
@@ -49,7 +48,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             if (obj is FillData fd)
             {

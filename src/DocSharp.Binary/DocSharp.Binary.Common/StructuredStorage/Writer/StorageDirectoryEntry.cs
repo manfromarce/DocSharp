@@ -66,7 +66,7 @@ namespace b2xtranslator.StructuredStorage.Writer
         /// <returns>The storage directory entry whic hahs been added.</returns>
         public StorageDirectoryEntry AddStorageDirectoryEntry(string name)
         {
-            StorageDirectoryEntry? result = null;
+            StorageDirectoryEntry result = null;
             result = this._storageDirectoryEntries.Find(delegate(StorageDirectoryEntry a) { return name == a.Name; });
             if (result != null)
             {

@@ -11,8 +11,8 @@ namespace b2xtranslator.OpenXmlLib
         protected Dictionary<string, string> _defaultTypes = new Dictionary<string, string>();
         protected Dictionary<string, string> _partOverrides = new Dictionary<string, string>();
 
-        protected CorePropertiesPart? _coreFilePropertiesPart;
-        protected AppPropertiesPart? _appPropertiesPart;
+        protected CorePropertiesPart _coreFilePropertiesPart;
+        protected AppPropertiesPart _appPropertiesPart;
 
         protected int _imageCounter;
         protected int _vmlCounter;
@@ -65,7 +65,7 @@ namespace b2xtranslator.OpenXmlLib
             set { this._fileName = value; }
         }
 
-        public CorePropertiesPart? CoreFilePropertiesPart
+        public CorePropertiesPart CoreFilePropertiesPart
         {
             get { return this._coreFilePropertiesPart; }
             set { this._coreFilePropertiesPart = value; }
@@ -77,7 +77,7 @@ namespace b2xtranslator.OpenXmlLib
             return this.AddPart(this.CoreFilePropertiesPart);
         }
 
-        public AppPropertiesPart? AppPropertiesPart
+        public AppPropertiesPart AppPropertiesPart
         {
             get { return this._appPropertiesPart; }
             set { this._appPropertiesPart = value; }

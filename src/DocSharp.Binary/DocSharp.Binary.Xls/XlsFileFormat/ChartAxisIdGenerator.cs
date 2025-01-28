@@ -20,7 +20,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat
         /// <summary>
         /// This class is a singleton
         /// </summary>
-        private static ChartAxisIdGenerator? _instance;
+        private static ChartAxisIdGenerator _instance;
 
         private ChartAxisIdGenerator()
         {

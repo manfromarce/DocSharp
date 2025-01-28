@@ -503,7 +503,7 @@ namespace b2xtranslator.PresentationMLMapping
                 else
                 {
 
-                    ColorSchemeAtom? MasterScheme = null;
+                    ColorSchemeAtom MasterScheme = null;
                     var ato = slide.FirstChildWithType<SlideAtom>();
                     List<ColorSchemeAtom> colors;
                     if (ato != null && Tools.Utils.BitmaskToBool(ato.Flags, 0x1 << 1) && ato.MasterId != 0)

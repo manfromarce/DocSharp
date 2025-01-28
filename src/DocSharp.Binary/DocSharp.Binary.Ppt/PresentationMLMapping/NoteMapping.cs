@@ -10,7 +10,7 @@ namespace b2xtranslator.PresentationMLMapping
 {
     public class NoteMapping : PresentationMapping<RegularContainer>
     {
-        public Note? Note;
+        public Note Note;
         private SlideMapping SlideMapping;
 
         public NoteMapping(ConversionContext ctx, SlideMapping slideMapping)

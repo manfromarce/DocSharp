@@ -14,7 +14,7 @@ namespace b2xtranslator.PresentationMLMapping
     public class HandoutMasterMapping : PresentationMapping<RegularContainer>
     {
         public HandoutMasterPart MasterPart;
-        protected Handout? Master;
+        protected Handout Master;
         protected uint MasterId;
 
         public HandoutMasterMapping(ConversionContext ctx)

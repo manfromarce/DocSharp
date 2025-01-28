@@ -9,8 +9,8 @@ namespace b2xtranslator.PresentationMLMapping
 {
     public class SlideMapping : PresentationMapping<RegularContainer>
     {
-        public Slide? Slide;
-        public ShapeTreeMapping? shapeTreeMapping;
+        public Slide Slide;
+        public ShapeTreeMapping shapeTreeMapping;
 
         public SlideMapping(ConversionContext ctx)
             : base(ctx, ctx.Pptx.PresentationPart.AddSlidePart())
@@ -49,7 +49,7 @@ namespace b2xtranslator.PresentationMLMapping
             uint mainMasterId = GetMainMasterId(slideAtom);
             var layoutManager = this._ctx.GetOrCreateLayoutManagerByMasterId(mainMasterId);
 
-            SlideLayoutPart? layoutPart = null;
+            SlideLayoutPart layoutPart = null;
             var masterInfo = slide.FirstChildWithType<RoundTripContentMasterId12>();
 
             // PPT2007 OOXML-Layout

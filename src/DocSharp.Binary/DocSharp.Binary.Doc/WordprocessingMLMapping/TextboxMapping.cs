@@ -33,7 +33,7 @@ namespace b2xtranslator.WordprocessingMLMapping
 
             int cp = 0;
             int cpEnd = 0;
-            BreakDescriptor? bkd = null;
+            BreakDescriptor bkd = null;
             int txtbxSubdocStart = doc.FIB.ccpText + doc.FIB.ccpFtn + doc.FIB.ccpHdr + doc.FIB.ccpAtn + doc.FIB.ccpEdn;
 
             if(this._targetPart.GetType() == typeof(MainDocumentPart))

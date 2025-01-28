@@ -8,11 +8,11 @@ namespace b2xtranslator.OpenXmlLib.SpreadsheetML
         private int _chartsheetNumber;
         private int _drawingsNumber;
         private int _externalLinkNumber;
-        protected WorksheetPart? _workSheetPart;
-        protected SharedStringPart? _sharedStringPart;
-        protected ExternalLinkPart? _externalLinkPart;
-        protected VbaProjectPart? _vbaProjectPart;
-        protected StylesPart? _stylesPart;
+        protected WorksheetPart _workSheetPart;
+        protected SharedStringPart _sharedStringPart;
+        protected ExternalLinkPart _externalLinkPart;
+        protected VbaProjectPart _vbaProjectPart;
+        protected StylesPart _stylesPart;
         private string _type;
 
         public WorkbookPart(OpenXmlPartContainer parent, string contentType)
@@ -76,7 +76,7 @@ namespace b2xtranslator.OpenXmlLib.SpreadsheetML
         /// return the latest created worksheetpart
         /// </summary>
         /// <returns></returns>
-        public WorksheetPart? GetWorksheetPart()
+        public WorksheetPart GetWorksheetPart()
         {
             return this._workSheetPart; 
         }
@@ -96,7 +96,7 @@ namespace b2xtranslator.OpenXmlLib.SpreadsheetML
         /// return the latest created worksheetpart
         /// </summary>
         /// <returns></returns>
-        public ExternalLinkPart? GetExternalLinkPart()
+        public ExternalLinkPart GetExternalLinkPart()
         {
             return this._externalLinkPart;
         }

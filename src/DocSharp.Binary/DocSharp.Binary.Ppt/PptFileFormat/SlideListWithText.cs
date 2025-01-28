@@ -37,8 +37,8 @@ namespace b2xtranslator.PptFileFormat
         public SlideListWithText(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance)
         {
-            SlidePersistAtom? curSpAtom = null;
-            TextHeaderAtom? curThAtom = null;
+            SlidePersistAtom curSpAtom = null;
+            TextHeaderAtom curThAtom = null;
 
             foreach (var r in this.Children)
             {

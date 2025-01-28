@@ -56,7 +56,7 @@ namespace b2xtranslator.PptFileFormat
     [OfficeRecord(4044)]
     public class ExOleEmbedContainer : RegularContainer
     {
-        public ExOleObjStgAtom? stgAtom;
+        public ExOleObjStgAtom stgAtom;
 
         public ExOleEmbedContainer(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance) { }

@@ -11,7 +11,7 @@ namespace b2xtranslator.PptFileFormat
         public Note(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance) { }
 
-        public SlidePersistAtom? PersistAtom;
+        public SlidePersistAtom PersistAtom;
     }
 
 }

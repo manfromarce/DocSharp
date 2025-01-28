@@ -120,7 +120,7 @@ namespace b2xtranslator.PresentationMLMapping
         }
 
        
-       private void CreateSlides(PowerpointDocument ppt, DocumentContainer? documentRecord)
+       private void CreateSlides(PowerpointDocument ppt, DocumentContainer documentRecord)
         {
             var slideLists = ppt.DocumentRecord?.AllChildrenWithType<SlideListWithText>();
             if (slideLists != null)
@@ -179,7 +179,7 @@ namespace b2xtranslator.PresentationMLMapping
             }
        }
 
-        private void WriteSlides(PowerpointDocument ppt, DocumentContainer? documentRecord)
+        private void WriteSlides(PowerpointDocument ppt, DocumentContainer documentRecord)
         {
             this._writer.WriteStartElement("p", "sldIdLst", OpenXmlNamespaces.PresentationML);
 

@@ -24,7 +24,7 @@ namespace b2xtranslator.PptFileFormat
         /// </summary>
         public List<SlidePersistAtom> SlidePersistList = new List<SlidePersistAtom>();
 
-        public SlideListWithText? RegularSlideListWithText;
+        public SlideListWithText RegularSlideListWithText;
 
         public List DocInfoListContainer;
 
@@ -35,7 +35,7 @@ namespace b2xtranslator.PptFileFormat
 
             foreach (var collection in this.AllChildrenWithType<SlideListWithText>())
             {
-                List<SlidePersistAtom>? target = null;
+                List<SlidePersistAtom> target = null;
 
                 switch ((SlideListWithText.Instances)collection.Instance)
                 {
@@ -75,7 +75,7 @@ namespace b2xtranslator.PptFileFormat
             this.DocInfoListContainer = FirstChildWithType<List>();
         }
 
-        public SlidePersistAtom? SlidePersistAtomForSlideWithIdx(uint idx)
+        public SlidePersistAtom SlidePersistAtomForSlideWithIdx(uint idx)
         {
             foreach (var atom in this.SlidePersistList)
                 // idx is zero-based, psr-reference is one-based

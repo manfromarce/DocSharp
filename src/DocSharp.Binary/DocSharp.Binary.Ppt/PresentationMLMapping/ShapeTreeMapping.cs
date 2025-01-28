@@ -60,7 +60,7 @@ namespace b2xtranslator.PresentationMLMapping
             }
         }
 
-        public void Apply(PPDrawing? drawing)
+        public void Apply(PPDrawing drawing)
         {
             if (drawing is RegularContainer regularContainer)
             {
@@ -1919,7 +1919,7 @@ namespace b2xtranslator.PresentationMLMapping
             {
                  var chanchor = container.FirstChildWithType<ChildAnchor>();
                  anchor = new Rectangle(chanchor.Left, chanchor.Top, chanchor.rcgBounds.Width, chanchor.rcgBounds.Height);
-                 if (anchor != null && anchor.Right >= anchor.Left && anchor.Bottom >= anchor.Top)
+                 if (anchor.Right >= anchor.Left && anchor.Bottom >= anchor.Top)
                  {
                     this._writer.WriteStartElement("p", "xfrm", OpenXmlNamespaces.PresentationML);
 
@@ -1939,7 +1939,7 @@ namespace b2xtranslator.PresentationMLMapping
             else
             {
                 anchor = new Rectangle(clanchor.Left, clanchor.Top,clanchor.Right - clanchor.Left,clanchor.Bottom - clanchor.Top);
-                if (anchor != null && anchor.Right >= anchor.Left && anchor.Bottom >= anchor.Top)
+                if (anchor.Right >= anchor.Left && anchor.Bottom >= anchor.Top)
                 {
                     this._writer.WriteStartElement("p", "xfrm", OpenXmlNamespaces.PresentationML);
 

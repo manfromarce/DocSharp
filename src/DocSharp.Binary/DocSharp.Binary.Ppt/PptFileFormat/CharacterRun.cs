@@ -64,14 +64,14 @@ namespace b2xtranslator.PptFileFormat
         }
         #endregion
 
-        public StyleMask? Style;
-        public ushort? TypefaceIdx;
-        public ushort? FEOldTypefaceIdx;
-        public ushort? ANSITypefaceIdx;
-        public ushort? SymbolTypefaceIdx;
-        public ushort? Size;
-        public ushort? Position;
-        public GrColorAtom? Color;
+        public StyleMask Style;
+        public ushort TypefaceIdx;
+        public ushort FEOldTypefaceIdx;
+        public ushort ANSITypefaceIdx;
+        public ushort SymbolTypefaceIdx;
+        public ushort Size;
+        public ushort Position;
+        public GrColorAtom Color;
 
         public CharacterRun(BinaryReader reader)
         {
@@ -124,27 +124,13 @@ namespace b2xtranslator.PptFileFormat
 
             result.AppendFormat("\n{0}Length = {1}", indent, this.Length);
             result.AppendFormat("\n{0}Mask = {1}", indent, this.Mask);
-
-            if (this.Style != null)
-                result.AppendFormat("\n{0}Style = {1}", indent, this.Style);
-
-            if (this.TypefaceIdx != null)
-                result.AppendFormat("\n{0}TypefaceIdx = {1}", indent, this.TypefaceIdx);
-
-            if (this.FEOldTypefaceIdx != null)
-                result.AppendFormat("\n{0}FEOldTypefaceIdx = {1}", indent, this.FEOldTypefaceIdx);
-
-            if (this.ANSITypefaceIdx != null)
-                result.AppendFormat("\n{0}ANSITypefaceIdx = {1}", indent, this.ANSITypefaceIdx);
-
-            if (this.SymbolTypefaceIdx != null)
-                result.AppendFormat("\n{0}SymbolTypefaceIdx = {1}", indent, this.SymbolTypefaceIdx);
-
-            if (this.Size != null)
-                result.AppendFormat("\n{0}Size = {1}", indent, this.Size);
-
-            if (this.Position != null)
-                result.AppendFormat("\n{0}Position = {1}", indent, this.Position);
+            result.AppendFormat("\n{0}Style = {1}", indent, this.Style);
+            result.AppendFormat("\n{0}TypefaceIdx = {1}", indent, this.TypefaceIdx);
+            result.AppendFormat("\n{0}FEOldTypefaceIdx = {1}", indent, this.FEOldTypefaceIdx);
+            result.AppendFormat("\n{0}ANSITypefaceIdx = {1}", indent, this.ANSITypefaceIdx);
+            result.AppendFormat("\n{0}SymbolTypefaceIdx = {1}", indent, this.SymbolTypefaceIdx);
+            result.AppendFormat("\n{0}Size = {1}", indent, this.Size);
+            result.AppendFormat("\n{0}Position = {1}", indent, this.Position);
 
             if (this.Color != null)
                 result.AppendFormat("\n{0}Color = {1}", indent, this.Color);

@@ -14,7 +14,7 @@ namespace b2xtranslator.PresentationMLMapping
     public class NotesMasterMapping : PresentationMapping<RegularContainer>
     {
         public NotesMasterPart MasterPart;
-        protected Note? Master;
+        protected Note Master;
         protected uint MasterId;
 
         public NotesMasterMapping(ConversionContext ctx)

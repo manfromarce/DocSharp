@@ -35,7 +35,7 @@ namespace b2xtranslator.StructuredStorage.Reader
         public ICollection<DirectoryEntry> AllStreamEntries => this._directory.GetAllStreamEntries();
 
         /// <summary>Get a handle to the RootDirectoryEntry.</summary>
-        public DirectoryEntry? RootDirectoryEntry => this._directory.GetDirectoryEntry(0x0);
+        public DirectoryEntry RootDirectoryEntry => this._directory.GetDirectoryEntry(0x0);
 
         /// <summary>Initalizes a handle to a compound file based on a stream</summary>
         /// <param name="stream">The stream to the storage</param>

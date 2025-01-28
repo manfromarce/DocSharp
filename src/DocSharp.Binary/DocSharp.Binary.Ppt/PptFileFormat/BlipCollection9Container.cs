@@ -15,8 +15,8 @@ namespace b2xtranslator.PptFileFormat
     [OfficeRecord(2041)]
     public class BlipEntityAtom : Record
     {
-        public BitmapBlip? blip;
-        public MetafilePictBlip? mblip;
+        public BitmapBlip blip;
+        public MetafilePictBlip mblip;
 
         public BlipEntityAtom(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance)
@@ -40,7 +40,7 @@ namespace b2xtranslator.PptFileFormat
     public class StyleTextProp9Atom : Record
     {
         public List<ParagraphRun9> P9Runs = new List<ParagraphRun9>();
-        public TextSIException? si;
+        public TextSIException si;
         
         public StyleTextProp9Atom(BinaryReader _reader, uint size, uint typeCode, uint version, uint instance)
             : base(_reader, size, typeCode, version, instance)

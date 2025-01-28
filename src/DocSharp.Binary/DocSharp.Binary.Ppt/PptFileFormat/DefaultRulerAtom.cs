@@ -25,7 +25,7 @@ namespace b2xtranslator.PptFileFormat
 
         public int cLevels;
         public int defaultTabSize;
-        public TabStops? tabs;
+        public TabStops tabs;
         public int leftMargin1;
         public int leftMargin2;
         public int leftMargin3;

@@ -13,8 +13,8 @@ namespace b2xtranslator.WordprocessingMLMapping
         private ConversionContext _ctx;
         private XmlElement _pPr;
         private XmlElement _framePr;
-        private SectionPropertyExceptions? _sepx;
-        private CharacterPropertyExceptions? _paraEndChpx;
+        private SectionPropertyExceptions _sepx;
+        private CharacterPropertyExceptions _paraEndChpx;
         private int _sectionNr;
         private WordDocument _parentDoc;
 
@@ -22,7 +22,7 @@ namespace b2xtranslator.WordprocessingMLMapping
             XmlWriter writer, 
             ConversionContext ctx, 
             WordDocument parentDoc,
-            CharacterPropertyExceptions? paraEndChpx)
+            CharacterPropertyExceptions paraEndChpx)
             : base(writer)
         {
             this._parentDoc = parentDoc;
@@ -56,7 +56,7 @@ namespace b2xtranslator.WordprocessingMLMapping
             var numPr = this._nodeFactory.CreateElement("w", "numPr", OpenXmlNamespaces.WordprocessingML);
             var pBdr = this._nodeFactory.CreateElement("w", "pBdr", OpenXmlNamespaces.WordprocessingML);
             var spacing = this._nodeFactory.CreateElement("w", "spacing", OpenXmlNamespaces.WordprocessingML);
-            XmlElement? jc = null;
+            XmlElement jc = null;
 
             //append style id , do not append "Normal" style (istd 0)
             var pStyle = this._nodeFactory.CreateElement("w", "pStyle", OpenXmlNamespaces.WordprocessingML);

@@ -15,8 +15,8 @@ namespace b2xtranslator.WordprocessingMLMapping
         private ushort _currentIstd;
         private RevisionData _revisionData;
         private bool _styleChpx;
-        private ParagraphPropertyExceptions? _currentPapx;
-        List<CharacterPropertyExceptions>? _hierarchy;
+        private ParagraphPropertyExceptions _currentPapx;
+        List<CharacterPropertyExceptions> _hierarchy;
 
         private enum SuperscriptIndex
         {
@@ -25,7 +25,7 @@ namespace b2xtranslator.WordprocessingMLMapping
             subscript
         }
 
-        public CharacterPropertiesMapping(XmlWriter writer, WordDocument doc, RevisionData rev, ParagraphPropertyExceptions? currentPapx, bool styleChpx)
+        public CharacterPropertiesMapping(XmlWriter writer, WordDocument doc, RevisionData rev, ParagraphPropertyExceptions currentPapx, bool styleChpx)
             : base(writer)
         {
             this._doc = doc;
@@ -36,7 +36,7 @@ namespace b2xtranslator.WordprocessingMLMapping
             this._currentIstd = UInt16.MaxValue;
         }
 
-        public CharacterPropertiesMapping(XmlElement rPr, WordDocument doc, RevisionData rev, ParagraphPropertyExceptions? currentPapx, bool styleChpx)
+        public CharacterPropertiesMapping(XmlElement rPr, WordDocument doc, RevisionData rev, ParagraphPropertyExceptions currentPapx, bool styleChpx)
             : base(null)
         {
             this._doc = doc;

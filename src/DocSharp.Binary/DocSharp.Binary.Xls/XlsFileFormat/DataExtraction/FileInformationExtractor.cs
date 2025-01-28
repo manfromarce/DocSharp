@@ -45,7 +45,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat
         public void extractData()
         {
             BiffHeader bh;
-            StreamWriter? sw = null;
+            StreamWriter sw = null;
             sw = new StreamWriter(Console.OpenStandardOutput());
             try
             {

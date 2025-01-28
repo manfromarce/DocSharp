@@ -19,7 +19,7 @@ namespace b2xtranslator.OfficeGraph
         /// </summary>
         public ushort cRuns;
 
-        public FormatRun[]? rgRuns;
+        public FormatRun[] rgRuns;
 
         public AlRuns(IStreamReader reader, GraphRecordNumber id, ushort length)
             : base(reader, id, length)

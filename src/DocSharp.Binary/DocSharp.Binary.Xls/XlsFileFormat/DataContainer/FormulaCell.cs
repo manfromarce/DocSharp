@@ -51,7 +51,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
         }
 
 
-        public object? calculatedValue; 
+        public object calculatedValue; 
 
      }
 }

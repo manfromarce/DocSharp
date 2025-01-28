@@ -3,7 +3,7 @@ namespace b2xtranslator.OpenXmlLib.WordprocessingML
     public class WordprocessingDocument : OpenXmlPackage
     {
         protected OpenXmlDocumentType _documentType;
-        protected CustomXmlPropertiesPart? _customFilePropertiesPart;
+        protected CustomXmlPropertiesPart _customFilePropertiesPart;
         protected MainDocumentPart _mainDocumentPart;
 
         protected WordprocessingDocument(string fileName, OpenXmlDocumentType type)
@@ -42,7 +42,7 @@ namespace b2xtranslator.OpenXmlLib.WordprocessingML
             set { this._documentType = value; }
         }
 
-        public CustomXmlPropertiesPart? CustomFilePropertiesPart
+        public CustomXmlPropertiesPart CustomFilePropertiesPart
         {
             get { return this._customFilePropertiesPart; }
         }

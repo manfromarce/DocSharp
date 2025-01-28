@@ -5,7 +5,7 @@ namespace b2xtranslator.OpenXmlLib.SpreadsheetML
 
     public class WorksheetPart : OpenXmlPart
     {
-        private DrawingsPart? _drawingsPart = null;
+        private DrawingsPart _drawingsPart = null;
         
         public WorksheetPart(WorkbookPart parent, int partIndex)
             : base(parent, partIndex)

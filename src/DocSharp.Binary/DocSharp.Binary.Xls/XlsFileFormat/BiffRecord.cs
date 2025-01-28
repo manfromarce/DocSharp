@@ -108,7 +108,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat
 
         public static BiffRecord ReadRecord(IStreamReader reader)
         {
-            BiffRecord? result = null;
+            BiffRecord result = null;
             try
             {
                 var id = (RecordType)reader.ReadUInt16();

@@ -34,7 +34,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat
         public override void extractData()
         {
             BiffHeader bh, latestbiff;
-            BOF? firstBOF = null;
+            BOF firstBOF = null;
             
             //try
             //{

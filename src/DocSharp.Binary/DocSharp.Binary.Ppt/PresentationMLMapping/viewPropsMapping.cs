@@ -18,7 +18,7 @@ namespace b2xtranslator.PresentationMLMapping
             this._ctx = ctx;
         }
 
-        public void Apply(IVisitable? x)
+        public void Apply(IVisitable x)
         {
             // Start the document
             this._writer.WriteStartDocument();

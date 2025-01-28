@@ -40,7 +40,7 @@ namespace b2xtranslator.OfficeDrawing
                     readSize += child.TotalSize;
                     idx++;
                 }
-                catch (Exception e)
+                catch
                 {
                     if (WRITE_DEBUG_DUMPS)
                     {
@@ -55,7 +55,7 @@ namespace b2xtranslator.OfficeDrawing
                         }
                     }
 
-                    throw e;
+                    throw;
                 }
             }
         }
