@@ -1,10 +1,10 @@
-using b2xtranslator.DocFileFormat;
+using DocSharp.Binary.DocFileFormat;
 using System.Xml;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.Tools;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     class TableRowPropertiesMapping :
         PropertiesMapping,

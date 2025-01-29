@@ -1,15 +1,13 @@
-
-
 using System;
 using System.Globalization;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer;
-using b2xtranslator.Tools;
-using b2xtranslator.OpenXmlLib.SpreadsheetML;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer;
+using DocSharp.Binary.Tools;
+using DocSharp.Binary.OpenXmlLib.SpreadsheetML;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class WorksheetMapping : AbstractOpenXmlMapping,
           IMapping<WorkSheetData>

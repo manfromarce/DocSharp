@@ -1,9 +1,9 @@
 using System;
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.StructuredStorage.Writer;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Writer;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class MacroBinaryMapping : DocumentMapping
     {

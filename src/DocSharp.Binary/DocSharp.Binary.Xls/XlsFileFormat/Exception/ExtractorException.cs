@@ -1,6 +1,6 @@
 using System;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     public class ExtractorException: Exception 
     {

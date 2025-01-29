@@ -1,13 +1,13 @@
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.StructuredStorage.Common;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.StructuredStorage.Common;
+using DocSharp.Binary.StructuredStorage.Reader;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class WordDocument : IVisitable
     {

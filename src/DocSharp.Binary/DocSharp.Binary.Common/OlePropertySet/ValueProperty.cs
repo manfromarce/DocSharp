@@ -1,6 +1,6 @@
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.OlePropertySet
+namespace DocSharp.Binary.OlePropertySet
 {
     public class ValueProperty
     {

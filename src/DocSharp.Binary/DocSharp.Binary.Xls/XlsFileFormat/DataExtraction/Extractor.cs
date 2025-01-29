@@ -1,7 +1,6 @@
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     /// <summary>
     /// Simple struct to hold the biff record data 

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using b2xtranslator.StructuredStorage.Common;
+using DocSharp.Binary.StructuredStorage.Common;
 
 [assembly: CLSCompliant(false)]
 
-namespace b2xtranslator.StructuredStorage.Reader
+namespace DocSharp.Binary.StructuredStorage.Reader
 {
 
     /// <summary>

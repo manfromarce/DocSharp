@@ -1,9 +1,7 @@
-
-
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     /// <summary>
     /// This record specifies the location of the OLE server window that is contained in the parent document window when the chart data was saved.

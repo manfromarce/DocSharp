@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.OpenXmlLib;
 using System.IO;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 using System.Globalization;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.OfficeDrawing.Shapetypes;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing.Shapetypes;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class VMLPictureMapping
         : PropertiesMapping,

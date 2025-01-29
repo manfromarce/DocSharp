@@ -1,6 +1,6 @@
 using System;
 
-namespace b2xtranslator.StructuredStorage.Common
+namespace DocSharp.Binary.StructuredStorage.Common
 {
     /// <summary>
     /// Abstract class fo the header of a compound file.

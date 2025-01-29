@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 using System.IO;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(2040)]
     public class BlipCollection9Container : RegularContainer

@@ -1,10 +1,8 @@
-
-
 using System;
 using System.IO;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     /// <summary>
     /// An atom record that specifies a reference to text contained in the SlideListWithTextContainer record. 

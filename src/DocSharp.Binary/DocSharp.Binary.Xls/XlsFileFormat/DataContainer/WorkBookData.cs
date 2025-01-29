@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Records;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Records;
 
-
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer
 {
     /// <summary>
     /// This class is a container for the extracted data 

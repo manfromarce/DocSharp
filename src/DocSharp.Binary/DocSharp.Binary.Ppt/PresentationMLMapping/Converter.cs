@@ -1,12 +1,12 @@
 using System;
 using System.Text;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.PptFileFormat;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.PptFileFormat;
 using System.IO;
-using b2xtranslator.OpenXmlLib.PresentationML;
+using DocSharp.Binary.OpenXmlLib.PresentationML;
 using System.Xml;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class Converter
     {

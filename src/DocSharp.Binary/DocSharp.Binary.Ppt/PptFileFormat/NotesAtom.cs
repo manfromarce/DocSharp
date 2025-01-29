@@ -1,9 +1,7 @@
-
-
 using System.IO;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(1009)]
     public class NotesAtom : Record

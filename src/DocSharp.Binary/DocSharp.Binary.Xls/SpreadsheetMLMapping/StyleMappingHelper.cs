@@ -1,10 +1,9 @@
-
 using System;
 using System.Globalization;
 using System.Xml;
-using b2xtranslator.Spreadsheet.XlsFileFormat.StyleData;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.StyleData;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class StyleMappingHelper
     {

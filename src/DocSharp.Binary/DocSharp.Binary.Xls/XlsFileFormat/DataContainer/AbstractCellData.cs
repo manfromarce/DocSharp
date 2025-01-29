@@ -1,6 +1,6 @@
 using System;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer
 {
     /// <summary>
     /// Abstract class which stores some data

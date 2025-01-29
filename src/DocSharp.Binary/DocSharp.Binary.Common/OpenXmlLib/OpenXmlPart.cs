@@ -2,7 +2,7 @@ using System.IO;
 using System.Xml;
 using System.Text;
 
-namespace b2xtranslator.OpenXmlLib
+namespace DocSharp.Binary.OpenXmlLib
 {
     public abstract class OpenXmlPart : OpenXmlPartContainer
     {

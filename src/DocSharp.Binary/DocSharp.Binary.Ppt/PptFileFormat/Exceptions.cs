@@ -1,6 +1,6 @@
 using System;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     public class InvalidStreamException : Exception
     {

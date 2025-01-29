@@ -1,9 +1,7 @@
-﻿
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// This structure specifies the common properties of the Obj record that contains this FtCmo.

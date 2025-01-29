@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Ptg;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     [BiffRecord(RecordType.Array)] 
     public class ARRAY : BiffRecord

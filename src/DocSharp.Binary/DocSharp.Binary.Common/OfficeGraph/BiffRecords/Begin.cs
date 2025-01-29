@@ -1,9 +1,7 @@
-
-
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     /// <summary>
     /// This record specifies the beginning of a collection of records as defined by the Chart Sheet Substream ABNF. The collection of records specifies properties of a chart.

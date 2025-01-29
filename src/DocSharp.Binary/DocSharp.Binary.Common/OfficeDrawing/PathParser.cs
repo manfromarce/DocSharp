@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     public class GD
     {

@@ -2,9 +2,8 @@
 /// Global definitions
 /// Author: math
 /// </summary>
-namespace b2xtranslator.StructuredStorage.Common
+namespace DocSharp.Binary.StructuredStorage.Common
 {
-
     /// <summary>
     /// Constants used to identify sectors in fat, minifat and directory
     /// </summary>

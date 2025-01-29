@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class PieceTable
     {

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Ptg;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Records;
-using b2xtranslator.Tools;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Records;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     /// <summary>
     /// This class stores the data from every Boundsheet 

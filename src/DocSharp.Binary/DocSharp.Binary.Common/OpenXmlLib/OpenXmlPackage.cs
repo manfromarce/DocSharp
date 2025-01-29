@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace b2xtranslator.OpenXmlLib
+namespace DocSharp.Binary.OpenXmlLib
 {
     public abstract class OpenXmlPackage : OpenXmlPartContainer, IDisposable
     {

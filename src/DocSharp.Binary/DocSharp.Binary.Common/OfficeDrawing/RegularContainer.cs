@@ -1,11 +1,9 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     /// <summary>
     /// Regular containers are containers with Record children.<br/>

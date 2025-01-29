@@ -1,11 +1,10 @@
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer
 {
     /// <summary>
     /// a simple class to hold the format data from strings 
     /// </summary>
     public class StringFormatAssignment
     {
-
         /// <summary>
         /// Some public attributes to store and share the data 
         /// </summary>

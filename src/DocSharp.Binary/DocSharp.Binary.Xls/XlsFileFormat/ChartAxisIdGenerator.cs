@@ -1,8 +1,6 @@
-
-
 using System.Collections.Generic;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     /// <summary>
     /// An internal helper class for generating unique axis ids to be used in OpenXML

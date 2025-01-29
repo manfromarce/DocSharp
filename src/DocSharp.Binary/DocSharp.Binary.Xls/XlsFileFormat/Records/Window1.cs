@@ -1,9 +1,8 @@
-
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// Window1: Window Information (3Dh)
@@ -76,7 +75,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
         public bool fBotAdornment;  //     	    5	    20h	    =1 if the workbook tabs are displayed
         public bool fNoAFDateGroup; //     	    6	    40h	    =1 if the AutoFilter should not group dates (Excel 11 (2003) behavior), new for Office Excel 2007
         public bool reserved1;      //     	    7	    80h
-        public byte reserved2;      //  1       7–0	    FFh	
+        public byte reserved2;      //  1       7â€“0	    FFh	
 
         public Window1(IStreamReader reader, RecordType id, ushort length)
             : base(reader, id, length)

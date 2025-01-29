@@ -1,8 +1,6 @@
+using DocSharp.Binary.StructuredStorage.Reader;
 
-
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     /// <summary>
     /// Specifies an approximation of a real number, where the approximation has a fixed number of digits after the radix point. 

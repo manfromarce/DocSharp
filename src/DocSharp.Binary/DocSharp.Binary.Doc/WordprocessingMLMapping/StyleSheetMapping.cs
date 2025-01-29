@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.OpenXmlLib;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class StyleSheetMapping 
         : AbstractOpenXmlMapping,

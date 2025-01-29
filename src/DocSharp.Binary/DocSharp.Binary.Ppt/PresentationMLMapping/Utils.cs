@@ -1,15 +1,13 @@
-
-
 using System;
 using System.Collections.Generic;
-using b2xtranslator.PptFileFormat;
+using DocSharp.Binary.PptFileFormat;
 using System.Xml;
 using System.Reflection;
-using b2xtranslator.Tools;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.Tools;
+using DocSharp.Binary.OfficeDrawing;
 using System.Linq;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public static class Utils
     {
@@ -283,7 +281,7 @@ namespace b2xtranslator.PresentationMLMapping
             }
         }
 
-        public static string getRGBColorFromOfficeArtCOLORREF(uint value, RegularContainer slide, b2xtranslator.OfficeDrawing.ShapeOptions so)
+        public static string getRGBColorFromOfficeArtCOLORREF(uint value, RegularContainer slide, DocSharp.Binary.OfficeDrawing.ShapeOptions so)
         {
             string dummy = "";
             return getRGBColorFromOfficeArtCOLORREF(value, slide, so, ref dummy);
@@ -291,7 +289,7 @@ namespace b2xtranslator.PresentationMLMapping
 
 
 
-        public static string getRGBColorFromOfficeArtCOLORREF(uint value, RegularContainer slide, b2xtranslator.OfficeDrawing.ShapeOptions so, ref string SchemeType)
+        public static string getRGBColorFromOfficeArtCOLORREF(uint value, RegularContainer slide, DocSharp.Binary.OfficeDrawing.ShapeOptions so, ref string SchemeType)
         {
             var bytes = BitConverter.GetBytes(value);
             bool fPaletteIndex = (bytes[3] & 1) != 0;
@@ -315,9 +313,9 @@ namespace b2xtranslator.PresentationMLMapping
                 switch (val & 0x00ff)
                 {
                     case 0xF0: //shape fill color
-                        if (so.OptionsByID.ContainsKey(b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.fillColor))
+                        if (so.OptionsByID.ContainsKey(DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.fillColor))
                         {
-                            result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.fillColor].op,slide,so);
+                            result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.fillColor].op,slide,so);
                         } else {
                             result = new RGBColor(MasterScheme.Fills, RGBColor.ByteOrder.RedFirst).SixDigitHexCode;  //TODO: find out which color to use in this case
                         }
@@ -325,9 +323,9 @@ namespace b2xtranslator.PresentationMLMapping
                     case 0xF1: //shape line color if it is a line else shape fill color TODO!!
                         if (so.FirstAncestorWithType<OfficeDrawing.ShapeContainer>().FirstChildWithType<OfficeDrawing.Shape>().Instance == 1)
                         {
-                            if (so.OptionsByID.ContainsKey(b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.fillColor))
+                            if (so.OptionsByID.ContainsKey(DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.fillColor))
                             {
-                                result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.fillColor].op, slide, so);
+                                result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.fillColor].op, slide, so);
                             }
                             else
                             {
@@ -336,9 +334,9 @@ namespace b2xtranslator.PresentationMLMapping
                         }
                         else
                         {
-                            if (so.OptionsByID.ContainsKey(b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.lineColor))
+                            if (so.OptionsByID.ContainsKey(DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.lineColor))
                             {
-                                result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.lineColor].op, slide, so);
+                                result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.lineColor].op, slide, so);
                             }
                             else
                             {
@@ -347,9 +345,9 @@ namespace b2xtranslator.PresentationMLMapping
                         }
                         break;
                     case 0xF2: //shape line color
-                        if (so.OptionsByID.ContainsKey(b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.lineColor))
+                        if (so.OptionsByID.ContainsKey(DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.lineColor))
                         {
-                            result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.lineColor].op, slide, so);
+                            result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.lineColor].op, slide, so);
                         }
                         else
                         {
@@ -357,17 +355,17 @@ namespace b2xtranslator.PresentationMLMapping
                         }
                         break;
                     case 0xF3: //shape shadow color
-                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.shadowColor].op, slide, so);
+                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.shadowColor].op, slide, so);
                         break;
                     case 0xF4: //current or last used color
                     case 0xF5: //shape fill background color
-                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.fillBackColor].op, slide, so);
+                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.fillBackColor].op, slide, so);
                         break;
                     case 0xF6: //shape line background color
-                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.lineBackColor].op, slide, so);
+                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.lineBackColor].op, slide, so);
                         break;
                     case 0xF7: //shape fill color if shape contains a fill else line color
-                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.fillColor].op, slide, so);
+                        result = getRGBColorFromOfficeArtCOLORREF(so.OptionsByID[DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.fillColor].op, slide, so);
                         break;
                     case 0xFF: //undefined
                         return "";
@@ -388,7 +386,7 @@ namespace b2xtranslator.PresentationMLMapping
                 //        if (blue == 0x00) return "000000";
 
                 //        res = int.Parse(result, System.Globalization.NumberStyles.HexNumber);
-                //        if (!so.OptionsByID.ContainsKey(b2xtranslator.OfficeDrawing.ShapeOptions.PropertyId.ShadowStyleBooleanProperties))
+                //        if (!so.OptionsByID.ContainsKey(DocSharp.Binary.OfficeDrawing.ShapeOptions.PropertyId.ShadowStyleBooleanProperties))
                 //        res -= v; //this is wrong for shadow17
                 //        if (res < 0) res = 0;
                 //        return res.ToString("X").PadLeft(6, '0');

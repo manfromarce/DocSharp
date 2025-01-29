@@ -1,6 +1,6 @@
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     public class FillStyleBooleanProperties
     {

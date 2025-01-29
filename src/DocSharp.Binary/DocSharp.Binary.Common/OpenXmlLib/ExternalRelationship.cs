@@ -1,6 +1,6 @@
 using System;
 
-namespace b2xtranslator.OpenXmlLib
+namespace DocSharp.Binary.OpenXmlLib
 {
     public class ExternalRelationship
     {

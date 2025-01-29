@@ -1,10 +1,8 @@
-
-
 using System.Collections.Generic;
 using System.IO;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(0xF004)]
     public class ShapeContainer : RegularContainer, IVisitable

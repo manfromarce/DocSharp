@@ -1,9 +1,9 @@
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib;
 using System;
 using System.IO;
 using System.Xml;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     /// <summary>
     /// XML containers are containers with a zipped XML payload.

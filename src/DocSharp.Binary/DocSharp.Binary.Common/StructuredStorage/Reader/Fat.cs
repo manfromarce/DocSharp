@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using b2xtranslator.StructuredStorage.Common;
+using DocSharp.Binary.StructuredStorage.Common;
 
-namespace b2xtranslator.StructuredStorage.Reader
+namespace DocSharp.Binary.StructuredStorage.Reader
 {
     /// <summary>
     /// Represents the Fat in a compound file

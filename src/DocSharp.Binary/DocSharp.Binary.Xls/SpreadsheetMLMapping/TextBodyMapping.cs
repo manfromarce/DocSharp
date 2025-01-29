@@ -1,12 +1,10 @@
-﻿
-
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib.DrawingML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.Spreadsheet.XlsFileFormat.StyleData;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib.DrawingML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.StyleData;
 using System.Globalization;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class TextBodyMapping : AbstractChartMapping,
           IMapping<AttachedLabelSequence>

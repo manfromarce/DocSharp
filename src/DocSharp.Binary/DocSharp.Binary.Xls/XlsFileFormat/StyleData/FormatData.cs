@@ -1,5 +1,4 @@
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.StyleData
 {
     /// <summary>
     /// This object stores the data from a format biff record 

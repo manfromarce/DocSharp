@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.DocFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.DocFileFormat;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class Field : IVisitable
     {

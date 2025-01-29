@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using System.Diagnostics;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies that the chart group is an area chart group and specifies the chart group attributes.

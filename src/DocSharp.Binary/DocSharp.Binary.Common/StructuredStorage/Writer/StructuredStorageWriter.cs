@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace b2xtranslator.StructuredStorage.Writer
+namespace DocSharp.Binary.StructuredStorage.Writer
 {
     /// <summary>
     /// The root class for creating a structured storage
@@ -10,13 +10,11 @@ namespace b2xtranslator.StructuredStorage.Writer
     {
         StructuredStorageContext _context;
 
-
         // The root directory entry of this structured storage.
         public StorageDirectoryEntry RootDirectoryEntry
         {
             get { return this._context.RootDirectoryEntry; }
         }
-        
 
         /// <summary>
         /// Constructor.

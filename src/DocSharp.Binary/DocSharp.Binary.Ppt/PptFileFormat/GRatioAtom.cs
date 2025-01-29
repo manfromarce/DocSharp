@@ -1,9 +1,7 @@
-
-
 using System;
 using System.IO;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     public class GRatioAtom
     {

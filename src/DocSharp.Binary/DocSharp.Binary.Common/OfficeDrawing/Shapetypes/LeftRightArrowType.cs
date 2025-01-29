@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace b2xtranslator.OfficeDrawing.Shapetypes
+namespace DocSharp.Binary.OfficeDrawing.Shapetypes
 {
     [OfficeShapeType(69)]
     public class LeftRightArrowType :ShapeType

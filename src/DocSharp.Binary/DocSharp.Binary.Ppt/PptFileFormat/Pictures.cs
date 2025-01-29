@@ -1,10 +1,8 @@
-﻿
-
 using System.Collections.Generic;
 using System.IO;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     //[OfficeRecordAttribute(XXXX)]
     public class Pictures : Record

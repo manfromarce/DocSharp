@@ -1,9 +1,7 @@
-
-
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies the number of non-empty rows and the number of non-empty cells in the longest row of a Graph object.

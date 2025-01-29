@@ -1,7 +1,7 @@
 using System;
-using b2xtranslator.StructuredStorage.Common;
+using DocSharp.Binary.StructuredStorage.Common;
 
-namespace b2xtranslator.StructuredStorage.Reader
+namespace DocSharp.Binary.StructuredStorage.Reader
 {
     /// <summary>
     /// Encapsulates the header of a compound file

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace b2xtranslator.OfficeDrawing.Shapetypes
+namespace DocSharp.Binary.OfficeDrawing.Shapetypes
 {
     [OfficeShapeType(108)]
     public class EllipsedRibbon2Type : ShapeType

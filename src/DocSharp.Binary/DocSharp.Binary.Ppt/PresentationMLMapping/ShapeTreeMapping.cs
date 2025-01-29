@@ -1,20 +1,18 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 using System.Reflection;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib;
 using System.Drawing;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 using System.Collections;
 using System.IO;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class ShapeTreeMapping :
         AbstractOpenXmlMapping,

@@ -9,25 +9,39 @@ namespace DocSharp.Helpers;
 
 public static class RtfHelpers
 {
-    public static string ConvertToRtfUnicode(string input)
+    public static void AppendRtfEscaped(this StringBuilder sb, string value)
     {
-        StringBuilder rtf = new StringBuilder();
-        foreach (char c in input)
+        foreach (char c in value)
         {
             if (c == '\\' || c == '{' || c == '}')
             {
-                rtf.Append(new string(['\\', c]));
+                sb.Append(new string(['\\', c]));
             }
-            else if (c <= 127) // 255 for code pages ?
+            else if (c == '\t')
             {
-                rtf.Append(c);
+                sb.Append("\\tab ");
+            }
+            else if (c == '\f')
+            {
+                sb.Append("\\page ");
+            }
+            else if (c == '\r')
+            {
+                // Ignore
+            }
+            else if (c == '\n')
+            {
+                sb.Append("\\line ");
+            }
+            else if (c < 32 || c > 127)
+            {
+                sb.AppendFormat("\\u{0}?", (int)c);
             }
             else
             {
-                rtf.AppendFormat("\\u{0}?", (int)c);
+                sb.Append(c);
             }
         }
-        return rtf.ToString();
     }
 
     public static string? ConvertToRtfColor(string hexColor)

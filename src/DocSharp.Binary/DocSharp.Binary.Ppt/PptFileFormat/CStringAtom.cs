@@ -1,12 +1,10 @@
-
-
 using System;
 using System.Text;
 using System.IO;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.Tools;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(4026)]
     public class CStringAtom : Record

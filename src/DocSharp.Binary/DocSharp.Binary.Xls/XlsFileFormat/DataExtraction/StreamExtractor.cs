@@ -1,4 +1,4 @@
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     /// <summary>
     /// Class is / was used to extract different binary file internal files 

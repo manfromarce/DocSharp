@@ -1,5 +1,4 @@
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.StyleData
 {
     public class FillData
     {

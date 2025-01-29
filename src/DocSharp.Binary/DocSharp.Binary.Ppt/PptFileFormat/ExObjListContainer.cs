@@ -1,9 +1,9 @@
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 using System.IO;
 using System.IO.Compression;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(1033)]
     public class ExObjListContainer : RegularContainer

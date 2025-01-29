@@ -1,5 +1,5 @@
-﻿using b2xtranslator.CommonTranslatorLib;
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+﻿using DocSharp.Binary.CommonTranslatorLib;
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     public class ChartSheetData : SheetData
     {

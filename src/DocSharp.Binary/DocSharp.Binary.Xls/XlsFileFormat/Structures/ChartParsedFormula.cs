@@ -1,10 +1,8 @@
-﻿
-
 using System.Collections.Generic;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Ptg;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// This structure specifies a formula used in a chart.

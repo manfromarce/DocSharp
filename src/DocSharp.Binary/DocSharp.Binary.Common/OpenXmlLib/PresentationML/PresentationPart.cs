@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace b2xtranslator.OpenXmlLib.PresentationML
+namespace DocSharp.Binary.OpenXmlLib.PresentationML
 {
     public class PresentationPart : ContentPart
     {

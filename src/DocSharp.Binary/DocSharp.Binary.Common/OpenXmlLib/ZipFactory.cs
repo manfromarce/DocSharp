@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 
-namespace b2xtranslator.OpenXmlLib
+namespace DocSharp.Binary.OpenXmlLib
 {
     /// <summary>ZipFactory provides instances of IZipReader.</summary>
     public static class ZipFactory

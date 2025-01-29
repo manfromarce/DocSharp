@@ -54,8 +54,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
 
     internal override void ProcessText(Text text, StringBuilder sb)
     {
-        string escapedText = RtfHelpers.ConvertToRtfUnicode(text.InnerText);
-        sb.Append(escapedText);
+        sb.AppendRtfEscaped(text.InnerText);
     }
 
     internal override void ProcessPicture(Picture picture, StringBuilder sb)

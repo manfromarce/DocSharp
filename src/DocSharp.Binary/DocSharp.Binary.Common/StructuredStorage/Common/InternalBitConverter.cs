@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace b2xtranslator.StructuredStorage.Common
+namespace DocSharp.Binary.StructuredStorage.Common
 {
     /// <summary>
     /// Wrapper of the class BitConverter in order to support big endian

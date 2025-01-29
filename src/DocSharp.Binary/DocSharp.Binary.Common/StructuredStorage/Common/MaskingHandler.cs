@@ -1,9 +1,8 @@
 using System;
 using System.Globalization;
 
-namespace b2xtranslator.StructuredStorage.Common
+namespace DocSharp.Binary.StructuredStorage.Common
 {
-
     /// <summary>
     /// Provides methods for masking/unmasking strings in a path
     /// Author: math

@@ -1,11 +1,9 @@
-
-
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Records;
-using b2xtranslator.Tools;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Records;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.StyleData
 {
     public class StyleData: IVisitable
     {

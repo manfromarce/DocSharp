@@ -1,10 +1,10 @@
 using System;
 using System.Text;
 using System.Collections;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class StyleSheetDescription
     {

@@ -1,11 +1,9 @@
-﻿
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.OpenXmlLib.SpreadsheetML;
+using DocSharp.Binary.OpenXmlLib;
 
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.OpenXmlLib.SpreadsheetML;
-using b2xtranslator.OpenXmlLib;
-
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class ChartsheetMapping : AbstractOpenXmlMapping,
           IMapping<ChartSheetSequence>

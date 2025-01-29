@@ -1,9 +1,7 @@
-
-
 using System.IO;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     // Wrongly listed in documentation as 1016
     [OfficeRecord(2000)]

@@ -1,11 +1,9 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     public abstract class OfficeGraphBiffRecord
     {

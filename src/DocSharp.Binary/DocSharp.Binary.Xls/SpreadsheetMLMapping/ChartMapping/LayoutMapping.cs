@@ -1,11 +1,9 @@
-﻿
-
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib.DrawingML;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Records;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib.DrawingML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Records;
 using System.Globalization;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class LayoutMapping : AbstractChartMapping,
           IMapping<CrtLayout12>

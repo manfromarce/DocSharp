@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace b2xtranslator.CommonTranslatorLib
+namespace DocSharp.Binary.CommonTranslatorLib
 {
     public abstract class AbstractOpenXmlMapping
     {

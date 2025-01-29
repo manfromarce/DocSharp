@@ -1,4 +1,4 @@
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Ptg
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg
 {
     public enum FtabValues : ushort
     {

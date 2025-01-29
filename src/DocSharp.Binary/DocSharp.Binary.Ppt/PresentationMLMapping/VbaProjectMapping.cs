@@ -1,8 +1,8 @@
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.OpenXmlLib;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class VbaProjectMapping : AbstractOpenXmlMapping,
         IMapping<ExOleObjStgAtom>

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class OfficeArtContent
     {

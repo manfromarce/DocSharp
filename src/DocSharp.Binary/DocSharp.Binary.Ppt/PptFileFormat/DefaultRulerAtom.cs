@@ -1,8 +1,8 @@
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 using System.IO;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(4011)]
     public class DefaultRulerAtom : Record

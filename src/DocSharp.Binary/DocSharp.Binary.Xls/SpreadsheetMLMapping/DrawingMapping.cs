@@ -1,15 +1,13 @@
-﻿
-
 using System;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.OpenXmlLib.DrawingML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Structures;
-using b2xtranslator.Tools;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib.DrawingML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class DrawingMapping : AbstractOpenXmlMapping,
         IMapping<ChartSheetContentSequence>,

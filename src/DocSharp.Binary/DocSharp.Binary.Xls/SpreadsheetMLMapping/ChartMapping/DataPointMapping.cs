@@ -1,8 +1,8 @@
-﻿using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib.DrawingML;
+﻿using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib.DrawingML;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class DataPointMapping : AbstractChartMapping,
           IMapping<SsSequence>

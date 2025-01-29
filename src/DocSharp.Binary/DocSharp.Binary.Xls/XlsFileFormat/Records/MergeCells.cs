@@ -1,10 +1,9 @@
-
 using System.Collections.Generic;
 using System.Diagnostics;
-using b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This class extracts the data from a mergecell biffrecord 

@@ -1,6 +1,6 @@
-﻿using b2xtranslator.StructuredStorage.Reader;
+﻿using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies image data for a sheet background.

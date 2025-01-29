@@ -1,7 +1,7 @@
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 using System.IO;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(5003)]
     public class ProgBinaryTagDataBlob : RegularContainer

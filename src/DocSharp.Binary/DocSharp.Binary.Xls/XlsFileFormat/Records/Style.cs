@@ -1,9 +1,8 @@
-
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// STYLE: Style Information (293h)
@@ -20,7 +19,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
         /// <summary>
         /// Index to the style XF record.
         /// 
-        /// Note: ixfe uses only the low-order 12 bits of the field (bits 11–0). 
+        /// Note: ixfe uses only the low-order 12 bits of the field (bits 11â€“0). 
         /// Bits 12, 13, and 14 are unused, and bit 15 ( fBuiltIn ) is 1 for built-in styles.
         /// </summary>
         public ushort ixfe;
@@ -36,8 +35,8 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
         ///     =06h Comma[0]
         ///     =07h Currency[0] 
         /// 
-        /// The automatic outline styles — RowLevel_1 through RowLevel_7, 
-        /// and ColLevel_1 through ColLevel_7 — are stored by setting istyBuiltIn to 01h or 02h 
+        /// The automatic outline styles â€” RowLevel_1 through RowLevel_7, 
+        /// and ColLevel_1 through ColLevel_7 â€” are stored by setting istyBuiltIn to 01h or 02h 
         /// and then setting iLevel to the style level minus 1. 
         /// If the style is not an automatic outline style, ignore this field. 
         /// 

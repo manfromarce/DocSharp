@@ -1,7 +1,7 @@
-﻿using b2xtranslator.OpenXmlLib.DrawingML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
+﻿using DocSharp.Binary.OpenXmlLib.DrawingML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     /// <summary>
     /// A container class storing information required by the chart mapping classes 

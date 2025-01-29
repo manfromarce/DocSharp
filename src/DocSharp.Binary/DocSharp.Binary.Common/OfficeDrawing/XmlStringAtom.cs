@@ -1,7 +1,7 @@
 using System.IO;
 using System.Xml;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     /// <summary>
     /// XML string atoms are atom elements which have a XML payload string as their content.

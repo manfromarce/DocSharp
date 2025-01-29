@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer
 {
     /// <summary>
     /// Class stores data from a NUMBER Biffrecord 

@@ -1,10 +1,10 @@
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.OpenXmlLib;
 using System;
 using System.IO;
 using System.Xml;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(1038)]
     public class Theme : XmlContainer
@@ -55,7 +55,7 @@ namespace b2xtranslator.PptFileFormat
 
             XmlNode e = partDoc.DocumentElement;
             
-            b2xtranslator.Tools.Utils.replaceOutdatedNamespaces(ref e);
+            DocSharp.Binary.Tools.Utils.replaceOutdatedNamespaces(ref e);
             
             return (XmlElement)e;
         }

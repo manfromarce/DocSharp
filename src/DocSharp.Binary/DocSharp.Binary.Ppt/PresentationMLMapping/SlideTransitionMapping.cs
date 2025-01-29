@@ -1,13 +1,11 @@
-
-
 using System.Collections.Generic;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib;
 using System.Drawing;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     class SlideTransitionMapping :
         AbstractOpenXmlMapping//,

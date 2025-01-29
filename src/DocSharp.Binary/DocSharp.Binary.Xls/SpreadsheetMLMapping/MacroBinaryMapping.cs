@@ -1,11 +1,9 @@
-
-
 using System;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.StructuredStorage.Writer;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.StructuredStorage.Writer;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class MacroBinaryMapping : AbstractOpenXmlMapping,
         IMapping<XlsDocument>

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class ParagraphPropertyExceptions : PropertyExceptions
     {

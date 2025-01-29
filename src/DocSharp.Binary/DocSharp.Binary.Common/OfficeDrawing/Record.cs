@@ -1,15 +1,13 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Collections;
 using System.Reflection;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.Tools;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     public class Record : IEnumerable<Record>, IVisitable
     {

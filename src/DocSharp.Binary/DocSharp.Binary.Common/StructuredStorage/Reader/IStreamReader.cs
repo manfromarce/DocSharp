@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace b2xtranslator.StructuredStorage.Reader
+namespace DocSharp.Binary.StructuredStorage.Reader
 {
     public interface IStreamReader
     {

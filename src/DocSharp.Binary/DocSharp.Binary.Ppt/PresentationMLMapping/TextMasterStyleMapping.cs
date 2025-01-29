@@ -1,14 +1,12 @@
-
-
 using System.Collections.Generic;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.Tools;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     class TextMasterStyleMapping :
         AbstractOpenXmlMapping
@@ -205,7 +203,7 @@ namespace b2xtranslator.PresentationMLMapping
         public void writepPr(CharacterRun cr, ParagraphRun pr, ParagraphRun9 pr9, int IndentLevel, bool isTitle, bool isDefault)
         {
 
-            //TextMasterStyleAtom defaultStyle = _ctx.Ppt.DocumentRecord.FirstChildWithType<b2xtranslator.PptFileFormat.Environment>().FirstChildWithType<TextMasterStyleAtom>();
+            //TextMasterStyleAtom defaultStyle = _ctx.Ppt.DocumentRecord.FirstChildWithType<DocSharp.Binary.PptFileFormat.Environment>().FirstChildWithType<TextMasterStyleAtom>();
 
             this._writer.WriteStartElement("a", "lvl" + (IndentLevel+1).ToString() + "pPr", OpenXmlNamespaces.DrawingML);
 
@@ -443,7 +441,7 @@ namespace b2xtranslator.PresentationMLMapping
                      if (pr.BulletFontPresent)
                      {
                         this._writer.WriteStartElement("a", "buFont", OpenXmlNamespaces.DrawingML);
-                        var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<b2xtranslator.PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
+                        var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<DocSharp.Binary.PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
                         var entity = fonts.entities[(int)pr.BulletTypefaceIdx];
                         if (entity.TypeFace.IndexOf('\0') > 0)
                         {

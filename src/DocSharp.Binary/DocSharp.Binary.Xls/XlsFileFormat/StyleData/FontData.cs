@@ -1,9 +1,7 @@
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Records;
+using DocSharp.Binary.Tools;
 
-
-using b2xtranslator.Spreadsheet.XlsFileFormat.Records;
-using b2xtranslator.Tools;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.StyleData
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.StyleData
 {
     public class FontData
     {

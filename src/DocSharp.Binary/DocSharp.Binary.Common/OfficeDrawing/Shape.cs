@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using b2xtranslator.Tools;
-using b2xtranslator.OfficeDrawing.Shapetypes;
+using DocSharp.Binary.Tools;
+using DocSharp.Binary.OfficeDrawing.Shapetypes;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(0xF00A)]
     public class Shape : Record

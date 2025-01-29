@@ -1,6 +1,7 @@
 using System.IO;
 using System.Xml;
-namespace b2xtranslator.OfficeDrawing
+
+namespace DocSharp.Binary.OfficeDrawing
 {
     /// <summary>
     /// XML records are containers with a XML payload.

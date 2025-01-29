@@ -1,4 +1,4 @@
-namespace b2xtranslator.OfficeDrawing.Shapetypes
+namespace DocSharp.Binary.OfficeDrawing.Shapetypes
 {
     [OfficeShapeType(112)]
     public class FlowChartPredefinedProcessType :ShapeType

@@ -1,11 +1,11 @@
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.StructuredStorage.Reader;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class StringTable :
         IVisitable

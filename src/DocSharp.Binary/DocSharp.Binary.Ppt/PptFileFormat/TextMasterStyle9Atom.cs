@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 using System.IO;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(4013)]
     public class TextMasterStyle9Atom : Record

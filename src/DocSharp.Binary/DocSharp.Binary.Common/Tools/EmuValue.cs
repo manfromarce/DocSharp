@@ -1,9 +1,8 @@
 using System;
 using System.Globalization;
 
-namespace b2xtranslator.Tools
+namespace DocSharp.Binary.Tools
 {
-
     public class EmuValue
     {
         public int Value;

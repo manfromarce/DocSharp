@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-namespace b2xtranslator.StructuredStorage.Reader
+namespace DocSharp.Binary.StructuredStorage.Reader
 {
     public interface IStructuredStorageReader : IDisposable
     {

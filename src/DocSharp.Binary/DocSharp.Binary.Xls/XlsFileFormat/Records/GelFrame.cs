@@ -1,11 +1,9 @@
-﻿
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies the properties of a fill pattern for parts of a chart. 

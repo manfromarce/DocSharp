@@ -1,10 +1,8 @@
-
-
 using System;
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     /// <summary>
     /// This record specifies which rows of the data sheet are to be included or excluded from the chart.

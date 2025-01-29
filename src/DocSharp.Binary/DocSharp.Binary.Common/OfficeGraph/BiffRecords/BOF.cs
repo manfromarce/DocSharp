@@ -1,11 +1,9 @@
-
-
 using System;
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     /// <summary>
     /// This record specifies properties about the substream and specifies the beginning 

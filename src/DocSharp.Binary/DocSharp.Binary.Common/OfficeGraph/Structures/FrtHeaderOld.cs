@@ -1,8 +1,6 @@
+using DocSharp.Binary.StructuredStorage.Reader;
 
-
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     /// <summary>
     /// This structure specifies a future record.

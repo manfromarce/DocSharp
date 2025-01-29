@@ -1,9 +1,7 @@
-﻿
-
 using System.Collections;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     public class XmlTkChain
     {

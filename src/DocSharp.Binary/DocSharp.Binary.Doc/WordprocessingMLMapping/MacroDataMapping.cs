@@ -1,8 +1,8 @@
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class MacroDataMapping : DocumentMapping
     {

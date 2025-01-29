@@ -1,11 +1,9 @@
-﻿
-
-using b2xtranslator.OpenXmlLib.DrawingML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Records;
+using DocSharp.Binary.OpenXmlLib.DrawingML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Records;
 using System;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class OfPieChartMapping : AbstractChartGroupMapping
     {

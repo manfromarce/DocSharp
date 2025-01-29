@@ -1,8 +1,8 @@
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.OpenXmlLib.WordprocessingML;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.OpenXmlLib.WordprocessingML;
+using DocSharp.Binary.OpenXmlLib;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class FooterMapping : DocumentMapping
     {

@@ -1,10 +1,8 @@
-
-
 using System.Collections.Generic;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.OpenXmlLib;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class PresentationPartMapping : PresentationMapping<PowerpointDocument>
     {
@@ -62,7 +60,7 @@ namespace b2xtranslator.PresentationMLMapping
             this._writer.WriteEndElement(); //defPPr
 
 
-            var defaultStyle = this._ctx.Ppt.DocumentRecord.FirstChildWithType<b2xtranslator.PptFileFormat.Environment>().FirstChildWithType<TextMasterStyleAtom>();
+            var defaultStyle = this._ctx.Ppt.DocumentRecord.FirstChildWithType<DocSharp.Binary.PptFileFormat.Environment>().FirstChildWithType<TextMasterStyleAtom>();
 
             var map = new TextMasterStyleMapping(this._ctx, this._writer, null);
             

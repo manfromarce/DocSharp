@@ -13,10 +13,13 @@ public class ListItemRenderer : ContainerBlockParagraphRendererBase<ListItemBloc
 
         var listInfo = renderer.ActiveList.Peek();
         var p = WriteAsParagraph(renderer, obj, listInfo.StyleId);
-        p.GetOrCreateProperties().NumberingProperties = new NumberingProperties
+        if (listInfo.NumberingInstance != null)
         {
-            NumberingId = new NumberingId() { Val = listInfo.NumberingInstance.NumberID },
-            NumberingLevelReference = new NumberingLevelReference { Val = listInfo.Level }
-        };
+            p.GetOrCreateProperties().NumberingProperties = new NumberingProperties
+            {
+                NumberingId = new NumberingId() { Val = listInfo.NumberingInstance.NumberID },
+                NumberingLevelReference = new NumberingLevelReference { Val = listInfo.Level }
+            };
+        }
     } 
 }

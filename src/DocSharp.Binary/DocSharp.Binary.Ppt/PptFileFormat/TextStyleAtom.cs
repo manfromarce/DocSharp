@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 using System.IO;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     public class TextStyleAtom : Record, ITextDataRecord
     {

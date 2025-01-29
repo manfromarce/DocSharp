@@ -1,4 +1,4 @@
-namespace b2xtranslator.OpenXmlLib.SpreadsheetML
+namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
 {
     /// <summary>
     /// Includes some information about the spreadsheetdocument 

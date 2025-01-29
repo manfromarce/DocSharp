@@ -1,7 +1,4 @@
-
-
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     /// <summary>
     /// An internal helper class for counting the number of ChartFormat records per Chart sheet substream

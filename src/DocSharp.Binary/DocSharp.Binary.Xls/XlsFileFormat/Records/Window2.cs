@@ -1,9 +1,8 @@
-
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies attributes of the window used to display a sheet in a workbook 
@@ -73,7 +72,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
 
         /// <summary>
         /// A bit that specifies whether the gridlines of the window are drawn in the 
-        /// window‘s default foreground color or in the color specified by the value of icvHdr. 
+        /// windowâ€˜s default foreground color or in the color specified by the value of icvHdr. 
         /// This field is undefined and MUST be ignored if this record is contained in a 
         /// chart sheet substream. 
         /// 

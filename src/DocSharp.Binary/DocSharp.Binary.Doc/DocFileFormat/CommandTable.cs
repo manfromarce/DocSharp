@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.CommonTranslatorLib;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class CommandTable : IVisitable
     {

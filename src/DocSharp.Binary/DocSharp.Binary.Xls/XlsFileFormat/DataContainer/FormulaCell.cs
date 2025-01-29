@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Ptg;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer
 {
     /// <summary>
     /// This class stores the data about cell with a reference to a value in the 

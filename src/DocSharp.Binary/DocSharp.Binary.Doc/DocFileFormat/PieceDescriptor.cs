@@ -1,8 +1,8 @@
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 using System;
 using System.Text;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class PieceDescriptor
     {

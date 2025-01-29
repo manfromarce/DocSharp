@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Structures;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies rich text formatting within chart titles, trendline, and data labels.

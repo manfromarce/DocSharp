@@ -1,10 +1,8 @@
-﻿
-
 using System.Text;
 using System.IO;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(4023)]
     public class FontEntityAtom : Record

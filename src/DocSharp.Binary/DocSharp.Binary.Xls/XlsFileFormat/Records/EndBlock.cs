@@ -1,10 +1,8 @@
-﻿
+﻿using System.Diagnostics;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-using System.Diagnostics;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Structures;
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies the end of a collection of records. 

@@ -1,10 +1,8 @@
-
-
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(0xF006)]
     public class DrawingGroupRecord : Record

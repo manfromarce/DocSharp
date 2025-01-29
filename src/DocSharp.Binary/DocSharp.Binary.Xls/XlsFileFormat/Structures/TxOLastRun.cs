@@ -1,8 +1,6 @@
-﻿
+using DocSharp.Binary.StructuredStorage.Reader;
 
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// This structure marks the end of the formatting run information in the TxORuns structure.

@@ -1,9 +1,8 @@
-
 using System;
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// STYLEEXT: Named Cell Style Extension (892h) 
@@ -15,7 +14,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
     /// 
     /// This constraint exists because BIFF8 does not have a mechanism for uniquely identifying XF s 
     /// once they are loaded if document formatting changes. For named cell styles however new 
-    /// formatting properties can be associated with the style XF by name and the style’s formatting 
+    /// formatting properties can be associated with the style XF by name and the styleâ€™s formatting 
     /// can be updated on load (Office Excel 2007 or later).
     /// </summary>
     [BiffRecord(RecordType.StyleExt)] 
@@ -56,8 +55,8 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
         /// <summary>
         /// Level of the outline style RowLevel_n or ColLevel_n. 
         /// 
-        /// The automatic outline styles — RowLevel_1 through RowLevel_7, 
-        /// and ColLevel_1 through ColLevel_7 — are stored by setting 
+        /// The automatic outline styles â€” RowLevel_1 through RowLevel_7, 
+        /// and ColLevel_1 through ColLevel_7 â€” are stored by setting 
         /// istyBuiltIn to 01h or 02h and then setting iLevel to the style level minus 1.  
         /// 
         /// If the style is not an automatic outline style, ignore this field

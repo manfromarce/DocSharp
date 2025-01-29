@@ -1,10 +1,10 @@
 using System;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.DocFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.DocFileFormat;
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class SettingsMapping : PropertiesMapping,
           IMapping<DocumentProperties>

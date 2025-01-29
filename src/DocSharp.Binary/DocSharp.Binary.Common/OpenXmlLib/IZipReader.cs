@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace b2xtranslator.OpenXmlLib
+namespace DocSharp.Binary.OpenXmlLib
 {
     /// <summary>IZipReader defines an interface to read entries from a ZIP file.</summary>
     public interface IZipReader : IDisposable

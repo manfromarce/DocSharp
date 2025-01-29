@@ -1,9 +1,7 @@
-﻿
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public abstract class AbstractChartGroupMapping : AbstractChartMapping,
           IMapping<CrtSequence>

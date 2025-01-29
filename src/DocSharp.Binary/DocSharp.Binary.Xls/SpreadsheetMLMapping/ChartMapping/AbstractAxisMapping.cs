@@ -1,10 +1,8 @@
-﻿
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib.DrawingML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib.DrawingML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public abstract class AbstractAxisMapping : AbstractChartMapping,
           IMapping<AxesSequence>

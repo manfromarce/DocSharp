@@ -1,7 +1,4 @@
-
-
-
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     public enum GraphRecordNumber : ushort
     {

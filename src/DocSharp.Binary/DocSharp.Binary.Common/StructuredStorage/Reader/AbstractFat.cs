@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using b2xtranslator.StructuredStorage.Common;
+using DocSharp.Binary.StructuredStorage.Common;
 using System.IO;
 
-namespace b2xtranslator.StructuredStorage.Reader
+namespace DocSharp.Binary.StructuredStorage.Reader
 {
     /// <summary>
     /// Abstract class of a Fat in a compound file
@@ -14,8 +14,6 @@ namespace b2xtranslator.StructuredStorage.Reader
         protected Header _header;
         protected InputHandler _fileHandler;
         protected int _addressesPerSector;
-
-
 
         /// <summary>
         /// Constructor

@@ -1,8 +1,6 @@
-﻿
-
 using System;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     /// <summary>
     /// Used for mapping Office record TypeCodes to the classes implementing them.

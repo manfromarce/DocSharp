@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using b2xtranslator.DocFileFormat;
+using DocSharp.Binary.DocFileFormat;
 using System.Xml;
-using b2xtranslator.OpenXmlLib.WordprocessingML;
+using DocSharp.Binary.OpenXmlLib.WordprocessingML;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class ConversionContext
     {

@@ -1,8 +1,8 @@
 
 using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Ptg
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg
 {
     public class PtgFuncVar : AbstractPtg
     {

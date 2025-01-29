@@ -1,11 +1,9 @@
-
-
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     /// <summary>
     /// A structure that specifies a compressed table of sequential persist
@@ -29,7 +27,7 @@ namespace b2xtranslator.PptFileFormat
         /// The next entry, if present, is associated with StartPersistId + 1.
         /// 
         /// Each entry in PersistOffsetEntries is associated with a persist object identifier in this manner,
-        /// with the final entry associated with StartPersistId + PersistCount – 1. 
+        /// with the final entry associated with StartPersistId + PersistCount â€“ 1. 
         /// </summary>
         public uint StartPersistId;
 

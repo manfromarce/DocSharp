@@ -1,4 +1,4 @@
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     // TODO: No longer used
     //[BiffRecordAttribute(RecordType.ADDIN)] 

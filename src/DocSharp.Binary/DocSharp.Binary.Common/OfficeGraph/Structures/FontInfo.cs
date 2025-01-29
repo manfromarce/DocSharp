@@ -1,9 +1,7 @@
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
-
-namespace b2xtranslator.OfficeGraph
+namespace DocSharp.Binary.OfficeGraph
 {
     /// <summary>
     /// This structure specifies a Font record in the file.

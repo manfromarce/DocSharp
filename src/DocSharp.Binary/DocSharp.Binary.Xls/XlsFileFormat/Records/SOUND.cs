@@ -1,6 +1,4 @@
-
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     // TODO: no longer needed?
     //[BiffRecordAttribute(RecordType.SOUND)] 

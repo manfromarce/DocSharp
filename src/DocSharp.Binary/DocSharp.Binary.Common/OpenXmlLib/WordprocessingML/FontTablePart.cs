@@ -1,4 +1,4 @@
-namespace b2xtranslator.OpenXmlLib.WordprocessingML
+namespace DocSharp.Binary.OpenXmlLib.WordprocessingML
 {
     public class FontTablePart : OpenXmlPart
     {

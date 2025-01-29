@@ -1,10 +1,9 @@
 using System;
 using System.IO;
-using b2xtranslator.StructuredStorage.Common;
+using DocSharp.Binary.StructuredStorage.Common;
 
-namespace b2xtranslator.StructuredStorage.Writer
+namespace DocSharp.Binary.StructuredStorage.Writer
 {
-
     /// <summary>
     /// Class which represents a virtual stream in a structured storage.
     /// Author: math

@@ -1,12 +1,10 @@
-
-
 using System;
 using System.Xml;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.Spreadsheet.XlsFileFormat.StyleData;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.StyleData;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class StylesMapping : AbstractOpenXmlMapping,
           IMapping<StyleData>

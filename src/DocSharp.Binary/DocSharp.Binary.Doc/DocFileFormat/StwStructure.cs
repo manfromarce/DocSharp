@@ -1,8 +1,8 @@
-﻿using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+﻿using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 using System.Collections.Generic;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public sealed class StwStructure : Dictionary<string, string>
     {

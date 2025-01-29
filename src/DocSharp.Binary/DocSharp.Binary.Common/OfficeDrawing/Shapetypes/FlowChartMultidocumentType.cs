@@ -1,4 +1,4 @@
-namespace b2xtranslator.OfficeDrawing.Shapetypes
+namespace DocSharp.Binary.OfficeDrawing.Shapetypes
 {
     [OfficeShapeType(115)]
     public class FlowChartMultidocumentType : ShapeType

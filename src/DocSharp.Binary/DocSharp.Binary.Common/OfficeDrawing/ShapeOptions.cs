@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(0xF00B, 0xF121, 0xF122)]
     public class ShapeOptions : Record

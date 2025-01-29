@@ -1,8 +1,6 @@
-﻿
+﻿using DocSharp.Binary.StructuredStorage.Reader;
 
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     public class UnknownBiffRecord : BiffRecord
     {

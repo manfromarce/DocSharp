@@ -1,11 +1,9 @@
-
-
 using System.Diagnostics;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Structures;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies the text in a text box or a form control.
@@ -151,7 +149,7 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
             // assert that the correct number of bytes has been read from the stream
             Debug.Assert(this.Offset + this.Length == this.Reader.BaseStream.Position);
 
-            // NOTE: If the field cchText is not zero, this record doesn‘t fully specify the text. 
+            // NOTE: If the field cchText is not zero, this record doesnï¿½t fully specify the text. 
             //  The rest of the data that MUST be specified is the text string and the formatting runs 
             //  information. 
             //

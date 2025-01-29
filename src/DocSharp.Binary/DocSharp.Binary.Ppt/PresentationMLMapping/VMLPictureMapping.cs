@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib;
 using System.IO;
 using System.Drawing;
-using b2xtranslator.Tools;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.OfficeDrawing.Shapetypes;
+using DocSharp.Binary.Tools;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing.Shapetypes;
 using System.Collections;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class VMLPictureMapping
         : AbstractOpenXmlMapping

@@ -1,6 +1,6 @@
-using b2xtranslator.OpenXmlLib.DrawingML;
+using DocSharp.Binary.OpenXmlLib.DrawingML;
 
-namespace b2xtranslator.OpenXmlLib.SpreadsheetML
+namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
 {
 
     public class ChartsheetPart : OpenXmlPart

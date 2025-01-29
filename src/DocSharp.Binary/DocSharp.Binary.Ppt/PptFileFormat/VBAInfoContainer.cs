@@ -1,7 +1,7 @@
-﻿using b2xtranslator.OfficeDrawing;
+﻿using DocSharp.Binary.OfficeDrawing;
 using System.IO;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(0x03FF)]
     public class VBAInfoContainer : Record

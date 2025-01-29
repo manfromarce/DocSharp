@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class PropertyExceptions : IVisitable
     {

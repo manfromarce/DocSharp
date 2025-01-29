@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.DocFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.DocFileFormat;
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib;
 using System.Collections;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class TableCellPropertiesMapping : 
         PropertiesMapping,

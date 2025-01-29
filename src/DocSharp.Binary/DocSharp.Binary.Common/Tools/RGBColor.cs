@@ -1,6 +1,6 @@
 using System;
 
-namespace b2xtranslator.Tools
+namespace DocSharp.Binary.Tools
 {
     public class RGBColor
     {

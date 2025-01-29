@@ -2,11 +2,11 @@
 using System.IO;
 using System.Text;
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.OpenXmlLib.SpreadsheetML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib.SpreadsheetML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class Converter
     {

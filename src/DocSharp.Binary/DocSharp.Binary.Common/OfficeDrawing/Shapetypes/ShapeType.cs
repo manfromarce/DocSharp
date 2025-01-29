@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Reflection;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.OfficeDrawing.Shapetypes
+namespace DocSharp.Binary.OfficeDrawing.Shapetypes
 {
     public class ShapeType : IVisitable
     {

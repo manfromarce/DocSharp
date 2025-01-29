@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class CharacterProperties
     {
@@ -149,7 +149,7 @@ namespace b2xtranslator.DocFileFormat
         public byte ffm;
         public bool fSdtVanish;
         public FontFamilyName FontAscii;
-        public b2xtranslator.DocFileFormat.Global.UnderlineCode UnderlineStyle;
+        public DocSharp.Binary.DocFileFormat.Global.UnderlineCode UnderlineStyle;
 
         /// <summary>
         /// Creates a CHP with default properties

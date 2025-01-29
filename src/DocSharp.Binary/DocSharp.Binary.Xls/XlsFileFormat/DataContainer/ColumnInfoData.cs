@@ -1,4 +1,4 @@
-﻿namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
+﻿namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer
 {
     public class ColumnInfoData
     {

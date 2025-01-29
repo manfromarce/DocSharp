@@ -1,4 +1,4 @@
-namespace b2xtranslator.CommonTranslatorLib
+namespace DocSharp.Binary.CommonTranslatorLib
 {
     public interface IVisitable
     {

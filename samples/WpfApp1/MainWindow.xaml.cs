@@ -8,15 +8,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.IO;
-using DocSharp.Docx;
 using Microsoft.Win32;
-using b2xtranslator.StructuredStorage.Reader;
-using WordprocessingDocument = b2xtranslator.OpenXmlLib.WordprocessingML.WordprocessingDocument;
-using SpreadsheetDocument = b2xtranslator.OpenXmlLib.SpreadsheetML.SpreadsheetDocument;
-using PresentationDocument = b2xtranslator.OpenXmlLib.PresentationML.PresentationDocument;
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.PptFileFormat;
+using WordprocessingDocument = DocSharp.Binary.OpenXmlLib.WordprocessingML.WordprocessingDocument;
+using SpreadsheetDocument = DocSharp.Binary.OpenXmlLib.SpreadsheetML.SpreadsheetDocument;
+using PresentationDocument = DocSharp.Binary.OpenXmlLib.PresentationML.PresentationDocument;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Docx;
 using DocSharp.Markdown;
 using HtmlToOpenXml;
 
@@ -59,10 +59,10 @@ public partial class MainWindow : Window
                                 string outputExt = inputExt + "x";
                                 string baseName = Path.GetFileNameWithoutExtension(file);
                                 string outputFile = Path.Join(outputDir, baseName + outputExt);
-                                var outputType = b2xtranslator.OpenXmlLib.OpenXmlDocumentType.Document;
+                                var outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Document;
                                 if (inputExt == ".dot" || inputExt == ".xlt" || inputExt == ".pot")
                                 {
-                                    outputType = b2xtranslator.OpenXmlLib.OpenXmlDocumentType.Template;
+                                    outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Template;
                                 }
                                 switch (inputExt)
                                 {
@@ -71,7 +71,7 @@ public partial class MainWindow : Window
                                         var doc = new WordDocument(reader);
                                         using (var docx = WordprocessingDocument.Create(outputFile, outputType))
                                         {
-                                            b2xtranslator.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                                            DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
                                         }
                                         break;
                                     case ".xls":
@@ -79,7 +79,7 @@ public partial class MainWindow : Window
                                         var xls = new XlsDocument(reader);
                                         using (var xlsx = SpreadsheetDocument.Create(outputFile, outputType))
                                         {
-                                            b2xtranslator.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
+                                            DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
                                         }
                                         break;
                                     case ".ppt":
@@ -88,7 +88,7 @@ public partial class MainWindow : Window
                                         var ppt = new PowerpointDocument(reader);
                                         using (var pptx = PresentationDocument.Create(outputFile, outputType))
                                         {
-                                            b2xtranslator.PresentationMLMapping.Converter.Convert(ppt, pptx);
+                                            DocSharp.Binary.PresentationMLMapping.Converter.Convert(ppt, pptx);
                                         }
                                         break;
                                 }

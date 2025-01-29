@@ -9,7 +9,7 @@ namespace Markdig.Renderers.Docx.Blocks;
 
 public class ListInfo
 {
-    public NumberingInstance NumberingInstance { get; set; }
+    public NumberingInstance? NumberingInstance { get; set; }
     
     public string? StyleId { get; set; }
     

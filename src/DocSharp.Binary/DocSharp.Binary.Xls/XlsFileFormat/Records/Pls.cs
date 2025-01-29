@@ -1,9 +1,8 @@
-
 using System.Diagnostics;
 using System.IO;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     [BiffRecord(RecordType.Pls)] 
     public class Pls : BiffRecord

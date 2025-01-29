@@ -1,6 +1,6 @@
-﻿using b2xtranslator.StructuredStorage.Reader;
+﻿using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This class is used to read data from a NUMBER BiffRecord 

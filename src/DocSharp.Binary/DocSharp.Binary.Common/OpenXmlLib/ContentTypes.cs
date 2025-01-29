@@ -1,4 +1,4 @@
-namespace b2xtranslator.OpenXmlLib
+namespace DocSharp.Binary.OpenXmlLib
 {
     public static class OpenXmlContentTypes
     {

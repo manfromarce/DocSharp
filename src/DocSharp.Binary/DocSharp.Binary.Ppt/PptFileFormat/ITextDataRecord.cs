@@ -1,7 +1,4 @@
-
-
-
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     /// <summary>
     /// Marker interface used for marking Records that contain text data

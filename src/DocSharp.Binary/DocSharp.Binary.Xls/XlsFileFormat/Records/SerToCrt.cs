@@ -1,9 +1,7 @@
-﻿
+﻿using System.Diagnostics;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-using System.Diagnostics;
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies the chart group for the current series.

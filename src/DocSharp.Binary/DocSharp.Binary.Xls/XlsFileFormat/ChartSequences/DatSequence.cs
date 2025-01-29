@@ -1,7 +1,7 @@
-﻿using b2xtranslator.Spreadsheet.XlsFileFormat.Records;
-using b2xtranslator.StructuredStorage.Reader;
+﻿using DocSharp.Binary.Spreadsheet.XlsFileFormat.Records;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     public class DatSequence : BiffRecordSequence
     {

@@ -1,11 +1,9 @@
-﻿
+﻿using System.Diagnostics;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-using System.Diagnostics;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record specifies the appearance of a line.

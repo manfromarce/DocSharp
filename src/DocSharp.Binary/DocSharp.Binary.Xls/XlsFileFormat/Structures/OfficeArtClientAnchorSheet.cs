@@ -1,8 +1,6 @@
-﻿
+using DocSharp.Binary.Tools;
 
-using b2xtranslator.Tools;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// This structure specifies the anchor position of a drawing object embedded in a sheet.

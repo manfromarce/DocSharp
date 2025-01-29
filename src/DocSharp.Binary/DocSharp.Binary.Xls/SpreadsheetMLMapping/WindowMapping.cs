@@ -1,11 +1,9 @@
-﻿
-
 using System;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib.SpreadsheetML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib.SpreadsheetML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class WindowMapping : AbstractOpenXmlMapping,
           IMapping<WindowSequence>

@@ -1,8 +1,8 @@
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class PictureDescriptor : IVisitable
     {

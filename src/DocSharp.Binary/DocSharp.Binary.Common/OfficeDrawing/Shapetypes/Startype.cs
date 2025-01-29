@@ -1,4 +1,4 @@
-namespace b2xtranslator.OfficeDrawing.Shapetypes
+namespace DocSharp.Binary.OfficeDrawing.Shapetypes
 {
     [OfficeShapeType(12)]
     public class Startype : ShapeType

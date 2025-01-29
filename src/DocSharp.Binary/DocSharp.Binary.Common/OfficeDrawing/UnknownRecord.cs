@@ -2,7 +2,7 @@
 
 using System.IO;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     public class UnknownRecord : Record
     {

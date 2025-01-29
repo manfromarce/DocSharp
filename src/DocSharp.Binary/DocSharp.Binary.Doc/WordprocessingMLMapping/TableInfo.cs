@@ -1,7 +1,7 @@
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.Tools;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class TableInfo
     {

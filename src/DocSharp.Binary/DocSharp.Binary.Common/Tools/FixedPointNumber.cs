@@ -1,4 +1,4 @@
-﻿namespace b2xtranslator.Tools
+﻿namespace DocSharp.Binary.Tools
 {
     /// <summary>
     /// Specifies an approximation of a real number, where the approximation has a fixed number of digits after the radix point. 

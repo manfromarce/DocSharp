@@ -1,9 +1,7 @@
-﻿
+﻿using DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-using b2xtranslator.Spreadsheet.XlsFileFormat.Structures;
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     /// <summary>
     /// This record wraps around a non-Future Record Type (FRT) record and converts it into an FRT record.

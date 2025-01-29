@@ -1,11 +1,9 @@
-
-
 using System.Collections.Generic;
 using System.Xml;
-using b2xtranslator.OpenXmlLib.PresentationML;
-using b2xtranslator.PptFileFormat;
+using DocSharp.Binary.OpenXmlLib.PresentationML;
+using DocSharp.Binary.PptFileFormat;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class ConversionContext
     {

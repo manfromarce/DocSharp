@@ -1,11 +1,9 @@
-﻿
-
 using System.Collections.Generic;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Ptg;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// This structure specifies a formula used by an embedded object.

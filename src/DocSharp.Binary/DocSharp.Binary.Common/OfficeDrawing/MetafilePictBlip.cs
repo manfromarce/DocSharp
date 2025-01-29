@@ -1,9 +1,9 @@
 using System.IO;
 using System.Drawing;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Tools;
 using System.IO.Compression;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(new ushort[] { 0xF01A, 0xF01B, 0xF01C })]
     public class MetafilePictBlip : Record

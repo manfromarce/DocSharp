@@ -1,15 +1,13 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.OfficeDrawing;
 using System.Reflection;
 using System.IO;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     public class PowerpointDocument : BinaryDocument, IVisitable, IEnumerable<Record>
     {

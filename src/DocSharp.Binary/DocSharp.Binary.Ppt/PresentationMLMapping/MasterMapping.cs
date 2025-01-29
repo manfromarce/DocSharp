@@ -1,15 +1,13 @@
-
-
 using System;
 using System.Collections.Generic;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.OpenXmlLib;
 using System.Xml;
-using b2xtranslator.OpenXmlLib.PresentationML;
-using b2xtranslator.Tools;
+using DocSharp.Binary.OpenXmlLib.PresentationML;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class MasterMapping : PresentationMapping<RegularContainer>
     {

@@ -1,12 +1,10 @@
-
-
 using System;
 using System.Collections.Generic;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
-using b2xtranslator.Spreadsheet.XlsFileFormat.Ptg;
-using b2xtranslator.Tools;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class FormulaInfixMapping
     {

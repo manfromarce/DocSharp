@@ -1,10 +1,8 @@
-﻿
-
 using System.Text;
-using b2xtranslator.StructuredStorage.Reader;
-using b2xtranslator.Tools;
+using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// This structure specifies a Unicode string. 
@@ -75,4 +73,3 @@ namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
         }
     }
 }
-    

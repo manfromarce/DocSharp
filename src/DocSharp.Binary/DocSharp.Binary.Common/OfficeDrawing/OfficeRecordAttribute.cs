@@ -1,8 +1,6 @@
-
-
 using System;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     /// <summary>
     /// Used for mapping Office record TypeCodes to the classes implementing them.

@@ -1,7 +1,7 @@
-﻿using b2xtranslator.Spreadsheet.XlsFileFormat.Structures;
-using b2xtranslator.StructuredStorage.Reader;
+﻿using DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     [BiffRecord(RecordType.CrtMlFrt)]
     public class CrtMlFrt : BiffRecord

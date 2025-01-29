@@ -1,8 +1,6 @@
-﻿
+using DocSharp.Binary.StructuredStorage.Reader;
 
-using b2xtranslator.StructuredStorage.Reader;
-
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// This structure specifies the formula which specifies a range which contains a value that 

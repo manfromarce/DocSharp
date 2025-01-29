@@ -1,8 +1,6 @@
-
-
 using System.IO;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(0xF011)]
     public class ClientData : Record

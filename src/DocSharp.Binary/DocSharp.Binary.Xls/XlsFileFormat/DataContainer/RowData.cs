@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using b2xtranslator.Tools; 
+using DocSharp.Binary.Tools; 
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.DataContainer
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.DataContainer
 {
     /// <summary>
     /// This class stores the rowdata from a specific row 

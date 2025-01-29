@@ -1,12 +1,10 @@
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.OpenXmlLib.PresentationML;
+using DocSharp.Binary.Tools;
+using DocSharp.Binary.OfficeDrawing;
 
-
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.OpenXmlLib.PresentationML;
-using b2xtranslator.Tools;
-using b2xtranslator.OfficeDrawing;
-
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class TitleMasterMapping : PresentationMapping<RegularContainer>
     {

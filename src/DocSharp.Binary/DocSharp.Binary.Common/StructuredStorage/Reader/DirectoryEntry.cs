@@ -1,8 +1,8 @@
 using System;
-using b2xtranslator.Tools;
-using b2xtranslator.StructuredStorage.Common;
+using DocSharp.Binary.Tools;
+using DocSharp.Binary.StructuredStorage.Common;
 
-namespace b2xtranslator.StructuredStorage.Reader
+namespace DocSharp.Binary.StructuredStorage.Reader
 {
     /// <summary>
     /// Encapsulates a directory entry

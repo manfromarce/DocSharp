@@ -1,9 +1,9 @@
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.DocFileFormat;
-using b2xtranslator.OpenXmlLib.WordprocessingML;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.DocFileFormat;
+using DocSharp.Binary.OpenXmlLib.WordprocessingML;
 
-namespace b2xtranslator.WordprocessingMLMapping
+namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class TextboxMapping : DocumentMapping
     {

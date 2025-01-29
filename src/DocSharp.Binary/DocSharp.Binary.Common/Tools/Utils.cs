@@ -4,7 +4,7 @@ using System.IO;
 using System.Collections;
 using System.Xml;
 
-namespace b2xtranslator.Tools
+namespace DocSharp.Binary.Tools
 {
     public class Utils
     {

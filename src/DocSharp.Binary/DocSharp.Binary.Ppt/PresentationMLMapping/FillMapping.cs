@@ -1,16 +1,14 @@
-﻿
-
 using System;
 using System.Collections.Generic;
 using System.Text;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.Tools;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.Tools;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     class FillMapping :
         AbstractOpenXmlMapping

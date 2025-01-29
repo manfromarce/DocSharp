@@ -1,11 +1,9 @@
-
-
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.OpenXmlLib;
 using System.Xml;
-using b2xtranslator.CommonTranslatorLib;
+using DocSharp.Binary.CommonTranslatorLib;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class viewPropsMapping : AbstractOpenXmlMapping,
           IMapping<IVisitable>

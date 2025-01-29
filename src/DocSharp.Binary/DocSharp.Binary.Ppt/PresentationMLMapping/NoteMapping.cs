@@ -1,12 +1,10 @@
-
-
 using System.Collections.Generic;
-using b2xtranslator.PptFileFormat;
-using b2xtranslator.OpenXmlLib;
-using b2xtranslator.Tools;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.PptFileFormat;
+using DocSharp.Binary.OpenXmlLib;
+using DocSharp.Binary.Tools;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public class NoteMapping : PresentationMapping<RegularContainer>
     {

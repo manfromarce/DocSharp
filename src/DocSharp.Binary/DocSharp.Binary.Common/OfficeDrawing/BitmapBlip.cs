@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(new ushort[] { 0xF01D, 0xF01E, 0xF01F, 0xF020, 0xF021 })]
     public class BitmapBlip : Record

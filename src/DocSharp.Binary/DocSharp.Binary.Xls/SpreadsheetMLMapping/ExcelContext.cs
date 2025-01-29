@@ -1,10 +1,8 @@
-
-
 using System.Xml;
-using b2xtranslator.OpenXmlLib.SpreadsheetML;
-using b2xtranslator.Spreadsheet.XlsFileFormat;
+using DocSharp.Binary.OpenXmlLib.SpreadsheetML;
+using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 
-namespace b2xtranslator.SpreadsheetMLMapping
+namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     /// <summary>
     /// Includes some attributes and methods required by the mapping classes 

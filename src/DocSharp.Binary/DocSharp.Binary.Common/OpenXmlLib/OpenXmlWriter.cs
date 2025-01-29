@@ -2,9 +2,9 @@ using System;
 using System.Text;
 using System.Xml;
 using System.IO;
-using System.IO.Compression; // Replaces using b2xtranslator.ZipUtils;
+using System.IO.Compression; // Replaces using DocSharp.Binary.ZipUtils;
 
-namespace b2xtranslator.OpenXmlLib
+namespace DocSharp.Binary.OpenXmlLib
 {
     public sealed class OpenXmlWriter : IDisposable
     {

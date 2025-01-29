@@ -1,11 +1,9 @@
-
-
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using b2xtranslator.OfficeDrawing;
+using DocSharp.Binary.OfficeDrawing;
 
-namespace b2xtranslator.PptFileFormat
+namespace DocSharp.Binary.PptFileFormat
 {
     [OfficeRecord(6002)]
     public class PersistDirectoryAtom : Record

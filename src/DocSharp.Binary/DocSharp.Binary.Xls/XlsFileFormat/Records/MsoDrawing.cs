@@ -1,9 +1,8 @@
-
 using System.Diagnostics;
-using b2xtranslator.OfficeDrawing;
-using b2xtranslator.StructuredStorage.Reader;
+using DocSharp.Binary.OfficeDrawing;
+using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Records
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
 {
     [BiffRecord(RecordType.MsoDrawing)] 
     public class MsoDrawing : BiffRecord

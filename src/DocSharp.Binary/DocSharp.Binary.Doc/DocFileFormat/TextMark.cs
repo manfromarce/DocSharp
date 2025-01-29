@@ -1,4 +1,4 @@
-namespace b2xtranslator.DocFileFormat
+namespace DocSharp.Binary.DocFileFormat
 {
     public class TextMark
     {

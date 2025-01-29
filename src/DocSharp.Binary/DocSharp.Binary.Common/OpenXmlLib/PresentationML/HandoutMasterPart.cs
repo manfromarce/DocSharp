@@ -1,4 +1,4 @@
-namespace b2xtranslator.OpenXmlLib.PresentationML
+namespace DocSharp.Binary.OpenXmlLib.PresentationML
 {
     public class HandoutMasterPart : SlideMasterPart
     {

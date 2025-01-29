@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace b2xtranslator.OfficeDrawing
+namespace DocSharp.Binary.OfficeDrawing
 {
     [OfficeRecord(0xF001)]
     public class BlipStoreContainer : RegularContainer

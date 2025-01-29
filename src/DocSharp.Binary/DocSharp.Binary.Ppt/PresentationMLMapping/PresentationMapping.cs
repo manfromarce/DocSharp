@@ -1,10 +1,8 @@
-
-
-using b2xtranslator.CommonTranslatorLib;
-using b2xtranslator.OpenXmlLib;
+using DocSharp.Binary.CommonTranslatorLib;
+using DocSharp.Binary.OpenXmlLib;
 using System.Xml;
 
-namespace b2xtranslator.PresentationMLMapping
+namespace DocSharp.Binary.PresentationMLMapping
 {
     public abstract class PresentationMapping<T> :
         AbstractOpenXmlMapping,

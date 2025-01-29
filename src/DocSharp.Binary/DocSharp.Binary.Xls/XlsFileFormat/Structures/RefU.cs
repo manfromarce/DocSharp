@@ -1,6 +1,6 @@
-﻿using b2xtranslator.StructuredStorage.Reader;
+﻿using DocSharp.Binary.StructuredStorage.Reader;
 
-namespace b2xtranslator.Spreadsheet.XlsFileFormat.Structures
+namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Structures
 {
     /// <summary>
     /// A structure that specifies a range of cells on the sheet.
