@@ -238,6 +238,35 @@ public abstract class DocxConverterBase
             case Break br:
                 ProcessBreak(br, sb);
                 return true;
+            case CarriageReturn:
+                // The behavior of a carriage return is the same to a break character with null type and clear attributes
+                // (source: https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.carriagereturn)
+                ProcessBreak(new Break() { }, sb);
+                return true;
+            case TabChar:
+                ProcessText(new Text("\t"), sb);
+                return true;
+            case NoBreakHyphen:
+                ProcessText(new Text("\u2011"), sb);
+                return true;
+            case DayShort:
+                ProcessText(new Text(DateTime.Now.ToString("dd")), sb);
+                break;
+            case DayLong:
+                ProcessText(new Text(DateTime.Now.ToString("dddd")), sb);
+                break;
+            case MonthShort:
+                ProcessText(new Text(DateTime.Now.ToString("MM")), sb);
+                break;
+            case MonthLong:
+                ProcessText(new Text(DateTime.Now.ToString("MMMM")), sb);
+                break;
+            case YearShort:
+                ProcessText(new Text(DateTime.Now.ToString("YY")), sb);
+                break;
+            case YearLong:
+                ProcessText(new Text(DateTime.Now.ToString("YYYY")), sb);
+                return true;
             case AlternateContent alternateContent:
                 if (!ProcessRunElement(alternateContent.GetFirstChild<AlternateContentChoice>()?.FirstChild, sb))
                 {

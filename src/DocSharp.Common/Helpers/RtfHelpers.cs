@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DocSharp.Helpers;
 
@@ -27,7 +26,7 @@ public static class RtfHelpers
             }
             else if (c == '\r')
             {
-                // Ignore
+                // Ignore as it's usually followed by \n
             }
             else if (c == '\n')
             {

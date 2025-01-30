@@ -41,12 +41,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
     public string? ImagesBaseUriOverride { get; set; } = null;
 
     private char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
-                                     '#', '+', '-', '!', '|', '~' }; // '.'
-
-    internal static string Escape(char value)
-    {
-        return @"\" + value;
-    }
+                                     '#', '+', '-', '!', '|', '~' };
 
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
@@ -166,7 +161,15 @@ public class DocxToMarkdownConverter : DocxConverterBase
         {
             if (_specialChars.Contains(c))
             {
-                sb.Append(Escape(c));
+                sb.Append(new string(['\\', c]));
+            }
+            else if (c == '\r')
+            {
+                // Ignore as it's usually followed by \n
+            }
+            else if (c == '\n')
+            {
+                sb.AppendLine("  "); // soft break
             }
             else
             {
