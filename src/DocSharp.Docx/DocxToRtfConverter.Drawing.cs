@@ -8,6 +8,7 @@ using ImageData = DocumentFormat.OpenXml.Vml.ImageData;
 using Extent = DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent;
 using ShapeProperties = DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties;
 using BlipFill = DocumentFormat.OpenXml.Drawing.Pictures.BlipFill;
+using Pictures = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace DocSharp.Docx;
 public partial class DocxToRtfConverter
@@ -16,7 +17,7 @@ public partial class DocxToRtfConverter
     {
         var properties = new PictureProperties();
         var extent = drawing.Descendants<Extent>().FirstOrDefault();
-        var pic = drawing.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.Picture>().FirstOrDefault();
+        var pic = drawing.Descendants<Pictures.Picture>().FirstOrDefault();
         if (pic != null && extent?.Cx != null && extent?.Cy != null)
         {
             // Convert EMUs to twips
@@ -54,5 +55,4 @@ public partial class DocxToRtfConverter
             }
         }
     }
-
 }

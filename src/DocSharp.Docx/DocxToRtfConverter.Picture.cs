@@ -27,6 +27,8 @@ public partial class DocxToRtfConverter
                         break;
                     case ".jpeg":
                     case ".jpg":
+                    case ".jpe":
+                    case ".jfif":
                         format = @"\jpegblip ";
                         break;
                     case ".emf":
