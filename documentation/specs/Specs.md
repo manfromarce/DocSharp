@@ -5,6 +5,7 @@ This is a list of file format specifications which may be useful for this projec
   + PPTX: <https://msopenspecs.azureedge.net/files/MS-PPTX/%5bMS-PPTX%5d.pdf>
   + Office implementation of Open XML: <https://msopenspecs.azureedge.net/files/MS-OE376/%5bMS-OE376%5d.pdf>, <https://msopenspecs.azureedge.net/files/MS-OI29500/%5bMS-OI29500%5d.pdf>
   + DrawingML: <https://msopenspecs.azureedge.net/files/MS-ODRAWXML/%5bMS-ODRAWXML%5d.pdf>
+  + Cryptography: <https://msopenspecs.azureedge.net/files/MS-OFFCRYPTO/%5bMS-OFFCRYPTO%5d.pdf>
 - Office binary formats
   + Shared: <https://msopenspecs.azureedge.net/files/MS-OSHARED/%5bMS-OSHARED%5d.pdf>
   + DOC: <https://msopenspecs.azureedge.net/files/MS-DOC/%5bMS-DOC%5d.pdf>
