@@ -15,7 +15,10 @@ This is a list of file format specifications which may be useful for this projec
   + Drawing: <https://msopenspecs.azureedge.net/files/MS-ODRAW/%5bMS-ODRAW%5d.pdf>
   + Charts: <https://msopenspecs.azureedge.net/files/MS-OGRAPH/%5bMS-OGRAPH%5d.pdf>
   + Forms: <https://msopenspecs.azureedge.net/files/MS-OFORMS/%5bMS-OFORMS%5d.pdf>
+  + XLDM (spreadsheet data model): <https://msopenspecs.azureedge.net/files/MS-XLDM/%5bMS-XLDM%5d.pdf>
 - ODF (Open Document Format)
+  + ODF 1.1: <http://docs.oasis-open.org/office/v1.1/OpenDocument-v1.1.html>
+  + ODF 1.2: <http://docs.oasis-open.org/office/v1.2/>
   + ODF 1.3: <https://docs.oasis-open.org/office/OpenDocument/v1.3>
   + ODF 1.4: <https://docs.oasis-open.org/office/OpenDocument/v1.4/>
   + Office implementation of ODF 1.4: <https://msopenspecs.azureedge.net/files/MS-OODF14/%5bMS-OODF14%5d.pdf>
