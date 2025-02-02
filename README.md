@@ -76,4 +76,5 @@ Others:
 
 ### License
 
-DocSharp is licensed under MIT license and can be used for both open source and commercial projects.
+DocSharp is licensed under MIT license and can be used for both open source and commercial projects.  
+If you find the library useful, adding a star is highly appreciated.
