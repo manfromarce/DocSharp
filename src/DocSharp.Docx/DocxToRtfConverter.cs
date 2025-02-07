@@ -82,7 +82,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
         }
         else if (hyperlink.Anchor?.Value is string anchor)
         {
-            sb.Append(@"\| """ + anchor + @"""}}");
+            sb.Append(@"\\l """ + anchor + @"""}}");
         }
         sb.Append(@"{\fldrslt{");
         foreach (var element in hyperlink.Elements())
