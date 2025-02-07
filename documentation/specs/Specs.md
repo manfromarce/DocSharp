@@ -6,6 +6,9 @@ This is a list of file format specifications which may be useful for this projec
   + Office implementation of Open XML: <https://msopenspecs.azureedge.net/files/MS-OE376/%5bMS-OE376%5d.pdf>, <https://msopenspecs.azureedge.net/files/MS-OI29500/%5bMS-OI29500%5d.pdf>
   + DrawingML: <https://msopenspecs.azureedge.net/files/MS-ODRAWXML/%5bMS-ODRAWXML%5d.pdf>
   + Cryptography: <https://msopenspecs.azureedge.net/files/MS-OFFCRYPTO/%5bMS-OFFCRYPTO%5d.pdf>
+  + ECMA 376: <https://ecma-international.org/publications-and-standards/standards/ecma-376/>
+  + ISO/IEC 29500: <https://standards.iso.org/ittf/PubliclyAvailableStandards/index.html> (search for the most recent version of 29500-1, 29500-2, 29500-3 and 29500-4)
+  + Open XML SDK documentation: <https://learn.microsoft.com/en-us/office/open-xml/open-xml-sdk>
 - Office binary formats
   + Shared: <https://msopenspecs.azureedge.net/files/MS-OSHARED/%5bMS-OSHARED%5d.pdf>
   + DOC: <https://msopenspecs.azureedge.net/files/MS-DOC/%5bMS-DOC%5d.pdf>
