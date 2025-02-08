@@ -142,6 +142,16 @@ public partial class DocxToRtfConverter
                 sb.Append(@"\brdrr");
                 ProcessBorder(borders.RightBorder, sb);
             }
+            if (borders?.BarBorder != null)
+            {
+                sb.Append(@"\brdrbar");
+                ProcessBorder(borders.BarBorder, sb);
+            }
+            if (borders?.BetweenBorder != null)
+            {
+                sb.Append(@"\brdrbtw");
+                ProcessBorder(borders.BetweenBorder, sb);
+            }
         }
 
         var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph);

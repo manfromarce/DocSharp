@@ -200,6 +200,51 @@ public static class OpenXmlHelpers
         return null;
     }
 
+    // Helper function to get row formatting from row/table properties or style.
+    public static T? GetEffectiveProperty<T>(this TableRow row) where T : OpenXmlElement
+    {
+        var stylesPart = GetStylesPart(row);
+
+        // Check standard properties        
+        T? propertyValue = row.TableRowProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check exceptions to table properties
+        var tablePropertiesExceptions = row?.TablePropertyExceptions; // has exceptions to TableProperties
+        propertyValue = tablePropertiesExceptions?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check table properties (can contain properties such as TableJustification).
+        var tableProperties = row.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
+        propertyValue = tableProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check table style
+        var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+        while (tableStyle != null)
+        {
+            propertyValue = tableStyle.StyleTableProperties?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = stylesPart.GetBaseStyle(tableStyle);
+        }
+
+        return null;
+    }
+
     // Helper function to get cell formatting from cell/table properties or style.
     public static T? GetEffectiveProperty<T>(this TableCell cell) where T : OpenXmlElement
     {
@@ -207,6 +252,17 @@ public static class OpenXmlHelpers
 
         // Check cell properties        
         T? propertyValue = cell.TableCellProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check row properties
+        var row = cell.GetFirstAncestor<TableRow>();
+        var tableRowProperties = row?.TableRowProperties; // can have e.g. TableCellSpacing
+        var tablePropertiesExceptions = row?.TablePropertyExceptions; // has exceptions to TableProperties
+        propertyValue = tableRowProperties?.GetFirstChild<T>() ?? 
+                        tablePropertiesExceptions?.GetFirstChild<T>();
         if (propertyValue != null)
         {
             return propertyValue;
