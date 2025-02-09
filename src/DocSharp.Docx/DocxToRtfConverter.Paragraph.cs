@@ -37,6 +37,12 @@ public partial class DocxToRtfConverter
             ProcessListItem(numberingProperties, sb);
         }
 
+        var fp = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph);
+        if (fp != null)
+        {
+            ProcessFrameProperties(fp, sb);
+        }
+
         var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph);
         if (alignment?.Val != null)
         {
@@ -83,6 +89,12 @@ public partial class DocxToRtfConverter
             {
                 sb.Append($"\\sl{spacing.Line}\\slmult1");
             }
+        }
+
+        var adjustRight = OpenXmlHelpers.GetEffectiveProperty<AdjustRightIndent>(paragraph);
+        if (adjustRight != null && (adjustRight.Val == null || adjustRight.Val.Value))
+        {
+            sb.Append("\\adjustright");
         }
 
         var ind = OpenXmlHelpers.GetEffectiveProperty<Indentation>(paragraph);
@@ -159,5 +171,5 @@ public partial class DocxToRtfConverter
         {
             ProcessShading(shading, sb, ShadingType.Paragraph);
         }
-    }
+    }    
 }

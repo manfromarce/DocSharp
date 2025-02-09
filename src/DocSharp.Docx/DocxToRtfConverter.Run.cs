@@ -46,7 +46,7 @@ public partial class DocxToRtfConverter
         }
         else
         {
-            // Arial is already in the font table as last resort
+            // Calibri is already in the font table as last resort
             sb.Append(@"\f0");
         }
 

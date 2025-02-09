@@ -28,6 +28,7 @@ If your main purpose is creating documents from scratch you can consider the fol
     - JPEG, PNG and EMF are supported. 
     - Only inline images are supported (wrap layouts are not yet implemented).
   * Hyperlinks and bookmarks
+  * Drop caps
   * Page setup: size, orientation, margins, borders
   * Header and footer
   * TODO: math formulas, drawings, OLE objects, fields and more

@@ -25,7 +25,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
         sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
         
         // Prepare fonts table 
-        sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 Arial;}");        
+        sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 Calibri;}");        
         
         // Process content
         var bodySb = new StringBuilder();
