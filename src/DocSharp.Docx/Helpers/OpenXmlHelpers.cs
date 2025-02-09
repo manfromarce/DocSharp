@@ -72,14 +72,14 @@ public static class OpenXmlHelpers
     // Helper function to get paragraph formatting from paragraph properties, style or default style.
     public static T? GetEffectiveProperty<T>(this Paragraph paragraph) where T : OpenXmlElement
     {
-        var stylesPart = GetStylesPart(paragraph);
-
         // Check paragraph properties
         T? propertyValue = paragraph.ParagraphProperties?.GetFirstChild<T>();
         if (propertyValue != null)
         {
             return propertyValue;
         }
+
+        var stylesPart = GetStylesPart(paragraph);
 
         // Check paragraph style
         var paragraphStyle = stylesPart.GetStyleFromId(paragraph.ParagraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
@@ -120,8 +120,6 @@ public static class OpenXmlHelpers
     // Helper function to get run formatting from run/paragraph properties, style or default style.
     public static T? GetEffectiveProperty<T>(this Run run) where T : OpenXmlElement
     {
-        var stylesPart = GetStylesPart(run);
-
         // Check run properties
         T? propertyValue = run.RunProperties?.GetFirstChild<T>();
         if (propertyValue != null)
@@ -136,6 +134,8 @@ public static class OpenXmlHelpers
         {
             return propertyValue;
         }
+
+        var stylesPart = GetStylesPart(run);
 
         // Check run style
         var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character) ?? 
@@ -173,8 +173,6 @@ public static class OpenXmlHelpers
     // Helper function to get table formatting from table properties or style.
     public static T? GetEffectiveProperty<T>(this Table table) where T : OpenXmlElement
     {
-        var stylesPart = GetStylesPart(table);
-
         // Check table properties
         var tableProperties = table.GetFirstChild<TableProperties>();
         T? propertyValue = tableProperties?.GetFirstChild<T>();
@@ -182,6 +180,8 @@ public static class OpenXmlHelpers
         {
             return propertyValue;
         }
+
+        var stylesPart = GetStylesPart(table);
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
@@ -203,9 +203,7 @@ public static class OpenXmlHelpers
     // Helper function to get row formatting from row/table properties or style.
     public static T? GetEffectiveProperty<T>(this TableRow row) where T : OpenXmlElement
     {
-        var stylesPart = GetStylesPart(row);
-
-        // Check standard properties        
+        // Check standard properties
         T? propertyValue = row.TableRowProperties?.GetFirstChild<T>();
         if (propertyValue != null)
         {
@@ -213,7 +211,7 @@ public static class OpenXmlHelpers
         }
 
         // Check exceptions to table properties
-        var tablePropertiesExceptions = row?.TablePropertyExceptions; // has exceptions to TableProperties
+        var tablePropertiesExceptions = row.TablePropertyExceptions; // has exceptions to TableProperties
         propertyValue = tablePropertiesExceptions?.GetFirstChild<T>();
         if (propertyValue != null)
         {
@@ -227,6 +225,8 @@ public static class OpenXmlHelpers
         {
             return propertyValue;
         }
+
+        var stylesPart = GetStylesPart(row);
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
@@ -248,8 +248,6 @@ public static class OpenXmlHelpers
     // Helper function to get cell formatting from cell/table properties or style.
     public static T? GetEffectiveProperty<T>(this TableCell cell) where T : OpenXmlElement
     {
-        var stylesPart = GetStylesPart(cell);
-
         // Check cell properties        
         T? propertyValue = cell.TableCellProperties?.GetFirstChild<T>();
         if (propertyValue != null)
@@ -260,7 +258,8 @@ public static class OpenXmlHelpers
         // Check row properties
         var row = cell.GetFirstAncestor<TableRow>();
         var tableRowProperties = row?.TableRowProperties; // can have e.g. TableCellSpacing
-        var tablePropertiesExceptions = row?.TablePropertyExceptions; // has exceptions to TableProperties
+        var tablePropertiesExceptions = row?.TablePropertyExceptions; // has exceptions to TableProperties and many of the same properties,
+                                                                      // so it's considered less specific than row properties
         propertyValue = tableRowProperties?.GetFirstChild<T>() ?? 
                         tablePropertiesExceptions?.GetFirstChild<T>();
         if (propertyValue != null)
@@ -276,6 +275,8 @@ public static class OpenXmlHelpers
         {
             return propertyValue;
         }
+
+        var stylesPart = GetStylesPart(cell);
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
@@ -293,7 +294,153 @@ public static class OpenXmlHelpers
         }
 
         return null;
-    }    
+    }
+
+    // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
+    public static BorderType? GetEffectiveBorder(this TableCell cell, Primitives.BorderValue borderValue,
+                                                 int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft)
+    {
+        bool isFirstRow = rowNumber == 1;
+        bool isFirstColumn = columnNumber == 1;
+        bool isLastRow = rowNumber == rowCount;
+        bool isLastColumn = columnNumber == columnCount;
+
+        var targetTypesCell = new List<Type>();
+        var targetTypesTable = new List<Type>();
+        switch (borderValue)
+        {
+            case Primitives.BorderValue.Left:
+                targetTypesCell.Add(typeof(LeftBorder));
+                targetTypesCell.Add(isRightToLeft ? typeof(EndBorder) : typeof(StartBorder));
+                if (isFirstColumn)
+                {
+                    targetTypesTable.Add(typeof(LeftBorder));
+                    targetTypesTable.Add(isRightToLeft ? typeof(EndBorder) : typeof(StartBorder));
+                }
+                else
+                {
+                    targetTypesTable.Add(typeof(InsideVerticalBorder));
+                }
+                break;
+            case Primitives.BorderValue.Right:
+                targetTypesCell.Add(typeof(RightBorder));
+                targetTypesCell.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
+                if (isLastColumn)
+                {
+                    targetTypesTable.Add(typeof(RightBorder));
+                    targetTypesTable.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
+                }
+                else
+                {
+                    targetTypesTable.Add(typeof(InsideVerticalBorder));
+                }
+                break;
+            case Primitives.BorderValue.Top:
+                targetTypesCell.Add(typeof(TopBorder));
+                targetTypesTable.Add(isFirstRow ? typeof(TopBorder) : typeof(InsideHorizontalBorder));
+                break;
+            case Primitives.BorderValue.Bottom:
+                targetTypesCell.Add(typeof(BottomBorder));
+                targetTypesTable.Add(isLastRow ? typeof(BottomBorder) : typeof(InsideHorizontalBorder));
+                break;
+            case Primitives.BorderValue.TopLeftToBottomRightDiagonal:
+                targetTypesCell.Add(typeof(TopLeftToBottomRightCellBorder));
+                break;
+            case Primitives.BorderValue.TopRightToBottomLeftDiagonal:
+                targetTypesCell.Add(typeof(TopRightToBottomLeftCellBorder));
+                break;
+        }
+
+        // The types should be checked in order to preserve the correct priority.
+        // For example, left and right should have precedence over start and end as they are more specific,
+        // same applies to left/right/bottom/top over inside borders.
+        OpenXmlElement? res = null;
+        foreach (var type in targetTypesCell)
+        {
+            res = cell.TableCellProperties?.TableCellBorders?.FirstOrDefault(element => element.GetType() == type);
+            if (res != null)
+            {
+                return (BorderType)res;
+            }
+        }
+
+        // Check row properties
+        var row = cell.GetFirstAncestor<TableRow>();
+        var tablePropertiesExceptions = row?.TablePropertyExceptions;
+        foreach (var type in targetTypesTable)
+        {
+            res = tablePropertiesExceptions?.TableBorders?.FirstOrDefault(element => element.GetType() == type);
+            if (res != null)
+            {
+                return (BorderType)res;
+            }
+        }        
+        
+        // Check table properties
+        var tableProperties = cell.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
+        foreach (var type in targetTypesTable)
+        {
+            res = tableProperties?.TableBorders?.FirstOrDefault(element => element.GetType() == type);
+            if (res != null)
+            {
+                return (BorderType)res;
+            }
+        }
+
+        // Check table style
+        var stylesPart = GetStylesPart(cell);
+        var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+        while (tableStyle != null)
+        {
+            res = tableStyle.StyleTableProperties?.TableBorders?.FirstOrDefault(element => targetTypesTable.Contains(element.GetType()));
+            if (res != null)
+            {
+                return (BorderType)res;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = stylesPart.GetBaseStyle(tableStyle);
+        }
+        return null;
+    }
+
+    // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
+    public static T? GetEffectiveBorder<T>(this TableRow row) where T : BorderType
+    {
+        // Check row properties
+        var tablePropertiesExceptions = row.TablePropertyExceptions;
+        T? propertyValue = tablePropertiesExceptions?.TableBorders?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check table properties
+        var tableProperties = row.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
+        propertyValue = tableProperties?.TableBorders?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        var stylesPart = GetStylesPart(row);
+
+        // Check table style
+        var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+        while (tableStyle != null)
+        {
+            propertyValue = tableStyle.StyleTableProperties?.TableBorders?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = stylesPart.GetBaseStyle(tableStyle);
+        }
+        return null;
+    }
+
 
     public static void InsertAfterLastOfType<T>(this OpenXmlCompositeElement parent, OpenXmlElement element)
         where T : OpenXmlElement

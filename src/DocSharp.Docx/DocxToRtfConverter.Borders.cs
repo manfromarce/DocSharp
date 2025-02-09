@@ -40,6 +40,10 @@ public  partial class DocxToRtfConverter
                 sb.Append($"\\brdrcf{colorIndex}");
             }
         }
+        if (border.Shadow != null && ((!border.Shadow.HasValue) || border.Shadow.Value))
+        {
+            sb.Append(@"\brdrsh");
+        }
         if (border.Frame != null && ((!border.Frame.HasValue) || border.Frame.Value))
         {
             sb.Append(@"\brdrframe");
