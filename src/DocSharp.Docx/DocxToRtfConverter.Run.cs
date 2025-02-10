@@ -14,8 +14,12 @@ public partial class DocxToRtfConverter
 {
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
-        sb.Append('{');
-        
+        if (!run.HasChildren)
+            return;
+
+        if (!isInField)
+            sb.Append('{');
+
         ProcessRunFormatting(run, sb);
         sb.Append(' ');
 
@@ -24,7 +28,8 @@ public partial class DocxToRtfConverter
             base.ProcessRunElement(element, sb);
         }
 
-        sb.Append('}');
+        if (!isInField)
+            sb.Append('}');
     }
 
     internal void ProcessRunFormatting(Run run, StringBuilder sb)

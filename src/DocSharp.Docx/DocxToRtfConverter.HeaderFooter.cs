@@ -23,11 +23,11 @@ public partial class DocxToRtfConverter
         {
             sb.Append("{\\headerr ");
         }
-        foreach (var element in header.Elements<Paragraph>())
-        {            
-            ProcessParagraph(element, sb);
+        foreach(var element in header.Elements())
+        {
+            base.ProcessBodyElement(element, sb);
         }
-        sb.Append("}");
+        sb.Append('}');
     }
 
     internal void ProcessFooter(Footer footer, StringBuilder sb, FooterReference reference)
@@ -44,10 +44,10 @@ public partial class DocxToRtfConverter
         {
             sb.Append("{\\footerr ");
         }
-        foreach (var element in footer.Elements<Paragraph>())
+        foreach (var element in footer.Elements())
         {
-            ProcessParagraph(element, sb);
+            base.ProcessBodyElement(element, sb);
         }
-        sb.Append("}");
+        sb.Append('}');
     }
 }

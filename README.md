@@ -31,7 +31,8 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Drop caps
   * Page setup: size, orientation, margins, borders
   * Header and footer
-  * TODO: math formulas, drawings, OLE objects, fields and more
+  * Fields (partial) and page numbers
+  * TODO: math formulas, drawings, OLE objects, right-to-left and more
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough, superscript, subscript

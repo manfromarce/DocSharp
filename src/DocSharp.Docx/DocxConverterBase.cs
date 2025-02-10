@@ -174,6 +174,11 @@ public abstract class DocxConverterBase
 
     internal virtual void ProcessBodyElement(OpenXmlElement element, StringBuilder sb)
     {
+        ProcessCompositeElement(element, sb);
+    }
+
+    internal virtual void ProcessCompositeElement(OpenXmlElement element, StringBuilder sb)
+    {
         switch (element)
         {
             case Paragraph paragraph:
@@ -184,6 +189,12 @@ public abstract class DocxConverterBase
                 break;
             case BookmarkStart bookmark:
                 ProcessBookmarkStart(bookmark, sb);
+                break;
+            case BookmarkEnd bookmarkEnd:
+                ProcessBookmarkEnd(bookmarkEnd, sb);
+                break;
+            case SdtBlock sdtBlock:
+                ProcessSdtBlock(sdtBlock, sb);
                 break;
         }
     }
@@ -196,7 +207,7 @@ public abstract class DocxConverterBase
         }
     }
 
-    // Used for paragraph content and hyperlink content
+    // Used for paragraphs and other composite elements
     internal virtual void ProcessParagraphElement(OpenXmlElement element, StringBuilder sb)
     {
         switch (element)
@@ -218,6 +229,12 @@ public abstract class DocxConverterBase
                 break;
             case Drawing drawing:
                 ProcessDrawing(drawing, sb);
+                break;
+            case SdtRun sdtRun:
+                ProcessSdtRun(sdtRun, sb);
+                break;
+            case SimpleField simpleField:
+                ProcessSimpleField(simpleField, sb);
                 break;
         }
     }
@@ -249,6 +266,12 @@ public abstract class DocxConverterBase
             case NoBreakHyphen:
                 ProcessText(new Text("\u2011"), sb);
                 return true;
+            case FieldChar fieldChar:
+                ProcessFieldChar(fieldChar, sb);
+                return true;
+            case FieldCode fieldCode:
+                ProcessFieldCode(fieldCode, sb);
+                return true;
             case DayShort:
                 ProcessText(new Text(DateTime.Now.ToString("dd")), sb);
                 break;
@@ -277,6 +300,60 @@ public abstract class DocxConverterBase
         return false;
     }
 
+    internal virtual void ProcessSimpleField(SimpleField field, StringBuilder sb)
+    {
+        foreach (var element in field.Elements())
+        {
+            ProcessParagraphElement(element, sb);
+        }
+    }
+
+    internal virtual void ProcessSdtRun(SdtRun sdtRun, StringBuilder sb)
+    {
+        if (sdtRun.SdtContentRun != null)
+        {
+            foreach (var element in sdtRun.Elements())
+            {
+                switch (element)
+                {
+                    case BookmarkStart bookmarkStart:
+                        ProcessBookmarkStart(bookmarkStart, sb);
+                        break;
+                    case BookmarkEnd bookmarkEnd:
+                        ProcessBookmarkEnd(bookmarkEnd, sb);
+                        break;
+                }
+            }
+            foreach (var element in sdtRun.SdtContentRun.Elements())
+            {
+                ProcessParagraphElement(element, sb);
+            }
+        }
+    }
+
+    internal virtual void ProcessSdtBlock(SdtBlock sdtBlock, StringBuilder sb)
+    {
+        if (sdtBlock.SdtContentBlock != null)
+        {
+            foreach (var element in sdtBlock.Elements())
+            {
+                switch (element)
+                {
+                    case BookmarkStart bookmarkStart:
+                        ProcessBookmarkStart(bookmarkStart, sb);
+                        break;
+                    case BookmarkEnd bookmarkEnd:
+                        ProcessBookmarkEnd(bookmarkEnd, sb);
+                        break;
+                }
+            }
+            foreach (var element in sdtBlock.SdtContentBlock.Elements())
+            {
+                ProcessCompositeElement(element, sb);
+            }
+        }
+    }
+
     internal abstract void ProcessRun(Run run, StringBuilder sb);
     internal abstract void ProcessBreak(Break @break, StringBuilder sb);
     internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, StringBuilder sb);
@@ -286,5 +363,7 @@ public abstract class DocxConverterBase
     internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
     internal abstract void ProcessTable(Table table, StringBuilder sb);
     internal abstract void ProcessText(Text text, StringBuilder sb);
+    internal abstract void ProcessFieldChar(FieldChar field, StringBuilder sb);
+    internal abstract void ProcessFieldCode(FieldCode field, StringBuilder sb);
 
 }
