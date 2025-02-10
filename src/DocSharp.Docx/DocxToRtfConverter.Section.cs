@@ -218,30 +218,31 @@ public partial class DocxToRtfConverter
             var headers = sectionProperties.Elements<HeaderReference>();
             var footers = sectionProperties.Elements<FooterReference>();
 
-            if ((headers != null && headers.Count() > 0) || 
-                (footers != null && footers.Count() > 0))
+            if (headers != null && headers.Any() && 
+                footers != null && footers.Any())
             {
                 sb.Append($"\\facingp");
-                if (headers != null)
+            }
+
+            if (headers != null)
+            {
+                foreach (var headerReference in headers)
                 {
-                    foreach (var headerReference in headers)
+                    if (headerReference?.Id?.Value is string headerId &&
+                        mainPart.GetPartById(headerId) is HeaderPart headerPart)
                     {
-                        if (headerReference?.Id?.Value is string headerId &&
-                            mainPart.GetPartById(headerId) is HeaderPart headerPart)
-                        {
-                            ProcessHeader(headerPart.Header, sb, headerReference);
-                        }
+                        ProcessHeader(headerPart.Header, sb, headerReference);
                     }
                 }
-                if (footers != null)
+            }
+            if (footers != null)
+            {
+                foreach(var footerReference in footers)
                 {
-                    foreach(var footerReference in footers)
+                    if (footerReference?.Id?.Value is string footerId &&
+                        mainPart.GetPartById(footerId) is FooterPart footerPart)
                     {
-                        if (footerReference?.Id?.Value is string footerId &&
-                            mainPart.GetPartById(footerId) is FooterPart footerPart)
-                        {
-                            ProcessFooter(footerPart.Footer, sb, footerReference);
-                        }
+                        ProcessFooter(footerPart.Footer, sb, footerReference);
                     }
                 }
             }
