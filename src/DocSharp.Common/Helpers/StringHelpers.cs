@@ -109,6 +109,10 @@ public static class StringHelpers
     public static string WingdingsToUnicode(char wingdings)
     {
         // https://www.alanwood.net/demos/wingdings.html
+        if (wingdings > 0xF000)
+        {
+            wingdings -= (char)0xF000;
+        }
         switch (wingdings)
         {
             case '\u0020': return " ";
@@ -353,6 +357,10 @@ public static class StringHelpers
 
     public static string Wingdings2ToUnicode(char wingdings)
     {
+        if (wingdings > 0xF000)
+        {
+            wingdings -= (char)0xF000;
+        }
         // https://www.alanwood.net/demos/wingdings-2.html
         switch (wingdings)
         {
@@ -592,6 +600,10 @@ public static class StringHelpers
 
     public static string Wingdings3ToUnicode(char wingdings)
     {
+        if (wingdings > 0xF000)
+        {
+            wingdings -= (char)0xF000;
+        }
         // https://www.alanwood.net/demos/wingdings-3.html
         switch (wingdings)
         {
@@ -822,6 +834,10 @@ public static class StringHelpers
 
     public static string WebdingsToUnicode(char wingdings)
     {
+        if (wingdings > 0xF000)
+        {
+            wingdings -= (char)0xF000;
+        }
         switch (wingdings)
         {
             case '\u0020': return " ";

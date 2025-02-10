@@ -266,6 +266,9 @@ public abstract class DocxConverterBase
             case NoBreakHyphen:
                 ProcessText(new Text("\u2011"), sb);
                 return true;
+            case SymbolChar symbolChar:
+                ProcessSymbolChar(symbolChar, sb);
+                return true;
             case FieldChar fieldChar:
                 ProcessFieldChar(fieldChar, sb);
                 return true;
@@ -365,5 +368,6 @@ public abstract class DocxConverterBase
     internal abstract void ProcessText(Text text, StringBuilder sb);
     internal abstract void ProcessFieldChar(FieldChar field, StringBuilder sb);
     internal abstract void ProcessFieldCode(FieldCode field, StringBuilder sb);
+    internal abstract void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb);
 
 }

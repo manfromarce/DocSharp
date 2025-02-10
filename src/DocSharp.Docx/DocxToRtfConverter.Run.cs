@@ -34,12 +34,26 @@ public partial class DocxToRtfConverter
 
     internal void ProcessRunFormatting(Run run, StringBuilder sb)
     {
-        string? lang = OpenXmlHelpers.GetEffectiveProperty<Languages>(run)?.Val;
-        if (!string.IsNullOrEmpty(lang))
+        var lang = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
+        if (!string.IsNullOrEmpty(lang?.Val?.Value))
         {
-            int code = RtfHelpers.GetLanguageCode(lang);
+            int code = RtfHelpers.GetLanguageCode(lang.Val.Value);
             sb.Append(@"\lang" + code);
             sb.Append(@"\langnp" + code);
+        }
+        if (!string.IsNullOrEmpty(lang?.Bidi?.Value))
+        {
+            int code = RtfHelpers.GetLanguageCode(lang.Bidi.Value);
+            sb.Append(@"\langfe" + code);
+            sb.Append(@"\langfenp" + code);
+        }
+
+        if (OpenXmlHelpers.GetEffectiveProperty<NoProof>(run) is NoProof noProof)
+        {
+            if (noProof.Val == null || noProof.Val.Value)
+            {
+                sb.Append(@"\noproof\lang1024");
+            }
         }
 
         // To be improved (Ascii value may not be present, although rare)
@@ -229,6 +243,19 @@ public partial class DocxToRtfConverter
         if (hidden != null && (hidden.Val is null || hidden.Val))
         {
             sb.Append(@"\v");
+        }
+    }
+
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
+    {
+        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) && 
+            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
+        {
+            fonts.TryAddAndGetIndex(symbolChar.Font.Value, out int fontIndex);
+            sb.Append('{');
+            sb.Append($"\\f{fontIndex} ");
+            sb.AppendRtfUnicodeChar(symbolChar.Char.Value);
+            sb.Append('}');
         }
     }
 }

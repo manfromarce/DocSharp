@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -330,6 +331,47 @@ public class DocxToMarkdownConverter : DocxConverterBase
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, StringBuilder sb)
     {
         // TODO
+    }
+
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
+    {
+        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value))
+        {
+            string hexValue = symbolChar?.Char?.Value!;
+            if (hexValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                hexValue.StartsWith("&h", StringComparison.OrdinalIgnoreCase))
+            {
+                hexValue = hexValue.Substring(2);
+            }
+            string htmlEntity = string.Empty;
+            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+                             out int decimalValue))
+            {
+                if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
+                {
+                    switch (symbolChar?.Font?.Value.ToLower())
+                    {
+                        case "wingdings":
+                            htmlEntity = StringHelpers.WingdingsToUnicode((char)decimalValue);
+                            break;
+                        case "wingdings2":
+                            htmlEntity = StringHelpers.Wingdings2ToUnicode((char)decimalValue);
+                            break;
+                        case "wingdings3":
+                            htmlEntity = StringHelpers.Wingdings3ToUnicode((char)decimalValue);
+                            break;
+                        case "webdings":
+                            htmlEntity = StringHelpers.WebdingsToUnicode((char)decimalValue);
+                            break;
+                    }
+                }
+            }
+            if (string.IsNullOrWhiteSpace(htmlEntity))
+            {
+                htmlEntity = $"&#{decimalValue};";
+            }
+            sb.Append(htmlEntity);
+        }        
     }
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
