@@ -26,10 +26,10 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore src/**/*.csproj
+      run: dotnet restore ./src/**/*.csproj
 
     - name: Build
-      run: dotnet build --no-restore -c Release src/**/*.csproj
+      run: dotnet build --no-restore -c Release ./src/**/*.csproj
 
   publish:
     runs-on: ubuntu-latest
@@ -45,13 +45,13 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore src/**/*.csproj
+      run: dotnet restore ./src/**/*.csproj
 
     - name: Build
-      run: dotnet build --no-restore -c Release src/**/*.csproj
+      run: dotnet build --no-restore -c Release ./src/**/*.csproj
       
     - name: Generate packages
-      run: dotnet pack --no-build --configuration Release src/**/*.csproj --output ./artifacts
+      run: dotnet pack --no-build --configuration Release ./src/**/*.csproj --output ./artifacts
 
     - name: Publish to NuGet
-      run: dotnet nuget push artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+      run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
