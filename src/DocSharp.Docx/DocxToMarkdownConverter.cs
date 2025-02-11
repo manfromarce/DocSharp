@@ -385,5 +385,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
     internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb) { }
     internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb) { }
     internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb) { }
+    internal override void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb) { }
 
 }

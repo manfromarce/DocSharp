@@ -22,18 +22,17 @@ If your main purpose is creating documents from scratch you can consider the fol
 
 - Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents/encodings. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
 - DOCX to RTF: 
-  * Text and font formatting
-  * Paragraphs and lists
-  * Tables
+  * Font formatting, paragraphs, tables and lists
+    - Not all properties are supported, e.g. advanced positioning and conditional formatting for tables or some list types are not recognized.  
   * Images:
     - JPEG, PNG and EMF are supported. 
     - Only inline images are supported (wrap layouts are not yet implemented).
   * Hyperlinks and bookmarks
-  * Drop caps
-  * Page setup: size, orientation, margins, borders
+  * Page setup: size, orientation, margins, borders, background color
   * Header and footer
+  * Drop caps
   * Fields (partial) and page numbers
-  * TODO: math formulas, drawings, OLE objects and more
+  * TODO: footnotes/endnotes, math formulas, drawings, OLE objects and more
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough, superscript, subscript

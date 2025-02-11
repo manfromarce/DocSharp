@@ -284,7 +284,7 @@ public partial class DocxToRtfConverter
             (titlePage.Val is null || titlePage.Val))
         {
             sb.Append(@"\titlepg");
-        }        
+        }
 
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(sectionProperties);
         if (mainPart != null)
@@ -347,6 +347,37 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"\linerestart");
                 }
+            }
+        }
+
+        if (sectionProperties.GetFirstChild<DocGrid>() is DocGrid docGrid)
+        {
+            if (docGrid.Type?.Value != null)
+            {
+                if (docGrid.Type.Value == DocGridValues.Default)
+                {
+                    sb.Append(@"\sectdefaultcl");
+                }
+                else if (docGrid.Type.Value == DocGridValues.Lines)
+                {
+                    sb.Append(@"\sectspecifyl");
+                }
+                else if (docGrid.Type.Value == DocGridValues.LinesAndChars)
+                {
+                    sb.Append(@"\sectspecifycl");
+                }
+                else if (docGrid.Type.Value == DocGridValues.SnapToChars)
+                {
+                    sb.Append(@"\sectspecifygenN"); // Note that N is part of keyword here.
+                }
+            }
+            if (docGrid.LinePitch != null && docGrid.LinePitch.HasValue)
+            {
+                sb.Append($"\\sectlinegrid{docGrid.LinePitch.Value}");
+            }
+            if (docGrid.CharacterSpace != null && docGrid.CharacterSpace.HasValue)
+            {
+                sb.Append($"\\sectexpand{docGrid.CharacterSpace.Value}");
             }
         }
 

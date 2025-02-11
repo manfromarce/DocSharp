@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using DocSharp.Collections;
@@ -16,16 +17,16 @@ public partial class DocxToRtfConverter : DocxConverterBase
     private FastStringCollection fonts = new FastStringCollection(); 
     private FastStringCollection colors = new FastStringCollection();
 
-    internal override void ProcessBody(Body body, StringBuilder sb)
+    internal override void ProcessDocument(Document document, StringBuilder sb)
     {
         sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
-        
+
         // Prepare fonts table 
-        sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 Calibri;}");        
-        
-        // Process content
-        var bodySb = new StringBuilder();
-        base.ProcessBody(body, bodySb);
+        sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 Calibri;}");
+
+        // Process body content and document background in another StringBuilder
+        var contentSb = new StringBuilder();
+        base.ProcessDocument(document, contentSb);
 
         // Insert fonts and colors table
         foreach (var font in fonts)
@@ -41,11 +42,39 @@ public partial class DocxToRtfConverter : DocxConverterBase
         }
         sb.AppendLineCrLf("}");
 
-        // Add body content
-        sb.Append(bodySb.ToString());
-        
+        // Add content
+        sb.Append(contentSb);
+
         // Close RTF document
         sb.AppendLineCrLf("}");
+    }
+
+    internal override void ProcessDocumentBackground(DocumentBackground documentBackground, StringBuilder sb)
+    {
+        //if (documentBackground.Background != null) // TODO
+        //{
+        //}
+        // documentBackground.Background requires VML support, which is not implemented yet for other elements as well.
+        // VML can contain images, shapes and effects but is mostly replaced by DrawingML in recent MS Word versions,
+        // and maintained for compatibility reasons.
+        // However, in RTF there is no direct equivalent of documentBackground.Color, so it is implemented as a special case of VML.
+        if (documentBackground.Color?.Value != null)
+        {
+            string hex = documentBackground.Color.Value.TrimStart('#');
+            if (hex.Length == 6)
+            {
+                int r = System.Convert.ToInt32(hex.Substring(0, 2), 16);
+                int g = System.Convert.ToInt32(hex.Substring(2, 2), 16);
+                int b = System.Convert.ToInt32(hex.Substring(4, 2), 16);
+                int bgr = (b << 16) + (g << 8) + r;
+
+                sb.Append(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0\shplid1025{\sp{\sn shapeType}{\sv 1}}{\sp{\sn fFlipH}{\sv 0}}{\sp{\sn fFlipV}{\sv 0}}{\sp{\sn fillColor}{\sv ");
+                sb.Append(bgr);
+                sb.Append(@"}}{\sp{\sn fFilled}{\sv 1}}{\sp{\sn lineWidth}{\sv 0}}{\sp{\sn fLine}{\sv 0}}{\sp{\sn bWMode}{\sv 9}}{\sp{\sn fBackground}{\sv 1}}{\sp{\sn fLayoutInCell}{\sv 1}}}}}");
+                sb.AppendLineCrLf();
+                sb.AppendLineCrLf(@"\viewbksp1");
+            }
+        }
     }
 
     internal override void ProcessText(Text text, StringBuilder sb)

@@ -22,11 +22,11 @@ public abstract class DocxConverterBase
     public string ConvertToString(WordprocessingDocument inputDocument)
     {
         var sb = new StringBuilder();
-        var body = inputDocument.MainDocumentPart?.Document.Body;
-        if (body != null)
+        var document = inputDocument.MainDocumentPart?.Document;
+        if (document != null)
         {
-            ProcessBody(body, sb);
-        }
+            ProcessDocument(document, sb);
+        }        
         return sb.ToString();
     }
 
@@ -161,6 +161,18 @@ public abstract class DocxConverterBase
         using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
         {
             streamWriter.Write(ConvertToString(inputBytes));
+        }
+    }
+
+    internal virtual void ProcessDocument(Document document, StringBuilder sb)
+    {
+        if (document.DocumentBackground is DocumentBackground bg)
+        {
+            ProcessDocumentBackground(bg, sb);
+        }
+        if (document.Body is Body body)
+        {
+            ProcessBody(body, sb);
         }
     }
 
@@ -464,4 +476,6 @@ public abstract class DocxConverterBase
     internal abstract void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb);
     internal abstract void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb);
     internal abstract void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb);
+    internal abstract void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb);
+
 }

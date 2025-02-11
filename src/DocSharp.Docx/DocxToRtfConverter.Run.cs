@@ -318,6 +318,12 @@ public partial class DocxToRtfConverter
         {
             ProcessShading(shading, sb, ShadingType.Character);
         }
+
+        var snapToGrid = OpenXmlHelpers.GetEffectiveProperty<SnapToGrid>(run);
+        if (snapToGrid?.Val != null && !snapToGrid.Val) // True by default
+        {
+            sb.Append(@"\cgrid0");
+        }
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)

@@ -80,27 +80,30 @@ public partial class DocxToRtfConverter
         //    }
         //}
 
-        //var vAlign = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
-        //if (vAlign?.Val != null)
-        //{
-        //    if (vAlign.Val == VerticalTextAlignmentValues.Auto) 
-        //    {
-        //    }
-        //    else if (vAlign.Val == VerticalTextAlignmentValues.Baseline)
-        //    {
-
-        //    }
-        //    else if (vAlign.Val == VerticalTextAlignmentValues.Bottom)
-        //    {
-
-        //    }
-        //    else if (vAlign.Val == VerticalTextAlignmentValues.Center)
-        //    {
-        //    }
-        //    else if (vAlign.Val == VerticalTextAlignmentValues.Top)
-        //    {
-        //    }
-        //}
+        var vAlign = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
+        if (vAlign?.Val != null)
+        {
+            if (vAlign.Val == VerticalTextAlignmentValues.Auto)
+            {
+                sb.Append(@"\faauto");
+            }
+            else if (vAlign.Val == VerticalTextAlignmentValues.Baseline)
+            {
+                sb.Append(@"\faroman");
+            }
+            else if (vAlign.Val == VerticalTextAlignmentValues.Bottom)
+            {
+                sb.Append(@"\favar");
+            }
+            else if (vAlign.Val == VerticalTextAlignmentValues.Center)
+            {
+                sb.Append(@"\facenter");
+            }
+            else if (vAlign.Val == VerticalTextAlignmentValues.Top)
+            {
+                sb.Append(@"\fahang");
+            }
+        }
 
         var tabs = OpenXmlHelpers.GetEffectiveProperty<Tabs>(paragraph);
         if (tabs != null)
@@ -243,7 +246,6 @@ public partial class DocxToRtfConverter
         {
             sb.Append(@"\nosnaplinegrid");
         }
-
         var outlineLevel = OpenXmlHelpers.GetEffectiveProperty<OutlineLevel>(paragraph);
         if (outlineLevel?.Val != null &&  outlineLevel.Val.HasValue)
         {
@@ -302,6 +304,32 @@ public partial class DocxToRtfConverter
         {
             ProcessShading(shading, sb, ShadingType.Paragraph);
         }
+
+        var textBoxTightWrap = OpenXmlHelpers.GetEffectiveProperty<TextBoxTightWrap>(paragraph);
+        if (textBoxTightWrap?.Val != null)
+        {
+            if (textBoxTightWrap.Val == TextBoxTightWrapValues.AllLines)
+            {
+                sb.Append(@"\txbxtwalways");
+            }
+            else if (textBoxTightWrap.Val == TextBoxTightWrapValues.FirstAndLastLine)
+            {
+                sb.Append(@"\txbxtwfirstlast");
+            }
+            else if (textBoxTightWrap.Val == TextBoxTightWrapValues.FirstLineOnly)
+            {
+                sb.Append(@"\txbxtwfirst");
+            }
+            else if (textBoxTightWrap.Val == TextBoxTightWrapValues.LastLineOnly)
+            {
+                sb.Append(@"\txbxtwlast");
+            }
+            else if (textBoxTightWrap.Val == TextBoxTightWrapValues.None)
+            {
+                sb.Append(@"\txbxtwno");
+            }
+        }
+
     }
 
 }
