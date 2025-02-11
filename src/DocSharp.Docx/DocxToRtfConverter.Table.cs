@@ -37,19 +37,20 @@ public partial class DocxToRtfConverter
     internal void ProcessTableRow(TableRow row, StringBuilder sb, int rowNumber, int rowCount)
     {
         sb.Append(@"\trowd");
-        bool isRightToLeft = false; 
-        // To be improved
-        // Compared to cells, rows don't have a "flow direction" property, so we check the section, but there might be other cases to consider.
-        var direction = currentSectionProperties?.GetFirstChild<TextDirection>();
-        if (direction != null && direction.Val != null)
+
+        bool isRightToLeft = false;
+        var biDiVisual = row.GetEffectiveProperty<BiDiVisual>();
+        if (biDiVisual != null && (biDiVisual.Val == null || biDiVisual.Val.Value == OnOffOnlyValues.On))
         {
-            if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
-                direction.Val == TextDirectionValues.TopToBottomRightToLeft2010 ||
-                direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
-                direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
-            {
-                isRightToLeft = true;
-            }            
+            isRightToLeft = true;
+        }
+        if (biDiVisual is null)
+        {
+            isRightToLeft = currentSectionProperties?.GetFirstChild<BiDi>() is BiDi biDi && (biDi.Val == null || biDi.Val.Value);
+        }
+        if (isRightToLeft)
+        {
+            sb.Append("\\taprtl");
         }
 
         var rowProperties = row.TableRowProperties; 
@@ -424,7 +425,7 @@ public partial class DocxToRtfConverter
         int columnCount = cells.Count();
         foreach (var cell in cells)
         {
-            ProcessTableCellProperties(cell, sb, ref totalWidth, avg, rowNumber, columnNumber, rowCount, columnCount);
+            ProcessTableCellProperties(cell, sb, ref totalWidth, avg, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
             sb.AppendLineCrLf();
             ++columnNumber;
         }
@@ -439,9 +440,8 @@ public partial class DocxToRtfConverter
     }
 
     internal void ProcessTableCellProperties(TableCell cell, StringBuilder sb, ref long totalWidth, long cellSpacing, 
-                                             int rowNumber, int columnNumber, int rowCount, int columnCount)
-    {        
-        bool isRightToLeft = false; // To be improved, might also be determined by the document language only.
+                                             int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft)
+    {
         var direction = cell.TableCellProperties?.TextDirection;
         if (direction != null && direction.Val != null)
         {
@@ -453,7 +453,6 @@ public partial class DocxToRtfConverter
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeft2010)
             {
-                isRightToLeft = true;
                 sb.Append(@"\cltxtbrl");
             }
             if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
@@ -471,7 +470,6 @@ public partial class DocxToRtfConverter
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
             {
-                isRightToLeft = true;
                 sb.Append(@"\cltxtbrlv");
             }
         }

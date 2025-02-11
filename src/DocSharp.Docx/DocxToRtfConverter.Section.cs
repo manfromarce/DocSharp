@@ -156,6 +156,12 @@ public partial class DocxToRtfConverter
             }
         }
 
+        if (sectionProperties.GetFirstChild<GutterOnRight>() is GutterOnRight gutterRight &&
+           (gutterRight.Val is null || gutterRight.Val))
+        {
+            sb.Append(@"\rtlgutter");
+        }
+
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {
             if (size.Width != null)
@@ -271,13 +277,13 @@ public partial class DocxToRtfConverter
             }
             if (cols.Separator != null && cols.Separator.HasValue && cols.Separator.Value)
             {
-                sb.Append($"\\linebetcol");
+                sb.Append(@"\linebetcol");
             }
         }
         if (sectionProperties.GetFirstChild<TitlePage>() is TitlePage titlePage && 
-            (titlePage.Val is null || titlePage.Val == true))
+            (titlePage.Val is null || titlePage.Val))
         {
-            sb.Append($"\\titlepg");
+            sb.Append(@"\titlepg");
         }        
 
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(sectionProperties);
@@ -289,7 +295,7 @@ public partial class DocxToRtfConverter
             if (headers != null && headers.Any() && 
                 footers != null && footers.Any())
             {
-                sb.Append($"\\facingp");
+                sb.Append(@"\facingp");
             }
 
             if (headers != null)
@@ -315,6 +321,35 @@ public partial class DocxToRtfConverter
                 }
             }
         }
+
+        if (sectionProperties.GetFirstChild<LineNumberType>() is LineNumberType lineNumber && lineNumber.CountBy != null)
+        {
+            sb.Append($"\\linemodN{lineNumber.CountBy.Value}");
+            if (lineNumber.Start != null)
+            {
+                sb.Append($"\\linestarts{lineNumber.Start.Value}");
+            }
+            if (lineNumber.Distance != null)
+            {
+                sb.Append($"\\linex{lineNumber.Distance.Value}");
+            }
+            if (lineNumber.Restart?.Value != null)
+            {
+                if (lineNumber.Restart.Value == LineNumberRestartValues.Continuous)
+                {
+                    sb.Append(@"\linecont");
+                }
+                else if (lineNumber.Restart.Value == LineNumberRestartValues.NewPage)
+                {
+                    sb.Append(@"\lineppage");
+                }
+                else if (lineNumber.Restart.Value == LineNumberRestartValues.NewSection)
+                {
+                    sb.Append(@"\linerestart");
+                }
+            }
+        }
+
         sb.AppendLineCrLf();
     }
 }

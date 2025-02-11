@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Shadow14 = DocumentFormat.OpenXml.Office2010.Word.Shadow;
-using Outline14 = DocumentFormat.OpenXml.Office2010.Word.TextOutlineEffect;
 using DocSharp.Helpers;
 using DocSharp.Docx.Rtf;
 
