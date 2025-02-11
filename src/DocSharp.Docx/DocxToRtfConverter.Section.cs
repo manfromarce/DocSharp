@@ -324,7 +324,7 @@ public partial class DocxToRtfConverter
 
         if (sectionProperties.GetFirstChild<LineNumberType>() is LineNumberType lineNumber && lineNumber.CountBy != null)
         {
-            sb.Append($"\\linemodN{lineNumber.CountBy.Value}");
+            sb.Append($"\\linemod{lineNumber.CountBy.Value}");
             if (lineNumber.Start != null)
             {
                 sb.Append($"\\linestarts{lineNumber.Start.Value}");
