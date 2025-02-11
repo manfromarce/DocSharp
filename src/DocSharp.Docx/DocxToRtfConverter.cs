@@ -8,10 +8,6 @@ using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
-using ImageData = DocumentFormat.OpenXml.Vml.ImageData;
-using Extent = DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent;
-using ShapeProperties = DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties;
-using BlipFill = DocumentFormat.OpenXml.Drawing.Pictures.BlipFill;
 
 namespace DocSharp.Docx;
 

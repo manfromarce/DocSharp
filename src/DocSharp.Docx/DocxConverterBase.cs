@@ -221,20 +221,29 @@ public abstract class DocxConverterBase
             case BookmarkEnd bookmarkEnd:
                 ProcessBookmarkEnd(bookmarkEnd, sb);
                 break;
-            case Hyperlink hyperlink:
-                ProcessHyperlink(hyperlink, sb);
-                break;
             case Picture picture:
                 ProcessPicture(picture, sb);
                 break;
             case Drawing drawing:
                 ProcessDrawing(drawing, sb);
                 break;
+            case Hyperlink hyperlink:
+                ProcessHyperlink(hyperlink, sb);
+                break;
+            case HyperlinkRuby hyperlinkRuby:
+                ProcessHyperlinkRuby(hyperlinkRuby, sb);
+                break;
             case SdtRun sdtRun:
                 ProcessSdtRun(sdtRun, sb);
                 break;
+            case SdtRunRuby sdtRunRuby:
+                ProcessSdtRunRuby(sdtRunRuby, sb);
+                break;
             case SimpleField simpleField:
                 ProcessSimpleField(simpleField, sb);
+                break;
+            case SimpleFieldRuby simpleFieldRuby:
+                ProcessSimpleFieldRuby(simpleFieldRuby, sb);
                 break;
         }
     }
@@ -384,6 +393,57 @@ public abstract class DocxConverterBase
         }
     }
 
+    internal virtual void ProcessRuby(Ruby ruby, StringBuilder sb)
+    {
+        // Only the base content is currently handled.
+        // Converters can override this method and process the guide text (RubyContent).
+        if (ruby.RubyBase != null)
+        {
+            foreach (var element in ruby.RubyBase.Elements())
+            {
+                switch (element)
+                {
+                    case HyperlinkRuby hyperlink:
+                        ProcessHyperlinkRuby(hyperlink, sb);
+                        break;
+                    case SdtRunRuby sdtRun:
+                        ProcessSdtRunRuby(sdtRun, sb);
+                        break;
+                    case SimpleFieldRuby simpleField:
+                        ProcessSimpleFieldRuby(simpleField, sb);
+                        break;
+                    case Run run:
+                        ProcessRun(run, sb);
+                        break;
+                    case BookmarkStart bookmarkStart:
+                        ProcessBookmarkStart(bookmarkStart, sb);
+                        break;
+                    case BookmarkEnd bookmarkEnd:
+                        ProcessBookmarkEnd(bookmarkEnd, sb);
+                        break;
+                }
+            }
+        }
+    }
+
+    internal virtual void ProcessHyperlinkRuby(HyperlinkRuby hyperlinkRuby, StringBuilder sb)
+    {
+        var hyperlink = new Hyperlink(hyperlinkRuby.OuterXml);
+        ProcessHyperlink(hyperlink, sb);
+    }
+
+    internal virtual void ProcessSdtRunRuby(SdtRunRuby sdtRunRuby, StringBuilder sb)
+    {
+        var sdtRun = new SdtRun(sdtRunRuby.OuterXml);
+        ProcessSdtRun(sdtRun, sb);
+    }
+
+    internal virtual void ProcessSimpleFieldRuby(SimpleFieldRuby fieldRuby, StringBuilder sb)
+    {
+        var field = new SimpleField(fieldRuby.OuterXml);
+        ProcessSimpleField(field, sb);
+    }
+
     internal abstract void ProcessRun(Run run, StringBuilder sb);
     internal abstract void ProcessBreak(Break @break, StringBuilder sb);
     internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, StringBuilder sb);
@@ -397,7 +457,6 @@ public abstract class DocxConverterBase
     internal abstract void ProcessFieldCode(FieldCode field, StringBuilder sb);
     internal abstract void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb);
     internal abstract void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb);
-    internal abstract void ProcessRuby(Ruby ruby, StringBuilder sb);
     internal abstract void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb);
     internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb);
     internal abstract void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb);

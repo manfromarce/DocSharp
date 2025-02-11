@@ -332,10 +332,4 @@ public partial class DocxToRtfConverter
             sb.Append('}');
         }
     }
-
-    internal override void ProcessRuby(Ruby ruby, StringBuilder sb)
-    {
-
-    }
-
 }

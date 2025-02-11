@@ -9,17 +9,6 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
-    internal override void ProcessSdtBlock(SdtBlock sdtBlock, StringBuilder sb)
-    {
-        // TODO: sdtBlock.SdtProperties
-        base.ProcessSdtBlock(sdtBlock, sb);
-    }
-
-    internal override void ProcessSdtRun(SdtRun sdtRun, StringBuilder sb)
-    {
-        // TODO: sdtRun.SdtProperties
-        base.ProcessSdtRun(sdtRun, sb);
-    }
 
     bool isInField = false;
     internal override void ProcessFieldChar(FieldChar fieldChar, StringBuilder sb)
@@ -54,22 +43,5 @@ public partial class DocxToRtfConverter
         {
             sb.Append(fieldCode.InnerText);
         }
-    }
-
-    internal override void ProcessSimpleField(SimpleField simpleField, StringBuilder sb)
-    {
-        //sb.Append("{\\field");
-        //if (simpleField.Instruction != null)
-        //{
-        //}
-        //if (simpleField.FieldData != null)
-        //{
-        //}
-        //if (simpleField.FieldLock != null && ((!simpleField.FieldLock.HasValue) || simpleField.FieldLock.Value)) 
-        //{
-        //    sb.Append("\\fldlock");
-        //}
-        base.ProcessSimpleField(simpleField, sb);
-        //sb.Append("}");
     }
 }

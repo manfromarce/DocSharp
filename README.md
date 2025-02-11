@@ -32,7 +32,7 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Page setup: size, orientation, margins, borders
   * Header and footer
   * Fields (partial) and page numbers
-  * TODO: math formulas, drawings, OLE objects, right-to-left and more
+  * TODO: math formulas, drawings, OLE objects and more
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough, superscript, subscript
@@ -45,7 +45,7 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines
-  * TODO: H1-H6 headers (Word styles), bookmarks (internal hyperlinks), lists, math formulas, charts; support for encrypted Word documents
+  * TODO: H1-H6 headers (Word styles), bookmarks (internal hyperlinks), lists, math formulas, charts
 - Markdown to DOCX:
   * Basic Markdown features
   * External hyperlinks

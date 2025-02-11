@@ -378,7 +378,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
     internal override void ProcessFieldChar(FieldChar simpleField, StringBuilder sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, StringBuilder sb) { }
     internal override void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb) { }
-    internal override void ProcessRuby(Ruby ruby, StringBuilder sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb) { }
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb) { }
     internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb) { }
