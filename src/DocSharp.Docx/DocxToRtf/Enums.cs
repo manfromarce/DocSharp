@@ -8,6 +8,14 @@ namespace DocSharp.Docx;
 
 public enum ShadingType
 {
+    Character,
+    Paragraph,
+    TableCell
+}
+
+public enum BordersType
+{
+    Character,
     Paragraph,
     TableCell
 }

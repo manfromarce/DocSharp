@@ -48,6 +48,8 @@ internal static class RtfUnderlineMapper
             return @"\ululdbwave";
         else if (underlineValue.Value == UnderlineValues.WavyHeavy)
             return @"\ulhwave";
+        else if (underlineValue.Value == UnderlineValues.None)
+            return @"\ulnone";
         else 
             return null;
     }

@@ -88,6 +88,74 @@ public partial class DocxToRtfConverter
             }
         }
 
+        if (sectionProperties.GetFirstChild<BiDi>() is BiDi bidi)
+        {
+            if (bidi.Val == null || bidi.Val)
+            {
+                // Left to right by default; right to left if the element is present unless explicitly set to false
+                sb.Append(@"\rtlsect");
+            }
+            else
+            {
+                sb.Append(@"\ltrsect");
+            }
+        }
+
+        if (sectionProperties.GetFirstChild<TextDirection>() is TextDirection direction && direction.Val != null)
+        {
+            if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
+                direction.Val == TextDirectionValues.LeftToRightTopToBottom2010)
+            {
+                sb.Append(@"\stextflow0");
+            }
+            if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
+                direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
+            {
+                sb.Append(@"\stextflow1");
+            }
+            if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
+                direction.Val == TextDirectionValues.BottomToTopLeftToRight2010)
+            {
+                sb.Append(@"\stextflow2");
+            }
+            if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
+                direction.Val == TextDirectionValues.TopToBottomRightToLeft2010)
+            {
+                sb.Append(@"\stextflow3");
+            }
+            if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
+                direction.Val == TextDirectionValues.LeftToRightTopToBottomRotated2010)
+            {
+                sb.Append(@"\stextflow4");
+            }
+            if (direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated ||
+               direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated2010)
+            {
+                sb.Append(@"\stextflow5");
+            }
+        }
+
+        if (sectionProperties.GetFirstChild<VerticalTextAlignmentOnPage>() is VerticalTextAlignmentOnPage vAlign &&
+            vAlign.Val != null)
+        {
+            if (vAlign.Val == VerticalJustificationValues.Both)
+            {
+                sb.Append(@"\vertalj");
+            }
+            else if (vAlign.Val == VerticalJustificationValues.Bottom)
+            {
+                sb.Append(@"\vertal");
+            }
+            else if (vAlign.Val == VerticalJustificationValues.Center)
+            {
+                sb.Append(@"\vertalc");
+            }
+            else if (vAlign.Val == VerticalJustificationValues.Top)
+            {
+                sb.Append(@"\vertalt");
+            }
+        }
+
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {
             if (size.Width != null)

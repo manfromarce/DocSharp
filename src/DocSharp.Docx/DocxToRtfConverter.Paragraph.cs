@@ -37,6 +37,77 @@ public partial class DocxToRtfConverter
             ProcessListItem(numberingProperties, sb);
         }
 
+        var bidi = OpenXmlHelpers.GetEffectiveProperty<BiDi>(paragraph);
+        if (bidi != null && (bidi.Val == null || bidi.Val)) 
+        {
+            // Left to right by default; right to left if the element is present unless explicitly set to false.
+            sb.Append(@"\rtlpar");
+        }
+        else
+        {
+            sb.Append(@"\ltrpar");
+        }
+
+        //var direction = OpenXmlHelpers.GetEffectiveProperty<TextDirection>(paragraph);
+        //if (direction != null && direction.Val != null)
+        //{
+        //    if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
+        //        direction.Val == TextDirectionValues.LeftToRightTopToBottom2010)
+        //    {
+        //        sb.Append(@"\frmtxlrtb");
+        //    }
+        //    if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
+        //        direction.Val == TextDirectionValues.TopToBottomRightToLeft2010)
+        //    {
+        //        sb.Append(@"\frmtxtbrl");
+        //    }
+        //    if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
+        //        direction.Val == TextDirectionValues.BottomToTopLeftToRight2010)
+        //    {
+        //        sb.Append(@"\frmtxbtlr");
+        //    }
+        //    if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
+        //        direction.Val == TextDirectionValues.LeftToRightTopToBottomRotated2010 ||
+        //        direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated ||
+        //        direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated2010)
+        //    {
+        //        sb.Append(@"\frmtxlrtbv");
+        //    }
+        //    if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
+        //        direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
+        //    {
+        //        sb.Append(@"\frmtxtbrlv");
+        //    }
+        //}
+
+        //var vAlign = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
+        //if (vAlign?.Val != null)
+        //{
+        //    if (vAlign.Val == VerticalTextAlignmentValues.Auto) 
+        //    {
+        //    }
+        //    else if (vAlign.Val == VerticalTextAlignmentValues.Baseline)
+        //    {
+
+        //    }
+        //    else if (vAlign.Val == VerticalTextAlignmentValues.Bottom)
+        //    {
+
+        //    }
+        //    else if (vAlign.Val == VerticalTextAlignmentValues.Center)
+        //    {
+        //    }
+        //    else if (vAlign.Val == VerticalTextAlignmentValues.Top)
+        //    {
+        //    }
+        //}
+
+        var tabs = OpenXmlHelpers.GetEffectiveProperty<Tabs>(paragraph);
+        if (tabs != null)
+        {
+            ProcessTabs(tabs, sb);
+        }
+
         var fp = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph);
         if (fp != null)
         {
@@ -114,9 +185,69 @@ public partial class DocxToRtfConverter
         }
 
         var wControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
-        if (wControl != null && (wControl.Val is null || wControl.Val))
+        if (wControl?.Val != null && !wControl.Val)
         {
-            sb.Append(@"\widowctrl");
+            sb.Append(@"\nowidctlpar");
+        }
+        else
+        {
+            sb.Append(@"\widowctrl"); // True by default
+        }
+
+        var wordWrap = OpenXmlHelpers.GetEffectiveProperty<WordWrap>(paragraph);
+        if (wordWrap?.Val != null && !wordWrap.Val)
+        {
+            // By default text breaks in new lines at the word level.
+            // If WordWrap is set to off the document allows to break at character level.
+            sb.Append(@"\nowwrap");
+        }
+        var op = OpenXmlHelpers.GetEffectiveProperty<OverflowPunctuation>(paragraph);
+        if (op?.Val != null && !op.Val)
+        {
+            // By default punctuation chars are allowed to extend past the end of the line by one character.
+            // If OverflowPunctuation is set to off, lines should break even if the next character is a punctuation mark.
+            sb.Append(@"\nooverflow");
+        }
+        var autoSpaceDE = OpenXmlHelpers.GetEffectiveProperty<AutoSpaceDE>(paragraph);
+        if (autoSpaceDE?.Val == null || autoSpaceDE.Val) // true by default
+        {            
+            sb.Append(@"\aspalpha");
+        }
+        var autoSpaceDN = OpenXmlHelpers.GetEffectiveProperty<AutoSpaceDN>(paragraph);
+        if (autoSpaceDN?.Val == null || autoSpaceDN.Val) // true by default
+        {
+            sb.Append(@"\aspnum");
+        }
+        var tlp = OpenXmlHelpers.GetEffectiveProperty<TopLinePunctuation>(paragraph);
+        if (tlp != null && (tlp.Val == null || tlp.Val)) // false by default, true if element is present without value
+        {
+            sb.Append(@"\toplinepunct");
+        }
+        var noAutoHyphen = OpenXmlHelpers.GetEffectiveProperty<SuppressAutoHyphens>(paragraph);
+        if (noAutoHyphen != null && (noAutoHyphen.Val == null || noAutoHyphen.Val))
+        {
+            sb.Append(@"\hyphpar0");
+        }
+        var noLineNumbers = OpenXmlHelpers.GetEffectiveProperty<SuppressLineNumbers>(paragraph);
+        if (noLineNumbers!= null && (noLineNumbers.Val == null || noLineNumbers.Val))
+        {
+            sb.Append(@"\noline");
+        }
+        var pageBb = OpenXmlHelpers.GetEffectiveProperty<PageBreakBefore>(paragraph);
+        if (pageBb != null && (pageBb.Val == null || pageBb.Val))
+        {
+            sb.Append(@"\pagebb");
+        }
+        var snapToGrid = OpenXmlHelpers.GetEffectiveProperty<SnapToGrid>(paragraph);
+        if (snapToGrid?.Val != null && !snapToGrid.Val) // True by default
+        {
+            sb.Append(@"\nosnaplinegrid");
+        }
+
+        var outlineLevel = OpenXmlHelpers.GetEffectiveProperty<OutlineLevel>(paragraph);
+        if (outlineLevel?.Val != null &&  outlineLevel.Val.HasValue)
+        {
+            sb.Append($"\\outline{outlineLevel.Val.Value}");
         }
 
         var contextualSpacing = OpenXmlHelpers.GetEffectiveProperty<ContextualSpacing>(paragraph);
@@ -171,5 +302,6 @@ public partial class DocxToRtfConverter
         {
             ProcessShading(shading, sb, ShadingType.Paragraph);
         }
-    }    
+    }
+
 }

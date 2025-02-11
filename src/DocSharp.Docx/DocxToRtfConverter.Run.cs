@@ -34,6 +34,16 @@ public partial class DocxToRtfConverter
 
     internal void ProcessRunFormatting(Run run, StringBuilder sb)
     {
+        var rtl = OpenXmlHelpers.GetEffectiveProperty<RightToLeftText>(run);
+        if (rtl != null && (rtl.Val == null || rtl.Val))
+        {
+            sb.Append(@"\rtlch");
+        }
+        else
+        {
+            sb.Append(@"\ltrch");
+        }
+
         var lang = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
         if (!string.IsNullOrEmpty(lang?.Val?.Value))
         {
@@ -141,7 +151,7 @@ public partial class DocxToRtfConverter
         }
 
         var underline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run);
-        if (underline != null && underline.Val != null && underline.Val != UnderlineValues.None)
+        if (underline?.Val != null)
         {
             string? ul = RtfUnderlineMapper.GetUnderlineType(underline.Val);
             if (!string.IsNullOrEmpty(ul))
@@ -173,18 +183,25 @@ public partial class DocxToRtfConverter
         }
 
         var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
-        if (highlight != null && highlight.Val != null && highlight.Val != HighlightColorValues.None)
+        if (highlight?.Val != null)
         {
-            string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
-            if (!string.IsNullOrEmpty(hex))
+            if (highlight.Val == HighlightColorValues.None)
             {
-                colors.TryAddAndGetIndex(hex, out int highlightIndex);
-                sb.Append($"\\highlight{highlightIndex}");
+                sb.Append(@"\highlight0");
+            }
+            else
+            {
+                string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
+                if (!string.IsNullOrEmpty(hex))
+                {
+                    colors.TryAddAndGetIndex(hex, out int highlightIndex);
+                    sb.Append($"\\highlight{highlightIndex}");
+                }
             }
         }
 
         var verticalTextAlignment = OpenXmlHelpers.GetEffectiveProperty<VerticalTextAlignment>(run);
-        if (verticalTextAlignment != null && verticalTextAlignment.Val != null)
+        if (verticalTextAlignment?.Val != null)
         {
             if (verticalTextAlignment.Val == VerticalPositionValues.Subscript)
             {
@@ -193,6 +210,50 @@ public partial class DocxToRtfConverter
             else if (verticalTextAlignment.Val == VerticalPositionValues.Superscript)
             {
                 sb.Append(@"\super");
+            }
+            else
+            {
+                sb.Append(@"\nosupersub");
+            }
+        }
+        else
+        {
+            var position = OpenXmlHelpers.GetEffectiveProperty<Position>(run);
+            if (position?.Val != null && int.TryParse(position.Val.Value, out int pos))
+            {
+                if (pos < 0)
+                {
+                    sb.Append($"\\dn{pos}");
+                }
+                else if (pos > 0) 
+                {
+                    sb.Append($"\\up{pos}");
+                }
+            }
+        }
+
+        var em = OpenXmlHelpers.GetEffectiveProperty<Emphasis>(run);
+        if (em?.Val != null)
+        {
+            if (em.Val == EmphasisMarkValues.None)
+            {
+                sb.Append(@"\accnone");
+            }
+            else if (em.Val == EmphasisMarkValues.Circle)
+            {
+                sb.Append(@"\acccircle");
+            }
+            else if (em.Val == EmphasisMarkValues.Comma)
+            {
+                sb.Append(@"\acccomma");
+            }
+            else if (em.Val == EmphasisMarkValues.Dot)
+            {
+                sb.Append(@"\accdot");
+            }
+            else if (em.Val == EmphasisMarkValues.UnderDot)
+            {
+                sb.Append(@"\accunderdot");
             }
         }
 
@@ -244,6 +305,19 @@ public partial class DocxToRtfConverter
         {
             sb.Append(@"\v");
         }
+
+        var border = OpenXmlHelpers.GetEffectiveProperty<Border>(run);
+        if (border != null)
+        {
+            sb.Append(@"\chbrdr");
+            ProcessBorder(border, sb);
+        }
+
+        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(run);
+        if (shading != null)
+        {
+            ProcessShading(shading, sb, ShadingType.Character);
+        }
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
@@ -258,4 +332,10 @@ public partial class DocxToRtfConverter
             sb.Append('}');
         }
     }
+
+    internal override void ProcessRuby(Ruby ruby, StringBuilder sb)
+    {
+
+    }
+
 }

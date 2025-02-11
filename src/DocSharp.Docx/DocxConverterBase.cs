@@ -252,6 +252,27 @@ public abstract class DocxConverterBase
             case Drawing drawing:
                 ProcessDrawing(drawing, sb);
                 return true;
+            case EmbeddedObject obj:
+                ProcessEmbeddedObject(obj, sb);
+                return true;
+            case FootnoteReference footnoteRef:
+                ProcessFootnoteReference(footnoteRef, sb);
+                return true;
+            case FootnoteReferenceMark footnoteRefMark:
+                ProcessFootnoteReferenceMark(footnoteRefMark, sb);
+                return true;
+            case EndnoteReference endnoteRef:
+                ProcessEndnoteReference(endnoteRef, sb);
+                return true;
+            case EndnoteReferenceMark endnoteRefMark:
+                ProcessEndnoteReferenceMark(endnoteRefMark, sb);
+                return true;
+            case SeparatorMark separatorMark:
+                ProcessSeparatorMark(separatorMark, sb);
+                return true;
+            case ContinuationSeparatorMark continuationSepMark:
+                ProcessContinuationSeparatorMark(continuationSepMark, sb);
+                return true;
             case Break br:
                 ProcessBreak(br, sb);
                 return true;
@@ -266,6 +287,9 @@ public abstract class DocxConverterBase
             case NoBreakHyphen:
                 ProcessText(new Text("\u2011"), sb);
                 return true;
+            case PositionalTab positionalTab:
+                ProcessPositionalTab(positionalTab, sb);
+                return true;
             case SymbolChar symbolChar:
                 ProcessSymbolChar(symbolChar, sb);
                 return true;
@@ -274,6 +298,9 @@ public abstract class DocxConverterBase
                 return true;
             case FieldCode fieldCode:
                 ProcessFieldCode(fieldCode, sb);
+                return true;
+            case Ruby ruby:
+                ProcessRuby(ruby, sb);
                 return true;
             case DayShort:
                 ProcessText(new Text(DateTime.Now.ToString("dd")), sb);
@@ -369,5 +396,13 @@ public abstract class DocxConverterBase
     internal abstract void ProcessFieldChar(FieldChar field, StringBuilder sb);
     internal abstract void ProcessFieldCode(FieldCode field, StringBuilder sb);
     internal abstract void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb);
-
+    internal abstract void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb);
+    internal abstract void ProcessRuby(Ruby ruby, StringBuilder sb);
+    internal abstract void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb);
+    internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb);
+    internal abstract void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb);
+    internal abstract void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb);
+    internal abstract void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb);
+    internal abstract void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb);
+    internal abstract void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb);
 }

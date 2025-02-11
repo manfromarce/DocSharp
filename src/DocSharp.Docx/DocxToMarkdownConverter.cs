@@ -377,5 +377,14 @@ public class DocxToMarkdownConverter : DocxConverterBase
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, StringBuilder sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, StringBuilder sb) { }
+    internal override void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb) { }
+    internal override void ProcessRuby(Ruby ruby, StringBuilder sb) { }
+    internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb) { }
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb) { }
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb) { }
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb) { }
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb) { }
+    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb) { }
+    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb) { }
 
 }

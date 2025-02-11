@@ -57,17 +57,6 @@ public partial class DocxToRtfConverter : DocxConverterBase
         sb.AppendRtfEscaped(text.InnerText);
     }
 
-    internal override void ProcessPicture(Picture picture, StringBuilder sb)
-    {
-        //var properties = new PictureProperties();
-        //if (picture.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
-        //        imageData.RelationshipId?.Value is string relId)
-        //{
-        //    var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
-        //    ProcessImagePart(mainDocumentPart, relId, properties, sb);
-        //}
-    }
-
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
     {        
         sb.Append(@"{\field{\*\fldinst{HYPERLINK ");
@@ -110,5 +99,6 @@ public partial class DocxToRtfConverter : DocxConverterBase
             sb.Append(@"\column ");
         else
             sb.Append(@"\line ");
-    }    
+    }
+
 }

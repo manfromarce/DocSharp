@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public  partial class DocxToRtfConverter
+public partial class DocxToRtfConverter
 {
     internal void ProcessFrameProperties(FrameProperties fp, StringBuilder sb)
     {
