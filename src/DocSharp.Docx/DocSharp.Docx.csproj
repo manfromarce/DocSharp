@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -13,8 +13,8 @@
     <AssemblyTitle>DocSharp.Docx</AssemblyTitle>
     <PackageId>DocSharp.Docx</PackageId>
     <Title>DocSharp.Docx</Title>
-    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
-    <PackageTags>docx doc rtf markdown convert</PackageTags>
+    <Description>.NET library for converting documents. The DocSharp.Docx package provides DOCX to RTF and DOCX to Markdown conversions.</Description>
+    <PackageTags>docx doc rtf markdown convert openxml</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
