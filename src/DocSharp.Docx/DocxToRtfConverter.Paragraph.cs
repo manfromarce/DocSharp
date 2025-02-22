@@ -141,14 +141,32 @@ public partial class DocxToRtfConverter
         }
 
         var spacing = OpenXmlHelpers.GetEffectiveProperty<SpacingBetweenLines>(paragraph);
-        if (spacing?.Before != null)
+        if (spacing?.BeforeAutoSpacing != null && (!spacing.BeforeAutoSpacing.HasValue || spacing.BeforeAutoSpacing.Value))
         {
-            sb.Append($"\\sb{spacing.Before}");
+            sb.Append($"\\sbauto1");
         }
-        if (spacing?.After != null)
+        else if (spacing?.BeforeLines != null)
         {
-            sb.Append($"\\sa{spacing.After}");
+            sb.Append($"\\sbauto0\\lisb{spacing.BeforeLines}"); // overrides \sb
         }
+        else if (spacing?.Before != null)
+        {
+            sb.Append($"\\sbauto0\\sb{spacing.Before}");
+        }
+
+        if (spacing?.AfterAutoSpacing != null && (!spacing.AfterAutoSpacing.HasValue || spacing.AfterAutoSpacing.Value))
+        {
+            sb.Append("\\saauto1");
+        }
+        else if (spacing?.AfterLines != null)
+        {
+            sb.Append($"\\saauto0\\lisa{spacing.AfterLines}"); // overrides \sa
+        }
+        else if (spacing?.After != null)
+        {
+            sb.Append($"\\saauto0\\sa{spacing.After}");
+        }
+
         if (spacing?.LineRule != null && spacing?.Line != null)
         {
             if (spacing.LineRule == LineSpacingRuleValues.AtLeast)
@@ -172,12 +190,33 @@ public partial class DocxToRtfConverter
         }
 
         var ind = OpenXmlHelpers.GetEffectiveProperty<Indentation>(paragraph);
-        if (ind?.Left != null)
+        if (ind?.LeftChars != null)
+            sb.Append($"\\culi{ind.LeftChars}"); // overwrites \liN
+        else if (ind?.Left != null)
             sb.Append($"\\li{ind.Left}");
-        if (ind?.Right != null)
+
+        if (ind?.RightChars != null)
+            sb.Append($"\\curi{ind.RightChars}"); // overwrites \riN
+        else if (ind?.Right != null)
             sb.Append($"\\ri{ind.Right}");
-        if (ind?.FirstLine != null)
+
+        if (ind?.Left == null && ind?.LeftChars == null && ind?.Right == null && ind?.RightChars == null)
+        {
+            if (ind?.Start != null)
+                sb.Append($"\\lin{ind.Start}");
+           
+            if (ind?.End != null)
+                sb.Append($"\\rin{ind.End}");
+
+            // StartCharacters and EndCharacters have no equivalent in RTF.
+        }
+
+        if (ind?.FirstLineChars != null)
+            sb.Append($"\\cufi{ind.FirstLineChars}"); // overwrites \fiN
+        else if (ind?.FirstLine != null)
             sb.Append($"\\fi{ind.FirstLine}");
+        else if (ind?.HangingChars != null)
+            sb.Append($"\\cufi-{ind.HangingChars}"); // overwrites \fiN
         else if (ind?.Hanging != null)
             sb.Append($"\\fi-{ind.Hanging}");
 
