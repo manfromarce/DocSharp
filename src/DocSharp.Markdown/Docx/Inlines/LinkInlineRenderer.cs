@@ -208,7 +208,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 case ImageHeader.FileType.Tiff:
                     imageFormat = ImagePartType.Tiff;
                     break;
-                case ImageHeader.FileType.Xml:
+                case ImageHeader.FileType.Svg:
                     imageFormat = ImagePartType.Svg;
                     break;
                 case ImageHeader.FileType.Ico:

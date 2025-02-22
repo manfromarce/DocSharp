@@ -48,9 +48,8 @@ public static class ImageHeader
         Jpeg2000,
         Jxl, 
         Jxr,
-        Dds,
         Pcx,
-        Xml 
+        Svg 
     }
 
     private static readonly byte[] pngSignatureBytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
@@ -74,11 +73,12 @@ public static class ImageHeader
         { new byte[] { 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20, 0x0D, 0x0A, 0x87, 0x0A }, FileType.Jpeg2000 }, // JPEG 2000 (jp2, jpf, jpx, jpm, mj2, jph)
         { new byte[] { 0xFF, 0x4F, 0xFF, 0x51 }, FileType.Jpeg2000 }, // JPEG 2000 codestream (j2k, j2c, jpc)
         { new byte[] { 0xD7, 0xCD, 0xC6, 0x9A }, FileType.Wmf },
+        { new byte[] { 0x01, 0x00, 0x09, 0x00 }, FileType.Wmf },
+        { new byte[] { 0x02, 0x00, 0x09, 0x00 }, FileType.Wmf },
         { new byte[] { 0x1, 0, 0, 0 }, FileType.Emf },
         { new byte[] { 0, 0, 0x1, 0 }, FileType.Ico }, 
         { new byte[] { 0, 0, 0x2, 0 }, FileType.Cur },
         { new byte[] { 0x0A }, FileType.Pcx }, // needs further analysis
-        { Encoding.UTF8.GetBytes("DDS "), FileType.Dds },
         
         // Signatures for AVIF and HEIF start from the 5th byte (the first 4 can be skipped)
         { Encoding.UTF8.GetBytes("ftypavif"), FileType.Avif },
@@ -121,7 +121,7 @@ public static class ImageHeader
                     var res = new string(buffer).Trim();
                     if (res.StartsWith("<svg") || res.StartsWith("<?xml"))
                     {
-                        type = FileType.Xml;
+                        type = FileType.Svg;
                         return true;
                     }
                 }
@@ -178,7 +178,7 @@ public static class ImageHeader
                 case FileType.Jpeg: return DecodeJfif(reader);
                 case FileType.Png: return DecodePng(reader);
                 case FileType.Ico: return DecodeIco(reader);
-                case FileType.Xml: return DecodeXml(stream);
+                case FileType.Svg: return DecodeXml(stream);
 
                 // Other formats are not supported by web browsers or DOCX or neither,
                 // so reading their dimensions is not needed anywhere in the library.
@@ -617,8 +617,9 @@ public static class ImageHeader
         reader.IsBigEndian = false;
         if (reader.ReadUInt32() != 0x9AC6CDD7)
         {
-            // To be improved; older WMF files may lack this
-            throw new Exception("Invalid WMF signature.");
+            // To be improved; how to get dimensions for metafiles directly starting
+            // with the WMF header 01 00 or 02 00 ?
+            throw new Exception("Invalid or unsupported WMF file.");
         }
         reader.Skip(2); // HWmf
         int left = reader.ReadInt16();

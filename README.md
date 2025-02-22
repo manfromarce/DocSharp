@@ -25,7 +25,7 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Font formatting, paragraphs, tables and lists
     - Not all properties are supported, e.g. advanced positioning and conditional formatting for tables or some list types are not recognized.  
   * Images:
-    - JPEG, PNG and EMF are supported. 
+    - JPEG, PNG, EMF and WMF are supported. 
     - Only inline images are supported (wrap layouts are not yet implemented).
   * Hyperlinks and bookmarks
   * Page setup: size, orientation, margins, borders, background color
