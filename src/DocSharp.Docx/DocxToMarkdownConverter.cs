@@ -46,9 +46,51 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
+        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        if (numberingProperties != null)
+        {
+            ProcessListItem(numberingProperties, sb);
+        }
         base.ProcessParagraph(paragraph, sb);
         sb.AppendLine();
         sb.AppendLine();
+    }
+
+    internal void ProcessListItem(NumberingProperties numPr, StringBuilder sb)
+    {
+        var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
+        if (numberingPart != null && numPr.NumberingId?.Val != null)
+        {
+            int levelIndex = numPr.NumberingLevelReference?.Val ?? 0;
+            var num = numberingPart.Elements<NumberingInstance>()
+                                   .FirstOrDefault(x => x.NumberID == numPr.NumberingId.Val);
+            var abstractNumId = num?.AbstractNumId?.Val;
+            if (abstractNumId != null)
+            {
+                var abstractNum = numberingPart.Elements<AbstractNum>()
+                                  .FirstOrDefault(x => x.AbstractNumberId == abstractNumId);
+                var level = abstractNum?.Elements<Level>().FirstOrDefault(x => x.LevelIndex != null &&
+                                                                               x.LevelIndex == levelIndex);
+                if (level != null &&
+                    level.NumberingFormat?.Val is EnumValue<NumberFormatValues> listType &&
+                    listType != NumberFormatValues.None)
+                {
+                    for (int i = 0; i < levelIndex; i++)
+                    {
+                        sb.Append("    "); // indentation
+                    }
+                    if (listType == NumberFormatValues.Bullet)
+                    {
+                        sb.Append("- ");
+                    }
+                    else
+                    {
+                        var startNumber = level.StartNumberingValue?.Val ?? 1;
+                        sb.Append($"{startNumber}. "); // Markdown renderers will automatically increase the number.
+                    }
+                }
+            }
+        }
     }
 
     internal override void ProcessRun(Run run, StringBuilder sb)

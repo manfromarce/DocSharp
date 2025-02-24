@@ -42,10 +42,11 @@ If your main purpose is creating documents from scratch you can consider the fol
     - Some image types are not recognized (e.g. WordPad embeds images in a different way compared to MS Word and other word processors).
     - Images should be in JPEG, PNG or GIF format to be supported by browsers; BMP is partially supported but not recommended. There is currently no automatic image conversion implemented.
     - Crop and effects are not supported.
+  * Lists (partial)
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines
-  * TODO: H1-H6 headers (Word styles), bookmarks (internal hyperlinks), lists, math formulas, charts
+  * TODO: H1-H6 headers (Word styles), bookmarks (internal hyperlinks), math formulas, charts
 - Markdown to DOCX:
   * Basic Markdown features
   * External hyperlinks
