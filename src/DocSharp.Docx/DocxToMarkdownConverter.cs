@@ -51,6 +51,35 @@ public class DocxToMarkdownConverter : DocxConverterBase
         {
             ProcessListItem(numberingProperties, sb);
         }
+        else if (paragraph.ParagraphProperties?.ParagraphStyleId != null)
+        {
+            var styles = paragraph.GetStylesPart();
+            var style = styles.GetStyleFromId(paragraph.ParagraphProperties.ParagraphStyleId.Val, StyleValues.Paragraph);
+            if (style?.StyleName?.Val?.Value != null)
+            {
+                switch (style.StyleName.Val.Value.ToLower())
+                {
+                    case "heading 1":
+                        sb.Append("# ");
+                        break;
+                    case "heading 2":
+                        sb.Append("## ");
+                        break;
+                    case "heading 3":
+                        sb.Append("### ");
+                        break;
+                    case "heading 4":
+                        sb.Append("#### ");
+                        break;
+                    case "heading 5":
+                        sb.Append("##### ");
+                        break;
+                    case "heading 6":
+                        sb.Append("###### ");
+                        break;
+                }
+            }
+        }
         base.ProcessParagraph(paragraph, sb);
         sb.AppendLine();
         sb.AppendLine();

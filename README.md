@@ -36,6 +36,7 @@ If your main purpose is creating documents from scratch you can consider the fol
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough, superscript, subscript
+    - Header 1-6 styles
     - Any highlight color is converted to `<mark>`
   * Inline images
     - `ImagesOutputFolder` needs to be set to an existing directory, otherwise images are skipped. An absolute URI is used by default; to produce a relative URI set `ImagesBaseUriOverride` to any not-null folder path (empty string or "." means same folder as the Markdown file, "../images" means images subfolder in the parent folder).
@@ -46,7 +47,7 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Tables (values only)
   * External hyperlinks
   * Page breaks are converted to horizontal lines
-  * TODO: H1-H6 headers (Word styles), bookmarks (internal hyperlinks), math formulas, charts
+  * TODO: bookmarks (internal hyperlinks), math formulas, charts
 - Markdown to DOCX:
   * Basic Markdown features
   * External hyperlinks
