@@ -30,9 +30,10 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Hyperlinks and bookmarks
   * Page setup: size, orientation, margins, borders, background color
   * Header and footer
+  * Endnotes and footnotes
   * Drop caps
   * Fields (partial) and page numbers
-  * TODO: footnotes/endnotes, math formulas, drawings, OLE objects and more
+  * TODO: math formulas, drawings, OLE objects, comments, improve support for right-to-left and complex script languages
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough, superscript, subscript

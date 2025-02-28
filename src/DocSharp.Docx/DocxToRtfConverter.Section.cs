@@ -380,7 +380,16 @@ public partial class DocxToRtfConverter
                 sb.Append($"\\sectexpand{docGrid.CharacterSpace.Value}");
             }
         }
-
+        if (sectionProperties.Elements<EndnoteProperties>().FirstOrDefault() is EndnoteProperties endnoteProp &&
+            endnoteProp.EndnotePosition?.Val != null && 
+            endnoteProp.EndnotePosition.Val == EndnotePositionValues.DocumentEnd)
+        {            
+            sb.Append("\\aenddoc"); // Can this be emitted in this context ?
+        }
+        else
+        {
+            sb.Append("\\endnhere");
+        }
         sb.AppendLineCrLf();
     }
 }

@@ -47,8 +47,22 @@ public static class OpenXmlHelpers
     /// <returns></returns>
     public static MainDocumentPart? GetMainDocumentPart(this OpenXmlElement element)
     {
-        var document = (element as Document) ?? element.Ancestors<Document>().FirstOrDefault();
-        return document?.MainDocumentPart;
+        var root = element.GetRoot();
+        if (root is OpenXmlPartRootElement rootElement)
+        {
+            return (rootElement.OpenXmlPart?.OpenXmlPackage as WordprocessingDocument)?.MainDocumentPart;
+        }
+        return null;
+    }
+
+    public static OpenXmlElement GetRoot(this OpenXmlElement element)
+    {
+        OpenXmlElement rootElement = element;       
+        while (rootElement.Parent != null)
+        {
+            rootElement = rootElement.Parent;
+        }
+        return rootElement;
     }
 
     /// <summary>

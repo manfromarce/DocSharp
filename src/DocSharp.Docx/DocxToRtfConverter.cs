@@ -42,6 +42,17 @@ public partial class DocxToRtfConverter : DocxConverterBase
         }
         sb.AppendLineCrLf("}");
 
+        if (document.MainDocumentPart?.FootnotesPart != null)
+        {
+            ProcessFootnotesPart(document.MainDocumentPart.FootnotesPart, sb);
+            sb.AppendLineCrLf();
+        }
+        if (document.MainDocumentPart?.EndnotesPart != null)
+        {
+            ProcessEndnotesPart(document.MainDocumentPart.EndnotesPart, sb);
+            sb.AppendLineCrLf();
+        }
+
         // Add content
         sb.Append(contentSb);
 
