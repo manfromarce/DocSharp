@@ -60,11 +60,15 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Tables (experimental)
   * TODO: other internal hyperlinks types, HTML tags (`<u>`, `<sup>`, `<sub>`, `<mark>`, ...), math and other extensions
 
+
+### Usage
+
+You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki) or [sample app](https://github.com/manfromarce/DocSharp/tree/main/samples/WpfApp1).
+
 ### Roadmap
 
 - Support more elements and attributes, and fix issues on edge cases
 - Reverse RTF to DOCX conversion
-- Documentation: for now you can refer to the sample app. When ready, any documentation will be available in the project [Wiki](https://github.com/manfromarce/DocSharp/wiki).
 
 ### Credits
 
