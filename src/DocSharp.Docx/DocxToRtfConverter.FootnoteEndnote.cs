@@ -10,6 +10,8 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
+    private FootnotesEndnotesType _footnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
+
     internal void ProcessFootnotesPart(FootnotesPart footnotesPart, StringBuilder sb)
     {
         // This method handles separator and continuationSeparator types only,

@@ -64,8 +64,25 @@ public partial class DocxToRtfConverter : DocxConverterBase
         }
         if (document.MainDocumentPart?.EndnotesPart != null)
         {
+            if (document.MainDocumentPart.FooterParts == null)
+            {
+                _footnotesEndnotes = FootnotesEndnotesType.EndnotesOnly;
+            }
+            else
+            {
+                _footnotesEndnotes = FootnotesEndnotesType.Both;
+            }
             ProcessEndnotesPart(document.MainDocumentPart.EndnotesPart, sb);
             sb.AppendLineCrLf();
+        }
+        switch (_footnotesEndnotes)
+        {
+            case FootnotesEndnotesType.EndnotesOnly:
+                sb.Append("\\fet1 ");
+                break;
+            case FootnotesEndnotesType.Both:
+                sb.Append("\\fet2 ");
+                break;
         }
 
         // Add content

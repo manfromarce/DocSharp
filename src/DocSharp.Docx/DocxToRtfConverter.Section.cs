@@ -380,16 +380,29 @@ public partial class DocxToRtfConverter
                 sb.Append($"\\sectexpand{docGrid.CharacterSpace.Value}");
             }
         }
+
         if (sectionProperties.Elements<EndnoteProperties>().FirstOrDefault() is EndnoteProperties endnoteProp &&
             endnoteProp.EndnotePosition?.Val != null && 
             endnoteProp.EndnotePosition.Val == EndnotePositionValues.DocumentEnd)
-        {            
-            sb.Append("\\aenddoc"); // Can this be emitted in this context ?
+        {
+            sb.Append("\\aenddoc");
+            if (_footnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
+            {
+                sb.Append("\\enddoc"); // for compatibility
+            }
         }
         else
         {
-            sb.Append("\\endnhere");
-        }
+            sb.Append("\\aendnotes");
+            if (_footnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
+            {
+                sb.Append("\\endnotes"); // for compatibility
+            }
+            if (_footnotesEndnotes != FootnotesEndnotesType.FootnotesOnlyOrNothing)
+            {
+                sb.Append("\\endnhere");
+            }
+        }        
         sb.AppendLineCrLf();
     }
 }
