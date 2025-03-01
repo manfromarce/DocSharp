@@ -29,6 +29,9 @@
             Click="DocxToRtf_Click"
             Content="Docx to Rtf" />
         <Button
+             Click="RtfToDocx_Click"
+             Content="Rtf to Docx (third-party libs)" />
+        <Button
             Click="MarkdownToDocx_Click"
             Content="Markdown to Docx" />
         <Button
@@ -37,6 +40,9 @@
         <Button
             Click="HtmlToRtf_Click"
             Content="Html to Docx/Rtf (via Html2OpenXml)" />
+        <Button
+            Click="DocxRtfToHtml_Click"
+            Content="Docx/Rtf to Html (via RtfPipe)" />
         <Button
             Click="ViewDocx_Click"
             Content="View Docx document" />

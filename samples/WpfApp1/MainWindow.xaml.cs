@@ -52,52 +52,44 @@ public partial class MainWindow : Window
                     foreach (string file in ofd.FileNames)
                     {
                         string inputExt = Path.GetExtension(file).ToLower();
-                        try
+                        using (var reader = new StructuredStorageReader(file))
                         {
-                            using (var reader = new StructuredStorageReader(file))
+                            string outputExt = inputExt + "x";
+                            string baseName = Path.GetFileNameWithoutExtension(file);
+                            string outputFile = Path.Join(outputDir, baseName + outputExt);
+                            var outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Document;
+                            if (inputExt == ".dot" || inputExt == ".xlt" || inputExt == ".pot")
                             {
-                                string outputExt = inputExt + "x";
-                                string baseName = Path.GetFileNameWithoutExtension(file);
-                                string outputFile = Path.Join(outputDir, baseName + outputExt);
-                                var outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Document;
-                                if (inputExt == ".dot" || inputExt == ".xlt" || inputExt == ".pot")
-                                {
-                                    outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Template;
-                                }
-                                switch (inputExt)
-                                {
-                                    case ".doc":
-                                    case ".dot":
-                                        var doc = new WordDocument(reader);
-                                        using (var docx = WordprocessingDocument.Create(outputFile, outputType))
-                                        {
-                                            DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
-                                        }
-                                        break;
-                                    case ".xls":
-                                    case ".xlt":
-                                        var xls = new XlsDocument(reader);
-                                        using (var xlsx = SpreadsheetDocument.Create(outputFile, outputType))
-                                        {
-                                            DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
-                                        }
-                                        break;
-                                    case ".ppt":
-                                    case ".pps":
-                                    case ".pot":
-                                        var ppt = new PowerpointDocument(reader);
-                                        using (var pptx = PresentationDocument.Create(outputFile, outputType))
-                                        {
-                                            DocSharp.Binary.PresentationMLMapping.Converter.Convert(ppt, pptx);
-                                        }
-                                        break;
-                                }
+                                outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Template;
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            throw;
-                            //MessageBox.Show("Conversion failed: " + Environment.NewLine + ex.Message);
+                            switch (inputExt)
+                            {
+                                case ".doc":
+                                case ".dot":
+                                    var doc = new WordDocument(reader);
+                                    using (var docx = WordprocessingDocument.Create(outputFile, outputType))
+                                    {
+                                        DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                                    }
+                                    break;
+                                case ".xls":
+                                case ".xlt":
+                                    var xls = new XlsDocument(reader);
+                                    using (var xlsx = SpreadsheetDocument.Create(outputFile, outputType))
+                                    {
+                                        DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
+                                    }
+                                    break;
+                                case ".ppt":
+                                case ".pps":
+                                case ".pot":
+                                    var ppt = new PowerpointDocument(reader);
+                                    using (var pptx = PresentationDocument.Create(outputFile, outputType))
+                                    {
+                                        DocSharp.Binary.PresentationMLMapping.Converter.Convert(ppt, pptx);
+                                    }
+                                    break;
+                            }
                         }
                     }
                 }
@@ -113,7 +105,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Word OpenXML document|*.docx",
+            Filter = "Word OpenXML document|*.docx;*.dotx",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
@@ -148,7 +140,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Word OpenXML document|*.docx",
+            Filter = "Word OpenXML document|*.docx;*.dotx",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
@@ -172,7 +164,46 @@ public partial class MainWindow : Window
             }
         }
     }
-    
+
+    private async void RtfToDocx_Click(object sender, RoutedEventArgs e)
+    {
+        // The RTF to DOCX is not implemented yet in DocSharp but it's planned.
+        // This is a workaround based on other open source libraries and will be used as comparison.
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Word OpenXML document|*.docx",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    string html = RtfPipe.Rtf.ToHtml(File.ReadAllText(ofd.FileName));
+                    using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(sfd.FileName, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+                    {
+                        var mainPart = package.AddMainDocumentPart();
+                        mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
+                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());
+                        var htmlConverter = new HtmlConverter(mainPart);
+                        await htmlConverter.ParseBody(html);
+                        package.Save();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
     private void MarkdownToDocx_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
@@ -275,6 +306,51 @@ public partial class MainWindow : Window
 
                     var converter = new DocxToRtfConverter();
                     converter.Convert(docxFilePath, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void DocxRtfToHtml_Click(object sender, RoutedEventArgs e)
+    {
+        // Please note that other open source libraries exist to convert DOCX to HTML directly, 
+        // e.g. OpenXmlToHtml (based on a fork of OpenXmlPowerTools) would give better results.
+        // This sample is mainly to test the DOCX to RTF conversion
+        // and if the produced RTF is correctly interpreted by third-party tools.
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Documents|*.docx;*.dotx;*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    string rtfContent = "";
+                    switch (Path.GetExtension(ofd.FileName).ToLower())
+                    {
+                        case ".docx":
+                        case ".dotx":
+                            var converter = new DocxToRtfConverter();
+                            rtfContent = converter.ConvertToString(ofd.FileName);
+                            break;
+                        case ".rtf":
+                            rtfContent = File.ReadAllText(ofd.FileName);
+                            break;
+                    }
+                    string html = RtfPipe.Rtf.ToHtml(rtfContent);
+                    File.WriteAllText(sfd.FileName, html);
                 }
                 catch (Exception ex)
                 {
