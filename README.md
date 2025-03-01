@@ -60,7 +60,6 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Tables (experimental)
   * TODO: other internal hyperlinks types, HTML tags (`<u>`, `<sup>`, `<sub>`, `<mark>`, ...), math and other extensions
 
-
 ### Usage
 
 You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki) or [sample app](https://github.com/manfromarce/DocSharp/tree/main/samples/WpfApp1).

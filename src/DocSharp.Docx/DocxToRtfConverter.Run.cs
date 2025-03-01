@@ -101,8 +101,7 @@ public partial class DocxToRtfConverter
         }
         else
         {
-            // Use 12 pt as default value
-            sb.Append(@"\fs24");
+            sb.Append($"\\fs{DefaultSettings.FontSize * 2}"); // Font size is in half-points
         }
 
         string? kerning = OpenXmlHelpers.GetEffectiveProperty<Kern>(run)?.Val;

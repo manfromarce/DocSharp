@@ -166,6 +166,11 @@ public partial class DocxToRtfConverter
         {
             sb.Append($"\\saauto0\\sa{spacing.After}");
         }
+        else
+        {
+            var defaultSpaceAfter = DefaultSettings.SpaceAfterParagraph * 20;
+            sb.Append($"\\saauto0\\sa{defaultSpaceAfter}");
+        }
 
         if (spacing?.LineRule != null && spacing?.Line != null)
         {
@@ -181,6 +186,12 @@ public partial class DocxToRtfConverter
             {
                 sb.Append($"\\sl{spacing.Line}\\slmult1");
             }
+        }
+        else
+        {
+            var defaultSpacing = Math.Round(DefaultSettings.LineSpacing * 240);
+            // This value is expressed in 240th of lines.
+            sb.Append($"\\sl{defaultSpacing}\\slmult1");
         }
 
         var adjustRight = OpenXmlHelpers.GetEffectiveProperty<AdjustRightIndent>(paragraph);

@@ -14,15 +14,30 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxConverterBase
 {
+    /// <summary>
+    /// Gets or set the default font and paragraph properties used in (rare) cases where 
+    /// they are not specified in in neither the document body, styles or default style. 
+    /// In these cases, different word processors and versions behave differently. 
+    /// If not set, DocSharp will emulate recent Microsoft Word versions. 
+    /// </summary>
+    public DocumentDefaultSettings DefaultSettings { get; set; }
+
     private FastStringCollection fonts = new FastStringCollection(); 
     private FastStringCollection colors = new FastStringCollection();
+
+    public DocxToRtfConverter()
+    {
+        DefaultSettings = new DocumentDefaultSettings();
+    }
 
     internal override void ProcessDocument(Document document, StringBuilder sb)
     {
         sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
 
         // Prepare fonts table 
-        sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 Calibri;}");
+        sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 ");
+        sb.Append(DefaultSettings.FontName);
+        sb.Append(";}");
 
         // Process body content and document background in another StringBuilder
         var contentSb = new StringBuilder();
