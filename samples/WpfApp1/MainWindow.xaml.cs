@@ -246,7 +246,7 @@ public partial class MainWindow : Window
         };
         if (ofd.ShowDialog(this) == true)
         {
-            var ofd2 = new OpenFileDialog()
+            var ofd2 = new SaveFileDialog()
             {
                 Filter = "Word OpenXML document|*.docx",
                 FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
