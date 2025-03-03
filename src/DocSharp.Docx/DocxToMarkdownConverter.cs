@@ -60,9 +60,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 switch (style.StyleName.Val.Value.ToLower())
                 {
                     case "heading 1":
+                    case "title":
                         sb.Append("# ");
                         break;
                     case "heading 2":
+                    case "subtitle":
                         sb.Append("## ");
                         break;
                     case "heading 3":
