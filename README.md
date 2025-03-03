@@ -50,15 +50,17 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Page breaks are converted to horizontal lines
   * TODO: bookmarks (internal hyperlinks), math formulas, charts
 - Markdown to DOCX:
-  * Basic Markdown features
+  * Basic Markdown features (headings, bold, italic, strikethrough, superscript, subscript)
+  * Quotes and code blocks
+  * Lists
   * External hyperlinks
   * Bookmarks for internal hyperlinks to headings (GitHub-like auto-identifiers)
   * Images
     - The converter attempts to read local images and download online images (http/https URLs only). If this behavior is not desired, set `SkipImages` to true.
-    - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute local directory path or http(s) URL, which will be combined with the image URL at runtime, such as: `C:\Data` + `./images/image1.jpg` (all kind of URIs should be recognized).
+    - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute local directory path or http(s) URL, which will be combined with the image file name at runtime, such as: `C:\Data` + `./images/image1.jpg`.
     - WEBP and AVIF images are ignored as they are not supported in DOCX documents; base64 is also ignored as it is rarely used and not supported by many Markdown processors.
   * Tables (experimental)
-  * TODO: other internal hyperlinks types, HTML tags (`<u>`, `<sup>`, `<sub>`, `<mark>`, ...), math and other extensions
+  * TODO: other internal hyperlinks types, math and other extensions, raw HTML tags
 
 ### Usage
 
