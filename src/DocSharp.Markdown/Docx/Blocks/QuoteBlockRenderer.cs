@@ -27,7 +27,7 @@ public class QuoteBlockRenderer : ContainerBlockParagraphRendererBase<QuoteBlock
             renderer.Write(paragraph);
 
             // Paragraph has been closed by somebody else during render (for example, nested list item)
-            if (renderer.NoParagraph == 0) return;
+            if (renderer.NoParagraph == 0) continue;
 
             renderer.NoParagraph--;
 

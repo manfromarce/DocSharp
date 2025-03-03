@@ -70,7 +70,7 @@ public class DocxDocumentRenderer : RendererBase
         ObjectRenderers.Add(new HtmlEntityInlineRenderer());
         ObjectRenderers.Add(new LinkInlineRenderer());
         ObjectRenderers.Add(new LiteralInlineRenderer());
-        //ObjectRenderers.Add(new CustomHtmlInlineRenderer());
+        //ObjectRenderers.Add(new HtmlInlineRenderer());
 
         // Extensions renderers
         ObjectRenderers.Add(new TableRenderer());

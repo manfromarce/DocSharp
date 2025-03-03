@@ -51,7 +51,7 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
             listInfo.NumberingInstance = new NumberingInstance
             {
                 NumberID = newNumberingId,
-                AbstractNumId = new AbstractNumId {Val = abstractNum.AbstractNumberId}
+                AbstractNumId = new AbstractNumId { Val = abstractNum.AbstractNumberId }
             };
 
             if (obj.IsOrdered)
@@ -61,7 +61,7 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
                     var lvlOverride = new LevelOverride
                     {
                         LevelIndex = i,
-                        StartOverrideNumberingValue = new StartOverrideNumberingValue() {Val = 1}
+                        StartOverrideNumberingValue = new StartOverrideNumberingValue() { Val = 1 }
                     };
                     listInfo.NumberingInstance.AppendChild(lvlOverride);
                 }
