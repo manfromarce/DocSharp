@@ -270,6 +270,44 @@ public partial class MainWindow : Window
         }
     }
 
+    private void MarkdownToRtf_Click(object sender, RoutedEventArgs e)
+    {
+        // Currently achieved through a two steps conversion.
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Rich Text Format|*.rtf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".rtf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var markdown = MarkdownSource.FromFile(ofd.FileName);
+                    var converter = new MarkdownConverter()
+                    {
+                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName)
+                    };
+                    using var ms = new MemoryStream();
+                    using (var document = converter.ToWordprocessingDocument(markdown, ms))
+                    {
+                        document.SaveTo(sfd.FileName, DocSharp.IO.SaveFormat.Rtf);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
     private async void HtmlToRtf_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
