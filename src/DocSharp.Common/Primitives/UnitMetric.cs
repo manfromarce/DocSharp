@@ -70,5 +70,11 @@ public static class UnitMetricHelper
             _ => UnitMetric.Unknown,
         };
     }
+
+    internal static bool IsValid(this UnitMetric unit)
+    {
+        return unit != UnitMetric.Unknown && unit != UnitMetric.Percent &&
+               unit != UnitMetric.Unitless && unit != UnitMetric.Auto;
+    }
 }
 

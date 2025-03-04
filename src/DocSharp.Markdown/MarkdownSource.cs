@@ -57,7 +57,6 @@ public class MarkdownSource
         var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions()
                                                     .UseEmojiAndSmiley()
                                                     .Build();
-
         return Markdig.Markdown.Parse(markdown, pipeline);
     }
 

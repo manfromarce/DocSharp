@@ -122,11 +122,11 @@ public static class ImageHeader
                     if (res.StartsWith("<svg") || res.StartsWith("<?xml"))
                     {
                         type = FileType.Svg;
-                        return true;
-                    }
+                    }                    
                 }
             }
         }
+        stream.Seek(0L, SeekOrigin.Begin);
         return type != FileType.Unknown;
     }
 
@@ -679,8 +679,11 @@ public static class ImageHeader
             {
                 var width = Unit.Parse(nav.GetAttribute("width", string.Empty), UnitMetric.Pixel);
                 var height = Unit.Parse(nav.GetAttribute("height", string.Empty), UnitMetric.Pixel);
-                if (width.IsValid && height.IsValid)
+                if (width.IsValid && width.Type.IsValid() && height.IsValid && height.Type.IsValid())
                     return new Size(width.ValueInPx, height.ValueInPx);
+
+                // If width or height are not found or use unsupported units (%, auto, unitless),
+                // try to get the viewBox
                 var viewBox = nav.GetAttribute("viewBox", string.Empty);
                 if (!string.IsNullOrWhiteSpace(viewBox))
                 {
@@ -692,6 +695,11 @@ public static class ImageHeader
                         return new Size(width.ValueInPx, height.ValueInPx);
                     }
                 }
+
+                // If viewBox is not found assume unsupported units as pixels 
+                // (at least aspect ratio is preserved, better than returning 0).
+                if (width.IsValid && height.IsValid)
+                    return new Size(width.ValueInPx, height.ValueInPx);
             }
         }
         catch (SystemException)

@@ -153,7 +153,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 else if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
                 {
                     // Only HTTP and HTTPS are supported for automatic download
-                    var bytes = ResourceDownloader.DownloadImage(url);
+                    var bytes = ResourceDownloader.DownloadFile(url);
                     if (bytes != null)
                     {
                         InsertImage(renderer, bytes, label, title);
@@ -162,9 +162,9 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
             }
             catch (Exception ex)
             {
-                //Probably non-existent file or permission issue, do not stop the conversion
+                //Probably non-existent file, inaccessible URL or permission issue, do not stop the conversion
                 #if DEBUG
-                Console.WriteLine("InsertImage exception: " + ex.Message);
+                Debug.WriteLine("InsertImage exception: " + ex.Message);
                 #endif
             }
         }
@@ -215,7 +215,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                     imageFormat = ImagePartType.Icon;
                     break;
                 default:
-                    // Note: WEBP and AVIF images are supported by web browser but not by DOCX.
+                    // Note: WEBP and AVIF images are supported by web browsers but not by DOCX.
                     return;
             }
 
