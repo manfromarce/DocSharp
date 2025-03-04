@@ -112,7 +112,7 @@ public partial class MainWindow : Window
         {
             var sfd = new SaveFileDialog()
             {
-                Filter = "Markdown|*.md;*.markdown",
+                Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
                 FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
             };
             if (sfd.ShowDialog(this) == true)
@@ -208,7 +208,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Markdown|*.md;*.markdown",
+            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
@@ -241,7 +241,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Markdown|*.md;*.markdown",
+            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)

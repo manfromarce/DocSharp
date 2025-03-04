@@ -64,6 +64,7 @@ public static class DocxExtensions
                 case ".markdown":
                 case ".mkd":
                 case ".mkdn":
+                case ".mkdwn":
                 case ".markdn":
                 case ".mdown":
                 case ".mdwn":
