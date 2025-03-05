@@ -30,7 +30,7 @@
             Content="Docx to Rtf" />
         <Button
              Click="RtfToDocx_Click"
-             Content="Rtf to Docx (third-party libs)" />
+             Content="Rtf to Docx" />
         <Button
             Click="MarkdownToDocx_Click"
             Content="Markdown to Docx" />

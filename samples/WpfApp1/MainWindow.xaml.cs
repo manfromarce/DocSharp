@@ -18,6 +18,7 @@ using DocSharp.Binary.PptFileFormat;
 using DocSharp.Binary.StructuredStorage.Reader;
 using DocSharp.Docx;
 using DocSharp.Markdown;
+using DocSharp.Rtf;
 using HtmlToOpenXml;
 
 namespace WpfApp1;
@@ -168,7 +169,6 @@ public partial class MainWindow : Window
     private async void RtfToDocx_Click(object sender, RoutedEventArgs e)
     {
         // The RTF to DOCX is not implemented yet in DocSharp but it's planned.
-        // This is a workaround based on other open source libraries and will be used as comparison.
         var ofd = new OpenFileDialog()
         {
             Filter = "Rich Text Format|*.rtf",
@@ -183,23 +183,26 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                try
-                {
-                    string html = RtfPipe.Rtf.ToHtml(File.ReadAllText(ofd.FileName));
-                    using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(sfd.FileName, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
-                    {
-                        var mainPart = package.AddMainDocumentPart();
-                        mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
-                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());
-                        var htmlConverter = new HtmlConverter(mainPart);
-                        await htmlConverter.ParseBody(html);
-                        package.Save();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
+                var rtf = RtfSource.FromFile(ofd.FileName);
+                RtfConverter.ToDocx(rtf, sfd.FileName);
+                // Workaround based on other open source libraries, used as comparison.
+                //try
+                //{
+                //    string html = RtfPipe.Rtf.ToHtml(File.ReadAllText(ofd.FileName));
+                //    using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(sfd.FileName, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+                //    {
+                //        var mainPart = package.AddMainDocumentPart();
+                //        mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
+                //        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());
+                //        var htmlConverter = new HtmlConverter(mainPart);
+                //        await htmlConverter.ParseBody(html);
+                //        package.Save();
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    MessageBox.Show(ex.Message);
+                //}
             }
         }
     }
@@ -424,7 +427,7 @@ public partial class MainWindow : Window
                     var rtb = new RichTextBox()
                     {
                         HorizontalAlignment = HorizontalAlignment.Stretch,
-                        VerticalAlignment = VerticalAlignment.Stretch,
+                        VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
                         IsInactiveSelectionHighlightEnabled = true,
                         AutoWordSelection = false,
                         AcceptsReturn = true,

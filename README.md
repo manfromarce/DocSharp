@@ -6,6 +6,7 @@ The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
 - DocSharp.Docx: convert DOCX to Markdown and RTF. Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.RTF: convert RTF to DOCX.
 - DocSharp.Markdown: convert Markdown to DOCX using a custom Markdig renderer.
 
 Packages can be installed via NuGet:  
@@ -33,7 +34,7 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Endnotes and footnotes
   * Drop caps
   * Fields (partial) and page numbers
-  * TODO: math formulas, drawings, OLE objects, comments, improve support for right-to-left and complex script languages
+  * TODO: math formulas, drawings, OLE objects, comments, document properties, improve support for right-to-left and complex script languages
 - DOCX to Markdown:
   * Text and basic formatting
     - Bold, italic, underline, strikethrough, superscript, subscript
@@ -69,7 +70,7 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 ### Roadmap
 
 - Support more elements and attributes, and fix issues on edge cases
-- Reverse RTF to DOCX conversion
+- ODT and ODS support
 
 ### Credits
 
@@ -82,6 +83,7 @@ Forked:
 - [markdig.docx](https://github.com/morincer/markdig.docx)
 
 Others:
+- [RtfPipe](https://github.com/erdomke/RtfPipe) and [FridaysForks.RtfPipe](https://github.com/cezarypiatek/FridaysForks.RtfPipe) for RTF parsing code.
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
 
 ### License
