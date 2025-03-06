@@ -57,6 +57,9 @@ namespace DocSharp.Binary.OpenXmlLib
         // SpreadsheetML content types
         public const string Workbook = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
         public const string WorkbookMacro = "application/vnd.ms-excel.sheet.macroEnabled.main+xml";
+        public const string WorkbookTemplate = "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml";
+        public const string WorkbookMacroTemplate = "application/vnd.ms-excel.template.macroEnabled.main+xml";        
+        public const string WorkbookBinary = "application/vnd.ms-excel.sheet.binary.macroEnabled.main";
        
         public const string Styles = "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml";
         public const string Worksheet = "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml";
@@ -71,6 +74,11 @@ namespace DocSharp.Binary.OpenXmlLib
         // PresentationML content types
         public const string Presentation = "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml";
         public const string PresentationMacro = "application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml";
+        public const string PresentationTemplate = "application/vnd.openxmlformats-officedocument.presentationml.template.main+xml";
+        public const string PresentationMacroTemplate = "application/vnd.ms-powerpoint.template.macroEnabled.main+xml";
+        public const string Slideshow = "application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml";
+        public const string SlideshowMacro = "application/vnd.ms-powerpoint.slideshow.macroEnabled.main+xml";
+        
         public const string Slide = "application/vnd.openxmlformats-officedocument.presentationml.slide+xml";
         public const string SlideMaster = "application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml";
         public const string NotesSlide = "application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml";

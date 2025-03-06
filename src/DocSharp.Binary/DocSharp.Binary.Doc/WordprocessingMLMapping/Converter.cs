@@ -9,9 +9,9 @@ namespace DocSharp.Binary.WordprocessingMLMapping
 {
     public class Converter
     {
-        public static OpenXmlDocumentType DetectOutputType(WordDocument doc)
+        public static WordprocessingDocumentType DetectOutputType(WordDocument doc)
         {
-            var returnType = OpenXmlDocumentType.Document;
+            var returnType = WordprocessingDocumentType.Document;
 
             //detect the document type
             if (doc.FIB.fDot)
@@ -20,12 +20,12 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                 if (doc.CommandTable.MacroDatas != null && doc.CommandTable.MacroDatas.Count > 0)
                 {
                     //macro enabled template
-                    returnType = OpenXmlDocumentType.MacroEnabledTemplate;
+                    returnType = WordprocessingDocumentType.MacroEnabledTemplate;
                 }
                 else
                 {
                     //without macros
-                    returnType = OpenXmlDocumentType.Template;
+                    returnType = WordprocessingDocumentType.Template;
                 }
             }
             else
@@ -34,11 +34,11 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                 if (doc.CommandTable.MacroDatas != null && doc.CommandTable.MacroDatas.Count > 0)
                 {
                     //macro enabled document
-                    returnType = OpenXmlDocumentType.MacroEnabledDocument;
+                    returnType = WordprocessingDocumentType.MacroEnabledDocument;
                 }
                 else
                 {
-                    returnType = OpenXmlDocumentType.Document;
+                    returnType = WordprocessingDocumentType.Document;
                 }
             }
 
@@ -46,21 +46,21 @@ namespace DocSharp.Binary.WordprocessingMLMapping
         }
 
 
-        public static string GetConformFilename(string choosenFilename, OpenXmlDocumentType outType)
+        public static string GetConformFilename(string choosenFilename, WordprocessingDocumentType outType)
         {
             string outExt = ".docx";
             switch (outType)
             {
-                case OpenXmlDocumentType.Document:
+                case WordprocessingDocumentType.Document:
                     outExt = ".docx";
                     break;
-                case OpenXmlDocumentType.MacroEnabledDocument:
+                case WordprocessingDocumentType.MacroEnabledDocument:
                     outExt = ".docm";
                     break;
-                case OpenXmlDocumentType.MacroEnabledTemplate:
+                case WordprocessingDocumentType.MacroEnabledTemplate:
                     outExt = ".dotm";
                     break;
-                case OpenXmlDocumentType.Template:
+                case WordprocessingDocumentType.Template:
                     outExt = ".dotx";
                     break;
                 default:
@@ -97,8 +97,8 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                 context.Docx = docx;
 
                 //convert the macros
-                if (docx.DocumentType == OpenXmlDocumentType.MacroEnabledDocument ||
-                    docx.DocumentType == OpenXmlDocumentType.MacroEnabledTemplate)
+                if (docx.DocumentType == WordprocessingDocumentType.MacroEnabledDocument ||
+                    docx.DocumentType == WordprocessingDocumentType.MacroEnabledTemplate)
                 {
                     doc.Convert(new MacroBinaryMapping(context));
                     doc.Convert(new MacroDataMapping(context));

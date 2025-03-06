@@ -12,6 +12,9 @@ using Microsoft.Win32;
 using WordprocessingDocument = DocSharp.Binary.OpenXmlLib.WordprocessingML.WordprocessingDocument;
 using SpreadsheetDocument = DocSharp.Binary.OpenXmlLib.SpreadsheetML.SpreadsheetDocument;
 using PresentationDocument = DocSharp.Binary.OpenXmlLib.PresentationML.PresentationDocument;
+using WordprocessingDocumentType = DocSharp.Binary.OpenXmlLib.WordprocessingDocumentType;
+using SpreadsheetDocumentType = DocSharp.Binary.OpenXmlLib.SpreadsheetDocumentType;
+using PresentationDocumentType = DocSharp.Binary.OpenXmlLib.PresentationDocumentType;
 using DocSharp.Binary.DocFileFormat;
 using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 using DocSharp.Binary.PptFileFormat;
@@ -36,7 +39,7 @@ public partial class MainWindow : Window
         var ofd = new OpenFileDialog()
         {
             Multiselect = true,
-            Filter = "Office 97-2003 documents|*.doc;*.dot;*.xls;*.xlt;*.ppt;*.pps;*.pot",
+            Filter = "Office 97-2003 documents|*.doc;*.dot;*.xls;*.xlt;*.xlr;*.ppt;*.pps;*.pot",
         };
         if (ofd.ShowDialog(this) == true)
         {
@@ -57,17 +60,14 @@ public partial class MainWindow : Window
                             string outputExt = inputExt + "x";
                             string baseName = Path.GetFileNameWithoutExtension(file);
                             string outputFile = Path.Join(outputDir, baseName + outputExt);
-                            var outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Document;
-                            if (inputExt == ".dot" || inputExt == ".xlt" || inputExt == ".pot")
-                            {
-                                outputType = DocSharp.Binary.OpenXmlLib.OpenXmlDocumentType.Template;
-                            }
                             switch (inputExt)
                             {
                                 case ".doc":
                                 case ".dot":
                                     var doc = new WordDocument(reader);
-                                    using (var docx = WordprocessingDocument.Create(outputFile, outputType))
+                                    var docxType = inputExt == ".dot" ? WordprocessingDocumentType.Template :
+                                                                          WordprocessingDocumentType.Document;
+                                    using (var docx = WordprocessingDocument.Create(outputFile, docxType))
                                     {
                                         DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
                                     }
@@ -75,7 +75,9 @@ public partial class MainWindow : Window
                                 case ".xls":
                                 case ".xlt":
                                     var xls = new XlsDocument(reader);
-                                    using (var xlsx = SpreadsheetDocument.Create(outputFile, outputType))
+                                    var xlsxType = inputExt == ".xlt" ? SpreadsheetDocumentType.Template :
+                                                                         SpreadsheetDocumentType.Workbook;
+                                    using (var xlsx = SpreadsheetDocument.Create(outputFile, xlsxType))
                                     {
                                         DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
                                     }
@@ -84,7 +86,16 @@ public partial class MainWindow : Window
                                 case ".pps":
                                 case ".pot":
                                     var ppt = new PowerpointDocument(reader);
-                                    using (var pptx = PresentationDocument.Create(outputFile, outputType))
+                                    var pptxType = PresentationDocumentType.Presentation;
+                                    if (inputExt == ".pot")
+                                    {
+                                        pptxType = PresentationDocumentType.Template;
+                                    }
+                                    else if (inputExt == ".pps")
+                                    {
+                                        pptxType = PresentationDocumentType.Slideshow;
+                                    }
+                                    using (var pptx = PresentationDocument.Create(outputFile, pptxType))
                                     {
                                         DocSharp.Binary.PresentationMLMapping.Converter.Convert(ppt, pptx);
                                     }
@@ -441,5 +452,96 @@ public partial class MainWindow : Window
                 MessageBox.Show(ex.Message);
             }
         }
+    }
+
+    private void DocToRtf_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Multiselect = true,
+            Filter = "Microsoft Word 97-2003 document|*.doc;*.dot",
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Rich Text Format|*.rtf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".rtf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                var tempFile = Path.GetTempFileName();
+                try
+                {
+                    using (var reader = new StructuredStorageReader(ofd.FileName))
+                    {
+                        var doc = new WordDocument(reader);
+                        using (var docx = WordprocessingDocument.Create(tempFile, WordprocessingDocumentType.Document))
+                        {
+                            DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                        }
+                    }
+                    var converter = new DocxToRtfConverter();
+                    converter.Convert(tempFile, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    File.Delete(tempFile);
+                }
+            }
+        }
+    }
+
+    private void XlsToHtml_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Multiselect = true,
+            Filter = "Microsoft Excel 97-2003 spreadsheet|*.xls;*.xlt;*.xlr",
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                var tempFile = Path.GetTempFileName();
+                try
+                {
+                    using (var reader = new StructuredStorageReader(ofd.FileName))
+                    {
+                        var xls = new XlsDocument(reader);
+                        using (var xlsx = SpreadsheetDocument.Create(tempFile, SpreadsheetDocumentType.Workbook))
+                        {
+                            DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
+                        }
+                    }
+                    using (var outputStream = new FileStream(sfd.FileName, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        XlsxToHtmlConverter.Converter.ConvertXlsx(tempFile, outputStream);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    File.Delete(tempFile);
+                }
+            }
+        }
+    }
+
+    private void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+
     }
 }

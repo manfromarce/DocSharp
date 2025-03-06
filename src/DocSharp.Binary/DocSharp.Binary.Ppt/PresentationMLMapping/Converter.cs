@@ -10,16 +10,16 @@ namespace DocSharp.Binary.PresentationMLMapping
 {
     public class Converter
     {
-        public static OpenXmlDocumentType DetectOutputType(PowerpointDocument ppt)
+        public static PresentationDocumentType DetectOutputType(PowerpointDocument ppt)
         {
-            var returnType = OpenXmlDocumentType.Document;
+            var returnType = PresentationDocumentType.Presentation;
 
             try
             {
                 //ToDo: Find better way to detect macro type
                 if (ppt.VbaProject != null)
                 {
-                    returnType = OpenXmlDocumentType.MacroEnabledDocument;
+                    returnType = PresentationDocumentType.MacroEnabledPresentation;
                 }
             }
             catch (Exception)
@@ -29,22 +29,25 @@ namespace DocSharp.Binary.PresentationMLMapping
             return returnType;
         }
 
-        public static string GetConformFilename(string choosenFilename, OpenXmlDocumentType outType)
+        public static string GetConformFilename(string choosenFilename, PresentationDocumentType outType)
         {
             string outExt = ".pptx";
             switch (outType)
             {
-                case OpenXmlDocumentType.Document:
-                    outExt = ".pptx";
-                    break;
-                case OpenXmlDocumentType.MacroEnabledDocument:
+                case PresentationDocumentType.MacroEnabledPresentation:
                     outExt = ".pptm";
                     break;
-                case OpenXmlDocumentType.MacroEnabledTemplate:
+                case PresentationDocumentType.MacroEnabledTemplate:
                     outExt = ".potm";
                     break;
-                case OpenXmlDocumentType.Template:
+                case PresentationDocumentType.Template:
                     outExt = ".potx";
+                    break;
+                case PresentationDocumentType.Slideshow:
+                    outExt = ".ppsx";
+                    break;
+                case PresentationDocumentType.MacroEnabledSlideshow:
+                    outExt = ".ppsm";
                     break;
                 default:
                     outExt = ".pptx";

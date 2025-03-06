@@ -2,22 +2,22 @@ namespace DocSharp.Binary.OpenXmlLib.WordprocessingML
 {
     public class WordprocessingDocument : OpenXmlPackage
     {
-        protected OpenXmlDocumentType _documentType;
+        protected WordprocessingDocumentType _documentType;
         protected CustomXmlPropertiesPart _customFilePropertiesPart;
         protected MainDocumentPart _mainDocumentPart;
 
-        protected WordprocessingDocument(string fileName, OpenXmlDocumentType type)
+        protected WordprocessingDocument(string fileName, WordprocessingDocumentType type)
             : base(fileName)
         {
             switch (type)
             {
-                case OpenXmlDocumentType.MacroEnabledDocument:
+                case WordprocessingDocumentType.MacroEnabledDocument:
                     this._mainDocumentPart = new MainDocumentPart(this, WordprocessingMLContentTypes.MainDocumentMacro);
                     break;
-                case OpenXmlDocumentType.Template:
+                case WordprocessingDocumentType.Template:
                     this._mainDocumentPart = new MainDocumentPart(this, WordprocessingMLContentTypes.MainDocumentTemplate);
                     break;
-                case OpenXmlDocumentType.MacroEnabledTemplate:
+                case WordprocessingDocumentType.MacroEnabledTemplate:
                     this._mainDocumentPart = new MainDocumentPart(this, WordprocessingMLContentTypes.MainDocumentMacroTemplate);
                     break;
                 default:
@@ -29,14 +29,14 @@ namespace DocSharp.Binary.OpenXmlLib.WordprocessingML
             this.AddPart(this._mainDocumentPart);
         }
 
-        public static WordprocessingDocument Create(string fileName, OpenXmlDocumentType type)
+        public static WordprocessingDocument Create(string fileName, WordprocessingDocumentType type)
         {
             var doc = new WordprocessingDocument(fileName, type);
             
             return doc;
         }
 
-        public OpenXmlDocumentType DocumentType
+        public WordprocessingDocumentType DocumentType
         {
             get { return this._documentType; }
             set { this._documentType = value; }
@@ -46,7 +46,6 @@ namespace DocSharp.Binary.OpenXmlLib.WordprocessingML
         {
             get { return this._customFilePropertiesPart; }
         }
-
         
         public MainDocumentPart MainDocumentPart
         {
