@@ -6,25 +6,25 @@ namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
     public class SpreadsheetDocument : OpenXmlPackage
     {
         protected WorkbookPart workBookPart;
-        protected OpenXmlDocumentType _documentType;
+        protected SpreadsheetDocumentType _documentType;
 
         /// <summary>
         /// Ctor 
         /// </summary>
         /// <param name="fileName">Filename of the file which should be written</param>
-        protected SpreadsheetDocument(string fileName, OpenXmlDocumentType type)
+        protected SpreadsheetDocument(string fileName, SpreadsheetDocumentType type)
             : base(fileName)
         {
             switch (type)
             {
-                case OpenXmlDocumentType.MacroEnabledDocument:
+                case SpreadsheetDocumentType.MacroEnabledWorkbook:
                     this.workBookPart = new WorkbookPart(this, SpreadsheetMLContentTypes.WorkbookMacro);
                     break;
-                case OpenXmlDocumentType.Template:
-                    this.workBookPart = new WorkbookPart(this, WordprocessingMLContentTypes.MainDocumentTemplate);
+                case SpreadsheetDocumentType.Template:
+                    this.workBookPart = new WorkbookPart(this, SpreadsheetMLContentTypes.WorkbookTemplate);
                     break;
-                case OpenXmlDocumentType.MacroEnabledTemplate:
-                    this.workBookPart = new WorkbookPart(this, WordprocessingMLContentTypes.MainDocumentMacroTemplate);
+                case SpreadsheetDocumentType.MacroEnabledTemplate:
+                    this.workBookPart = new WorkbookPart(this, SpreadsheetMLContentTypes.WorkbookMacroTemplate);
                     break;
                 default:
                     this.workBookPart = new WorkbookPart(this, SpreadsheetMLContentTypes.Workbook);
@@ -39,13 +39,13 @@ namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
         /// </summary>
         /// <param name="fileName">The name of the file which should be written</param>
         /// <returns>The object itself</returns>
-        public static SpreadsheetDocument Create(string fileName, OpenXmlDocumentType type)
+        public static SpreadsheetDocument Create(string fileName, SpreadsheetDocumentType type)
         {
             var spreadsheet = new SpreadsheetDocument(fileName, type);
             return spreadsheet;
         }
 
-        public OpenXmlDocumentType DocumentType
+        public SpreadsheetDocumentType DocumentType
         {
             get { return this._documentType; }
             set { this._documentType = value; }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -10,9 +10,9 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
 {
     public class Converter
     {
-        public static OpenXmlDocumentType DetectOutputType(XlsDocument xls)
+        public static SpreadsheetDocumentType DetectOutputType(XlsDocument xls)
         {
-            var returnType = OpenXmlDocumentType.Document;
+            var returnType = SpreadsheetDocumentType.Workbook;
             try
             {
                 //ToDo: Find better way to detect macro type
@@ -20,22 +20,22 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
                 {
                     if (xls.WorkBookData.Template)
                     {
-                        returnType = OpenXmlDocumentType.MacroEnabledTemplate;
+                        returnType = SpreadsheetDocumentType.MacroEnabledTemplate;
                     }
                     else
                     {
-                        returnType = OpenXmlDocumentType.MacroEnabledDocument;
+                        returnType = SpreadsheetDocumentType.MacroEnabledWorkbook;
                     }
                 }
                 else
                 {
                     if (xls.WorkBookData.Template)
                     {
-                        returnType = OpenXmlDocumentType.Template;
+                        returnType = SpreadsheetDocumentType.Template;
                     }
                     else
                     {
-                        returnType = OpenXmlDocumentType.Document;
+                        returnType = SpreadsheetDocumentType.Workbook;
                     }
                 }
             }
@@ -46,21 +46,18 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
             return returnType;
         }
 
-        public static string GetConformFilename(string choosenFilename, OpenXmlDocumentType outType)
+        public static string GetConformFilename(string choosenFilename, SpreadsheetDocumentType outType)
         {
             string outExt = ".xlsx";
             switch (outType)
             {
-                case OpenXmlDocumentType.Document:
-                    outExt = ".xlsx";
-                    break;
-                case OpenXmlDocumentType.MacroEnabledDocument:
+                case SpreadsheetDocumentType.MacroEnabledWorkbook:
                     outExt = ".xlsm";
                     break;
-                case OpenXmlDocumentType.MacroEnabledTemplate:
+                case SpreadsheetDocumentType.MacroEnabledTemplate:
                     outExt = ".xltm";
                     break;
-                case OpenXmlDocumentType.Template:
+                case SpreadsheetDocumentType.Template:
                     outExt = ".xltx";
                     break;
                 default:
@@ -120,8 +117,8 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
             xls.WorkBookData.Convert(new WorkbookMapping(xlsContext, spreadsheetDocument.WorkbookPart));
 
             // convert the macros
-            if (spreadsheetDocument.DocumentType == OpenXmlDocumentType.MacroEnabledDocument ||
-                spreadsheetDocument.DocumentType == OpenXmlDocumentType.MacroEnabledTemplate)
+            if (spreadsheetDocument.DocumentType == SpreadsheetDocumentType.MacroEnabledWorkbook ||
+                spreadsheetDocument.DocumentType == SpreadsheetDocumentType.MacroEnabledTemplate)
             {
                 xls.Convert(new MacroBinaryMapping(xlsContext));
             }

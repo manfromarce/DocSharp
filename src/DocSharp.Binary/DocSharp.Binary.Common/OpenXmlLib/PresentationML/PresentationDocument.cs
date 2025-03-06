@@ -1,31 +1,39 @@
-﻿namespace DocSharp.Binary.OpenXmlLib.PresentationML
+namespace DocSharp.Binary.OpenXmlLib.PresentationML
 {
     public class PresentationDocument : OpenXmlPackage
     {
         protected PresentationPart _presentationPart;
-        protected OpenXmlDocumentType _documentType;
+        protected PresentationDocumentType _documentType;
 
-        protected PresentationDocument(string fileName, OpenXmlDocumentType type)
+        protected PresentationDocument(string fileName, PresentationDocumentType type)
             : base(fileName)
         {
             switch (type)
             {
-                case OpenXmlDocumentType.Document:
-                    this._presentationPart = new PresentationPart(this, PresentationMLContentTypes.Presentation);
-                    break;
-                case OpenXmlDocumentType.MacroEnabledDocument:
+                case PresentationDocumentType.MacroEnabledPresentation:
                     this._presentationPart = new PresentationPart(this, PresentationMLContentTypes.PresentationMacro);
                     break;
-                case OpenXmlDocumentType.Template:
+                case PresentationDocumentType.Template:
+                    this._presentationPart = new PresentationPart(this, PresentationMLContentTypes.PresentationTemplate);
                     break;
-                case OpenXmlDocumentType.MacroEnabledTemplate:
+                case PresentationDocumentType.MacroEnabledTemplate:
+                    this._presentationPart = new PresentationPart(this, PresentationMLContentTypes.PresentationMacroTemplate);
+                    break;
+                case PresentationDocumentType.Slideshow:
+                    this._presentationPart = new PresentationPart(this, PresentationMLContentTypes.Slideshow);
+                    break;
+                case PresentationDocumentType.MacroEnabledSlideshow:
+                    this._presentationPart = new PresentationPart(this, PresentationMLContentTypes.SlideshowMacro);
+                    break;
+                default:
+                    this._presentationPart = new PresentationPart(this, PresentationMLContentTypes.Presentation);
                     break;
             }
 
             this.AddPart(this._presentationPart);
         }
 
-        public static PresentationDocument Create(string fileName, OpenXmlDocumentType type)
+        public static PresentationDocument Create(string fileName, PresentationDocumentType type)
         {
             var presentation = new PresentationDocument(fileName, type);
 
