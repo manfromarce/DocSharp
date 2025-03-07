@@ -177,9 +177,8 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void RtfToDocx_Click(object sender, RoutedEventArgs e)
+    private void RtfToDocx_Click(object sender, RoutedEventArgs e)
     {
-        // The RTF to DOCX is not implemented yet in DocSharp but it's planned.
         var ofd = new OpenFileDialog()
         {
             Filter = "Rich Text Format|*.rtf",
@@ -308,11 +307,61 @@ public partial class MainWindow : Window
                     {
                         ImagesBaseUri = Path.GetDirectoryName(ofd.FileName)
                     };
-                    using var ms = new MemoryStream();
-                    using (var document = converter.ToWordprocessingDocument(markdown, ms))
+                    using (var ms = new MemoryStream())
                     {
-                        document.SaveTo(sfd.FileName, DocSharp.IO.SaveFormat.Rtf);
+                        using (var document = converter.ToWordprocessingDocument(markdown, ms))
+                        {
+                            document.SaveTo(sfd.FileName, DocSharp.IO.SaveFormat.Rtf);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        // Currently achieved through a two steps conversion.
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    using (var ms = new MemoryStream())
+                    {
+                        RtfConverter.ToDocx(rtf, ms);
+                        var converter = new DocxToMarkdownConverter()
+                        {
+                            ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                            ImagesBaseUriOverride = "",
+                        };
+                        converter.Convert(ms, sfd.FileName);
+                    }
+                    // Alternative way (RtfPipe + BracketPipe), used as comparison
+                    //using (var fs = new FileStream(ofd.FileName, FileMode.Open, FileAccess.Read))
+                    //using (var w = new System.IO.StringWriter())
+                    //using (var md = new BracketPipe.MarkdownWriter(w))
+                    //{
+                    //    RtfPipe.Rtf.ToHtml(fs, md);
+                    //    md.Flush();
+                    //    File.WriteAllText(sfd.FileName, w.ToString());
+                    //}
                 }
                 catch (Exception ex)
                 {
@@ -370,7 +419,8 @@ public partial class MainWindow : Window
     private void DocxRtfToHtml_Click(object sender, RoutedEventArgs e)
     {
         // Please note that other open source libraries exist to convert DOCX to HTML directly, 
-        // e.g. OpenXmlToHtml (based on a fork of OpenXmlPowerTools) would give better results.
+        // e.g. OpenXmlToHtml (https://github.com/Codeuctivity/OpenXmlToHtml)
+        // (based on a fork of OpenXmlPowerTools) would probably give better results.
         // This sample is mainly to test the DOCX to RTF conversion
         // and if the produced RTF is correctly interpreted by third-party tools.
         var ofd = new OpenFileDialog()
@@ -541,10 +591,5 @@ public partial class MainWindow : Window
                 }
             }
         }
-    }
-
-    private void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
-    {
-
     }
 }

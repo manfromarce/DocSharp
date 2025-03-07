@@ -40,6 +40,9 @@
                 Click="DocxToRtf_Click"
                 Content="Docx to Rtf" />
             <Button
+               Click="RtfToDocx_Click"
+               Content="Rtf to Docx" />
+            <Button
                 Click="MarkdownToDocx_Click"
                 Content="Markdown to Docx" />
             <Button
@@ -64,14 +67,14 @@
                 </Style>
             </UniformGrid.Resources>
             <Button
-               Click="RtfToDocx_Click"
-               Content="Rtf to Docx (third-party)" />
-            <Button
                Click="DocToRtf_Click"
-               Content="Doc to Rtf" /> 
+               Content="Doc to Rtf" />
             <Button
                Click="MarkdownToRtf_Click"
                Content="Markdown to Rtf" />
+            <Button
+               Click="RtfToMarkdown_Click"
+               Content="Rtf to Markdown" />
             <Button
               Click="HtmlToRtf_Click"
               Content="Html to Docx/Rtf (via Html2OpenXml)" />
