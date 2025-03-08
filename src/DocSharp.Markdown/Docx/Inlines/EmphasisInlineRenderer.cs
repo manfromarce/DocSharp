@@ -44,13 +44,13 @@ public class EmphasisInlineRenderer : DocxObjectRenderer<EmphasisInline>
             case '+':
                 if (obj.DelimiterCount == 2)
                 {
-                    props.Highlight = new Highlight {Val = HighlightColorValues.Green};
+                    props.Highlight = new Highlight { Val = HighlightColorValues.Green };
                 }
                 break;
             case '=':
                 if (obj.DelimiterCount == 2)
                 {
-                    props.Highlight = new Highlight {Val = HighlightColorValues.Yellow};
+                    props.Highlight = new Highlight { Val = HighlightColorValues.Yellow };
                 }
                 break;
             default:

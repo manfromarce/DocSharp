@@ -51,6 +51,7 @@ If your main purpose is creating documents from scratch you can consider the fol
   * TODO: bookmarks (internal hyperlinks), math formulas, charts
 - Markdown to DOCX:
   * Basic Markdown features (headings, bold, italic, strikethrough, superscript, subscript)
+    - Few basic HTML tags such as `<u>`, `<sup>`, `<sub>`, `<mark>` are also supported
   * Quotes and code blocks
   * Lists
   * External hyperlinks
@@ -60,7 +61,7 @@ If your main purpose is creating documents from scratch you can consider the fol
     - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute local directory path or http(s) URL, which will be combined with the image file name at runtime, such as: `C:\Data` + `./images/image1.jpg`.
     - WEBP and AVIF images are ignored as they are not supported in DOCX documents; base64 is also ignored as it is rarely used and not supported by many Markdown processors.
   * Tables (experimental)
-  * TODO: other internal hyperlinks types, math and other extensions, raw HTML tags, async functions (some tasks such as downloading images may take some time)
+  * TODO: other internal hyperlinks types, math and other extensions, raw HTML blocks, async functions/progress callback (some tasks such as downloading images may take some time)
 
 ### Usage
 
