@@ -10,7 +10,8 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
-    internal void ProcessMathElements(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
     {
+        // TODO
     }
 }

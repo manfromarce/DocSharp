@@ -447,6 +447,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }        
     }
 
+    internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
+    {
+        // TODO
+    }
+
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, StringBuilder sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, StringBuilder sb) { }

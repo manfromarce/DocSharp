@@ -257,6 +257,12 @@ public abstract class DocxConverterBase
             case SimpleFieldRuby simpleFieldRuby:
                 ProcessSimpleFieldRuby(simpleFieldRuby, sb);
                 break;
+            default:
+                if (element.NamespaceUri.Equals("http://schemas.openxmlformats.org/officeDocument/2006/math", StringComparison.OrdinalIgnoreCase))
+                {
+                    ProcessMathElement(element, sb);
+                }
+                break;
         }
     }
 
@@ -477,5 +483,5 @@ public abstract class DocxConverterBase
     internal abstract void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb);
     internal abstract void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb);
     internal abstract void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb);
-
+    internal abstract void ProcessMathElement(OpenXmlElement element, StringBuilder sb);
 }

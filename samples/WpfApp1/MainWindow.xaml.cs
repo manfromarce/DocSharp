@@ -540,8 +540,32 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
+    private void DocxToTxt_Click(object sender, RoutedEventArgs e)
     {
-
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Plain text|*.txt",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".txt"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToTxtConverter();
+                    converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
     }
 }

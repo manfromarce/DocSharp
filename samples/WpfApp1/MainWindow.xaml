@@ -40,6 +40,9 @@
                 Click="DocxToRtf_Click"
                 Content="Docx to Rtf" />
             <Button
+                 Click="DocxToTxt_Click"
+                 Content="Docx to Txt" />
+            <Button
                 Click="MarkdownToDocx_Click"
                 Content="Markdown to Docx" />
             <Button
