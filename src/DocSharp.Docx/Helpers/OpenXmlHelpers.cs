@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -481,5 +482,65 @@ public static class OpenXmlHelpers
         {
             parent.InsertAfter(element, refElement);
         }
-    }           
+    }
+
+    /// <summary>
+    /// Get page size of the last section in DXA (1/20th of point).
+    /// </summary>
+    /// <param name="document">The word processing document object</param>
+    /// <returns>A Size in twenthies of a point.</returns>
+    public static Size GetPageSize(this WordprocessingDocument document)
+    {
+        var sectionProperties = document.MainDocumentPart?.Document?.Body?.Elements<SectionProperties>().LastOrDefault();
+        var pageSize = sectionProperties?.GetFirstChild<PageSize>();
+        if (pageSize?.Width != null && pageSize?.Height != null)
+        {
+            uint width = pageSize.Width?.Value ?? 0;
+            uint height = pageSize.Height?.Value ?? 0;
+            if (pageSize.Orient != null && pageSize.Orient.Value == PageOrientationValues.Landscape)
+            {
+                return new Size((int)height, (int)width);
+            }
+            else
+            {
+                return new Size((int)width, (int)height);
+            }
+        }
+        // If not found, return A4 portrait.
+        // A4 page size is 210 mm x 297 mm = 11906 x 16838
+        return new Size(11906, 16838);
+    }
+
+    /// <summary>
+    /// Get page size of the last section in DXA (1/20th of point) excluding page margins.
+    /// </summary>
+    /// <param name="document">The word processing document object</param>
+    /// <returns>A Size in twenthies of a point.</returns>
+    public static Size GetEffectivePageSize(this WordprocessingDocument document)
+    {
+        var sectionProperties = document.MainDocumentPart?.Document?.Body?.Elements<SectionProperties>().LastOrDefault();
+        var pageSize = sectionProperties?.GetFirstChild<PageSize>();
+        var pageMargin = sectionProperties?.GetFirstChild<PageMargin>();
+
+        if (pageSize?.Width != null && pageSize.Height != null)
+        {
+            uint leftMargin = pageMargin?.Left?.Value ?? 0;
+            uint rightMargin = pageMargin?.Right?.Value ?? 0;
+            int topMargin = pageMargin?.Top?.Value ?? 0;
+            int bottomMargin = pageMargin?.Bottom?.Value ?? 0;
+            uint width = pageSize.Width.Value - leftMargin - rightMargin;
+            int height = ((int)pageSize.Height.Value) - topMargin - bottomMargin;
+            if (pageSize.Orient != null && pageSize.Orient.Value == PageOrientationValues.Landscape)
+            {
+                return new Size(height, (int)width);
+            }
+            else
+            {
+                return new Size((int)width, height);
+            }
+        }
+        // If not found, return A4 portrait.
+        // A4 page size is 210 mm x 297 mm = 11906 x 16838
+        return new Size(11906, 16838);
+    }
 }

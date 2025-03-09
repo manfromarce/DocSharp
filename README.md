@@ -5,7 +5,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
-- DocSharp.Docx: convert DOCX to Markdown and RTF. Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Docx: convert DOCX to Markdown, RTF and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX using a custom Markdig renderer.
 
 Packages can be installed via NuGet:  
@@ -60,6 +60,7 @@ If your main purpose is creating documents from scratch you can consider the fol
     - The converter attempts to read local images and download online images (http/https URLs only). If this behavior is not desired, set `SkipImages` to true.
     - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute local directory path or http(s) URL, which will be combined with the image file name at runtime, such as: `C:\Data` + `./images/image1.jpg`.
     - WEBP and AVIF images are ignored as they are not supported in DOCX documents; base64 is also ignored as it is rarely used and not supported by many Markdown processors.
+    - Width and height must be specified in DOCX. The converter tries to scale the original image file dimensions to fit the page, but it's not always accurate. 
   * Tables (experimental)
   * TODO: other internal hyperlinks types, math and other extensions, raw HTML blocks, async functions/progress callback (some tasks such as downloading images may take some time)
 

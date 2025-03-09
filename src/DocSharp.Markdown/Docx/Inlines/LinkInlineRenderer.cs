@@ -242,10 +242,14 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 // Convert to EMUs
                 var width = DocSharp.UnitMetricHelper.ConvertToEmus(size.Width, unit);
                 var height = DocSharp.UnitMetricHelper.ConvertToEmus(size.Height, unit);
-                
-                // Limit image size to fit A4 page width and height, subtracted by 2 cm margins used in the template.
-                int maxWidth = 6840000;
-                int maxHeight = 9972000;
+
+                // Try to scale image size to fit the page.
+                var pageSize = renderer.Document.GetEffectivePageSize();
+                // Convert twips to EMUs (used for image dimensions),
+                // and assume 75% of the page size as maximum (empirical). 
+                var maxWidth = pageSize.Width * 635 * 0.75;
+                var maxHeight = pageSize.Height * 635 * 0.75;
+
                 ScaleImageSize(ref width, ref height, maxWidth, maxHeight);
 
                 var imageElement = ImageHelpers.CreateImage(rId, width, height, _imageIdCounter, label, title);
@@ -263,12 +267,12 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
     }
 
     // Scale image dimensions to be less than max width and height, keeping aspect ratio.
-    private static void ScaleImageSize(ref long width, ref long height, long maxWidth, long maxHeight)
+    private static void ScaleImageSize(ref long width, ref long height, double maxWidth, double maxHeight)
     {
         if (width > maxWidth || height > maxHeight)
         {
-            var ratioX = (double)maxWidth / width;
-            var ratioY = (double)maxHeight / height;
+            var ratioX = maxWidth / width;
+            var ratioY = maxHeight / height;
             var ratio = Math.Min(ratioX, ratioY);
             width = Math.Max((int)(width * ratio), 1);
             height = Math.Max((int)(height * ratio), 1);
