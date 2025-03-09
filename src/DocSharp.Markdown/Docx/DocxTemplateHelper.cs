@@ -32,7 +32,6 @@ internal class DocxTemplateHelper
         {
             stream.CopyTo(outputStream);
             var document = WordprocessingDocument.Open(outputStream, true);
-            CleanContents(document);
             if (openXmlDocumentType != WordprocessingDocumentType.Document)
             {
                 // This will create a template (.dotx) or macro-enabled document, if desired.
@@ -53,8 +52,6 @@ internal class DocxTemplateHelper
 
             var document = WordprocessingDocument.Open(outputFilePath, true);
 
-            CleanContents(document);
-
             if (openXmlDocumentType != WordprocessingDocumentType.Document)
             {
                 // This will create a template (.dotx) or macro-enabled document, if desired.
@@ -62,12 +59,6 @@ internal class DocxTemplateHelper
             }
             return document;
         }
-    }
-
-    internal static void CleanContents(WordprocessingDocument document)
-    {
-        document.MainDocumentPart?.Document.Body?.RemoveAllChildren();
-        document.MainDocumentPart?.NumberingDefinitionsPart?.Numbering.RemoveAllChildren<NumberingInstance>();
     }
 
     internal static void AddStylesIfRequired(DocumentStyles styles, WordprocessingDocument targetDocument)
