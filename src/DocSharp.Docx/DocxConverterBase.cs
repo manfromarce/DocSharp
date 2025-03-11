@@ -317,6 +317,9 @@ public abstract class DocxConverterBase
             case PositionalTab positionalTab:
                 ProcessPositionalTab(positionalTab, sb);
                 return true;
+            case PageNumber pageNumber:
+                ProcessPageNumber(pageNumber, sb);
+                break;
             case SymbolChar symbolChar:
                 ProcessSymbolChar(symbolChar, sb);
                 return true;
@@ -476,6 +479,7 @@ public abstract class DocxConverterBase
     internal abstract void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb);
     internal abstract void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb);
     internal abstract void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb);
+    internal abstract void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb);
     internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb);
     internal abstract void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb);
     internal abstract void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb);

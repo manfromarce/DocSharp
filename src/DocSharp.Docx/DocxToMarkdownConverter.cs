@@ -464,5 +464,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
     internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb) { }
     internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb) { }
+    internal override void ProcessPageNumber(PageNumber background, StringBuilder sb) { }
 
 }
