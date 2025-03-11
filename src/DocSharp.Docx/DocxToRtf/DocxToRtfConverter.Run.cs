@@ -325,7 +325,7 @@ public partial class DocxToRtfConverter
         }
     }
 
-    public override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
     {
         if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) && 
             !string.IsNullOrEmpty(symbolChar?.Font?.Value))
