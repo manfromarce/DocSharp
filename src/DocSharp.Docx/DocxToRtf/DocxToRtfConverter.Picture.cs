@@ -22,7 +22,7 @@ public partial class DocxToRtfConverter
             {
                 string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
                 byte[] pngData = Array.Empty<byte>();
-                string format;
+                string format = string.Empty;
                 try
                 {
 
@@ -91,6 +91,9 @@ public partial class DocxToRtfConverter
                     return;
                     #endif
                 }
+
+                if (string.IsNullOrEmpty(format))
+                    return;
 
                 sb.AppendLineCrLf(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
                 sb.Append(format);
