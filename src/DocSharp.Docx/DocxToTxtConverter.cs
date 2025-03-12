@@ -99,7 +99,7 @@ public class DocxToTxtConverter : DocxConverterBase
 
             cellBuilder.Append(' ');
         }
-        sb.Append(cellBuilder.ToString());
+        sb.Append(cellBuilder);
         sb.Append(" | ");
     }
 
@@ -118,6 +118,11 @@ public class DocxToTxtConverter : DocxConverterBase
     internal override void ProcessBreak(Break br, StringBuilder sb)
     {
         sb.AppendLine();
+        if (br.Type != null && (br.Type.Value == BreakValues.Column || br.Type.Value == BreakValues.Page))
+        {
+            // Hard break
+            sb.AppendLine();
+        }
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)

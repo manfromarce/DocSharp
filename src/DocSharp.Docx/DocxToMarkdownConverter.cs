@@ -483,7 +483,20 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
     {
-        // TODO
+        switch (element)
+        {
+            // To be improved.
+            case DocumentFormat.OpenXml.Math.Paragraph oMathPara:
+                if (oMathPara.GetFirstChild<DocumentFormat.OpenXml.Math.OfficeMath>() is DocumentFormat.OpenXml.Math.OfficeMath mathElement)
+                {
+                    ProcessMathElement(mathElement, sb);
+                }
+                break;
+            case DocumentFormat.OpenXml.Math.OfficeMath oMath:
+                var latex = MathConverter.MLConverter.Convert(oMath.OuterXml);
+                sb.Append($"$ {latex} $");
+                break;
+        }
     }
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }

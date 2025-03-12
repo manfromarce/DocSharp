@@ -48,7 +48,8 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Tables (values only)
   * Hyperlinks and bookmarks
   * Page breaks are converted to horizontal lines
-  * TODO: math formulas, charts
+  * Math formulas are converted to LaTex (not everything is supported yet)
+  * TODO: header, footer, endnotes, footnotes, extract text from text boxes, charts
 - Markdown to DOCX:
   * Basic Markdown features (headings, bold, italic, strikethrough, superscript, subscript)
     - Few basic HTML tags such as `<u>`, `<sup>`, `<sub>`, `<mark>` are also supported
