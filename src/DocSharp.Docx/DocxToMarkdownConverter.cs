@@ -11,6 +11,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
+using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
@@ -485,16 +486,74 @@ public class DocxToMarkdownConverter : DocxConverterBase
     {
         switch (element)
         {
-            // To be improved.
-            case DocumentFormat.OpenXml.Math.Paragraph oMathPara:
-                if (oMathPara.GetFirstChild<DocumentFormat.OpenXml.Math.OfficeMath>() is DocumentFormat.OpenXml.Math.OfficeMath mathElement)
+            // Notes:
+            // - Latex blocks in Markdown don't support non-math content like in DOCX.
+            //   We split Math.Paragraph into multiple inline math blocks so that standard elements can be processed, 
+            //   but it's not feasible for OfficeMath and Math.Run elements.
+            // - OfficeMath and Math.Paragraph elements nested into another OfficeMath element are not currently supported.
+            //   These need to be implemented in DocSharp.Common.MathConverter classes.
+            //      
+            case M.Paragraph oMathPara:
+                foreach (var subElement in oMathPara.Elements())
                 {
-                    ProcessMathElement(mathElement, sb);
+                    if (subElement is M.OfficeMath mathElement)
+                    {
+                        ProcessMathElement(mathElement, sb);
+                        // The same math paragraph may contain multiple formulas.
+                        sb.AppendLine("  "); 
+                    }
+                    else if (subElement is M.Run run)
+                    {
+                        ProcessMathElement(new M.OfficeMath(run), sb);
+                    }
+                    else if (subElement is M.ParagraphProperties oMathParaPr)
+                    {
+                    }
+                    // Math paragraphs can't contain other elements such as limits or fractions directly 
+                    // (see hierarchy in the Open XML Sdk documentation).
+                    // Also, we must avoid infinite recursion.
+                    else if (!subElement.NamespaceUri.Equals(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Process word processing elements such as regular Runs.
+                        ProcessParagraphElement(subElement, sb);
+                    }
                 }
                 break;
-            case DocumentFormat.OpenXml.Math.OfficeMath oMath:
+            case M.OfficeMath oMath:
+                bool hasNestedMath = oMath.Elements().Where(x => x.GetType() == typeof(M.OfficeMath) ||
+                                                                 x.GetType() == typeof(M.Paragraph)).Any();
                 var latex = MathConverter.MLConverter.Convert(oMath.OuterXml);
-                sb.Append($"$ {latex} $");
+                if (hasNestedMath)
+                {
+                    sb.Append($" $${latex}$$");
+                    sb.AppendLine();
+                }
+                else
+                {
+                    sb.Append($" $` {latex} `$ ");
+                }
+                break;
+            case M.Accent:
+            case M.Bar:
+            case M.BorderBox:
+            case M.Box:
+            case M.Delimiter:
+            case M.EquationArray:
+            case M.Fraction:
+            case M.MathFunction:
+            case M.GroupChar:
+            case M.LimitLower:
+            case M.LimitUpper:
+            case M.Matrix:
+            case M.Nary:
+            case M.Phantom:
+            case M.Run:
+            case M.Radical:
+            case M.PreSubSuper:
+            case M.Subscript:
+            case M.Superscript:
+            case M.SubSuperscript:
+                ProcessMathElement(new M.OfficeMath(element), sb);
                 break;
         }
     }

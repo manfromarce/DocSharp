@@ -258,7 +258,7 @@ public abstract class DocxConverterBase
                 ProcessSimpleFieldRuby(simpleFieldRuby, sb);
                 break;
             default:
-                if (element.NamespaceUri.Equals("http://schemas.openxmlformats.org/officeDocument/2006/math", StringComparison.OrdinalIgnoreCase))
+                if (element.NamespaceUri.Equals(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase))
                 {
                     ProcessMathElement(element, sb);
                 }
