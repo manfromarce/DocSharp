@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -165,7 +166,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
             isSuperscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Superscript;           
 
             if (isItalic)
-                sb.Append("*");
+                sb.Append('*');
 
             if (isBold)
                 sb.Append("**");
@@ -210,7 +211,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 sb.Append("**");
 
             if (isItalic)
-                sb.Append("*");
+                sb.Append('*');
 
             sb.Append(trailingSpaces);
         }
@@ -231,13 +232,15 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessText(Text text, StringBuilder sb)
     {
-        foreach(char c in text.InnerText.Trim())
+        string font = string.Empty;
+        if (text.Parent is Run run)
         {
-            if (_specialChars.Contains(c))
-            {
-                sb.Append(new string(['\\', c]));
-            }
-            else if (c == '\r')
+            var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
+            font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
+        }
+        foreach (char c in text.InnerText.Trim())
+        {
+            if (c == '\r')
             {
                 // Ignore as it's usually followed by \n
             }
@@ -247,7 +250,31 @@ public class DocxToMarkdownConverter : DocxConverterBase
             }
             else
             {
-                sb.Append(c);
+                switch (font)
+                {
+                    case "wingdings":
+                        sb.Append(StringHelpers.WingdingsToUnicode(c));
+                        continue;
+                    case "wingdings2":
+                        sb.Append(StringHelpers.Wingdings2ToUnicode(c));
+                        continue;
+                    case "wingdings3":
+                        sb.Append(StringHelpers.Wingdings3ToUnicode(c));
+                        continue;
+                    case "webdings":
+                        sb.Append(StringHelpers.WebdingsToUnicode(c));
+                        continue;
+                    default:
+                        if (_specialChars.Contains(c))
+                        {
+                            sb.Append(new string(['\\', c]));
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                        }
+                        continue;
+                }
             }
         }
     }
@@ -314,7 +341,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
             cellBuilder.Append(' ');
         }
-        sb.Append(cellBuilder.ToString());
+        sb.Append(cellBuilder);
         sb.Append(" | ");
     }
 
@@ -337,7 +364,10 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 sb.Append($" [{displayTextBuilder.ToString().Trim()}]({url}) ");
             }
         }
-        //else if (hyperlink.Anchor?.Value is string anchor) // TODO
+        else if (hyperlink.Anchor?.Value is string anchor)
+        {
+            sb.Append($" [{displayTextBuilder.ToString().Trim()}](#{anchor}) ");
+        }
     }
 
     internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
@@ -368,42 +398,46 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal void ProcessImagePart(MainDocumentPart? mainDocumentPart, string relId, StringBuilder sb)
     {
-        if (mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
+        try
         {
-            string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
-            string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
-            Uri uri;
-            if (ImagesBaseUriOverride is null)
+            if (ImagesOutputFolder != null &&
+            mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
             {
-                uri = new Uri(actualFilePath, UriKind.Absolute);
-            }
-            else
-            {
-                ImagesBaseUriOverride = ImagesBaseUriOverride.Trim('"');
-                ImagesBaseUriOverride = ImagesBaseUriOverride.Replace('\\', '/');
-                if (ImagesBaseUriOverride != string.Empty)
+                string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
+                string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
+                Uri uri;
+                if (ImagesBaseUriOverride is null)
                 {
-                    ImagesBaseUriOverride = System.IO.Path.TrimEndingDirectorySeparator(ImagesBaseUriOverride);
-                    ImagesBaseUriOverride += "/";
+                    uri = new Uri(actualFilePath, UriKind.Absolute);
                 }
-                ImagesBaseUriOverride += fileName;
-                uri = new Uri(ImagesBaseUriOverride, UriKind.RelativeOrAbsolute);
-            }
+                else
+                {
+                    string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
+                    uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
+                }
 
-            using (var stream = imagePart.GetStream())
-            using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
-            {
-                stream.CopyTo(fileStream);
+                using (var stream = imagePart.GetStream())
+                using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    stream.CopyTo(fileStream);
+                }
+                sb.Append($" ![{relId}]({uri}) ");
             }
-            sb.Append(' ');
-            sb.Append($"![{relId}]({uri})");
-            sb.Append(' ');
+        }
+        catch (Exception ex)
+        {
+            // Probably an issue with the output directory.
+            // Don't stop the conversion.
+#if DEBUG
+            Debug.WriteLine("ProcessImagePart error: " + ex.Message);
+            return;
+#endif
         }
     }
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, StringBuilder sb)
     {
-        // TODO
+        sb.Append($"<a id=\"{bookmark.Name}\"></a>");
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
@@ -422,7 +456,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
-                    switch (symbolChar?.Font?.Value.ToLower())
+                    switch (symbolChar?.Font?.Value.ToLowerInvariant())
                     {
                         case "wingdings":
                             htmlEntity = StringHelpers.WingdingsToUnicode((char)decimalValue);

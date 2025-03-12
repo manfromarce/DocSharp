@@ -142,14 +142,6 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        // Check paragraph properties
-        var paragraphProperties = run.GetFirstAncestor<Paragraph>()?.ParagraphProperties;
-        propertyValue = paragraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<T>();
-        if (propertyValue != null)
-        {
-            return propertyValue;
-        }
-
         var stylesPart = GetStylesPart(run);
 
         // Check run style
@@ -168,6 +160,7 @@ public static class OpenXmlHelpers
         }
 
         // Check paragraph style
+        var paragraphProperties = run.GetFirstAncestor<Paragraph>()?.ParagraphProperties;
         var paragraphStyle = stylesPart.GetStyleFromId(paragraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
         while (paragraphStyle != null)
         {

@@ -46,9 +46,9 @@ If your main purpose is creating documents from scratch you can consider the fol
     - Crop and effects are not supported.
   * Lists (partial)
   * Tables (values only)
-  * External hyperlinks
+  * Hyperlinks and bookmarks
   * Page breaks are converted to horizontal lines
-  * TODO: bookmarks (internal hyperlinks), math formulas, charts
+  * TODO: math formulas, charts
 - Markdown to DOCX:
   * Basic Markdown features (headings, bold, italic, strikethrough, superscript, subscript)
     - Few basic HTML tags such as `<u>`, `<sup>`, `<sub>`, `<mark>` are also supported

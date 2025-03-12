@@ -57,7 +57,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 }
                 if (!string.IsNullOrWhiteSpace(fixedUrl))
                 {
-                    Uri.TryCreate(obj.Url, UriKind.Relative, out uri);
+                    Uri.TryCreate(fixedUrl, UriKind.Relative, out uri);
                 }
             }
             else
