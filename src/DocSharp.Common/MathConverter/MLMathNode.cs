@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using DocSharp.Xml;
 
@@ -24,6 +25,9 @@ internal class MLMathNode : MLNodeBase
             throw new InvalidDataException($"Expected 'oMath' node, but got '{oMathNode.LocalName}'!");
 
         Text = ProcessChildren(oMathNode);
+        // Remove unnecessary spaces before right curly brackets
+        string pattern = @"(?<!\\)\s+\}";
+        Text = Regex.Replace(Text, pattern, "}");
     }
 
     protected override TeXNode? ProcessTag(string tag, XmlNode elm)
@@ -300,48 +304,36 @@ internal class MLMathNode : MLNodeBase
     // Get text from 'r' element and try convert them to latex symbols
     private TeXNode? DoR(XmlNode elm)
     {
-        var sb = new StringBuilder();
         var t = elm.GetChildByName("m:t");
         if (t == null)
             return null;
 
-        //mxd
-        bool keep_spaces = (t.GetAttributeValue("xml:space") == "preserve");
-
-        //mxd. We need to iterate UTF-8 chars...
-        var char_enumerator = StringInfo.GetTextElementEnumerator(t.InnerText);
-        while (char_enumerator.MoveNext())
-        {
-            var s = char_enumerator.GetTextElement();
-
-            if (keep_spaces && s == " ")
-                sb.Append(@"\ ");
-            else
-                sb.Append(T.TryGetValue(s, out string? value) ? value : s);
-        }
-
-        return new TeXNode(EscapeLatex(sb.ToString()));
+        bool keepSpaces = (t.GetAttributeValue("xml:space") == "preserve");
+        return new TeXNode(EscapeLatex(t.InnerText, keepSpaces));
     }
 
-    private static string EscapeLatex(string str)
+    private static string EscapeLatex(string str, bool keepSpaces = true)
     {
-        char last = '\0';
+        // This function must only be called for leaf values 
+        // coming from Office math direcly, so that backslash and other special chars
+        // are meant to be part of the math expression itself rather than LaTex syntax.
         var sb = new StringBuilder();
-        str = str.Replace(@"\\", @"\");
 
         foreach (char c in str)
         {
-            if (CHARS.Contains(c) && last != '\\')
+            if (CharsToEscape.Contains(c))
                 sb.Append(@"\" + c);
             else if (c == '~')
                 sb.Append(@"\sim ");
-            //else if (c == '\\')
-            //    sb.Append(@"\backslash ");
-
+                //sb.Append(@"\text{\textasciitilde}");
+            else if (c == '^')
+                sb.Append(@"\text{\textasciicircum}");
+            else if (c == '\\')
+                sb.Append(@"\backslash ");
+            else if (keepSpaces && c == ' ')
+                sb.Append(@"\ ");
             else
-                sb.Append(c);
-
-            last = c;
+                sb.Append(T.TryGetValue(c.ToString(), out string? value) ? value : c);
         }
 
         return sb.ToString();

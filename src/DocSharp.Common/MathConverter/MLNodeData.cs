@@ -6,7 +6,7 @@ namespace DocSharp.MathConverter;
 internal abstract partial class MLNodeBase
 {
     // Define characters that need to be escaped in LaTeX
-    protected static readonly char[] CHARS = { '{', '}', '_', '^', '#', '&', '$', '%' };
+    protected static readonly char[] CharsToEscape = { '{', '}', '_', '#', '&', '$', '%' };
 
     // Mapping of Unicode characters to LaTeX commands for accents and symbols
     protected static readonly Dictionary<string, string> CHR = new Dictionary<string, string>
