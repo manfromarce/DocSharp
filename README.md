@@ -33,12 +33,11 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Endnotes and footnotes
   * Drop caps
   * Fields (partial) and page numbers
-  * TODO: math formulas, drawings, OLE objects, comments, improve support for right-to-left and complex script languages
+  * TODO: math formulas, drawings, OLE objects, comments
 - DOCX to Markdown:
   * Text and basic formatting
-    - Bold, italic, underline, strikethrough, superscript, subscript
+    - Bold, italic, underline, strikethrough, superscript, subscript, highlight
     - Heading 1-6 styles
-    - Any highlight color is converted to `<mark>`
   * Inline images
     - `ImagesOutputFolder` needs to be set to an existing directory, otherwise images are skipped. An absolute URI is used by default; to produce a relative URI set `ImagesBaseUriOverride` to any not-null folder path (empty string or "." means same folder as the Markdown file, "../images" means images subfolder in the parent folder).
     - Some image types are not recognized (e.g. WordPad embeds images in a different way compared to MS Word and other word processors).
@@ -48,8 +47,8 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Tables (values only)
   * Hyperlinks and bookmarks
   * Page breaks are converted to horizontal lines
-  * Math formulas are converted to LaTex (not everything is supported yet)
-  * TODO: header, footer, endnotes, footnotes, extract text from text boxes, charts
+  * Math formulas are converted to LaTex - experimental feature, not published on NuGet yet. Please also note that not all Markdown processors support math blocks.
+  * TODO: header, footer, endnotes, footnotes, extract text from text boxes
 - Markdown to DOCX:
   * Basic Markdown features (headings, bold, italic, strikethrough, superscript, subscript)
     - Few basic HTML tags such as `<u>`, `<sup>`, `<sub>`, `<mark>` are also supported
@@ -63,7 +62,7 @@ If your main purpose is creating documents from scratch you can consider the fol
     - WEBP and AVIF images are ignored as they are not supported in DOCX documents; base64 is also ignored as it is rarely used and not supported by many Markdown processors.
     - Width and height must be specified in DOCX. The converter tries to scale the original image file dimensions to fit the page, but it's not always accurate. 
   * Tables (experimental)
-  * TODO: other internal hyperlinks types, math and other extensions, raw HTML blocks, async functions/progress callback (some tasks such as downloading images may take some time)
+  * TODO: other internal hyperlinks types, math and other extensions, raw HTML blocks
 
 ### Usage
 
@@ -73,6 +72,8 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 
 - Support more elements and attributes, and fix issues on edge cases
 - Reverse RTF to DOCX conversion
+- Async functions/progress callback (some tasks such as downloading images referenced in Markdown may take some time)
+- Improve support for right-to-left and complex script languages
 
 ### Credits
 
@@ -86,6 +87,7 @@ Forked:
 
 Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
+- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office MathML conversion
 
 ### License
 
