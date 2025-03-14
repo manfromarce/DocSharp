@@ -317,7 +317,7 @@ internal class MLMathNode : MLNodeBase
             if (keep_spaces && s == " ")
                 sb.Append(@"\ ");
             else
-                sb.Append(T.ContainsKey(s) ? T[s] : s);
+                sb.Append(T.TryGetValue(s, out string? value) ? value : s);
         }
 
         return new TeXNode(EscapeLatex(sb.ToString()));
