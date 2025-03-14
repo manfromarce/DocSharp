@@ -486,25 +486,13 @@ public class DocxToMarkdownConverter : DocxConverterBase
     {
         switch (element)
         {
-            // Notes:
-            // - Latex blocks in Markdown don't support non-math content like in DOCX.
-            //   We split Math.Paragraph into multiple inline math blocks so that standard elements can be processed, 
-            //   but it's not feasible for OfficeMath and Math.Run elements.
-            // - OfficeMath and Math.Paragraph elements nested into another OfficeMath element are not currently supported.
-            //   These need to be implemented in DocSharp.Common.MathConverter classes.
-            //      
             case M.Paragraph oMathPara:
                 foreach (var subElement in oMathPara.Elements())
                 {
-                    if (subElement is M.OfficeMath mathElement)
+                    if (subElement is M.OfficeMath || 
+                        subElement is M.Run)
                     {
-                        ProcessMathElement(mathElement, sb);
-                        // The same math paragraph may contain multiple formulas.
-                        sb.AppendLine("  "); 
-                    }
-                    else if (subElement is M.Run run)
-                    {
-                        ProcessMathElement(new M.OfficeMath(run), sb);
+                        ProcessMathElement(subElement, sb);
                     }
                     else if (subElement is M.ParagraphProperties oMathParaPr)
                     {
@@ -512,7 +500,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
                     // Math paragraphs can't contain other elements such as limits or fractions directly 
                     // (see hierarchy in the Open XML Sdk documentation).
                     // Also, we must avoid infinite recursion.
-                    else if (!subElement.NamespaceUri.Equals(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase))
+                    else if (!subElement.IsMathElement())
                     {
                         // Process word processing elements such as regular Runs.
                         ProcessParagraphElement(subElement, sb);
@@ -520,18 +508,45 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 }
                 break;
             case M.OfficeMath oMath:
-                bool hasNestedMath = oMath.Elements().Where(x => x.GetType() == typeof(M.OfficeMath) ||
-                                                                 x.GetType() == typeof(M.Paragraph)).Any();
-                var latex = MathConverter.MLConverter.Convert(oMath.OuterXml);
-                if (hasNestedMath)
+                // Limitations:
+                // - Regular (not math) elements inside OfficeMath and Math.Run are not supported,
+                //   except for the last element that can be taken out of the Latex block 
+                //   (this way at least line breaks are supported). 
+                //   To preserve formatting such as bold or color we would need to convert these to LaTex syntax,
+                //   as regular Markdown can't be added to LaTex blocks. 
+                // - OfficeMath and Math.Paragraph elements nested into another OfficeMath element are not supported.
+                //   
+                string latex;
+                try
                 {
-                    sb.Append($" $${latex}$$");
-                    sb.AppendLine();
+                    latex = MathConverter.MLConverter.ToLaTex(oMath.OuterXml);
                 }
-                else
+                catch (Exception ex)
                 {
+                    // Don't stop converter if math translation fails.
+                    latex = string.Empty;
+#if DEBUG
+                    Debug.Write($"Math converter: {ex.Message}");
+#endif
+                }
+                if (!string.IsNullOrWhiteSpace(latex))
+                { 
                     sb.Append($" $` {latex} `$ ");
                 }
+                if (element.LastChild != null && !element.LastChild.IsMathElement())
+                {
+                    // Process word processing element (hyperlink, bookmark, ...)
+                    ProcessParagraphElement(element.LastChild, sb);
+                }
+                if (element.LastChild is M.Run run && run.LastChild != null && !run.LastChild.IsMathElement())
+                {
+                    // Process word processing element (break, regular text, ...)
+                    ProcessRunElement(run.LastChild, sb);
+                }
+                break;
+            case M.Run:
+                ProcessMathElement(new M.OfficeMath(element), sb);
+                // The last child is handled in the above case.
                 break;
             case M.Accent:
             case M.Bar:
@@ -547,7 +562,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
             case M.Matrix:
             case M.Nary:
             case M.Phantom:
-            case M.Run:
             case M.Radical:
             case M.PreSubSuper:
             case M.Subscript:

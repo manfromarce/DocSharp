@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -27,7 +28,7 @@ internal abstract partial class MLNodeBase
 
         foreach (XmlNode e in elm.ChildNodes)
         {
-            if (!e.NamespaceURI.Contains(OMML_NS))
+            if (!e.NamespaceURI.StartsWith(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             var tag = e.LocalName;

@@ -5,13 +5,8 @@ namespace DocSharp.MathConverter;
 // LaTeX data for inheriting classes. Stored in 'latex_dict.py' in Python version.
 internal abstract partial class MLNodeBase
 {
-    // OMML namespace
-    protected const string OMML_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math";
-
     // Define characters that need to be escaped in LaTeX
-    protected static readonly char[] CHARS = { '{', '}', '_', '^', '#', '&', '$', '%', '~' };
-    protected const string BACKSLASH = "\\";
-    protected const string ALN = "&";
+    protected static readonly char[] CHARS = { '{', '}', '_', '^', '#', '&', '$', '%' };
 
     // Mapping of Unicode characters to LaTeX commands for accents and symbols
     protected static readonly Dictionary<string, string> CHR = new Dictionary<string, string>
@@ -333,7 +328,6 @@ internal abstract partial class MLNodeBase
     protected static readonly Dictionary<string, string> F = new Dictionary<string, string>
         {
             { "bar", F_DEFAULT },
-            //{ "bar", "\\frac{{{0}}}{{{1}}}" },
             { "skw", "^{{{0}}}/_{{{1}}}" },
             { "noBar", "\\genfrac{{}}{{}}{{0pt}}{{}}{{{0}}}{{{1}}}" },
             { "lin", "{{{0}}}/{{{1}}}" },

@@ -4,8 +4,8 @@ namespace DocSharp.MathConverter;
 
 public static class MLConverter
 {
-    public static string Convert(XmlNode oMath) => new MLMathNode(oMath).Text;
-    public static string Convert(string oMathXml)
+    public static string ToLaTex(XmlNode oMath) => new MLMathNode(oMath).Text;
+    public static string ToLaTex(string oMathXml)
     {
         XmlDocument doc = new XmlDocument();
         doc.LoadXml(oMathXml);

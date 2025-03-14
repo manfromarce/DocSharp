@@ -17,6 +17,11 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlHelpers
 {
+    public static bool IsMathElement(this OpenXmlElement element)
+    {
+        return element.NamespaceUri.StartsWith(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase);
+    }
+
     public static T? NextElement<T>(this OpenXmlElement? element) where T : OpenXmlElement
     {
         if (element != null && element.GetFirstAncestor<Document>() is Document document)

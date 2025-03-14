@@ -18,10 +18,10 @@ internal class TeXNode
         this.text = text;
     }
 
-    public string GetAttributeValue(string name)
+    public string? GetAttributeValue(string name)
     {
         if (pr == null)
-            throw new InvalidDataException($"Can't get attribute '{name}' from string '{text}'.");
+            return null;
 
         return pr.GetAttributeValue(name);
     }

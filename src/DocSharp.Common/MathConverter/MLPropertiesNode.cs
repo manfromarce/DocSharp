@@ -6,7 +6,7 @@ namespace DocSharp.MathConverter;
 
 internal class MLPropertiesNode : MLNodeBase
 {
-    private static readonly HashSet<string> val_tags = new HashSet<string> { "chr", "pos", "begChr", "endChr", "type" };
+    private static readonly HashSet<string> val_tags = ["chr", "pos", "begChr", "endChr", "type"];
 
     private readonly string text;
     private readonly Dictionary<string, TeXNode?> inner_dict = new Dictionary<string, TeXNode?>();
@@ -18,12 +18,12 @@ internal class MLPropertiesNode : MLNodeBase
 
     public override string ToString() => text;
 
-    public string GetAttributeValue(string name)
+    public string? GetAttributeValue(string name)
     {
         if (!inner_dict.ContainsKey(name))
-            return string.Empty;
+            return null;
 
-        return inner_dict[name]?.ToString() ?? string.Empty;
+        return inner_dict[name]?.ToString();
     }
 
     protected override TeXNode? ProcessTag(string tag, XmlNode elm)

@@ -12,7 +12,8 @@ namespace DocSharp.MathConverter;
 // Convert oMath element of omml to latex. Named 'oMath2Latex' in Python version.
 internal class MLMathNode : MLNodeBase
 {
-    private static readonly HashSet<string> direct_tags = new HashSet<string> { "box", "sSub", "sSup", "sSubSup", "num", "den", "deg", "e" };
+    private static readonly HashSet<string> direct_tags = 
+        ["box", "sSub", "sSup", "sSubSup", "sPre", "num", "den", "deg", "e", "phant", "borderBox"];
 
     public string Text { get; }
 
@@ -22,12 +23,7 @@ internal class MLMathNode : MLNodeBase
         if (oMathNode.Name != "m:oMath")
             throw new InvalidDataException($"Expected 'oMath' node, but got '{oMathNode.LocalName}'!");
 
-        //mxd. Trim space before '}' and '\' (except explicit spaces) to better match MSWord LaTeX output.
-        Text = ProcessChildren(oMathNode)
-            .Replace(" }", "}")
-            .Replace("\\ \\", "[KEEP_VAL]")
-            .Replace(" \\", "\\")
-            .Replace("[KEEP_VAL]", "\\ \\");
+        Text = ProcessChildren(oMathNode);
     }
 
     protected override TeXNode? ProcessTag(string tag, XmlNode elm)
@@ -52,6 +48,7 @@ internal class MLMathNode : MLNodeBase
             case "m": return DoM(elm);
             case "mr": return DoMr(elm);
             case "nary": return DoNary(elm);
+            //case "borderBox": return DoBorderBox(elm); // currently only the content is preserved (without border)
             default: return null;
         }
     }
@@ -138,16 +135,23 @@ internal class MLMathNode : MLNodeBase
     }
 
     // The Function-Apply object (examples: sin cos)
-    private TeXNode DoFunc(XmlNode elm)
+    private TeXNode? DoFunc(XmlNode elm)
     {
         var children = ProcessChildrenDict(elm);
-        var func_name = children["fName"].ToString();
-
-        return new TeXNode(func_name.Replace(FUNC_PLACE, children["e"].ToString()));
+        if (children.ContainsKey("fName"))
+        {
+            var func_name = children["fName"].ToString();
+            return new TeXNode(func_name.Replace(FUNC_PLACE, children["e"].ToString()));
+        }
+        else
+        {
+            // Unsupported function name
+            return null;
+        }
     }
 
     // The func name
-    private TeXNode DoFName(XmlNode elm)
+    private TeXNode? DoFName(XmlNode elm)
     {
         var latex_func_names = new List<string>();
         foreach (var info in ProcessChildrenList(elm))
@@ -156,10 +160,12 @@ internal class MLMathNode : MLNodeBase
 
             if (info.Tag == "r")
             {
-                if (FUNC.ContainsKey(fkey))
-                    latex_func_names.Add(FUNC[fkey]);
+                if (FUNC.TryGetValue(fkey, out string? value))
+                    latex_func_names.Add(value);
                 else
-                    throw new NotSupportedException($"Not supported func '{fkey}'!");
+                    // Function names may be localized in Office math,
+                    // use the function name directly as fallback.
+                    latex_func_names.Add($" {fkey}({{fe}})"); 
             }
             else
             {
@@ -188,8 +194,8 @@ internal class MLMathNode : MLNodeBase
     private TeXNode DoRad(XmlNode elm)
     {
         var children = ProcessChildrenDict(elm);
-        if (children.ContainsKey("deg") && !string.IsNullOrEmpty(children["deg"].ToString()))
-            return new TeXNode(string.Format(RAD, children["deg"], children["e"]));
+        if (children.TryGetValue("deg", out TeXNode? value) && !string.IsNullOrEmpty(value.ToString()))
+            return new TeXNode(string.Format(RAD, value, children["e"]));
 
         return new TeXNode(string.Format(RAD_DEFAULT, children["e"]));
     }
@@ -198,8 +204,7 @@ internal class MLMathNode : MLNodeBase
     private TeXNode DoEqArr(XmlNode elm)
     {
         var include = new HashSet<string> { "e" };
-        var text = string.Join(BRK, ProcessChildrenList(elm, include).Select(t => t.Node));
-
+        var text = string.Join(BRK, ProcessChildrenList(elm, include).Select(t => t.Node));        
         return new TeXNode(string.Format(ARR, text));
     }
 
@@ -247,7 +252,7 @@ internal class MLMathNode : MLNodeBase
     private TeXNode DoMr(XmlNode elm)
     {
         var include = new HashSet<string> { "e" };
-        var result = string.Join(ALN, ProcessChildrenList(elm, include).Select(t => t.Node));
+        var result = string.Join("&", ProcessChildrenList(elm, include).Select(t => t.Node));
 
         return new TeXNode(result);
     }
@@ -264,7 +269,7 @@ internal class MLMathNode : MLNodeBase
             {
                 bo = GetValue(info.Node.GetAttributeValue("chr"), store: CHR_BO);
 
-                //TODO: mxd. VERY unsure, but MSWord seems to assume this as default?
+                //TODO: mxd. Very unsure, but MS Word seems to assume this as default
                 if (bo == null)
                     bo = "\\int";
             }
@@ -280,11 +285,17 @@ internal class MLMathNode : MLNodeBase
 
         //mxd. Handle operators with empty <m:sub> / <m:sup> nodes (like '\sum x')
         var val = string.Join("", res);
-        if (!val.StartsWith("_") && !val.StartsWith("^"))
+        if (!val.StartsWith('_') && !val.StartsWith('^'))
             bo += " ";
 
         return new TeXNode(bo + val);
     }
+
+    //private TeXNode? DoBorderBox(XmlNode elm)
+    //{
+    //    // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.math.borderbox?view=openxml-3.0.1
+    //    return null;
+    //}
 
     // Get text from 'r' element and try convert them to latex symbols
     private TeXNode? DoR(XmlNode elm)
@@ -304,7 +315,7 @@ internal class MLMathNode : MLNodeBase
             var s = char_enumerator.GetTextElement();
 
             if (keep_spaces && s == " ")
-                sb.Append("\\ ");
+                sb.Append(@"\ ");
             else
                 sb.Append(T.ContainsKey(s) ? T[s] : s);
         }
@@ -316,12 +327,17 @@ internal class MLMathNode : MLNodeBase
     {
         char last = '\0';
         var sb = new StringBuilder();
-        str = str.Replace(@"\\", "\\");
+        str = str.Replace(@"\\", @"\");
 
         foreach (char c in str)
         {
-            if (CHARS.Contains(c) && last != BACKSLASH[0])
-                sb.Append(BACKSLASH + c);
+            if (CHARS.Contains(c) && last != '\\')
+                sb.Append(@"\" + c);
+            else if (c == '~')
+                sb.Append(@"\sim ");
+            //else if (c == '\\')
+            //    sb.Append(@"\backslash ");
+
             else
                 sb.Append(c);
 
@@ -331,15 +347,16 @@ internal class MLMathNode : MLNodeBase
         return sb.ToString();
     }
 
-    private static string? GetValue(string key, string? default_value = null, Dictionary<string, string>? store = null)
+    private static string? GetValue(string? key, string? default_value = null, Dictionary<string, string>? store = null)
     {
-        if (string.IsNullOrEmpty(key))
+        if (key == null) 
             return default_value;
+            // Don't treat empty string as null in this case,
+            // as having attributes explicitly set to "" may have a different meaning.
 
-        if (store == null)
-            store = CHR;
+        store ??= CHR;
 
-        return store.ContainsKey(key) ? store[key] : key;
+        return store.TryGetValue(key, out string? value) ? value : key;
     }
 
     // Return true when equation needs to be wrapped in {}.
