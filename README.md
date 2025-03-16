@@ -47,7 +47,7 @@ If your main purpose is creating documents from scratch you can consider the fol
   * Tables (values only)
   * Hyperlinks and bookmarks
   * Page breaks are converted to horizontal lines
-  * Math formulas are converted to LaTex - experimental feature, not published on NuGet yet. Please also note that not all Markdown processors support math blocks.
+  * Math formulas are converted to LaTex. Please also note that not all Markdown processors support math blocks.
   * TODO: header, footer, endnotes, footnotes, extract text from text boxes
 - Markdown to DOCX:
   * Basic Markdown features (headings, bold, italic, strikethrough, superscript, subscript)
