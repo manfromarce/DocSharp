@@ -11,6 +11,14 @@ public class UriHelpers
 {
     public static string NormalizeBaseUri(string uri)
     {
-        return Path.TrimEndingDirectorySeparator(uri.Trim('"').Replace('\\', '/')) + "/";
+        string url = uri.Trim('"');
+        if (string.IsNullOrEmpty(url))
+        {
+            return string.Empty; // Don't add trailing slash, it would be intended as root path.
+        }
+        else
+        {
+            return Path.TrimEndingDirectorySeparator(url.Replace('\\', '/')) + "/";
+        }
     }
 }
