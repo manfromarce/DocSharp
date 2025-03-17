@@ -21,6 +21,7 @@ using DocSharp.Binary.PptFileFormat;
 using DocSharp.Binary.StructuredStorage.Reader;
 using DocSharp.Docx;
 using DocSharp.Markdown;
+using DocSharp.Imaging;
 using HtmlToOpenXml;
 
 namespace WpfApp1;
@@ -165,7 +166,10 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var converter = new DocxToRtfConverter();
+                    var converter = new DocxToRtfConverter()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)

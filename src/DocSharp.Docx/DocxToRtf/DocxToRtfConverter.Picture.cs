@@ -14,6 +14,8 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
+    public IImageConverter? ImageConverter { get; set; } = null;
+
     internal void ProcessImagePart(MainDocumentPart? mainDocumentPart, string relId, PictureProperties properties, StringBuilder sb)
     {
         if (mainDocumentPart?.GetPartById(relId) is ImagePart imagePart)
@@ -80,7 +82,15 @@ public partial class DocxToRtfConverter
                             }
                             break;
                         default:
-                            return;
+                            if (ImageConverter != null)
+                            {
+                                pngData = ImageConverter.ConvertToPng(stream);
+                                if (pngData.Length > 0)
+                                {
+                                    format = @"\pngblip ";
+                                }
+                            }
+                            break;
                     }
                 }
                 catch (Exception ex)
