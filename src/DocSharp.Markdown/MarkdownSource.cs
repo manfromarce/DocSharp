@@ -39,11 +39,13 @@ public class MarkdownSource
     /// Create a Markdown source from a stream
     /// </summary>
     /// <param name="stream">The stream to use</param>
-    public static MarkdownSource FromStream(Stream stream)
+    /// <param name="encoding">The encoding to use (UTF8 by default if not specified).</param>
+    public static MarkdownSource FromStream(Stream stream, Encoding? encoding = null)
     {
-        using (var streamReader = new StreamReader(stream))
+        using (var sr = new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks: true, 
+                                         bufferSize: 1024, leaveOpen: true))
         {
-            string markdown = streamReader.ReadToEnd();
+            string markdown = sr.ReadToEnd();
             return MarkdownSource.FromMarkdownString(markdown);
         }
     }
