@@ -114,7 +114,7 @@ public static class ImageHeader
             // Check for SVG
             if (stream.Length > 4)
             {
-                using (var sr = new StreamReader(stream, leaveOpen: true))
+                using (var sr = new StreamReader(stream, encoding: Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true))
                 {
                     char[] buffer = new char[5];
                     sr.Read(buffer, 0, 5);

@@ -38,7 +38,7 @@ public class MarkdownConverter
         using (var document = ToWordprocessingDocument(markdown, outputStream, openXmlDocumentType, append))
         {
             document.Save();
-        }        
+        }
     }
 
     /// <summary>

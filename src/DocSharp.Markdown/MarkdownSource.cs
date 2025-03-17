@@ -18,6 +18,13 @@ public class MarkdownSource
     /// </summary>
     public MarkdownDocument Document { get; }
 
+#if !NETFRAMEWORK
+    static MarkdownSource()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    }
+#endif
+
     /// <summary>
     /// Create a Markdown source from a document
     /// </summary>

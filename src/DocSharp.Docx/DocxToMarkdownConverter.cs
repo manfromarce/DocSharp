@@ -405,7 +405,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
             mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
             {
                 string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
+#if NETFRAMEWORK
+                string actualFilePath = System.IO.Path.Combine(ImagesOutputFolder, fileName);
+#else 
                 string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
+#endif
                 Uri uri;
                 if (ImagesBaseUriOverride is null)
                 {

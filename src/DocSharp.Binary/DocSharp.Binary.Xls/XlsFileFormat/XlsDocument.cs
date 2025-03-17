@@ -8,10 +8,13 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
 {
     public class XlsDocument :  IVisitable
     {
+
+#if !NETFRAMEWORK
         static XlsDocument()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
+#endif
 
         /// <summary>
         /// Some constant strings 

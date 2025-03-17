@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using DocSharp.Markdown;
+using DocSharp.Collections;
 
 namespace Markdig.Renderers.Docx.Blocks;
 

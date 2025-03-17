@@ -4,6 +4,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using DocSharp.Docx;
+using DocSharp.Collections;
 
 namespace Markdig.Renderers.Docx;
 
@@ -23,7 +24,7 @@ public abstract class DocxObjectRenderer<T> : MarkdownObjectRenderer<DocxDocumen
 
         if (renderer.TextFormat.TryPeek(out var props))
         {
-            run.RunProperties = new RunProperties(props.OuterXml);
+            run.RunProperties = new RunProperties(props!.OuterXml);
         }
 
         if (renderer.TextStyle.TryPeek(out var runStyle))

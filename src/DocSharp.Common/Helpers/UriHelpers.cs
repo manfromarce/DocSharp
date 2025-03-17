@@ -18,7 +18,7 @@ public class UriHelpers
         }
         else
         {
-            return Path.TrimEndingDirectorySeparator(url.Replace('\\', '/')) + "/";
+            return url.Replace('\\', '/').TrimEnd('/') + "/";
         }
     }
 }

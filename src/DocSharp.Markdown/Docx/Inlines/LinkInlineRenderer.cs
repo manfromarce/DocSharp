@@ -134,7 +134,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 // otherwise it is interpreted as file and relative links starting with . or .. won't work properly.
                 // Note that ImagesPathUri should not be a file path.
                 string normalizedBaseUri = renderer.ImagesBaseUri.TrimEnd('\\', '/') + @"/";
-                if (Uri.TryCreate(normalizedBaseUri, UriKind.Absolute, out Uri? baseUri) 
+                if (Uri.TryCreate(normalizedBaseUri, UriKind.Absolute, out Uri? baseUri)
                     && baseUri != null)
                 {
                     uri = new Uri(baseUri, uri);

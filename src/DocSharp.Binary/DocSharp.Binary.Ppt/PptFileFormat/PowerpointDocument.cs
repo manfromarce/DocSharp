@@ -11,8 +11,11 @@ namespace DocSharp.Binary.PptFileFormat
 {
     public class PowerpointDocument : BinaryDocument, IVisitable, IEnumerable<Record>
     {
-        static PowerpointDocument() {
+        static PowerpointDocument() 
+        {
+#if !NETFRAMEWORK
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
             Record.UpdateTypeToRecordClassMapping(Assembly.GetExecutingAssembly(), typeof(PowerpointDocument).Namespace);
         }
 

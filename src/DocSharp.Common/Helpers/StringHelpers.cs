@@ -9,6 +9,19 @@ namespace DocSharp.Helpers;
 
 public static class StringHelpers
 {
+
+#if NETFRAMEWORK
+    public static bool StartsWith(this string source, char value)
+    {
+        return source.StartsWith(value.ToString());
+    }
+
+    public static bool EndsWith(this string source, char value)
+    {
+        return source.EndsWith(value.ToString());
+    }
+#endif
+
     public static void AppendLineCrLf(this StringBuilder sb)
     {
         sb.Append("\r\n");

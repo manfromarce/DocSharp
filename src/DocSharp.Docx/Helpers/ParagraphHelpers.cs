@@ -56,7 +56,7 @@ public static class ParagraphHelpers
 
         if (text == null) return para;
 
-        var splits = text.NormalizeNewLines().Split("\n");
+        var splits = text.NormalizeNewLines().Split('\n');
 
         var afterNewline = false;
         var run = new Run();
@@ -70,7 +70,7 @@ public static class ParagraphHelpers
 
             Text t = new Text(s);
 
-            if (s.StartsWith(" ") || s.EndsWith(" "))
+            if (s.StartsWith(' ') || s.EndsWith(' '))
             {
                 t.Space = SpaceProcessingModeValues.Preserve;
             }

@@ -13,7 +13,9 @@ namespace DocSharp.Binary.DocFileFormat
     {
         static WordDocument()
         {
+#if !NETFRAMEWORK
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
             Record.UpdateTypeToRecordClassMapping(Assembly.GetExecutingAssembly(), typeof(WordDocument).Namespace);
         }
 

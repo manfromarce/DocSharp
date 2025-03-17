@@ -9,10 +9,13 @@ namespace DocSharp.Docx;
 
 public abstract class DocxConverterBase
 {
+
+#if !NETFRAMEWORK
     static DocxConverterBase()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
+#endif
 
     /// <summary>
     /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
@@ -89,9 +92,9 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(WordprocessingDocument inputDocument, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
         {
-            streamWriter.Write(ConvertToString(inputDocument));
+            sw.Write(ConvertToString(inputDocument));
         }
     }
     
@@ -112,9 +115,9 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(string inputFilePath, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
         {
-            streamWriter.Write(ConvertToString(inputFilePath));
+            sw.Write(ConvertToString(inputFilePath));
         }
     }
 
@@ -135,9 +138,9 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(Stream inputStream, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
         {
-            streamWriter.Write(ConvertToString(inputStream));
+            sw.Write(ConvertToString(inputStream));
         }
     }
 
@@ -158,9 +161,9 @@ public abstract class DocxConverterBase
     /// <param name="outputStream">The output stream.</param>
     public void Convert(byte[] inputBytes, Stream outputStream)
     {
-        using (var streamWriter = new StreamWriter(outputStream, leaveOpen: true))
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
         {
-            streamWriter.Write(ConvertToString(inputBytes));
+            sw.Write(ConvertToString(inputBytes));
         }
     }
 

@@ -7,6 +7,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using DocSharp.Xml;
+#if NETFRAMEWORK
+using DocSharp.Helpers;
+#endif
 
 namespace DocSharp.MathConverter;
 
