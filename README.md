@@ -20,49 +20,12 @@ If your main purpose is creating documents from scratch you can consider the fol
 
 ### Supported features
 
-- Binary formats: almost all doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents/encodings. Most errors should be fixed now but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
-- DOCX to RTF: 
-  * Font formatting, paragraphs, tables and lists
-    - Not all properties are supported, e.g. advanced positioning and conditional formatting for tables or some list types are not recognized.  
-  * Images:
-    - JPEG, PNG, EMF and WMF are supported. 
-    - Only inline images are supported (wrap layouts are not yet implemented).
-  * Hyperlinks and bookmarks
-  * Page setup: size, orientation, margins, borders, background color
-  * Header and footer
-  * Endnotes and footnotes
-  * Drop caps
-  * Fields (partial) and page numbers
-  * TODO: math formulas, drawings, OLE objects, comments
-- DOCX to Markdown:
-  * Text and basic formatting
-    - Bold, italic, underline, strikethrough, superscript, subscript, highlight
-    - Heading 1-6 styles
-  * Inline images
-    - `ImagesOutputFolder` needs to be set to an existing directory, otherwise images are skipped. An absolute URI is used by default; to produce a relative URI set `ImagesBaseUriOverride` to any not-null folder path (empty string or "." means same folder as the Markdown file, "../images" means images subfolder in the parent folder).
-    - Some image types are not recognized (e.g. WordPad embeds images in a different way compared to MS Word and other word processors).
-    - Images should be in JPEG, PNG or GIF format to be supported by browsers; BMP is partially supported but not recommended. There is currently no automatic image conversion implemented.
-    - Crop and effects are not supported.
-  * Lists (partial)
-  * Tables (values only)
-  * Hyperlinks and bookmarks
-  * Page breaks are converted to horizontal lines
-  * Math formulas are converted to LaTex. Please also note that not all Markdown processors support math blocks.
-  * TODO: header, footer, endnotes, footnotes, extract text from text boxes
-- Markdown to DOCX:
-  * Basic Markdown features (headings, bold, italic, strikethrough, superscript, subscript)
-    - Few basic HTML tags such as `<u>`, `<sup>`, `<sub>`, `<mark>` are also supported
-  * Quotes and code blocks
-  * Lists
-  * External hyperlinks
-  * Bookmarks for internal hyperlinks to headings (GitHub-like auto-identifiers)
-  * Images
-    - The converter attempts to read local images and download online images (http/https URLs only). If this behavior is not desired, set `SkipImages` to true.
-    - Images specified as absolute URLs are processed by default. For relative URLs `ImagesBaseUri` needs to be set to an absolute local directory path or http(s) URL, which will be combined with the image file name at runtime, such as: `C:\Data` + `./images/image1.jpg`.
-    - WEBP and AVIF images are ignored as they are not supported in DOCX documents; base64 is also ignored as it is rarely used and not supported by many Markdown processors.
-    - Width and height must be specified in DOCX. The converter tries to scale the original image file dimensions to fit the page, but it's not always accurate. 
-  * Tables (experimental)
-  * TODO: other internal hyperlinks types, math and other extensions, raw HTML blocks
+- Binary formats: most doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents. Many errors have been fixed, but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
+- DOCX, RTF, Markdown: supported elements vary depending on input and output formats, see [Supported features](https://github.com/manfromarce/DocSharp/documentation/Supported_features.MD) for an overview.
+
+### Requirements
+
+.NET 6, 8, 9 and .NET Framework 4.6.2 and higher are supported.
 
 ### Usage
 
