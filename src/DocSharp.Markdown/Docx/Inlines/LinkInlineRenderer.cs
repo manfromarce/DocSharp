@@ -133,9 +133,9 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 // Relative URI is well formatted, check ImagesBaseUri and add a final slash,
                 // otherwise it is interpreted as file and relative links starting with . or .. won't work properly.
                 // Note that ImagesPathUri should not be a file path.
-                string normalizedBaseUri = renderer.ImagesBaseUri.Trim('\\', '/') + @"\";
-                if (Uri.TryCreate(Path.TrimEndingDirectorySeparator(normalizedBaseUri) + '/', 
-                                  UriKind.Absolute, out Uri? baseUri) && baseUri != null)
+                string normalizedBaseUri = renderer.ImagesBaseUri.TrimEnd('\\', '/') + @"/";
+                if (Uri.TryCreate(normalizedBaseUri, UriKind.Absolute, out Uri? baseUri) 
+                    && baseUri != null)
                 {
                     uri = new Uri(baseUri, uri);
                 }
