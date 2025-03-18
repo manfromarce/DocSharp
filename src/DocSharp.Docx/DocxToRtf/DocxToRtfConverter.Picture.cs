@@ -27,7 +27,6 @@ public partial class DocxToRtfConverter
                 string format = string.Empty;
                 try
                 {
-
                     string ext = Path.GetExtension(fileName).ToLower();
                     if (ext == ".bin")
                     {
