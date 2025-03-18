@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using DocSharp;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -15,6 +16,8 @@ namespace Markdig.Renderers.Docx;
 
 public class DocxDocumentRenderer : RendererBase
 {
+    public IImageConverter? ImageConverter { get; set; } = null;
+
     public string? ImagesBaseUri { get; set; } = null;
 
     public bool SkipImages { get; set; } = false;

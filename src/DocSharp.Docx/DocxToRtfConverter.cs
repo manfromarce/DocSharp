@@ -22,6 +22,12 @@ public partial class DocxToRtfConverter : DocxConverterBase
     /// </summary>
     public DocumentDefaultSettings DefaultSettings { get; set; }
 
+    /// <summary>
+    /// Image converter to preserve TIFF, GIF and other image types when converting to RTF. 
+    /// If the DocSharp.Imaging package is installed, this property can be set to new ImageSharpConverter(). 
+    /// </summary>
+    public IImageConverter? ImageConverter { get; set; } = null;
+
     private FastStringCollection fonts = new FastStringCollection(); 
     private FastStringCollection colors = new FastStringCollection();
 

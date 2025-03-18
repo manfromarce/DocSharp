@@ -26,6 +26,12 @@ public class MarkdownConverter
     public bool SkipImages { get; set; } = false;
 
     /// <summary>
+    /// Image converter to preserve WEBP and other image types when rendering Markdown. 
+    /// If the DocSharp.Imaging package is installed, this property can be set to new ImageSharpConverter(). 
+    /// </summary>
+    public IImageConverter? ImageConverter { get; set; } = null;
+
+    /// <summary>
     /// Convert Markdown to DOCX.
     /// </summary>
     /// <param name="markdown">The input markdown source.</param>
@@ -83,7 +89,8 @@ public class MarkdownConverter
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
             ImagesBaseUri = this.ImagesBaseUri,
-            SkipImages = this.SkipImages
+            SkipImages = this.SkipImages,
+            ImageConverter = this.ImageConverter
         };
         renderer.Render(markdown.Document);
         return document;
@@ -115,7 +122,8 @@ public class MarkdownConverter
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
             ImagesBaseUri = this.ImagesBaseUri,
-            SkipImages = this.SkipImages
+            SkipImages = this.SkipImages,
+            ImageConverter = this.ImageConverter
         };
         renderer.Render(markdown.Document);
         return document;
@@ -172,7 +180,8 @@ public class MarkdownConverter
         var renderer = new DocxDocumentRenderer(outputDocument, styles)
         {
             ImagesBaseUri = this.ImagesBaseUri,
-            SkipImages = this.SkipImages
+            SkipImages = this.SkipImages,
+            ImageConverter = this.ImageConverter
         };
         renderer.Render(markdown.Document);
     }

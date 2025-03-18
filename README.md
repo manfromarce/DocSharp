@@ -43,6 +43,7 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 Dependencies: 
 - [Open XML SDK](https://github.com/dotnet/Open-XML-SDK)
 - [Markdig](https://github.com/xoofx/markdig) - for DocSharp.Markdown only
+- [ImageSharp](https://github.com/SixLabors/ImageSharp) and [VectSharp](https://github.com/arklumpus/VectSharp) - for DocSharp.ImageSharp only
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
@@ -55,4 +56,7 @@ Others:
 ### License
 
 DocSharp is licensed under MIT license and can be used for both open source and commercial projects.  
+
+DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt); ImageSharp and VectSharp have their own licenses, please visit their repositories for more information.
+
 If you find the library useful, adding a star is highly appreciated.

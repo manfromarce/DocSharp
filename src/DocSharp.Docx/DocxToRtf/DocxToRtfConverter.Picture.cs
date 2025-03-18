@@ -14,8 +14,6 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
-    public IImageConverter? ImageConverter { get; set; } = null;
-
     internal void ProcessImagePart(MainDocumentPart? mainDocumentPart, string relId, PictureProperties properties, StringBuilder sb)
     {
         if (mainDocumentPart?.GetPartById(relId) is ImagePart imagePart)
@@ -32,7 +30,7 @@ public partial class DocxToRtfConverter
                     {
                         // Binary image type, rare but likely to be found if the document is created by WordPad.
                         // We need to detect the actual image type from its bytes.
-                        if (ImageHeader.TryDetectFileType(stream, out ImageHeader.FileType type))
+                        if (ImageHeader.TryDetectFileType(stream, out ImageFormat type))
                         {
                             ext = type.ToFileExtension();
                             stream.Position = 0;
@@ -83,7 +81,7 @@ public partial class DocxToRtfConverter
                         default:
                             if (ImageConverter != null)
                             {
-                                pngData = ImageConverter.ConvertToPng(stream);
+                                pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromFileExtension(ext));
                                 if (pngData.Length > 0)
                                 {
                                     format = @"\pngblip ";

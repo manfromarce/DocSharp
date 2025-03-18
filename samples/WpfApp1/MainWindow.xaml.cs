@@ -137,6 +137,8 @@ public partial class MainWindow : Window
                         ImagesBaseUriOverride = "",
                         //ImagesBaseUriOverride = "..",
                         //ImagesBaseUriOverride = "images/",
+                        ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
+                                                                      // (ImageSharp does not support WMF / EMF yet)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -169,6 +171,7 @@ public partial class MainWindow : Window
                     var converter = new DocxToRtfConverter()
                     {
                         ImageConverter = new ImageSharpConverter()
+                        // Converts TIFF, GIF and other formats which are not supported in RTF.
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -240,7 +243,9 @@ public partial class MainWindow : Window
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
                     var converter = new MarkdownConverter()
                     {
-                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName)
+                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName),
+                        ImageConverter = new ImageSharpConverter() // Convert WEBP images which are not supported in DOCX
+                                                                   // (possibly AVIF and JXL too in a future release) 
                     };
                     converter.ToDocx(markdown, sfd.FileName);
                 }
@@ -273,7 +278,8 @@ public partial class MainWindow : Window
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
                     var converter = new MarkdownConverter()
                     {
-                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName)
+                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName),
+                        ImageConverter = new ImageSharpConverter()
                     };
                     converter.ToDocx(markdown, ofd2.FileName, append: true);
                 }
@@ -307,7 +313,8 @@ public partial class MainWindow : Window
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
                     var converter = new MarkdownConverter()
                     {
-                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName)
+                        ImagesBaseUri = Path.GetDirectoryName(ofd.FileName),
+                        ImageConverter = new ImageSharpConverter()
                     };
                     using var ms = new MemoryStream();
                     using (var document = converter.ToWordprocessingDocument(markdown, ms))
@@ -357,7 +364,10 @@ public partial class MainWindow : Window
                         package.Save();
                     }
 
-                    var converter = new DocxToRtfConverter();
+                    var converter = new DocxToRtfConverter()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    };
                     converter.Convert(docxFilePath, sfd.FileName);
                 }
                 catch (Exception ex)
@@ -395,7 +405,10 @@ public partial class MainWindow : Window
                     {
                         case ".docx":
                         case ".dotx":
-                            var converter = new DocxToRtfConverter();
+                            var converter = new DocxToRtfConverter()
+                            {
+                                ImageConverter = new ImageSharpConverter()
+                            };
                             rtfContent = converter.ConvertToString(ofd.FileName);
                             break;
                         case ".rtf":
@@ -429,7 +442,10 @@ public partial class MainWindow : Window
             {
                 using (var ms = new MemoryStream())
                 {
-                    var converter = new DocxToRtfConverter();
+                    var converter = new DocxToRtfConverter()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    };
                     converter.Convert(ofd.FileName, ms);
                     var rtbWindow = new Window()
                     {
@@ -485,7 +501,10 @@ public partial class MainWindow : Window
                             DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
                         }
                     }
-                    var converter = new DocxToRtfConverter();
+                    var converter = new DocxToRtfConverter()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    };
                     converter.Convert(tempFile, sfd.FileName);
                 }
                 catch (Exception ex)

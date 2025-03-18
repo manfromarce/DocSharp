@@ -33,8 +33,7 @@
 | Document information | ❌ | - | - |
 
 [1]: RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
-Other image formats can be converted using the DocSharp.Imaging package (based on ImageSharp) or setting the ImageConverter on a custom converter which returns PNG bytes.  
-The default converter does not support SVG, WMF, EMF and JPEG 2000 yet.  
+Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  
 For Markdown, the ImagesOutputFolder has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
 [2]: Preserved as inline formatting  
@@ -68,6 +67,6 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 
 [1]: Known issue: lists, code blocks and quotes may not use the correct style when nested inside another quote block.  
 [2]: WebP, AVIF and JXL images are not supported in DOCX.  
-WebP images can be converted using the DocSharp.Imaging package (based on ImageSharp) or setting the ImageConverter property on a custom converter which returns PNG bytes.  
+WebP images can be converted using the DocSharp.ImageSharp package or setting the ImageConverter property on a custom converter which returns PNG bytes.  
 The ImagesBaseUri property has to be set in order to support relative URLs, otherwise only images referenced with absolute URLs are processed (see the wiki or sample app for examples).  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.

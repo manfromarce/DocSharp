@@ -32,7 +32,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{D4B9
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "..\samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Imaging", "DocSharp.Imaging\DocSharp.Imaging.csproj", "{FC884F18-C779-4B1F-B957-4BC31C6D71C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.ImageSharp", "DocSharp.Imaging\DocSharp.ImageSharp.csproj", "{FC884F18-C779-4B1F-B957-4BC31C6D71C1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Imaging", "Imaging", "{6C83A596-D32D-B35F-00DD-F0C99B673980}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.SystemDrawing", "DocSharp.SystemDrawing\DocSharp.SystemDrawing.csproj", "{C5A5B630-2A06-491C-AF17-97DB195F7050}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +80,10 @@ Global
 		{FC884F18-C779-4B1F-B957-4BC31C6D71C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC884F18-C779-4B1F-B957-4BC31C6D71C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC884F18-C779-4B1F-B957-4BC31C6D71C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5A5B630-2A06-491C-AF17-97DB195F7050}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5A5B630-2A06-491C-AF17-97DB195F7050}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5A5B630-2A06-491C-AF17-97DB195F7050}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5A5B630-2A06-491C-AF17-97DB195F7050}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +94,8 @@ Global
 		{07464BE5-0B31-4180-897A-B2630C102CA2} = {C9824610-1947-4901-A29A-32A29E081568}
 		{6329AD0D-68E2-438A-B73B-BC5003EB9765} = {C9824610-1947-4901-A29A-32A29E081568}
 		{DCE126AF-361A-47D6-A6E0-6148362B6453} = {D4B9A0DF-568D-43A8-BEFD-858AAEA41838}
+		{FC884F18-C779-4B1F-B957-4BC31C6D71C1} = {6C83A596-D32D-B35F-00DD-F0C99B673980}
+		{C5A5B630-2A06-491C-AF17-97DB195F7050} = {6C83A596-D32D-B35F-00DD-F0C99B673980}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {66D6BFB0-ECBD-49CD-B3E2-CABBD74AF79E}

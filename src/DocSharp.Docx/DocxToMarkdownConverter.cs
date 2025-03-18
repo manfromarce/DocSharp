@@ -6,12 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using DocSharp.Helpers;
+using DocSharp.IO;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
 using M = DocumentFormat.OpenXml.Math;
+using Path = System.IO.Path;
 
 namespace DocSharp.Docx;
 
@@ -42,6 +44,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
     /// the Markdown document is not saved to file, or in environments with limited file system access.
     /// </summary>
     public string? ImagesBaseUriOverride { get; set; } = null;
+
+    /// <summary>
+    /// Image converter to preserve WEBP and other image types when rendering Markdown. 
+    /// If the DocSharp.Imaging package is installed, this property can be set to new ImageSharpConverter(). 
+    /// </summary>
+    public IImageConverter? ImageConverter { get; set; } = null;
 
     private char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
                                      '#', '+', '-', '!', '|', '~' };
@@ -410,6 +418,35 @@ public class DocxToMarkdownConverter : DocxConverterBase
 #else 
                 string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
 #endif
+                using (var stream = imagePart.GetStream())
+                {
+                    if (ImageConverter != null &&
+                        imagePart.ContentType != ImagePartType.Jpeg.ContentType &&
+                        imagePart.ContentType != ImagePartType.Gif.ContentType &&
+                        imagePart.ContentType != ImagePartType.Png.ContentType &&
+                        imagePart.ContentType != ImagePartType.Svg.ContentType &&
+                        imagePart.ContentType != ImagePartType.Icon.ContentType)
+                    {
+                        var pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromFileExtension(imagePart.ContentType));
+                        if (pngData.Length > 0)
+                        {
+                            actualFilePath = Path.ChangeExtension(actualFilePath, ".png");
+                            fileName = Path.ChangeExtension(fileName, ".png");
+                            File.WriteAllBytes(actualFilePath, pngData);
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
+                        {
+                            stream.CopyTo(fileStream);
+                        }
+                    }
+                }
                 Uri uri;
                 if (ImagesBaseUriOverride is null)
                 {
@@ -419,12 +456,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 {
                     string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
                     uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
-                }
-
-                using (var stream = imagePart.GetStream())
-                using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
-                {
-                    stream.CopyTo(fileStream);
                 }
                 sb.Append($" ![{relId}]({uri}) ");
             }

@@ -20,8 +20,9 @@
     <ProjectReference Include="..\..\src\DocSharp.Binary\DocSharp.Binary.Ppt\DocSharp.Binary.Ppt.csproj" />
     <ProjectReference Include="..\..\src\DocSharp.Binary\DocSharp.Binary.Xls\DocSharp.Binary.Xls.csproj" />
     <ProjectReference Include="..\..\src\DocSharp.Docx\DocSharp.Docx.csproj" />
-    <ProjectReference Include="..\..\src\DocSharp.Imaging\DocSharp.Imaging.csproj" />
+    <ProjectReference Include="..\..\src\DocSharp.Imaging\DocSharp.ImageSharp.csproj" />
     <ProjectReference Include="..\..\src\DocSharp.Markdown\DocSharp.Markdown.csproj" />
+    <ProjectReference Include="..\..\src\DocSharp.SystemDrawing\DocSharp.SystemDrawing.csproj" />
   </ItemGroup>
 
 </Project>

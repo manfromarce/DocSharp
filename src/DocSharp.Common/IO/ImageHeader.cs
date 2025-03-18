@@ -30,67 +30,45 @@ public static class ImageHeader
 {
     // https://en.wikipedia.org/wiki/List_of_file_signatures
 
-    public enum FileType 
-    { 
-        Unknown,
-        Bitmap, 
-        Gif, 
-        Png, 
-        Jpeg, 
-        Tiff, 
-        Webp, 
-        Avif,
-        Heif,
-        Wmf, 
-        Emf, 
-        Ico,
-        Cur,
-        Jpeg2000,
-        Jxl, 
-        Jxr,
-        Pcx,
-        Svg 
-    }
-
     private static readonly byte[] pngSignatureBytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
-    private static readonly Dictionary<byte[], FileType> imageFormatDecoders = new()
+    private static readonly Dictionary<byte[], ImageFormat> imageFormatDecoders = new()
     {
-        { new byte[] { 0x42, 0x4D }, FileType.Bitmap }, // bmp, dib
-        { Encoding.UTF8.GetBytes("GIF87a"), FileType.Gif },
-        { Encoding.UTF8.GetBytes("GIF89a"), FileType.Gif }, // animated gif
-        { pngSignatureBytes, FileType.Png },
-        { new byte[] { 0xff, 0xd8, 0xff }, FileType.Jpeg }, // JPEG
-        { new byte[] { 0x49, 0x49, 0xbc, 0x01 }, FileType.Jxr }, // JPEG-XR / HD Photo (jxr, wdp, hdp, wmp) - Not a TIFF
-        { new byte[] { 0x49, 0x49, 0xbc, 0x00 }, FileType.Jxr }, // HD Photo pre-release
-        { new byte[] { 0x49, 0x49, 0x2a, 0x00 }, FileType.Tiff }, // TIFF (little-endian)
-        { new byte[] { 0x4d, 0x4d, 0x00, 0x2a }, FileType.Tiff }, // TIFF (big-endian)
-        { new byte[] { 0x49, 0x49, 0x2b, 0x00 }, FileType.Tiff }, // BigTIFF (little-endian)
-        { new byte[] { 0x4d, 0x4d, 0x00, 0x2b }, FileType.Tiff }, // BigTIFF (big-endian)
-        { new byte[] { 0x52, 0x49, 0x46, 0x46 }, FileType.Webp }, // WebP or other RIFF-based format (needs further analysis)
-        { new byte[] { 0x00, 0x00, 0x00, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A }, FileType.Jxl },
-        { new byte[] { 0xFF, 0x0A }, FileType.Jxl },
-        { new byte[] { 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20, 0x0D, 0x0A, 0x87, 0x0A }, FileType.Jpeg2000 }, // JPEG 2000 (jp2, jpf, jpx, jpm, mj2, jph)
-        { new byte[] { 0xFF, 0x4F, 0xFF, 0x51 }, FileType.Jpeg2000 }, // JPEG 2000 codestream (j2k, j2c, jpc)
-        { new byte[] { 0xD7, 0xCD, 0xC6, 0x9A }, FileType.Wmf },
-        { new byte[] { 0x01, 0x00, 0x09, 0x00 }, FileType.Wmf },
-        { new byte[] { 0x02, 0x00, 0x09, 0x00 }, FileType.Wmf },
-        { new byte[] { 0x1, 0, 0, 0 }, FileType.Emf },
-        { new byte[] { 0, 0, 0x1, 0 }, FileType.Ico }, 
-        { new byte[] { 0, 0, 0x2, 0 }, FileType.Cur },
-        { new byte[] { 0x0A }, FileType.Pcx }, // needs further analysis
+        { new byte[] { 0x42, 0x4D }, ImageFormat.Bitmap }, // bmp, dib
+        { Encoding.UTF8.GetBytes("GIF87a"), ImageFormat.Gif },
+        { Encoding.UTF8.GetBytes("GIF89a"), ImageFormat.Gif }, // animated gif
+        { pngSignatureBytes, ImageFormat.Png },
+        { new byte[] { 0xff, 0xd8, 0xff }, ImageFormat.Jpeg }, // JPEG
+        { new byte[] { 0x49, 0x49, 0xbc, 0x01 }, ImageFormat.Jxr }, // JPEG-XR / HD Photo (jxr, wdp, hdp, wmp) - Not a TIFF
+        { new byte[] { 0x49, 0x49, 0xbc, 0x00 }, ImageFormat.Jxr }, // HD Photo pre-release
+        { new byte[] { 0x49, 0x49, 0x2a, 0x00 }, ImageFormat.Tiff }, // TIFF (little-endian)
+        { new byte[] { 0x4d, 0x4d, 0x00, 0x2a }, ImageFormat.Tiff }, // TIFF (big-endian)
+        { new byte[] { 0x49, 0x49, 0x2b, 0x00 }, ImageFormat.Tiff }, // BigTIFF (little-endian)
+        { new byte[] { 0x4d, 0x4d, 0x00, 0x2b }, ImageFormat.Tiff }, // BigTIFF (big-endian)
+        { new byte[] { 0x52, 0x49, 0x46, 0x46 }, ImageFormat.Webp }, // WebP or other RIFF-based format (needs further analysis)
+        { new byte[] { 0x00, 0x00, 0x00, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A }, ImageFormat.Jxl },
+        { new byte[] { 0xFF, 0x0A }, ImageFormat.Jxl },
+        { new byte[] { 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20, 0x0D, 0x0A, 0x87, 0x0A }, ImageFormat.Jpeg2000 }, // JPEG 2000 (jp2, jpf, jpx, jpm, mj2, jph)
+        { new byte[] { 0xFF, 0x4F, 0xFF, 0x51 }, ImageFormat.Jpeg2000 }, // JPEG 2000 codestream (j2k, j2c, jpc)
+        { new byte[] { 0xD7, 0xCD, 0xC6, 0x9A }, ImageFormat.Wmf },
+        { new byte[] { 0x01, 0x00, 0x09, 0x00 }, ImageFormat.Wmf },
+        { new byte[] { 0x02, 0x00, 0x09, 0x00 }, ImageFormat.Wmf },
+        { new byte[] { 0x1, 0, 0, 0 }, ImageFormat.Emf },
+        { new byte[] { 0, 0, 0x1, 0 }, ImageFormat.Ico }, 
+        { new byte[] { 0, 0, 0x2, 0 }, ImageFormat.Cur },
+        { new byte[] { 0x0A }, ImageFormat.Pcx }, // needs further analysis
         
         // Signatures for AVIF and HEIF start from the 5th byte (the first 4 can be skipped)
-        { Encoding.UTF8.GetBytes("ftypavif"), FileType.Avif },
-        { Encoding.UTF8.GetBytes("ftypavis"), FileType.Avif }, // Avif image sequence
-        { Encoding.UTF8.GetBytes("ftypmif1"), FileType.Avif },
-        { Encoding.UTF8.GetBytes("ftypheic"), FileType.Heif },
-        { Encoding.UTF8.GetBytes("ftypheim"), FileType.Heif },
-        { Encoding.UTF8.GetBytes("ftypheis"), FileType.Heif },
-        { Encoding.UTF8.GetBytes("ftypheix"), FileType.Heif },
-        { Encoding.UTF8.GetBytes("ftyphevc"), FileType.Heif },
-        { Encoding.UTF8.GetBytes("ftyphevm"), FileType.Heif },
-        { Encoding.UTF8.GetBytes("ftyphevs"), FileType.Heif },
+        { Encoding.UTF8.GetBytes("ftypavif"), ImageFormat.Avif },
+        { Encoding.UTF8.GetBytes("ftypavis"), ImageFormat.Avif }, // Avif image sequence
+        { Encoding.UTF8.GetBytes("ftypmif1"), ImageFormat.Avif },
+        { Encoding.UTF8.GetBytes("ftypheic"), ImageFormat.Heif },
+        { Encoding.UTF8.GetBytes("ftypheim"), ImageFormat.Heif },
+        { Encoding.UTF8.GetBytes("ftypheis"), ImageFormat.Heif },
+        { Encoding.UTF8.GetBytes("ftypheix"), ImageFormat.Heif },
+        { Encoding.UTF8.GetBytes("ftyphevc"), ImageFormat.Heif },
+        { Encoding.UTF8.GetBytes("ftyphevm"), ImageFormat.Heif },
+        { Encoding.UTF8.GetBytes("ftyphevs"), ImageFormat.Heif },
     };
 
     private static readonly int MaxMagicBytesLength = imageFormatDecoders
@@ -102,14 +80,14 @@ public static class ImageHeader
     /// <param name="stream">The readable image stream</param>
     /// <param name="type">The guess file type.</param>
     /// <returns>Returns true if the detection was successful.</returns>
-    public static bool TryDetectFileType(Stream stream, out FileType type)
+    public static bool TryDetectFileType(Stream stream, out ImageFormat type)
     {
         using (SequentialBinaryReader reader = new SequentialBinaryReader(stream, leaveOpen: true))
         {
             type = DetectFileType(reader);
             stream.Seek(0L, SeekOrigin.Begin);
         }
-        if (type == FileType.Unknown)
+        if (type == ImageFormat.Unknown)
         {
             // Check for SVG
             if (stream.Length > 4)
@@ -121,20 +99,20 @@ public static class ImageHeader
                     var res = new string(buffer).Trim();
                     if (res.StartsWith("<svg") || res.StartsWith("<?xml"))
                     {
-                        type = FileType.Svg;
+                        type = ImageFormat.Svg;
                     }                    
                 }
             }
         }
         stream.Seek(0L, SeekOrigin.Begin);
-        return type != FileType.Unknown;
+        return type != ImageFormat.Unknown;
     }
 
     /// <summary>
     /// Examines the first bytes of the file and estimates its image type if possible.
     /// </summary>
-    /// <returns>Returns <see cref="FileType.Unrecognized"/> if not recognized.</returns>
-    private static FileType DetectFileType(SequentialBinaryReader reader)
+    /// <returns>Returns <see cref="ImageFormat.Unrecognized"/> if not recognized.</returns>
+    private static ImageFormat DetectFileType(SequentialBinaryReader reader)
     {
         byte[] magicBytes = new byte[MaxMagicBytesLength];
         for (int i = 0; i < MaxMagicBytesLength; i += 1)
@@ -143,7 +121,7 @@ public static class ImageHeader
             foreach (var kvPair in imageFormatDecoders)
             {
                 int startIndex = 0;
-                if (kvPair.Value == FileType.Avif || kvPair.Value == FileType.Heif)
+                if (kvPair.Value == ImageFormat.Avif || kvPair.Value == ImageFormat.Heif)
                 {
                     // Skip first 4 values (0, 1, 2, 3)
                     startIndex = 4;
@@ -155,7 +133,7 @@ public static class ImageHeader
                 }
             }
         }
-        return FileType.Unknown;
+        return ImageFormat.Unknown;
     }
 
     /// <summary>
@@ -166,32 +144,32 @@ public static class ImageHeader
     /// <param name="stream">The image stream.</param>
     /// <param name="type">The image type.</param>
     /// <returns>The dimensions of the specified image.</returns>
-    public static Size GetDimensions(Stream stream, FileType type)
+    public static Size GetDimensions(Stream stream, ImageFormat type)
     {
         using (SequentialBinaryReader reader = new SequentialBinaryReader(stream, leaveOpen: true))
         {
             stream.Seek(0L, SeekOrigin.Begin);
             switch (type)
             {
-                case FileType.Bitmap: return DecodeBitmap(reader);
-                case FileType.Gif: return DecodeGif(reader);
-                case FileType.Jpeg: return DecodeJfif(reader);
-                case FileType.Png: return DecodePng(reader);
-                case FileType.Ico: return DecodeIco(reader);
-                case FileType.Svg: return DecodeXml(stream);
+                case ImageFormat.Bitmap: return DecodeBitmap(reader);
+                case ImageFormat.Gif: return DecodeGif(reader);
+                case ImageFormat.Jpeg: return DecodeJfif(reader);
+                case ImageFormat.Png: return DecodePng(reader);
+                case ImageFormat.Ico: return DecodeIco(reader);
+                case ImageFormat.Svg: return DecodeXml(stream);
 
                 // Other formats are not supported by web browsers or DOCX or neither,
                 // so reading their dimensions is not needed anywhere in the library.
                 // However, the following are handled for the sake of completeness and possible future use.
-                case FileType.Webp: return DecodeWebP(reader); // supported by web browsers
-                case FileType.Avif: // supported by web browsers
-                case FileType.Heif: // supported by Safari
+                case ImageFormat.Webp: return DecodeWebP(reader); // supported by web browsers
+                case ImageFormat.Avif: // supported by web browsers
+                case ImageFormat.Heif: // supported by Safari
                     return DecodeAvifOrHeif(reader);
-                case FileType.Jxr: return DecodeJxr(reader); // supported by IE 11
-                case FileType.Tiff: return DecodeTiff(reader); // supported in DOCX and Safari
-                case FileType.Jpeg2000: return DecodeJpeg2000(reader); // supported in DOCX and previous Safari versions
-                case FileType.Emf: return DecodeEmf(reader); // supported in DOCX and RTF
-                case FileType.Wmf: return DecodeWmf(reader); // supported in DOCX and RTF
+                case ImageFormat.Jxr: return DecodeJxr(reader); // supported by IE 11
+                case ImageFormat.Tiff: return DecodeTiff(reader); // supported in DOCX and Safari
+                case ImageFormat.Jpeg2000: return DecodeJpeg2000(reader); // supported in DOCX and previous Safari versions
+                case ImageFormat.Emf: return DecodeEmf(reader); // supported in DOCX and RTF
+                case ImageFormat.Wmf: return DecodeWmf(reader); // supported in DOCX and RTF
                 // Note: WMF size is in inches, all the others are in pixels.
                 
                 default: return Size.Empty;

@@ -188,38 +188,9 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
 
     private void InsertImage(DocxDocumentRenderer renderer, Stream stream, string? label, string? title)
     {
-        if (ImageHeader.TryDetectFileType(stream, out var fileType))
+        if (ImageHeader.TryDetectFileType(stream, out ImageFormat fileType))
         {
-            PartTypeInfo imageFormat;
-            switch (fileType)
-            {
-                case ImageHeader.FileType.Bitmap:
-                    imageFormat = ImagePartType.Bmp;
-                    break;
-                case ImageHeader.FileType.Gif:
-                    imageFormat = ImagePartType.Gif;
-                    break;
-                case ImageHeader.FileType.Jpeg:
-                    imageFormat = ImagePartType.Jpeg;
-                    break;
-                case ImageHeader.FileType.Png:
-                    imageFormat = ImagePartType.Png;
-                    break;
-                case ImageHeader.FileType.Tiff:
-                    imageFormat = ImagePartType.Tiff;
-                    break;
-                case ImageHeader.FileType.Svg:
-                    imageFormat = ImagePartType.Svg;
-                    break;
-                case ImageHeader.FileType.Ico:
-                    imageFormat = ImagePartType.Icon;
-                    break;
-                default:
-                    // Note: WEBP and AVIF images are supported by web browsers but not by DOCX.
-                    return;
-            }
-
-            var imagePart = renderer.Document.MainDocumentPart?.AddImagePart(stream, imageFormat);
+            var imagePart = TryInsertImagePart(renderer, stream, fileType);
             if (imagePart != null && renderer.Document.MainDocumentPart?.GetIdOfPart(imagePart) is string rId)
             {
                 System.Drawing.Size size = System.Drawing.Size.Empty;
@@ -237,7 +208,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 }
                 // GetDimensions returns width and height in pixels, except for WMF
                 // whose dimensions are return in inches as it's not device-independent.
-                var unit = fileType == ImageHeader.FileType.Wmf ? DocSharp.UnitMetric.Inch : DocSharp.UnitMetric.Pixel;
+                var unit = fileType == ImageFormat.Wmf ? DocSharp.UnitMetric.Inch : DocSharp.UnitMetric.Pixel;
                 
                 // Convert to EMUs
                 var width = DocSharp.UnitMetricHelper.ConvertToEmus(size.Width, unit);
@@ -263,6 +234,63 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                     renderer.Cursor.Write(new Run(imageElement));
                 }
             }
+        }
+    }
+
+    private ImagePart? TryInsertImagePart(DocxDocumentRenderer renderer, Stream stream, ImageFormat fileType)
+    {
+        PartTypeInfo? partType = null;
+        switch (fileType)
+        {
+            case ImageFormat.Bitmap:
+                partType = ImagePartType.Bmp;
+                break;
+            case ImageFormat.Gif:
+                partType = ImagePartType.Gif;
+                break;
+            case ImageFormat.Jpeg:
+                partType = ImagePartType.Jpeg;
+                break;
+            case ImageFormat.Png:
+                partType = ImagePartType.Png;
+                break;
+            case ImageFormat.Tiff:
+                partType = ImagePartType.Tiff;
+                break;
+            case ImageFormat.Svg:
+                partType = ImagePartType.Svg;
+                break;
+            case ImageFormat.Ico:
+                partType = ImagePartType.Icon;
+                break;
+            case ImageFormat.Jpeg2000:
+                partType = ImagePartType.Jp2;
+                break;
+            case ImageFormat.Webp:
+            case ImageFormat.Avif:
+            case ImageFormat.Jxl:
+            case ImageFormat.Heif:
+            case ImageFormat.Jxr:
+                using (var ms = new MemoryStream())
+                {
+                    if (renderer.ImageConverter != null &&
+                        renderer.ImageConverter.ConvertToPng(stream, ms, fileType))
+                    {
+                        ms.Position = 0;
+                        var part = renderer.Document.MainDocumentPart?.AddImagePart(ms, ImagePartType.Png);
+                        renderer.Document.Save();
+                        return part;
+                    }
+                }
+                break;
+        }
+        if (partType != null)
+        {
+            return renderer.Document.MainDocumentPart?.AddImagePart(stream, partType.Value);
+        }
+        else
+        {
+            return null;
         }
     }
 
