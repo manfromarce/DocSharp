@@ -68,12 +68,13 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
 
             if (renderer.ActiveList.Count == 0)
             {
-                listInfo.Level = 1;
+                listInfo.Level = 0;
             }
             else
             {
                 var previousList = renderer.ActiveList.Peek();
-                listInfo.Level = previousList.Level + 1;
+                listInfo.Level = Math.Min(previousList.Level + 1, 8); 
+                // 8 seems to be the maximum level in DOCX documents (9 levels including 0).
             }
             renderer.ActiveList.Push(listInfo);
             renderer.WriteChildren(obj);
