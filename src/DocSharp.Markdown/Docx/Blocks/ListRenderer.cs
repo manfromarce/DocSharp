@@ -18,42 +18,37 @@ public class ListInfo
 
 public class ListRenderer : DocxObjectRenderer<ListBlock>
 {
-    private AbstractNum? _bulletListAbstractNum = null;
-    private AbstractNum? _orderListAbstractNum = null;
-    
+    //private AbstractNum? _bulletListAbstractNum = null;
+    //private AbstractNum? _orderedListAbstractNum = null;
+
     protected override void WriteObject(DocxDocumentRenderer renderer, ListBlock obj)
     {
         var listInfo = new ListInfo();
+        var numbering = renderer.Document.GetOrCreateNumbering().NumberingDefinitionsPart!.Numbering;
+        var listStyle = obj.IsOrdered ? renderer.Styles.MarkdownStyles["ListOrdered"] : renderer.Styles.MarkdownStyles["ListBullet"];
+        var listItemStyle = obj.IsOrdered ? renderer.Styles.MarkdownStyles["ListOrderedItem"] : renderer.Styles.MarkdownStyles["ListBulletItem"];
+        listInfo.StyleId = listItemStyle;
+
+        var abstractNum = numbering.Elements<AbstractNum>().FirstOrDefault(e => e.StyleLink?.Val == listStyle);
         
-        if (renderer.ActiveList.Count == 0)
+        if (abstractNum?.AbstractNumberId != null) // TODO: Fallback and create this
         {
-            // We're creating new numbering for the list so item can reference it
-            var listStyle = obj.IsOrdered ? renderer.Styles.MarkdownStyles["ListOrdered"] : renderer.Styles.MarkdownStyles["ListBullet"];
-            var listItemStyle = obj.IsOrdered ? renderer.Styles.MarkdownStyles["ListOrderedItem"] : renderer.Styles.MarkdownStyles["ListBulletItem"];
+            int abstractNumId = abstractNum.AbstractNumberId.Value;
 
-            listInfo.StyleId = listItemStyle;
-            listInfo.Level = 1;
-            
-            // Find or create abstract numbering associated with this style
-            var numbering = renderer.Document.GetOrCreateNumbering().NumberingDefinitionsPart!.Numbering;
-
-            var abstractNum = numbering
-                .Elements<AbstractNum>().FirstOrDefault(e => e.StyleLink?.Val == listStyle);
-
-            if (abstractNum == null)
-            {
-                throw new FormatException(
-                    $"Failed to identify abstract numbering associated with list style ${listStyle}");
-                // TODO Fallback and create this
-            }
+            //var numberingId = numbering.Elements<NumberingInstance>().Where(n => n.AbstractNumId?.Val != null &&
+            //                                                                     n.AbstractNumId.Val == abstractNumId)
+            //                                                         .FirstOrDefault();
 
             var newNumberingId = numbering.Elements<NumberingInstance>().Count() + 1;
-            listInfo.NumberingInstance = new NumberingInstance
+            var numberingInstance = new NumberingInstance
             {
                 NumberID = newNumberingId,
-                AbstractNumId = new AbstractNumId { Val = abstractNum.AbstractNumberId }
+                AbstractNumId = new AbstractNumId
+                {
+                    Val = abstractNum.AbstractNumberId
+                }
             };
-
+            listInfo.NumberingInstance = numberingInstance;
             if (obj.IsOrdered)
             {
                 for (var i = 0; i <= 8; i++)
@@ -61,24 +56,28 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
                     var lvlOverride = new LevelOverride
                     {
                         LevelIndex = i,
-                        StartOverrideNumberingValue = new StartOverrideNumberingValue() { Val = 1 }
+                        StartOverrideNumberingValue = new StartOverrideNumberingValue()
+                        {
+                            Val = int.TryParse(obj.OrderedStart, out int startNumber) ? startNumber : 1
+                        }
                     };
                     listInfo.NumberingInstance.AppendChild(lvlOverride);
                 }
             }
-
             numbering.AddNumberingInstance(listInfo.NumberingInstance);
+
+            if (renderer.ActiveList.Count == 0)
+            {
+                listInfo.Level = 1;
+            }
+            else
+            {
+                var previousList = renderer.ActiveList.Peek();
+                listInfo.Level = previousList.Level + 1;
+            }
+            renderer.ActiveList.Push(listInfo);
+            renderer.WriteChildren(obj);
+            renderer.ActiveList.Pop();
         }
-        else
-        {
-            var previousList = renderer.ActiveList.Peek();
-            listInfo.NumberingInstance = previousList.NumberingInstance;
-            listInfo.StyleId = previousList.StyleId;
-            listInfo.Level = previousList.Level + 1;
-        }
-        
-        renderer.ActiveList.Push(listInfo);
-        renderer.WriteChildren(obj);
-        renderer.ActiveList.Pop();
     }
 }

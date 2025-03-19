@@ -8,8 +8,9 @@
 | Paragraph formatting | ✅ | - | - |
 | Section formatting   | ✅ | - | - |
 | Page setup   | ✅ | - | - |
+| Columns | ✅ | ❌ | ❌ |
 | Pictures [1] | ✅ | ✅ | - |
-| Lists    | 🟡 | 🟡 | 🟡 |
+| Lists [4]    | 🟡 | 🟡 | 🟡 |
 | Tables   | ✅[3] | 🟡 | 🟡 |
 | Styles   | 🟡 [2] | 🟡 [2] | - |
 | Header and footer | ✅ | ❌ | ❌ |
@@ -38,6 +39,7 @@ For Markdown, the ImagesOutputFolder has to be set to an existing directory, oth
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
 [2]: Preserved as inline formatting  
 [3]: Nested tables, conditional formatting and few other advanced properties are not supported yet.
+[4]: Known issue: some numbering styles are not preserved.
 
 ## Markdown renderers
 

@@ -17,8 +17,14 @@ public class ListItemRenderer : ContainerBlockParagraphRendererBase<ListItemBloc
         {
             p.GetOrCreateProperties().NumberingProperties = new NumberingProperties
             {
-                NumberingId = new NumberingId() { Val = listInfo.NumberingInstance.NumberID },
-                NumberingLevelReference = new NumberingLevelReference { Val = listInfo.Level }
+                NumberingId = new NumberingId() 
+                { 
+                    Val = listInfo.NumberingInstance.NumberID 
+                },
+                NumberingLevelReference = new NumberingLevelReference 
+                { 
+                    Val = listInfo.Level
+                }
             };
         }
     } 
