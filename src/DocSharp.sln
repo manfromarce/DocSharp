@@ -32,7 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{D4B9
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp1", "..\samples\WpfApp1\WpfApp1.csproj", "{DCE126AF-361A-47D6-A6E0-6148362B6453}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.ImageSharp", "DocSharp.Imaging\DocSharp.ImageSharp.csproj", "{FC884F18-C779-4B1F-B957-4BC31C6D71C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.ImageSharp", "DocSharp.ImageSharp\DocSharp.ImageSharp.csproj", "{FC884F18-C779-4B1F-B957-4BC31C6D71C1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Imaging", "Imaging", "{6C83A596-D32D-B35F-00DD-F0C99B673980}"
 EndProject

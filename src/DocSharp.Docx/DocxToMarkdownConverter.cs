@@ -23,7 +23,9 @@ public class DocxToMarkdownConverter : DocxConverterBase
     /// <summary>
     /// If this property is set to an existing directory, images will be exported to that folder
     /// and a reference will be added in Markdown syntax,
-    /// otherwise images are not converted.
+    /// otherwise images are not converted. 
+    /// NOTE: if the directory contains image files with the same names as in the DOCX document archive 
+    /// (usually image1.*, image2.*, ...), they will be overwritten.
     /// </summary>
     public string? ImagesOutputFolder { get; set; } = string.Empty;
 
