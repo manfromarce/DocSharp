@@ -8,6 +8,7 @@ using System.Text;
 using DocSharp.Helpers;
 using DocSharp.IO;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Office2019.Drawing.SVG;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -383,11 +384,19 @@ public class DocxToMarkdownConverter : DocxConverterBase
     {
         if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)) && Directory.Exists(ImagesOutputFolder))
         {
-            if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip &&
-                blip.Embed?.Value is string relId)
+            if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
             {
                 var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
-                ProcessImagePart(mainDocumentPart, relId, sb);
+                if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip && 
+                    svgBlip.Embed?.Value is string svgRelId)
+                {
+                    // Prefer the actual SVG image as web browsers can display it.
+                    ProcessImagePart(mainDocumentPart, svgRelId, sb);
+                }
+                else if (blip.Embed?.Value is string relId)
+                {
+                    ProcessImagePart(mainDocumentPart, relId, sb);
+                }
             }
         }
     }
@@ -410,7 +419,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
         try
         {
             if (ImagesOutputFolder != null &&
-            mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
+                mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
             {
                 string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
 #if NETFRAMEWORK
@@ -427,7 +436,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
                         imagePart.ContentType != ImagePartType.Svg.ContentType &&
                         imagePart.ContentType != ImagePartType.Icon.ContentType)
                     {
-                        var pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromFileExtension(imagePart.ContentType));
+                        var pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
                         if (pngData.Length > 0)
                         {
                             actualFilePath = Path.ChangeExtension(actualFilePath, ".png");
