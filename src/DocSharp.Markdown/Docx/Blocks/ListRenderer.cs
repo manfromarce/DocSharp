@@ -30,7 +30,6 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
         listInfo.StyleId = listItemStyle;
 
         var abstractNum = numbering.Elements<AbstractNum>().FirstOrDefault(e => e.StyleLink?.Val == listStyle);
-        
         if (abstractNum?.AbstractNumberId != null) // TODO: Fallback and create this
         {
             int abstractNumId = abstractNum.AbstractNumberId.Value;

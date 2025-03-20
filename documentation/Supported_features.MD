@@ -10,9 +10,9 @@
 | Page setup   | ✅ | - | - |
 | Columns | ✅ | ❌ | ❌ |
 | Pictures [1] | ✅ | ✅ | - |
-| Lists [4]    | 🟡 | 🟡 | 🟡 |
-| Tables   | ✅[3] | 🟡 | 🟡 |
-| Styles   | 🟡 [2] | 🟡 [2] | - |
+| Lists [2]    | 🟡 | 🟡 | 🟡 |
+| Tables [3]  | ✅ | 🟡 | 🟡 |
+| Styles [4] | 🟡 | 🟡 | - |
 | Header and footer | ✅ | ❌ | ❌ |
 | Endnotes and footnotes | ✅ | ❌ | ❌ |
 | Hyperlinks | ✅ | ✅ | - |
@@ -27,7 +27,7 @@
 | Diagrams | ❌ | ❌ | - |
 | Advanced text effects (includes WordArt) | ❌ | ❌ | - |
 | Image effects | ❌ | ❌ | - |
-| Math | ❌ | ❌ | ❌ |
+| Math | ❌ | ✅ | ❌ |
 | OLE objects | ❌ | - | - |
 | Form fields | ❌ | - | - |
 | Comments | ❌ | - | - |
@@ -37,9 +37,12 @@
 Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  
 For Markdown, the ImagesOutputFolder has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
-[2]: Preserved as inline formatting  
-[3]: Nested tables, conditional formatting and few other advanced properties are not supported yet.
-[4]: Known issue: some numbering styles are not preserved.
+
+[2]: There are some known issues with lists, due to the fact that other formats support a subset of DOCX features, and figuring out the correct visual representation is not always easy.
+
+[3]: Nested tables, conditional formatting and few other advanced properties are not supported yet for DOCX --> RTF; while for DOCX --> MD / TXT only basic cell content can be preserved.
+
+[4]: Styles are converted to inline formatting  
 
 ## Markdown renderers
 
@@ -53,6 +56,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | Fenced code blocks [1] | ✅ |
 | Quote blocks [1] | ✅ |
 | Lists [1] | ✅ |
+| Task lists | 🟡 |
 | Breaks | ✅ |
 | Pictures [2] | ✅ |
 | Links | ✅ |
@@ -64,10 +68,10 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | Math | ❌ |
 | Figures | ❌ |
 | Footer | ❌ |
-| Task list | ❌ |
 | Definition list | ❌ |
 
-[1]: Known issue: lists, code blocks and quotes may not use the correct style when nested inside another quote block.  
+[1]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
+
 [2]: WebP, AVIF and JXL images are not supported in DOCX.  
 WebP images can be converted using the DocSharp.ImageSharp package or setting the ImageConverter property on a custom converter which returns PNG bytes.  
 The ImagesBaseUri property has to be set in order to support relative URLs, otherwise only images referenced with absolute URLs are processed (see the wiki or sample app for examples).  

@@ -11,6 +11,12 @@ namespace DocSharp.Docx;
 
 public static class ParagraphHelpers
 {
+    public static bool IsEmpty(this Paragraph paragraph)
+    {
+        return paragraph.ChildElements.Count == 0 ||
+               (paragraph.ChildElements.Count == 1 && paragraph.ParagraphProperties != null);
+    }
+
     public static ParagraphProperties GetOrCreateProperties(this Paragraph p)
     {
         if (p.ParagraphProperties == null)

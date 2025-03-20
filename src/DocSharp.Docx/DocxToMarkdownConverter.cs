@@ -59,6 +59,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
+        if (paragraph.ChildElements.Count == 0 ||
+           (paragraph.ChildElements.Count == 1 && paragraph.ParagraphProperties != null))
+        {
+            // Skip empty paragraphs as they are not rendered anyway in Markdown.
+            return;
+        }
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)
         {
@@ -70,26 +76,32 @@ public class DocxToMarkdownConverter : DocxConverterBase
             var style = styles.GetStyleFromId(paragraph.ParagraphProperties.ParagraphStyleId.Val, StyleValues.Paragraph);
             if (style?.StyleName?.Val?.Value != null)
             {
-                switch (style.StyleName.Val.Value.ToLower())
+                switch (style.StyleName.Val.Value.ToLowerInvariant())
                 {
                     case "heading 1":
+                    case "heading1":
                     case "title":
                         sb.Append("# ");
                         break;
                     case "heading 2":
+                    case "heading2":
                     case "subtitle":
                         sb.Append("## ");
                         break;
                     case "heading 3":
+                    case "heading3":
                         sb.Append("### ");
                         break;
                     case "heading 4":
+                    case "heading4":
                         sb.Append("#### ");
                         break;
                     case "heading 5":
+                    case "heading5":
                         sb.Append("##### ");
                         break;
                     case "heading 6":
+                    case "heading6":
                         sb.Append("###### ");
                         break;
                 }
@@ -115,11 +127,15 @@ public class DocxToMarkdownConverter : DocxConverterBase
                                   .FirstOrDefault(x => x.AbstractNumberId == abstractNumId);
                 var level = abstractNum?.Elements<Level>().FirstOrDefault(x => x.LevelIndex != null &&
                                                                                x.LevelIndex == levelIndex);
+                var levelOverride = num?.Elements<LevelOverride>().FirstOrDefault(x => x.LevelIndex != null &&
+                                                                                  x.LevelIndex == levelIndex);
+                var levelOverrideLevel = levelOverride?.Level;
+
                 if (level != null &&
                     level.NumberingFormat?.Val is EnumValue<NumberFormatValues> listType &&
                     listType != NumberFormatValues.None)
                 {
-                    for (int i = 0; i < levelIndex; i++)
+                    for (int i = 1; i <= levelIndex; i++)
                     {
                         sb.Append("    "); // indentation
                     }
@@ -129,7 +145,9 @@ public class DocxToMarkdownConverter : DocxConverterBase
                     }
                     else
                     {
-                        var startNumber = level.StartNumberingValue?.Val ?? 1;
+                        int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ?? 
+                                          levelOverrideLevel?.StartNumberingValue?.Val ??
+                                          level.StartNumberingValue?.Val ?? 1;
                         sb.Append($"{startNumber}. "); // Markdown renderers will automatically increase the number.
                     }
                 }
@@ -262,30 +280,14 @@ public class DocxToMarkdownConverter : DocxConverterBase
             }
             else
             {
-                switch (font)
+                string s = StringHelpers.ToUnicode(font, c);
+                if (s.Length == 1 && _specialChars.Contains(s[0]))
                 {
-                    case "wingdings":
-                        sb.Append(StringHelpers.WingdingsToUnicode(c));
-                        continue;
-                    case "wingdings2":
-                        sb.Append(StringHelpers.Wingdings2ToUnicode(c));
-                        continue;
-                    case "wingdings3":
-                        sb.Append(StringHelpers.Wingdings3ToUnicode(c));
-                        continue;
-                    case "webdings":
-                        sb.Append(StringHelpers.WebdingsToUnicode(c));
-                        continue;
-                    default:
-                        if (_specialChars.Contains(c))
-                        {
-                            sb.Append(new string(['\\', c]));
-                        }
-                        else
-                        {
-                            sb.Append(c);
-                        }
-                        continue;
+                    sb.Append(new string(['\\', s[0]]));
+                }
+                else
+                {
+                    sb.Append(s);
                 }
             }
         }
@@ -503,21 +505,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
-                    switch (symbolChar?.Font?.Value.ToLowerInvariant())
-                    {
-                        case "wingdings":
-                            htmlEntity = StringHelpers.WingdingsToUnicode((char)decimalValue);
-                            break;
-                        case "wingdings2":
-                            htmlEntity = StringHelpers.Wingdings2ToUnicode((char)decimalValue);
-                            break;
-                        case "wingdings3":
-                            htmlEntity = StringHelpers.Wingdings3ToUnicode((char)decimalValue);
-                            break;
-                        case "webdings":
-                            htmlEntity = StringHelpers.WebdingsToUnicode((char)decimalValue);
-                            break;
-                    }
+                    htmlEntity = StringHelpers.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
                 }
             }
             if (string.IsNullOrWhiteSpace(htmlEntity))

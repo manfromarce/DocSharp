@@ -114,11 +114,11 @@ public static class StringHelpers
         return s;
     }
 
-    // Convert Wingdings char to Unicode char or emoji.
-    // When a standard emoji with similar appearance and meaning exist (even if not identical), it should be preferred
-    // over other Unicode chars, as it will be displayed as colored by browsers and is less likely to be missing on the system.
-    // However, Visual Studio displays emojis as black and white anyway so it should be checked on
-    // https://emojipedia.org, Windows 11 notepad or Visual Studio Code.
+    /// <summary>
+    /// Convert Wingdings char to Unicode char or emoji.
+    /// </summary>
+    /// <param name="wingdings">The Wingdings char</param>
+    /// <returns></returns>
     public static string WingdingsToUnicode(char wingdings)
     {
         // https://www.alanwood.net/demos/wingdings.html
@@ -368,14 +368,19 @@ public static class StringHelpers
         }
     }
 
-    public static string Wingdings2ToUnicode(char wingdings)
+    /// <summary>
+    /// Convert Wingdings 2 char to Unicode char or emoji.
+    /// </summary>
+    /// <param name="wingdings2">The Wingdings 2 char</param>
+    /// <returns></returns>
+    public static string Wingdings2ToUnicode(char wingdings2)
     {
-        if (wingdings > 0xF000)
+        if (wingdings2 > 0xF000)
         {
-            wingdings -= (char)0xF000;
+            wingdings2 -= (char)0xF000;
         }
         // https://www.alanwood.net/demos/wingdings-2.html
-        switch (wingdings)
+        switch (wingdings2)
         {
             case '\u0020': return " ";
             case '\u0021': return "🖊️";
@@ -611,14 +616,19 @@ public static class StringHelpers
         }
     }
 
-    public static string Wingdings3ToUnicode(char wingdings)
+    /// <summary>
+    /// Convert Wingdings 3 char to Unicode char or emoji.
+    /// </summary>
+    /// <param name="wingdings3">The Wingdings 3 char</param>
+    /// <returns></returns>
+    public static string Wingdings3ToUnicode(char wingdings3)
     {
-        if (wingdings > 0xF000)
+        if (wingdings3 > 0xF000)
         {
-            wingdings -= (char)0xF000;
+            wingdings3 -= (char)0xF000;
         }
         // https://www.alanwood.net/demos/wingdings-3.html
-        switch (wingdings)
+        switch (wingdings3)
         {
             case '\u0020': return " ";
             case '\u0021': return "⭠";
@@ -845,13 +855,19 @@ public static class StringHelpers
         }
     }
 
-    public static string WebdingsToUnicode(char wingdings)
+    /// <summary>
+    /// Convert Webdings char to Unicode char or emoji.
+    /// </summary>
+    /// <param name="webdings">The Webdings char</param>
+    /// <returns></returns>
+    public static string WebdingsToUnicode(char webdings)
     {
-        if (wingdings > 0xF000)
+        if (webdings > 0xF000)
         {
-            wingdings -= (char)0xF000;
+            webdings -= (char)0xF000;
         }
-        switch (wingdings)
+        // https://www.alanwood.net/demos/webdings.html
+        switch (webdings)
         {
             case '\u0020': return " ";
             case '\u0021': return "🕷";
@@ -1091,6 +1107,244 @@ public static class StringHelpers
             case '\u00FE': return "🌎";
             case '\u00FF': return "🕊";
             default: return "";
+        }
+    }
+
+    /// <summary>
+    /// Convert Symbol font char to Unicode char or emoji.
+    /// </summary>
+    /// <param name="symbol">The Symbol char</param>
+    /// <returns></returns>
+    public static string SymbolToUnicode(char symbol)
+    {
+        if (symbol > 0xF000)
+        {
+            symbol -= (char)0xF000;
+        }
+        // https://www.alanwood.net/demos/symbol.html
+        switch (symbol)
+        {
+            case '\u0020': return " ";
+            case '\u0021': return "!";
+            case '\u0022': return "∀";
+            case '\u0023': return "#";
+            case '\u0024': return "∃";
+            case '\u0025': return "%";
+            case '\u0026': return "&";
+            case '\u0027': return "∍";
+            case '\u0028': return "(";
+            case '\u0029': return ")";
+            case '\u002A': return "∗";
+            case '\u002B': return "+";
+            case '\u002C': return ",";
+            case '\u002D': return "−";
+            case '\u002E': return ".";
+            case '\u002F': return "/";
+
+            case '\u0030': return "0";
+            case '\u0031': return "1";
+            case '\u0032': return "2";
+            case '\u0033': return "3";
+            case '\u0034': return "4";
+            case '\u0035': return "5";
+            case '\u0036': return "6";
+            case '\u0037': return "7";
+            case '\u0038': return "8";
+            case '\u0039': return "9";
+            case '\u003A': return ":";
+            case '\u003B': return ";";
+            case '\u003C': return "<";
+            case '\u003D': return "=";
+            case '\u003E': return ">";
+            case '\u003F': return "?";
+
+            case '\u0040': return "≅";
+            case '\u0041': return "A";
+            case '\u0042': return "B";
+            case '\u0043': return "Χ";
+            case '\u0044': return "Δ";
+            case '\u0045': return "E";
+            case '\u0046': return "Φ";
+            case '\u0047': return "Γ";
+            case '\u0048': return "H";
+            case '\u0049': return "I";
+            case '\u004A': return "ϑ";
+            case '\u004B': return "K";
+            case '\u004C': return "Λ";
+            case '\u004D': return "Μ";
+            case '\u004E': return "Ν";
+            case '\u004F': return "Ο";
+
+            case '\u0050': return "Π";
+            case '\u0051': return "Θ";
+            case '\u0052': return "Ρ";
+            case '\u0053': return "Σ";
+            case '\u0054': return "Τ";
+            case '\u0055': return "Υ";
+            case '\u0056': return "ς";
+            case '\u0057': return "Ω";
+            case '\u0058': return "Ξ";
+            case '\u0059': return "Ψ";
+            case '\u005A': return "Ζ";
+            case '\u005B': return "[";
+            case '\u005C': return "∴";
+            case '\u005D': return "]";
+            case '\u005E': return "⊥";
+            case '\u005F': return "_";
+
+            case '\u0060': return "¯"; // not an exact equivalent
+            case '\u0061': return "α";
+            case '\u0062': return "β";
+            case '\u0063': return "χ";
+            case '\u0064': return "δ";
+            case '\u0065': return "ε";
+            case '\u0066': return "φ";
+            case '\u0067': return "γ";
+            case '\u0068': return "η";
+            case '\u0069': return "ι";
+            case '\u006A': return "ϕ";
+            case '\u006B': return "κ";
+            case '\u006C': return "λ";
+            case '\u006D': return "μ";
+            case '\u006E': return "ν";
+            case '\u006F': return "ο";
+
+            case '\u0070': return "π";
+            case '\u0071': return "θ";
+            case '\u0072': return "ρ";
+            case '\u0073': return "σ";
+            case '\u0074': return "τ";
+            case '\u0075': return "υ";
+            case '\u0076': return "ϖ";
+            case '\u0077': return "ω";
+            case '\u0078': return "ξ";
+            case '\u0079': return "ψ";
+            case '\u007A': return "ζ";
+            case '\u007B': return "{";
+            case '\u007C': return "|";
+            case '\u007D': return "}";
+            case '\u007E': return "~";
+           
+            case '\u00A1': return "ϒ";
+            case '\u00A2': return "′";
+            case '\u00A3': return "≤";
+            case '\u00A4': return "⁄";
+            case '\u00A5': return "∞";
+            case '\u00A6': return "ƒ";
+            case '\u00A7': return "♣";
+            case '\u00A8': return "♦";
+            case '\u00A9': return "♥";
+            case '\u00AA': return "♠";
+            case '\u00AB': return "↔";
+            case '\u00AC': return "←";
+            case '\u00AD': return "↑";
+            case '\u00AE': return "→";
+            case '\u00AF': return "↓";
+
+            case '\u00B0': return "°";
+            case '\u00B1': return "±";
+            case '\u00B2': return "″";
+            case '\u00B3': return "≥";
+            case '\u00B4': return "×";
+            case '\u00B5': return "∝";
+            case '\u00B6': return "∂";
+            case '\u00B7': return "•";
+            case '\u00B8': return "÷";
+            case '\u00B9': return "≠";
+            case '\u00BA': return "≡";
+            case '\u00BB': return "≈";
+            case '\u00BC': return "…";
+            case '\u00BD': return "⏐";
+            case '\u00BE': return "⎯";
+            case '\u00BF': return "↵";
+
+            case '\u00C0': return "ℵ";
+            case '\u00C1': return "ℑ";
+            case '\u00C2': return "ℜ";
+            case '\u00C3': return "℘";
+            case '\u00C4': return "⊗";
+            case '\u00C5': return "⊕";
+            case '\u00C6': return "∅";
+            case '\u00C7': return "∩";
+            case '\u00C8': return "∪";
+            case '\u00C9': return "⊃";
+            case '\u00CA': return "⊇";
+            case '\u00CB': return "⊄";
+            case '\u00CC': return "⊂";
+            case '\u00CD': return "⊆";
+            case '\u00CE': return "∈";
+            case '\u00CF': return "∉";
+
+            case '\u00D0': return "∠";
+            case '\u00D1': return "∇";
+            case '\u00D2': return "®";
+            case '\u00D3': return "©";
+            case '\u00D4': return "™";
+            case '\u00D5': return "∏";
+            case '\u00D6': return "√";
+            case '\u00D7': return "⋅";
+            case '\u00D8': return "¬";
+            case '\u00D9': return "∧";
+            case '\u00DA': return "∨";
+            case '\u00DB': return "⇔";
+            case '\u00DC': return "⇐";
+            case '\u00DD': return "⇑";
+            case '\u00DE': return "⇒";
+            case '\u00DF': return "⇓";
+
+            case '\u00E0': return "◊";
+            case '\u00E1': return "〈";
+            case '\u00E2': return "®";
+            case '\u00E3': return "©";
+            case '\u00E4': return "™";
+            case '\u00E5': return "∑";
+            case '\u00E6': return "⎛";
+            case '\u00E7': return "⎜";
+            case '\u00E8': return "⎝";
+            case '\u00E9': return "⎡";
+            case '\u00EA': return "⎢";
+            case '\u00EB': return "⎣";
+            case '\u00EC': return "⎧";
+            case '\u00ED': return "⎨";
+            case '\u00EE': return "⎩";
+            case '\u00EF': return "⎪";
+
+            case '\u00F1': return "〉";
+            case '\u00F2': return "∫";
+            case '\u00F3': return "⌠";
+            case '\u00F4': return "⎮";
+            case '\u00F5': return "⌡";
+            case '\u00F6': return "⎞";
+            case '\u00F7': return "⎟";
+            case '\u00F8': return "⎠";
+            case '\u00F9': return "⎤";
+            case '\u00FA': return "⎥";
+            case '\u00FB': return "⎦";
+            case '\u00FC': return "⎫";
+            case '\u00FD': return "⎬";
+            case '\u00FE': return "⎭";
+            default: return "";
+        }
+    }
+
+    public static string ToUnicode(string fontName, char symbol)
+    {
+        switch (fontName.ToLowerInvariant())
+        {
+            case "wingdings":
+                return WingdingsToUnicode(symbol);
+            case "wingdings2":
+            case "wingdings 2":
+                return Wingdings2ToUnicode(symbol);
+            case "wingdings3":
+            case "wingdings 3":
+                return Wingdings3ToUnicode(symbol);
+            case "webdings":
+                return WebdingsToUnicode(symbol);
+            case "symbol":
+                return SymbolToUnicode(symbol);
+            default:
+                return symbol.ToString();
         }
     }
 }

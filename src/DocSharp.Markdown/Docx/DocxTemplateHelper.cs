@@ -67,26 +67,19 @@ internal class DocxTemplateHelper
         {
             using (WordprocessingDocument templateDocument = WordprocessingDocument.Open(templateStream, false))
             {
-                if (templateDocument.MainDocumentPart?.StyleDefinitionsPart is StyleDefinitionsPart templateStylesPart && 
-                    templateStylesPart.Styles is Styles templateStyles)
+                if (targetDocument.MainDocumentPart is null)
                 {
-                    if (targetDocument.MainDocumentPart is null)
-                    {
-                        targetDocument.AddMainDocumentPart();
-                    }
+                    targetDocument.AddMainDocumentPart();
+                }
+                if (templateDocument.MainDocumentPart?.StyleDefinitionsPart is StyleDefinitionsPart templateStylesPart &&
+                    templateStylesPart.Styles != null)
+                {
                     var targetStylesPart = targetDocument.MainDocumentPart!.StyleDefinitionsPart;
-                    if (targetStylesPart is null)
-                    {
-                        targetStylesPart = targetDocument.MainDocumentPart?.AddNewPart<StyleDefinitionsPart>();
-                    }
-                    if (targetStylesPart!.Styles is null)
-                    {
-                        targetStylesPart.Styles = new Styles();
-                    }
+                    targetStylesPart ??= targetDocument.MainDocumentPart?.AddNewPart<StyleDefinitionsPart>();
+                    targetStylesPart!.Styles ??= new Styles();
                     foreach (Style style in templateStylesPart.Styles.Elements<Style>())
                     {
-                        // Only clone styles included in the "styles" argument
-                        // and not defined in the target document
+                        // Clone styles not defined in the target document
                         if (style.StyleId?.Value is string styleId &&
                             styles.Contains(styleId) &&
                             !targetStylesPart.Styles.Elements<Style>().Any(s => s.StyleId == styleId))
@@ -95,6 +88,27 @@ internal class DocxTemplateHelper
                         }
                     }
                     //targetStylesPart.Styles.Save();
+                }
+                if (templateDocument.MainDocumentPart?.NumberingDefinitionsPart is NumberingDefinitionsPart numberingPart && 
+                    numberingPart.Numbering != null)
+                {
+                    var targetNumberingPart = targetDocument.MainDocumentPart!.NumberingDefinitionsPart;
+                    targetNumberingPart ??= targetDocument.MainDocumentPart?.AddNewPart<NumberingDefinitionsPart>();
+                    targetNumberingPart!.Numbering ??= new Numbering();
+                    foreach (var abstractNum in numberingPart.Numbering.Elements<AbstractNum>())
+                    {
+                        // Clone abstract numbering not defined in the target document
+                        if (targetNumberingPart.Numbering.Elements<AbstractNum>()
+                                                         .Where(an => an.StyleLink != null && 
+                                                                an.StyleLink == abstractNum.StyleLink).Any())
+                        {
+                            continue;
+                        }
+                        var clone = abstractNum.CloneNode(true);
+                        ((AbstractNum)clone).AbstractNumberId = targetNumberingPart.Numbering.Elements<AbstractNum>().Count();
+                        targetNumberingPart.Numbering.Append(clone);
+                    }
+                    //numberingPart.Numbering.Save();
                 }
             }
         }

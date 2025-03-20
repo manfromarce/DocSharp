@@ -35,21 +35,7 @@ public class DocxToTxtConverter : DocxConverterBase
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
-                    switch (symbolChar?.Font?.Value.ToLower())
-                    {
-                        case "wingdings":
-                            symbol = StringHelpers.WingdingsToUnicode((char)decimalValue);
-                            break;
-                        case "wingdings2":
-                            symbol = StringHelpers.Wingdings2ToUnicode((char)decimalValue);
-                            break;
-                        case "wingdings3":
-                            symbol = StringHelpers.Wingdings3ToUnicode((char)decimalValue);
-                            break;
-                        case "webdings":
-                            symbol = StringHelpers.WebdingsToUnicode((char)decimalValue);
-                            break;
-                    }
+                    symbol = StringHelpers.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
                 }
             }
             sb.Append(symbol);
@@ -105,14 +91,126 @@ public class DocxToTxtConverter : DocxConverterBase
 
     internal override void ProcessText(Text text, StringBuilder sb)
     {
-        sb.Append(text.InnerText);
+        string font = string.Empty;
+        if (text.Parent is Run run)
+        {
+            var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
+            font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
+        }
+        AppendText(text.InnerText, font, sb); // TODO: consider xml:space="preserve"
+    }
+
+    internal void AppendText(string text, string fontName, StringBuilder sb)
+    {
+        foreach (char c in text)
+        {
+            if (c == '\r')
+            {
+                // Ignore as it's usually followed by \n
+            }
+            else if (c == '\n')
+            {
+                sb.AppendLine("  "); // soft break
+            }
+            else
+            {
+                string x = StringHelpers.ToUnicode(fontName, c);
+                sb.Append(x);
+            }
+        }
     }
 
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
-    {
+    {        
+        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        if (numberingProperties != null)
+        {
+            ProcessListItem(numberingProperties, sb);
+        }
         base.ProcessParagraph(paragraph, sb);
-        if (paragraph.HasChildren)
+
+        sb.AppendLine();
+        if (!paragraph.IsEmpty())
+        {
+            // Write additional blank line
             sb.AppendLine();
+        }
+    }
+
+    internal void ProcessListItem(NumberingProperties numPr, StringBuilder sb)
+    {
+        var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
+        if (numberingPart != null && numPr.NumberingId?.Val != null)
+        {
+            int levelIndex = numPr.NumberingLevelReference?.Val ?? 0;
+            var num = numberingPart.Elements<NumberingInstance>()
+                                   .FirstOrDefault(x => x.NumberID == numPr.NumberingId.Val);
+            var abstractNumId = num?.AbstractNumId?.Val;
+            if (abstractNumId != null)
+            {
+                var abstractNum = numberingPart.Elements<AbstractNum>()
+                                  .FirstOrDefault(x => x.AbstractNumberId == abstractNumId);
+                var level = abstractNum?.Elements<Level>().FirstOrDefault(x => x.LevelIndex != null &&
+                                                                               x.LevelIndex == levelIndex);
+                var levelOverride = num?.Elements<LevelOverride>().FirstOrDefault(x => x.LevelIndex != null &&
+                                                                                  x.LevelIndex == levelIndex);
+                var levelOverrideLevel = levelOverride?.Level;
+                var levelText = levelOverrideLevel?.LevelText?.Val ?? level?.LevelText?.Val;
+                var runPr = levelOverrideLevel?.NumberingSymbolRunProperties ?? level?.NumberingSymbolRunProperties;
+
+                if (level != null &&
+                    level.NumberingFormat?.Val is EnumValue<NumberFormatValues> listType &&
+                    listType != NumberFormatValues.None)
+                {
+                    for (int i = 1; i <= levelIndex; i++)
+                    {
+                        sb.Append("    "); // indentation
+                    }
+                    if (listType == NumberFormatValues.Bullet)
+                    {
+                        if (levelText?.Value != null)
+                        {
+                            string font = runPr?.RunFonts?.Ascii?.Value ?? string.Empty; // To be improved
+                            AppendText(levelText.Value, font, sb);
+                        }
+                        else
+                        {
+                            sb.Append('•');
+                        }
+                    }
+                    else
+                    {
+                        sb.Append('•'); // Retrieving the real number text is complex, use a generic bullet symbol for now.
+
+                        //int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ??
+                        //                  levelOverrideLevel?.StartNumberingValue?.Val ??
+                        //                  level.StartNumberingValue?.Val ?? 1;
+                        //var restart = levelOverrideLevel?.LevelRestart?.Val ?? level.LevelRestart?.Val;
+                        //if (levelText?.Value != null)
+                        //{
+                        //    sb.Append(levelText.Value.Replace("%1", startNumber.ToString()));
+                        //}
+                        //else
+                        //{
+                        //    sb.Append($"{startNumber}.");
+                        //}
+                    }
+                }
+                var levelSuffix = levelOverrideLevel?.LevelSuffix?.Val ?? level?.LevelSuffix?.Val;
+                if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
+                {
+                    sb.Append("  ");
+                }
+                else if (levelSuffix.Value == LevelSuffixValues.Space)
+                {
+                    sb.Append(' ');
+                }
+                else if (levelSuffix.Value == LevelSuffixValues.Nothing)
+                {
+                    // Don't append anything.
+                }
+            }
+        }
     }
 
     internal override void ProcessBreak(Break br, StringBuilder sb)

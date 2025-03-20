@@ -11,6 +11,7 @@ public class TaskListRenderer : DocxObjectRenderer<TaskList>
 {
     protected override void WriteObject(DocxDocumentRenderer renderer, TaskList obj)
     {
-
+        WriteText(renderer, obj.Checked ? "✅" : "🔲");
+        // To be improved; the list item itself is currently rendered independently.
     }
 }
