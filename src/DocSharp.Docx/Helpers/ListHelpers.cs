@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -11,6 +12,45 @@ namespace DocSharp.Docx;
 
 public static class ListHelpers
 {
+    public static string NumberToLetter(int number, bool uppercase)
+    {
+        if (number < 1)
+            number = 1;
+
+        const int alphabetLength = 26;
+        number--; // Convert to zero-based index
+        char letter = (char)('a' + (number % alphabetLength));
+        string result = new string(letter, 1);
+        if (number >= alphabetLength)
+        {
+            result = NumberToLetter(number / alphabetLength, uppercase) + result;
+        }
+        return uppercase ? result.ToUpperInvariant() : result;
+    }
+
+    public static string NumberToRomanLetter(int number, bool uppercase)
+    {
+        if (number < 1)
+            number = 1;
+
+        if (number > 3999)
+            number = 3999;
+
+        string[] romanSymbols = { "m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i" };
+        int[] values = { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
+        string result = "";
+
+        for (int i = 0; i < romanSymbols.Length; i++)
+        {
+            while (number >= values[i])
+            {
+                result += romanSymbols[i];
+                number -= values[i];
+            }
+        }
+        return uppercase ? result.ToUpperInvariant() : result;
+    }
+
     public static AbstractNum AddOrderedListAbstractNumbering(this WordprocessingDocument document)
     {
         var numbering = document.GetOrCreateNumbering();

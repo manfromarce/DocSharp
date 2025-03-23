@@ -137,35 +137,79 @@ public class DocxToTxtConverter : DocxConverterBase
         }
     }
 
+    private readonly Dictionary<(int NumberingId, int LevelIndex), int> _listLevelCounters = new();
+
     internal void ProcessListItem(NumberingProperties numPr, StringBuilder sb)
     {
         var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
         if (numberingPart != null && numPr.NumberingId?.Val != null)
         {
+            int numberingId = numPr.NumberingId.Val;
             int levelIndex = numPr.NumberingLevelReference?.Val ?? 0;
+
             var num = numberingPart.Elements<NumberingInstance>()
-                                   .FirstOrDefault(x => x.NumberID == numPr.NumberingId.Val);
+                                .FirstOrDefault(x => x.NumberID != null &&
+                                                     x.NumberID == numberingId);
             var abstractNumId = num?.AbstractNumId?.Val;
             if (abstractNumId != null)
             {
                 var abstractNum = numberingPart.Elements<AbstractNum>()
-                                  .FirstOrDefault(x => x.AbstractNumberId == abstractNumId);
+                                .FirstOrDefault(x => x.AbstractNumberId == abstractNumId);
                 var level = abstractNum?.Elements<Level>().FirstOrDefault(x => x.LevelIndex != null &&
-                                                                               x.LevelIndex == levelIndex);
+                                                                            x.LevelIndex == levelIndex);
                 var levelOverride = num?.Elements<LevelOverride>().FirstOrDefault(x => x.LevelIndex != null &&
-                                                                                  x.LevelIndex == levelIndex);
-                var levelOverrideLevel = levelOverride?.Level;
-                var levelText = levelOverrideLevel?.LevelText?.Val ?? level?.LevelText?.Val;
-                var runPr = levelOverrideLevel?.NumberingSymbolRunProperties ?? level?.NumberingSymbolRunProperties;
+                                                                                    x.LevelIndex == levelIndex);
 
-                if (level != null &&
-                    level.NumberingFormat?.Val is EnumValue<NumberFormatValues> listType &&
+                // Use LevelOverride if present
+                var effectiveLevel = levelOverride?.Level ?? level;
+
+                var start = levelOverride?.StartOverrideNumberingValue?.Val ?? effectiveLevel?.StartNumberingValue?.Val;
+                var levelText = effectiveLevel?.LevelText?.Val;
+                var listType = effectiveLevel?.NumberingFormat?.Val;
+                var runPr = effectiveLevel?.NumberingSymbolRunProperties;
+
+                if (effectiveLevel != null &&
+                    listType != null &&
                     listType != NumberFormatValues.None)
                 {
+                    var key = (NumberingId: numberingId, LevelIndex: levelIndex);
+
+                    // Restart numbering
+                    // var restart = effectiveLevel.LevelRestart?.Val;
+                    // if (restart!= null && restart.HasValue && restart.Value <= levelIndex + 1)
+                    // {
+                    //     for (int i = restart.Value - 1; i <= levelIndex; i++)
+                    //     {
+                    //         var restartKey = (NumberingId: numberingId, LevelIndex: i);
+                    //         _listLevelCounters[restartKey] = start ?? 1;
+                    //     }
+                    // }
+                    // else
+                    // {
+                        if (!_listLevelCounters.ContainsKey(key))
+                        {
+                            _listLevelCounters[key] = start ?? 1;
+                        }
+                        else
+                        {
+                            _listLevelCounters[key]++;
+                        }
+                    // }
+
+                    // Reset counters for deeper levels of this NumberingId
+                    foreach (var deeperLevel in _listLevelCounters.Keys
+                        .Where(k => k.NumberingId == numberingId && k.LevelIndex > levelIndex)
+                        .ToList())
+                    {
+                        _listLevelCounters.Remove(deeperLevel);
+                    }
+
+                    // Indentation
                     for (int i = 1; i <= levelIndex; i++)
                     {
-                        sb.Append("    "); // indentation
+                        sb.Append("    ");
                     }
+
                     if (listType == NumberFormatValues.Bullet)
                     {
                         if (levelText?.Value != null)
@@ -178,39 +222,64 @@ public class DocxToTxtConverter : DocxConverterBase
                             sb.Append('•');
                         }
                     }
-                    else
+                    else 
                     {
-                        sb.Append('•'); // Retrieving the real number text is complex, use a generic bullet symbol for now.
-
-                        //int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ??
-                        //                  levelOverrideLevel?.StartNumberingValue?.Val ??
-                        //                  level.StartNumberingValue?.Val ?? 1;
-                        //var restart = levelOverrideLevel?.LevelRestart?.Val ?? level.LevelRestart?.Val;
-                        //if (levelText?.Value != null)
-                        //{
-                        //    sb.Append(levelText.Value.Replace("%1", startNumber.ToString()));
-                        //}
-                        //else
-                        //{
-                        //    sb.Append($"{startNumber}.");
-                        //}
+                        // Numbered list
+                        string numberString = GetNumberString(levelText, listType, numberingId, levelIndex);
+                        sb.Append(numberString);
                     }
-                }
-                var levelSuffix = levelOverrideLevel?.LevelSuffix?.Val ?? level?.LevelSuffix?.Val;
-                if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
-                {
-                    sb.Append("  ");
-                }
-                else if (levelSuffix.Value == LevelSuffixValues.Space)
-                {
-                    sb.Append(' ');
-                }
-                else if (levelSuffix.Value == LevelSuffixValues.Nothing)
-                {
-                    // Don't append anything.
+
+
+                    var levelSuffix = effectiveLevel.LevelSuffix?.Val;
+                    if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
+                    {
+                        sb.Append("  ");
+                    }
+                    else if (levelSuffix.Value == LevelSuffixValues.Space)
+                    {
+                        sb.Append(' ');
+                    }
                 }
             }
         }
+    }
+
+    internal string GetNumberString(string? levelText, EnumValue<NumberFormatValues> listType, int numberingId, int levelIndex)
+    {
+        if (listType == NumberFormatValues.Bullet)
+        {
+            return "•";
+        }
+
+        if (levelText != null)
+        {
+            string formattedText = levelText;
+            foreach (var kvp in _listLevelCounters.Where(k => k.Key.NumberingId == numberingId))
+            {
+                var placeholder = kvp.Key.LevelIndex + 1;
+                string value = kvp.Value.ToString();
+                if (listType == NumberFormatValues.LowerLetter)
+                {
+                    value = ListHelpers.NumberToLetter(kvp.Value, false);
+                }
+                else if (listType == NumberFormatValues.UpperLetter)
+                {
+                    value = ListHelpers.NumberToLetter(kvp.Value, true);
+                }
+                else if (listType == NumberFormatValues.LowerRoman)
+                {
+                    value = ListHelpers.NumberToRomanLetter(kvp.Value, false);
+                }
+                else if (listType == NumberFormatValues.UpperRoman)
+                {
+                    value = ListHelpers.NumberToRomanLetter(kvp.Value, true);
+                }
+                formattedText = formattedText.Replace($"%{placeholder}", value);
+            }
+            return formattedText;
+        }
+
+        return _listLevelCounters[(numberingId, levelIndex)].ToString();
     }
 
     internal override void ProcessBreak(Break br, StringBuilder sb)
