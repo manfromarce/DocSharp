@@ -44,7 +44,7 @@ public class DocxToTxtConverter : DocxConverterBase
 
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        if (table == null || !table.Descendants<TableCell>().Any())
+        if (!table.Descendants<TableCell>().Any())
         {
             return;
         }
@@ -107,6 +107,7 @@ public class DocxToTxtConverter : DocxConverterBase
         }
         AddHorizontalBorder(columnWidths, sb); // Border after last row
         sb.AppendLine();
+        cellsText.Clear();
     }
 
     private int GetGridSpan(TableCell? cell)
@@ -151,14 +152,26 @@ public class DocxToTxtConverter : DocxConverterBase
         });
     }
 
+    private Dictionary<TableCell, string> cellsText = new Dictionary<TableCell, string>();
+
     internal string GetCellText(TableCell cell)
     {
-        var cellTextBuilder = new StringBuilder();
-        foreach(var paragraph in cell.Elements<Paragraph>())
+        // Cache the cells text content and avoid calling ProcessParagraph multiple times,
+        // as it would wrongly increment numbering for list items (if any).
+        if (cellsText.ContainsKey(cell))
         {
-            ProcessParagraph(paragraph, cellTextBuilder);
+            return cellsText[cell];
         }
-        return cellTextBuilder.ToString().TrimEnd();
+        else
+        {
+            var cellTextBuilder = new StringBuilder();
+            foreach(var paragraph in cell.Elements<Paragraph>())
+            {
+                ProcessParagraph(paragraph, cellTextBuilder);
+            }
+            cellsText.Add(cell, cellTextBuilder.ToString().TrimEnd());
+            return cellsText[cell];
+        }
     }
 
     internal void AddHorizontalBorder(int columnWidth, StringBuilder sb)
