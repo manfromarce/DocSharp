@@ -10,8 +10,8 @@
 | Page setup   | ✅ | - | - |
 | Columns | ✅ | ❌ | ❌ |
 | Pictures [1] | ✅ | ✅ | - |
-| Lists [2]    | 🟡 | 🟡 | 🟡 |
-| Tables [3]  | ✅ | 🟡 | 🟡 |
+| Lists [2]    | 🟡 | 🟡 | ✅ |
+| Tables [3]  | ✅ | 🟡 | ✅ |
 | Styles [4] | 🟡 | 🟡 | - |
 | Header and footer | ✅ | ❌ | ❌ |
 | Endnotes and footnotes | ✅ | ❌ | ❌ |
@@ -56,7 +56,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | Fenced code blocks [1] | ✅ |
 | Quote blocks [1] | ✅ |
 | Lists [1] | ✅ |
-| Task lists | 🟡 |
+| Task lists | ✅ |
 | Breaks | ✅ |
 | Pictures [2] | ✅ |
 | Links | ✅ |
