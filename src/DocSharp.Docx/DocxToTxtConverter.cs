@@ -64,6 +64,7 @@ public class DocxToTxtConverter : DocxConverterBase
         for (int r = 0; r < rows.Count(); r++)
         {
             var row = rows.ElementAt(r);
+            int rowHeight = GetRowHeight(row);
             var cells = row.Elements<TableCell>();
             int currentColumnIndex = 0;
 
@@ -87,7 +88,7 @@ public class DocxToTxtConverter : DocxConverterBase
             sb.AppendLine();
 
             // Add cell content
-            for (int lineIndex = 0; lineIndex < GetRowHeight(row); lineIndex++)
+            for (int lineIndex = 0; lineIndex < rowHeight; lineIndex++)
             {
                 sb.Append('|');
                 currentColumnIndex = 0;
@@ -111,7 +112,7 @@ public class DocxToTxtConverter : DocxConverterBase
     private int GetGridSpan(TableCell? cell)
     {
         var gridSpan = cell?.TableCellProperties?.GridSpan?.Val;
-        return gridSpan != null ? (int)gridSpan.Value : 1;
+        return gridSpan != null ? gridSpan.Value : 1;
     }
 
     private bool IsVerticalMerge(TableCell cell)
@@ -153,9 +154,9 @@ public class DocxToTxtConverter : DocxConverterBase
     internal string GetCellText(TableCell cell)
     {
         var cellTextBuilder = new StringBuilder();
-        foreach(var p in cell.Elements<Paragraph>())
+        foreach(var paragraph in cell.Elements<Paragraph>())
         {
-            ProcessParagraph(p, cellTextBuilder);
+            ProcessParagraph(paragraph, cellTextBuilder);
         }
         return cellTextBuilder.ToString().TrimEnd();
     }
@@ -202,12 +203,11 @@ public class DocxToTxtConverter : DocxConverterBase
             }
             else if (c == '\n')
             {
-                sb.AppendLine("  "); // soft break
+                sb.AppendLine();
             }
             else
             {
-                string x = StringHelpers.ToUnicode(fontName, c);
-                sb.Append(x);
+                sb.Append(StringHelpers.ToUnicode(fontName, c));
             }
         }
     }

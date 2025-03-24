@@ -109,7 +109,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }
         base.ProcessParagraph(paragraph, sb);
         sb.AppendLine();
-        sb.AppendLine();
+        if (!paragraph.IsEmpty())
+        {
+            // Write additional blank line
+            sb.AppendLine();
+        }
     }
 
     internal void ProcessListItem(NumberingProperties numPr, StringBuilder sb)
