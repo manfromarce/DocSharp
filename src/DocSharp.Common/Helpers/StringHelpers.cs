@@ -22,6 +22,15 @@ public static class StringHelpers
     }
 #endif
 
+    public static bool EndsWithNewLine(this StringBuilder stringBuilder)
+    {
+        if (stringBuilder.Length == 0)
+        {
+            return false;
+        }
+        return stringBuilder[stringBuilder.Length - 1] == '\n' || stringBuilder[stringBuilder.Length - 1] == '\r';
+    }
+
     public static void AppendLineCrLf(this StringBuilder sb)
     {
         sb.Append("\r\n");

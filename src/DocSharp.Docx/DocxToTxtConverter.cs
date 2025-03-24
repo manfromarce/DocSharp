@@ -44,49 +44,141 @@ public class DocxToTxtConverter : DocxConverterBase
 
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        int rowCount = 0;
-        foreach (var element in table.Elements())
+        if (table == null || !table.Descendants<TableCell>().Any())
         {
-            switch (element)
+            return;
+        }
+
+        if (!sb.EndsWithNewLine())
+        {
+            sb.AppendLine(); // Add a blank line before the table
+        }
+
+        var rows = table.Elements<TableRow>();
+        int maxCellsPerRow = rows.Max(c => c.Elements<TableCell>().Count());
+
+        // Calculate the maximum width of each column
+        var columnWidths = Enumerable.Range(0, maxCellsPerRow)
+                                     .Select(col => GetColumnWidth(rows, col)).ToList();
+
+        for (int r = 0; r < rows.Count(); r++)
+        {
+            var row = rows.ElementAt(r);
+            var cells = row.Elements<TableCell>();
+            int currentColumnIndex = 0;
+
+            // Add border above cell (if not in a vertically merged cell)
+            sb.Append('+');
+            foreach (var cell in cells)
             {
-                case TableRow row:
-                    ProcessRow(row, sb);
-                    ++rowCount;
-                    break;
+                int gridSpan = GetGridSpan(cell);                    
+                int width = columnWidths.Skip(currentColumnIndex).Take(gridSpan).Sum() + (gridSpan - 1) * 3;
+                if (!IsVerticalMerge(cell))
+                {
+                    AddHorizontalBorder(width, sb);
+                }
+                else
+                {
+                    AddHorizontalSpace(width, sb);
+                }
+                sb.Append('+');
+                currentColumnIndex += gridSpan;
+            }
+            sb.AppendLine();
+
+            // Add cell content
+            for (int lineIndex = 0; lineIndex < GetRowHeight(row); lineIndex++)
+            {
+                sb.Append('|');
+                currentColumnIndex = 0;
+                foreach(var cell in cells)
+                {
+                    int gridSpan = GetGridSpan(cell);
+                    string text = GetCellText(cell);
+                    string[] cellLines = text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+                    string line = lineIndex < cellLines.Length ? cellLines[lineIndex] : string.Empty;
+                    int cellWidth = columnWidths.Skip(currentColumnIndex).Take(gridSpan).Sum() + (gridSpan - 1) * 3;
+                    sb.Append($" {line.PadRight(cellWidth)} |");
+                    currentColumnIndex += gridSpan;
+                }
+                sb.AppendLine();
             }
         }
-        sb.AppendLine();
+        AddHorizontalBorder(columnWidths, sb); // Border after last row
         sb.AppendLine();
     }
 
-    internal void ProcessRow(TableRow tableRow, StringBuilder sb)
+    private int GetGridSpan(TableCell? cell)
     {
-        sb.Append("| ");
-        foreach (var element in tableRow.Elements())
-        {
-            switch (element)
-            {
-                case TableCell cell:
-                    ProcessCell(cell, sb);
-                    break;
-            }
-        }
-        sb.AppendLine();
+        var gridSpan = cell?.TableCellProperties?.GridSpan?.Val;
+        return gridSpan != null ? (int)gridSpan.Value : 1;
     }
 
-    internal void ProcessCell(TableCell cell, StringBuilder sb)
+    private bool IsVerticalMerge(TableCell cell)
     {
-        var cellBuilder = new StringBuilder();
-        foreach (var paragraph in cell.Elements<Paragraph>())
-        {
-            // Join paragraphs
-            if (paragraph != null)
-                base.ProcessParagraph(paragraph, cellBuilder);
+        var verticalMerge = cell.TableCellProperties?.VerticalMerge;
+        return verticalMerge != null && (verticalMerge.Val == null || verticalMerge.Val == MergedCellValues.Continue);
+    }
 
-            cellBuilder.Append(' ');
+    private int GetRowHeight(TableRow row)
+    {
+        int height = row.Elements<TableCell>().Max(cell =>
+        {
+            string text = GetCellText(cell);
+            return text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries).Length;
+        });
+        return height < 1 ? 1 : height;
+    }
+
+    private int GetColumnWidth(IEnumerable<TableRow> rows, int columnIndex)
+    {
+        return rows.Max(row =>
+        {
+            int currentColumnIndex = 0;
+            foreach (var cell in row.Elements<TableCell>())
+            {
+                int gridSpan = GetGridSpan(cell);
+                if (currentColumnIndex == columnIndex)
+                {
+                    string text = GetCellText(cell);
+                    var lines = text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+                    return lines.Length == 0 ? 0 : lines.Max(line => line.Length);
+                }
+                currentColumnIndex += gridSpan;
+            }
+            return 0;
+        });
+    }
+
+    internal string GetCellText(TableCell cell)
+    {
+        var cellTextBuilder = new StringBuilder();
+        foreach(var p in cell.Elements<Paragraph>())
+        {
+            ProcessParagraph(p, cellTextBuilder);
         }
-        sb.Append(cellBuilder);
-        sb.Append(" | ");
+        return cellTextBuilder.ToString().TrimEnd();
+    }
+
+    internal void AddHorizontalBorder(int columnWidth, StringBuilder sb)
+    {
+        sb.Append(new string('-', columnWidth + 2));
+    }
+
+    internal void AddHorizontalSpace(int columnWidth, StringBuilder sb)
+    {
+        sb.Append(new string(' ', columnWidth + 2));
+    }
+
+    internal void AddHorizontalBorder(List<int> columnWidths, StringBuilder sb)
+    {
+        sb.Append('+');
+        foreach (var width in columnWidths)
+        {
+            AddHorizontalBorder(width, sb);
+            sb.Append('+');
+        }
+        sb.AppendLine();
     }
 
     internal override void ProcessText(Text text, StringBuilder sb)
