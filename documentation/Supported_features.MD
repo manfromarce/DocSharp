@@ -54,6 +54,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | Emojis | ✅ |
 | Inline code blocks [1] | ✅ |
 | Fenced code blocks [1] | ✅ |
+| Syntax highlight for code | ❌ |
 | Quote blocks [1] | ✅ |
 | Lists [1] | ✅ |
 | Task lists | ✅ |
@@ -65,7 +66,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | HTML entities | ✅ |
 | Raw HTML blocks | ❌ |
 | Tables | ✅ |
-| Math | ❌ |
+| Math (LaTex blocks) | ❌ |
 | Figures | ❌ |
 | Footer | ❌ |
 | Definition list | ❌ |
