@@ -50,7 +50,8 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     /// <summary>
     /// Image converter to preserve WEBP and other image types when rendering Markdown. 
-    /// If the DocSharp.Imaging package is installed, this property can be set to new ImageSharpConverter(). 
+    /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
+    /// this property can be set to a new instance of ImageSharpConverter or SystemDrawingConverter. 
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
 
