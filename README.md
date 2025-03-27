@@ -54,7 +54,8 @@ Forked:
 
 Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
-- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office MathML conversion
+- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) conversion
+- [OpenXmlToHtml](https://github.com/Codeuctivity/OpenXmlToHtml), [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
 
 ### License
 
