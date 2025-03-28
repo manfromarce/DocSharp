@@ -42,6 +42,11 @@ public static class StringHelpers
         sb.Append("\r\n");
     }
 
+    public static StringBuilder ReplaceLineEndings(this StringBuilder sb, string val)
+    {
+        return sb.Replace("\r\n", val).Replace("\r", val).Replace("\n", val);
+    }
+
     public static string NormalizeNewLines(this string s)
     {
         return s.Replace("\r\n", "\n").Replace("\r", "\n");
@@ -94,33 +99,17 @@ public static class StringHelpers
 
     public static string GetLeadingSpaces(string s)
     {
-        for (int i = 0; i < s.Length; i++)
-        {
-            if (s[i] != ' ')
-            {
-                return s.Substring(0, i);
-            }
-        }
-        return s;
+        return new string(s.TakeWhile(c => char.IsWhiteSpace(c) && c != '\t').ToArray());
     }
 
     public static string GetTrailingSpaces(string s)
     {
-        for (int i = s.Length - 1; i >= 0; i--)
+        int index = s.Length - 1;
+        while (index >= 0 && char.IsWhiteSpace(s[index]) && s[index] != '\t')
         {
-            if (s[i] != ' ')
-            {
-                if (i < s.Length - 1)
-                {
-                    return s.Substring(i + 1);
-                }
-                else
-                {
-                    return string.Empty;
-                }
-            }
+            index--;
         }
-        return s;
+        return s.Substring(index + 1);
     }
 
     /// <summary>

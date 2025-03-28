@@ -55,8 +55,8 @@ public class DocxToMarkdownConverter : DocxConverterBase
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
 
-    private char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
-                                     '#', '+', '-', '!', '|', '~' };
+    private bool isInEmphasis = false;
+    private bool isAllCaps = false;
 
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
@@ -109,11 +109,14 @@ public class DocxToMarkdownConverter : DocxConverterBase
             }
         }
         base.ProcessParagraph(paragraph, sb);
-        sb.AppendLine();
-        if (!paragraph.IsEmpty())
+        if (!paragraph.IsLast())
         {
-            // Write additional blank line
             sb.AppendLine();
+            if (!paragraph.IsEmpty())
+            {
+                // Write additional blank line unless the paragraph is empty.
+                sb.AppendLine();
+            }
         }
     }
 
@@ -162,8 +165,13 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
-        var text = run.GetFirstChild<Text>()?.InnerText;
-        bool hasText = !string.IsNullOrWhiteSpace(text);
+        var text = run.GetFirstChild<Text>();
+        bool hasText = text != null && !string.IsNullOrEmpty(text.InnerText);
+        if (hasText && text!.InnerText.All(char.IsWhiteSpace))
+        {
+            sb.Append(text.InnerText);
+            return;
+        }
 
         bool isBold, isItalic, isUnderline, isStrikethrough, isHighlight, isSubscript, isSuperscript;
         isBold = isItalic = isUnderline = isStrikethrough = isHighlight = isSubscript = isSuperscript = false;
@@ -173,11 +181,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
         if (hasText)
         {
-            leadingSpaces = StringHelpers.GetLeadingSpaces(text!);
+            // Emphasis inlines starting with spaces are not interpreted properly, so we extract them.
+            leadingSpaces = StringHelpers.GetLeadingSpaces(text!.InnerText);
             sb.Append(leadingSpaces);
 
             // TODO: consider last child for trailing spaces
-            trailingSpaces = StringHelpers.GetTrailingSpaces(text!);
+            trailingSpaces = StringHelpers.GetTrailingSpaces(text.InnerText);
 
             // Formatting options of type OnOffValue such as bold and italic are considered enabled
             // if the element is present, unless value is explicitly set to false.
@@ -193,12 +202,19 @@ public class DocxToMarkdownConverter : DocxConverterBase
                           (OpenXmlHelpers.GetEffectiveProperty<Strike>(run) is Strike s &&
                           (s.Val is null || s.Val));
 
-            isHighlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run) is Highlight h &&
-                          h.Val != null && h.Val != HighlightColorValues.None;
+            isHighlight = (OpenXmlHelpers.GetEffectiveProperty<Highlight>(run) is Highlight h &&
+                           h.Val != null && h.Val != HighlightColorValues.None) ||
+                          (OpenXmlHelpers.GetEffectiveProperty<Shading>(run) is Shading sh &&
+                           sh.Val != null && sh.Val != ShadingPatternValues.Clear && sh.Val != ShadingPatternValues.Nil);
 
             var vta = OpenXmlHelpers.GetEffectiveProperty<VerticalTextAlignment>(run);
             isSubscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Subscript;
-            isSuperscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Superscript;           
+            isSuperscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Superscript;
+
+            // Consecutive emphasis inlines such as *italic***bold** are sometimes not interpreted properly.
+            if (sb.EndsWithEmphasis() && string.IsNullOrEmpty(leadingSpaces) &&
+                (isBold | isItalic | isStrikethrough))
+                sb.Append(' ');
 
             if (isItalic)
                 sb.Append('*');
@@ -221,10 +237,14 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 sb.Append("<sup>");
         }
 
+        isAllCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run) is Caps caps && (caps.Val is null || caps.Val);
+        isInEmphasis = true;
         foreach (var element in run.Elements())
         {
             base.ProcessRunElement(element, sb);              
         }
+        isInEmphasis = false;
+        isAllCaps = false;
 
         if (hasText)
         {
@@ -273,7 +293,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
             var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
-        foreach (char c in text.InnerText.Trim())
+        string t = text.InnerText;
+        if (isInEmphasis)
+        {
+            t = t.Trim();
+        }
+        foreach (char c in t)
         {
             if (c == '\r')
             {
@@ -285,33 +310,33 @@ public class DocxToMarkdownConverter : DocxConverterBase
             }
             else
             {
-                string s = StringHelpers.ToUnicode(font, c);
-                if (s.Length == 1 && _specialChars.Contains(s[0]))
-                {
-                    sb.Append(new string(['\\', s[0]]));
-                }
-                else
-                {
-                    sb.Append(s);
-                }
+                MarkdownHelpers.AppendChar(isAllCaps ? char.ToUpper(c) : c, font, sb);
             }
         }
     }
 
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        int rowCount = 0;
+        // Calculate maximum number of cells per row.
+        int cellsCount = table.Elements<TableRow>().Max(x => x.Elements<TableCell>().Count());
+        if (cellsCount == 0)
+        {
+            return;
+        }
+
+        sb.AppendLine(); // Inline tables would break the layout.
+        int rowIndex = 0;
         foreach(var element in table.Elements())
         {
             switch (element)
             {
                 case TableRow row:
-                    if (rowCount == 0)
+                    ProcessRow(row, sb, cellsCount);
+                    if (rowIndex == 0)
                     {
-                        AddTableHeader(3, sb);
+                        AddTableHeaderSeparator(cellsCount, sb);
                     }
-                    ProcessRow(row, sb);
-                    ++rowCount;
+                    ++rowIndex;
                     break;
             }
         }
@@ -319,14 +344,8 @@ public class DocxToMarkdownConverter : DocxConverterBase
         sb.AppendLine();
     }
 
-    private void AddTableHeader(int columnCount, StringBuilder sb)
+    private void AddTableHeaderSeparator(int columnCount, StringBuilder sb)
     {
-        sb.Append("|");
-        for (int i = 0; i < columnCount; ++i)
-        {
-            sb.Append(" |");
-        }
-        sb.AppendLine();
         for (int i = 0; i < columnCount; ++i)
         {
             sb.Append("| --- ");
@@ -334,18 +353,37 @@ public class DocxToMarkdownConverter : DocxConverterBase
         sb.AppendLine("|");
     }
 
-    internal void ProcessRow(TableRow tableRow, StringBuilder sb)
+    internal void ProcessRow(TableRow tableRow, StringBuilder sb, int maxCellsCount)
     {
         sb.Append("| ");
+        int currentCellCount = 0;
         foreach (var element in tableRow.Elements())
         {
             switch (element)
             {
                 case TableCell cell:
                     ProcessCell(cell, sb);
+                    ++currentCellCount;
+                    if (currentCellCount < maxCellsCount && 
+                        cell.TableCellProperties?.GridSpan?.Val != null)
+                    {
+                        // Markdown does not support merged cells, add another empty cell for consistency.
+                        for (int i = 1; i < cell.TableCellProperties.GridSpan.Val.Value; i++)
+                        {
+                            sb.Append(" | ");
+                            ++currentCellCount;
+                        }
+                    }
                     break;
             }
         }
+
+
+        for (int i = currentCellCount; i < maxCellsCount; i++)
+        {
+            sb.Append(" | "); // Markdown does not support rows with less cells.
+        }
+
         sb.AppendLine();
     }
 
@@ -354,14 +392,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
         var cellBuilder = new StringBuilder();
         foreach (var paragraph in cell.Elements<Paragraph>())
         {
-            // Join paragraphs as Markdown doesn't support multiple lines per cell
-            if (paragraph != null)
-                base.ProcessParagraph(paragraph, cellBuilder);
-
-            cellBuilder.Append(' ');
+            // Markdown doesn't support multiple lines per cell directly,
+            // so we use the <br> tag.
+            ProcessParagraph(paragraph, cellBuilder);
         }
-        sb.Append(cellBuilder);
-        sb.Append(" | ");
+        sb.Append(cellBuilder.ReplaceLineEndings("<br/>"));
+        sb.Append(" | ");      
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)

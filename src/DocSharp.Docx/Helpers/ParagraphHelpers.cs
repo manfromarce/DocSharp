@@ -11,6 +11,11 @@ namespace DocSharp.Docx;
 
 public static class ParagraphHelpers
 {
+    public static bool IsLast(this Paragraph paragraph)
+    {
+        return paragraph.Parent != null && paragraph.Parent.LastChild == paragraph;
+    }
+
     public static bool IsEmpty(this Paragraph paragraph)
     {
         return paragraph.ChildElements.Count == 0 ||
