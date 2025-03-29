@@ -23,6 +23,9 @@ using DocSharp.Docx;
 using DocSharp.Markdown;
 using DocSharp.Imaging;
 using HtmlToOpenXml;
+using DocSharp.Rtf;
+using Codeuctivity.OpenXmlToHtml;
+using PeachPDF;
 
 namespace WpfApp1;
 /// <summary>
@@ -183,6 +186,130 @@ public partial class MainWindow : Window
         }
     }
 
+    private void DocxToTxt_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Plain text|*.txt",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".txt"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToTxtConverter();
+                    converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void RtfToHtml_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    rtf.ToHtml(sfd.FileName, new RtfToHtmlSettings()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    rtf.ToMarkdown(sfd.FileName, new RtfToMdSettings()
+                    {
+                        ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                        ImagesBaseUriOverride = "",
+                        ImageConverter = new ImageSharpConverter()
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void RtfToTxt_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Plain text|*.txt",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".txt"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    rtf.ToPlainText(sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
     private async void RtfToDocx_Click(object sender, RoutedEventArgs e)
     {
         // The RTF to DOCX is not implemented yet in DocSharp but it's planned.
@@ -203,7 +330,11 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    string html = RtfPipe.Rtf.ToHtml(File.ReadAllText(ofd.FileName));
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    string html = rtf.ToHtml(new RtfToHtmlSettings()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    });
                     using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(sfd.FileName, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
                     {
                         var mainPart = package.AddMainDocumentPart();
@@ -378,54 +509,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void DocxRtfToHtml_Click(object sender, RoutedEventArgs e)
-    {
-        // Please note that other open source libraries exist to convert DOCX to HTML directly, 
-        // e.g. OpenXmlToHtml (based on a fork of OpenXmlPowerTools) would give better results.
-        // This sample is mainly to test the DOCX to RTF conversion
-        // and if the produced RTF is correctly interpreted by third-party tools.
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "Documents|*.docx;*.dotx;*.rtf",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "HTML|*.html;*.htm",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                try
-                {
-                    string rtfContent = "";
-                    switch (Path.GetExtension(ofd.FileName).ToLower())
-                    {
-                        case ".docx":
-                        case ".dotx":
-                            var converter = new DocxToRtfConverter()
-                            {
-                                ImageConverter = new ImageSharpConverter()
-                            };
-                            rtfContent = converter.ConvertToString(ofd.FileName);
-                            break;
-                        case ".rtf":
-                            rtfContent = File.ReadAllText(ofd.FileName);
-                            break;
-                    }
-                    string html = RtfPipe.Rtf.ToHtml(rtfContent);
-                    File.WriteAllText(sfd.FileName, html);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
-    }
-
     private void ViewDocx_Click(object sender, RoutedEventArgs e)
     {
         // Please note that the WPF RichTextBox supports a subset of RTF features.
@@ -455,7 +538,7 @@ public partial class MainWindow : Window
                     var rtb = new RichTextBox()
                     {
                         HorizontalAlignment = HorizontalAlignment.Stretch,
-                        VerticalAlignment = VerticalAlignment.Stretch,
+                        VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
                         IsInactiveSelectionHighlightEnabled = true,
                         AutoWordSelection = false,
                         AcceptsReturn = true,
@@ -519,6 +602,62 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void DocDocxToHtml_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Documents|*.doc;*.dot;*.docx;*.dotx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                string tempFile = "";
+                try
+                {
+                    var converter = new OpenXmlToHtml();
+                    switch (Path.GetExtension(ofd.FileName).ToLower())
+                    {
+                        case ".doc":
+                        case ".dot":
+                            tempFile = Path.GetTempFileName();
+                            using (var reader = new StructuredStorageReader(ofd.FileName))
+                            {
+                                var doc = new WordDocument(reader);
+                                using (var docx = WordprocessingDocument.Create(tempFile, WordprocessingDocumentType.Document))
+                                {
+                                    DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                                }
+                            }
+                            await converter.ConvertToHtmlAsync(tempFile, sfd.FileName);
+                            break;
+                        case ".docx":
+                        case ".dotx":
+                            await converter.ConvertToHtmlAsync(ofd.FileName, sfd.FileName);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    if (File.Exists(tempFile))
+                    {
+                        File.Delete(tempFile);
+                    }
+                }
+            }
+        }
+    }
+
     private void XlsToHtml_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
@@ -563,26 +702,39 @@ public partial class MainWindow : Window
         }
     }
 
-    private void DocxToTxt_Click(object sender, RoutedEventArgs e)
+    private async void RtfToPdf_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Filter = "Rich Text Format|*.rtf",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
         {
             var sfd = new SaveFileDialog()
             {
-                Filter = "Plain text|*.txt",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".txt"
+                Filter = "PDF|*.pdf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
             };
             if (sfd.ShowDialog(this) == true)
             {
                 try
                 {
-                    var converter = new DocxToTxtConverter();
-                    converter.Convert(ofd.FileName, sfd.FileName);
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    string html = rtf.ToHtml(new RtfToHtmlSettings()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    });
+                    var pdfConfig = new PdfGenerateConfig()
+                    {
+                        PageSize = PeachPDF.PdfSharpCore.PageSize.Letter,
+                        PageOrientation = PeachPDF.PdfSharpCore.PageOrientation.Portrait
+                    };
+                    var generator = new PdfGenerator();
+                    using (var document = await generator.GeneratePdf(html, pdfConfig))
+                    {
+                        document.Save(sfd.FileName);
+                    }
                 }
                 catch (Exception ex)
                 {

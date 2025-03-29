@@ -31,6 +31,7 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
 
         var abstractNum = numbering.Elements<AbstractNum>().FirstOrDefault(e => e.StyleLink?.Val == listStyle);
         if (abstractNum?.AbstractNumberId != null) // TODO: Fallback and create this
+                                                   // (it should not happen, AbstractNum elements are added to the target document by DocxTemplateHelper)
         {
             int abstractNumId = abstractNum.AbstractNumberId.Value;
 
