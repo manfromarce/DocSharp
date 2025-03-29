@@ -98,6 +98,24 @@ internal class MarkdownVisitor : INodeVisitor
     {
         switch (element.Type)
         {
+            case ElementType.Heading1:
+                _writer.Write("# ");
+                break;
+            case ElementType.Heading2:
+                _writer.Write("## ");
+                break;
+            case ElementType.Heading3:
+                _writer.Write("### ");
+                break;
+            case ElementType.Heading4:
+                _writer.Write("#### ");
+                break;
+            case ElementType.Heading5:
+                _writer.Write("##### ");
+                break;
+            case ElementType.Heading6:
+                _writer.Write("###### ");
+                break;
             case ElementType.Emphasis:
                 _writer.Write("*");
                 break;
