@@ -10,13 +10,13 @@
 | Page setup   | ✅ | - | - |
 | Columns | ✅ | ❌ | ❌ |
 | Pictures [1] | ✅ | ✅ | - |
-| Lists [2]    | 🟡 | 🟡 | ✅ |
-| Tables [3]  | ✅ | 🟡 | ✅ |
+| Lists [2]    | 🟡 | ✅ | ✅ |
+| Tables [3]  | ✅ | ✅ | ✅ |
 | Styles [4] | 🟡 | 🟡 | - |
 | Header and footer | ✅ | ❌ | ❌ |
 | Endnotes and footnotes | ✅ | ❌ | ❌ |
 | Hyperlinks | ✅ | ✅ | - |
-| Bookmarks | ✅ | ❌ | - |
+| Bookmarks | ✅ | ✅ | - |
 | Drop cap | ✅ | ❌ | ❌ |
 | Symbols | ✅ | ✅ | ✅ |
 | Fields | 🟡 | ❌ | ❌ |
@@ -54,7 +54,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | Emojis | ✅ |
 | Inline code blocks [1] | ✅ |
 | Fenced code blocks [1] | ✅ |
-| Syntax highlight for code | ❌ |
+| Syntax highlight for code blocks | ❌ |
 | Quote blocks [1] | ✅ |
 | Lists [1] | ✅ |
 | Task lists | ✅ |
