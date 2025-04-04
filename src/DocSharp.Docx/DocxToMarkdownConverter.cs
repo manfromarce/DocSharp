@@ -49,7 +49,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
     public string? ImagesBaseUriOverride { get; set; } = null;
 
     /// <summary>
-    /// Image converter to preserve WEBP and other image types when rendering Markdown. 
+    /// Image converter to preserve TIFF, EMF and other image types when converting to Markdown. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
     /// this property can be set to a new instance of ImageSharpConverter or SystemDrawingConverter. 
     /// </summary>
