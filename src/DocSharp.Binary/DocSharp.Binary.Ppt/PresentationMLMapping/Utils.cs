@@ -6,6 +6,7 @@ using System.Reflection;
 using DocSharp.Binary.Tools;
 using DocSharp.Binary.OfficeDrawing;
 using System.Linq;
+using System.IO;
 
 namespace DocSharp.Binary.PresentationMLMapping
 {
@@ -25,12 +26,15 @@ namespace DocSharp.Binary.PresentationMLMapping
                 
         public static XmlDocument GetDefaultDocument(string filename)
         {
-            var a = Assembly.GetExecutingAssembly();
-            var s = a.GetManifestResourceStream(string.Format("{0}.Defaults.{1}.xml",
-                typeof(Utils).Namespace, filename));
-
+            var name = string.Format("{0}.Defaults.{1}.xml", typeof(Utils).Namespace, filename);
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name) ??
+                        Assembly.GetCallingAssembly().GetManifestResourceStream(name);
+            if (stream == null)
+            {
+                throw new FileNotFoundException($"Failed to load default XML from resources.");
+            }
             var doc = new XmlDocument();
-            doc.Load(s);
+            doc.Load(stream);
             return doc;
         }
 

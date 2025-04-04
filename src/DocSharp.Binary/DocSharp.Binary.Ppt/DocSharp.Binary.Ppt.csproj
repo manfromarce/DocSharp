@@ -21,4 +21,12 @@
     <ProjectReference Include="..\DocSharp.Binary.Common\DocSharp.Binary.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Ppt\PresentationMLMapping\Defaults\**\*.xml" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Ppt\PresentationMLMapping\Defaults\**\*.xml" />
+  </ItemGroup>
+
 </Project>
