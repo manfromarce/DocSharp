@@ -300,18 +300,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
         }
         foreach (char c in t)
         {
-            if (c == '\r')
-            {
-                // Ignore as it's usually followed by \n
-            }
-            else if (c == '\n')
-            {
-                sb.AppendLine("  "); // soft break
-            }
-            else
-            {
-                MarkdownHelpers.AppendChar(isAllCaps ? char.ToUpper(c) : c, font, sb);
-            }
+            MarkdownHelpers.AppendChar(isAllCaps ? char.ToUpper(c) : c, font, sb);
         }
     }
 
@@ -324,7 +313,13 @@ public class DocxToMarkdownConverter : DocxConverterBase
             return;
         }
 
-        sb.AppendLine(); // Inline tables would break the layout.
+        if (!sb.EndsWithNewLine())
+        {
+            // Add a whole blank line before the table
+        	sb.AppendLine(); 
+            sb.AppendLine();
+        }
+
         int rowIndex = 0;
         foreach(var element in table.Elements())
         {
@@ -340,7 +335,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
                     break;
             }
         }
-        sb.AppendLine();
+        // Add a blank line after the table
         sb.AppendLine();
     }
 
@@ -466,11 +461,11 @@ public class DocxToMarkdownConverter : DocxConverterBase
             if (ImagesOutputFolder != null &&
                 mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
             {
-                string fileName = System.IO.Path.GetFileName(imagePart.Uri.OriginalString);
+                string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
 #if NETFRAMEWORK
-                string actualFilePath = System.IO.Path.Combine(ImagesOutputFolder, fileName);
+                string actualFilePath = Path.Combine(ImagesOutputFolder, fileName);
 #else 
-                string actualFilePath = System.IO.Path.Join(ImagesOutputFolder, fileName);
+                string actualFilePath = Path.Join(ImagesOutputFolder, fileName);
 #endif
                 using (var stream = imagePart.GetStream())
                 {
@@ -546,7 +541,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
-                    htmlEntity = StringHelpers.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
+                    htmlEntity = FontConverter.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
                 }
             }
             if (string.IsNullOrWhiteSpace(htmlEntity))

@@ -33,10 +33,7 @@ public class DocxToTxtConverter : DocxConverterBase
             if (int.TryParse(symbol, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
                              out int decimalValue))
             {
-                if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
-                {
-                    symbol = StringHelpers.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
-                }
+                symbol = FontConverter.ToUnicode(symbolChar?.Font?.Value ?? "", (char)decimalValue);
             }
             sb.Append(symbol);
         }
@@ -113,7 +110,7 @@ public class DocxToTxtConverter : DocxConverterBase
     private int GetGridSpan(TableCell? cell)
     {
         var gridSpan = cell?.TableCellProperties?.GridSpan?.Val;
-        return gridSpan != null ? gridSpan.Value : 1;
+        return gridSpan != null ? Math.Max(gridSpan.Value, 1) : 1;
     }
 
     private bool IsVerticalMerge(TableCell cell)
@@ -210,18 +207,7 @@ public class DocxToTxtConverter : DocxConverterBase
     {
         foreach (char c in text)
         {
-            if (c == '\r')
-            {
-                // Ignore as it's usually followed by \n
-            }
-            else if (c == '\n')
-            {
-                sb.AppendLine();
-            }
-            else
-            {
-                sb.Append(StringHelpers.ToUnicode(fontName, c));
-            }
+            sb.Append(FontConverter.ToUnicode(fontName, c));
         }
     }
 
@@ -234,11 +220,14 @@ public class DocxToTxtConverter : DocxConverterBase
         }
         base.ProcessParagraph(paragraph, sb);
 
-        sb.AppendLine();
-        if (!paragraph.IsEmpty())
+		if (!paragraph.IsLast())
         {
-            // Write additional blank line
             sb.AppendLine();
+            if (!paragraph.IsEmpty())
+            {
+                // Write additional blank line unless the paragraph is empty.
+                sb.AppendLine();
+            }
         }
     }
 

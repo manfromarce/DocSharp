@@ -29,16 +29,34 @@ public static class MarkdownHelpers
         }
     }
 
-    public static void AppendChar(char c, string font, StringBuilder sb)
+    public static void AppendChar(char c, string font, StringBuilder sb, bool forceHtmlBreak = false)
     {
-        string s = StringHelpers.ToUnicode(font, c);
-        if (s.Length == 1 && _specialChars.Contains(s[0]))
+        if (c == '\r')
         {
-            sb.Append(new string(['\\', s[0]]));
+            // Ignore as it's usually followed by \n
+        }
+        else if (c == '\n')
+        {
+            if (forceHtmlBreak)
+            {
+                sb.Append("<br>");
+            }
+            else
+            {
+                sb.AppendLine("  "); // Markdown soft break (2 trailing spaces).
+            }
         }
         else
         {
+            string s = FontConverter.ToUnicode(font, c);
+            if (s.Length == 1 && _specialChars.Contains(s[0]))
+            {
+                sb.Append(new string(['\\', s[0]]));
+            }
+            else
+            {
             sb.Append(s);
+            }
         }
     }
 }
