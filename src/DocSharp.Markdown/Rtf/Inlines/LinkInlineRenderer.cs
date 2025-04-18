@@ -1,0 +1,265 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using DocSharp.Docx;
+using DocSharp.Helpers;
+using DocSharp.IO;
+using Markdig.Syntax.Inlines;
+
+namespace Markdig.Renderers.Rtf.Inlines;
+
+public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
+{
+    protected override void WriteObject(RtfRenderer renderer, LinkInline obj)
+    {
+        if (string.IsNullOrWhiteSpace(obj.Url))
+        {
+            renderer.WriteChildren(obj);
+            return;
+        }
+
+        if (obj.IsImage)
+        {
+            if (!renderer.SkipImages)
+            {
+                ProcessImage(renderer, obj.Url, obj.Label, obj.Title);
+            }
+            return;
+        }
+
+        Uri? uri = null;
+
+        var isAbsoluteUri = Uri.TryCreate(obj.Url, UriKind.Absolute, out uri);
+        bool isExternal = true;
+        string anchorName = string.Empty;
+        
+        if (!isAbsoluteUri)
+        {
+            isExternal = !obj.Url.StartsWith("#"); // anchor link
+            
+            if (isExternal)
+            {
+                string fixedUrl = string.Empty;
+                if (!obj.Url.StartsWith("."))
+                {
+                    // Relative URIs like "file.txt" or "/file.txt" need be changed to
+                    // "./file.txt" to work in Microsoft Word, otherwise the document will result corrupted.
+                    fixedUrl = "./" + obj.Url.TrimStart(['/', '\\']);
+                }
+                else
+                {
+                    fixedUrl = obj.Url;
+                }
+                if (!string.IsNullOrWhiteSpace(fixedUrl))
+                {
+                    Uri.TryCreate(obj.Url, UriKind.Relative, out uri);
+                }
+            }
+            else
+            {
+                // Note: bookmarks are currently created in HeadingRenderer (for headings).
+                // It should be done in HtmlInline/HtmlBlock renderer too (for <a> tags),
+                // but it's not implemented yet.
+                anchorName = TryGetBookmark(renderer, obj.Url.Trim('#'));
+            }
+        }
+
+        if (isExternal && uri != null && ((!isAbsoluteUri) || uri.IsFile))
+        {
+            // Remove anchor (if any) from local file URLs, as it does not work in Word.
+            // Note that IsFile throws exception for relative URIs, it should be called only if URI is absolute
+            int i = obj.Url.LastIndexOf('#');
+            if (i >= 0)
+            {
+                string url = uri.OriginalString.Substring(0, i);
+                uri = new Uri(url, isAbsoluteUri ? UriKind.Absolute : UriKind.Relative);
+            }
+        }
+
+        if (uri == null && anchorName == string.Empty)
+        {
+            // Don't create the hyperlink if no valid Uri or anchor was created.
+            renderer.WriteChildren(obj);
+            return;
+        }
+
+        renderer.RtfBuilder.Append(@"{\field{\*\fldinst{HYPERLINK ");
+
+        if (isExternal)
+        {
+            renderer.RtfBuilder.Append(@"""" + uri + @"""}}");
+        }
+        else
+        {
+            // Link to bookmark
+            renderer.RtfBuilder.Append(@"\\l """ + anchorName + @"""}}");
+        }
+        renderer.RtfBuilder.Append(@"{\fldrslt{\cf16\ul ");
+        renderer.WriteChildren(obj);
+        renderer.RtfBuilder.Append(@"}}}");
+    }
+
+    private void ProcessImage(RtfRenderer renderer, string url, string? label, string? title)
+    {
+        Uri? uri = null;
+
+        var isAbsoluteUri = Uri.TryCreate(url, UriKind.Absolute, out uri);
+
+        if (!isAbsoluteUri)
+        {
+            // Could be a relative URL
+            if (Uri.TryCreate(url, UriKind.Relative, out uri) && !string.IsNullOrEmpty(renderer.ImagesBaseUri))
+            {
+                // Relative URI is well formatted, check ImagesBaseUri and add a final slash,
+                // otherwise it is interpreted as file and relative links starting with . or .. won't work properly.
+                // Note that ImagesPathUri should not be a file path.
+                string normalizedBaseUri = renderer.ImagesBaseUri.TrimEnd('\\', '/') + @"/";
+                if (Uri.TryCreate(normalizedBaseUri, UriKind.Absolute, out Uri? baseUri)
+                    && baseUri != null)
+                {
+                    uri = new Uri(baseUri, uri);
+                }
+            }
+        } // else the URI can be directly processed as absolute
+
+        if (uri != null)
+        {
+            try
+            {
+                if (uri.IsFile)
+                {
+                    InsertImage(renderer, uri.LocalPath, label, title);
+                }
+                else if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                {
+                    // Only HTTP and HTTPS are supported for automatic download
+                    var bytes = ResourceDownloader.DownloadFile(url);
+                    if (bytes != null)
+                    {
+                        InsertImage(renderer, bytes, label, title);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                //Probably non-existent file or permission issue, do not stop the conversion
+                #if DEBUG
+                Console.WriteLine("InsertImage exception: " + ex.Message);
+                #endif
+            }
+        }
+    }
+
+    private void InsertImage(RtfRenderer renderer, string filePath, string? label, string? title)
+    {
+        using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+        {
+            InsertImage(renderer, fs, label, title);
+        }
+    }
+
+    private void InsertImage(RtfRenderer renderer, byte[] bytes, string? label, string? title)
+    {
+        using (var ms = new MemoryStream(bytes))
+        {
+            InsertImage(renderer, ms, label, title);
+        }
+    }
+
+    private void InsertImage(RtfRenderer renderer, Stream stream, string? label, string? title)
+    {
+        if (ImageHeader.TryDetectFileType(stream, out var fileType))
+        {
+            //PartTypeInfo imageFormat;
+            //switch (fileType)
+            //{
+            //    case ImageHeader.FileType.Bitmap:
+            //        imageFormat = ImagePartType.Bmp;
+            //        break;
+            //    case ImageHeader.FileType.Gif:
+            //        imageFormat = ImagePartType.Gif;
+            //        break;
+            //    case ImageHeader.FileType.Jpeg:
+            //        imageFormat = ImagePartType.Jpeg;
+            //        break;
+            //    case ImageHeader.FileType.Png:
+            //        imageFormat = ImagePartType.Png;
+            //        break;
+            //    case ImageHeader.FileType.Tiff:
+            //        imageFormat = ImagePartType.Tiff;
+            //        break;
+            //    case ImageHeader.FileType.Svg:
+            //        imageFormat = ImagePartType.Svg;
+            //        break;
+            //    case ImageHeader.FileType.Ico:
+            //        imageFormat = ImagePartType.Icon;
+            //        break;
+            //    default:
+            //        // Note: WEBP and AVIF images are supported by web browser but not by DOCX.
+            //        return;
+            //}
+
+            //var imagePart = renderer.Document.MainDocumentPart?.AddImagePart(stream, imageFormat);
+            //if (imagePart != null && renderer.Document.MainDocumentPart?.GetIdOfPart(imagePart) is string rId)
+            //{
+            //    System.Drawing.Size size = System.Drawing.Size.Empty;
+            //    try
+            //    {
+            //        size = ImageHeader.GetDimensions(stream, fileType);
+            //    }
+            //    catch
+            //    {
+            //        return;
+            //    }
+            //    if (size == System.Drawing.Size.Empty || size.Width < 0 || size.Height < 0)
+            //    {
+            //        return;
+            //    }
+            //    // GetDimensions returns width and height in pixels, except for WMF
+            //    // whose dimensions are return in inches as it's not device-independent.
+            //    var unit = fileType == ImageHeader.FileType.Wmf ? DocSharp.UnitMetric.Inch : DocSharp.UnitMetric.Pixel;
+                
+            //    // Convert to EMUs
+            //    var width = DocSharp.UnitMetricHelper.ConvertToEmus(size.Width, unit);
+            //    var height = DocSharp.UnitMetricHelper.ConvertToEmus(size.Height, unit);
+                
+            //    // Limit image size to fit A4 page width and height, subtracted by 2 cm margins used in the template.
+            //    int maxWidth = 6840000;
+            //    int maxHeight = 9972000;
+            //    ScaleImageSize(ref width, ref height, maxWidth, maxHeight);
+
+            //    var imageElement = ImageHelpers.CreateImage(rId, width, height, _imageIdCounter, label, title);
+            //    ++_imageIdCounter;
+            //    if (renderer.Cursor.Container is Run run)
+            //    {
+            //        renderer.Cursor.Write(imageElement);
+            //    }
+            //    else
+            //    {
+            //        renderer.Cursor.Write(new Run(imageElement));
+            //    }
+            //}
+        }
+    }
+
+    // Scale image dimensions to be less than max width and height, keeping aspect ratio.
+    private static void ScaleImageSize(ref long width, ref long height, long maxWidth, long maxHeight)
+    {
+        if (width > maxWidth || height > maxHeight)
+        {
+            var ratioX = (double)maxWidth / width;
+            var ratioY = (double)maxHeight / height;
+            var ratio = Math.Min(ratioX, ratioY);
+            width = Math.Max((int)(width * ratio), 1);
+            height = Math.Max((int)(height * ratio), 1);
+        }
+    }
+
+    private string TryGetBookmark(RtfRenderer renderer, string anchorId)
+    {
+        var bookmarkName = renderer.Bookmarks
+                           .Where(b => b.Equals(anchorId, StringComparison.OrdinalIgnoreCase));
+        return bookmarkName?.FirstOrDefault() ?? "";
+    }
+}

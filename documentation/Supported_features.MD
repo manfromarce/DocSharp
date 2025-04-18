@@ -44,36 +44,65 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 
 [4]: Styles are converted to inline formatting  
 
+## RTF converters
+
+| Feature       | ➡️ HTML | ➡️ Markdown | ➡️ TXT |
+| ------------- | :------: | :-----: | :---------: | :----: |
+| Character formatting | ✅ | ✅ | - |
+| Paragraph formatting | ✅ | - | - |
+| Section formatting  | 🟡 | - | - |
+| Page setup   | - | - | - |
+| Pictures | ✅ | ✅ | - |
+| External pictures | ✅ | ✅ | - |
+| Lists | 🟡 | 🟡 | 🟡 |
+| Tables | ✅ | 🟡 | 🟡 |
+| Styles | 🟡[1] | 🟡[1] | - |
+| Hyperlinks | ✅ | ✅ | - |
+| Bookmarks | ✅ | ✅ | - |
+| Header and footer | 🟡 | 🟡 | 🟡 |
+| Foonotes and endnotes | 🟡 | 🟡 | 🟡 |
+| Fields | 🟡 | 🟡 | 🟡 |
+| Page numbers | 🟡 | 🟡 | 🟡 |
+| Shapes | ❌ | ❌ | ❌ |
+| WordArt | ❌ | ❌ | ❌ |
+| Image effects | ❌ | ❌ | ❌ |
+| Math | ❌ | ❌ | ❌ |
+| OLE objects | - | - | - |
+| Comments | - | - | - |
+| Document information | 🟡 | - | - |
+
+[1] preserved as inline formatting if possible.  
+
 ## Markdown renderers
 
-| Feature       | ➡️ DOCX | 
+| Feature       | ➡️ DOCX | ➡️ RTF |
 | ------------- | :-----: |
-| Emphasis, bold, strikethrough | ✅ |
-| Paragraphs | ✅ |
-| Headings | ✅ |
-| Emojis | ✅ |
-| Inline code blocks [1] | ✅ |
-| Fenced code blocks [1] | ✅ |
-| Syntax highlight for code blocks | ❌ |
-| Quote blocks [1] | ✅ |
-| Lists [1] | ✅ |
-| Task lists | ✅ |
-| Breaks | ✅ |
-| Pictures [2] | ✅ |
-| Links | ✅ |
-| Bookmarks on headings | ✅ |
-| HTML inline tags | 🟡 |
-| HTML entities | ✅ |
-| Raw HTML blocks | ❌ |
-| Tables | ✅ |
-| Math (LaTex blocks) | ❌ |
-| Figures | ❌ |
-| Footer | ❌ |
-| Definition list | ❌ |
+| Emphasis, bold, strikethrough | ✅ | ✅ |
+| Paragraphs | ✅ | ✅ |
+| Headings | ✅ | ✅ |
+| Emojis | ✅ | ✅ |
+| Inline code blocks [1] | ✅ | ✅ |
+| Fenced code blocks [1] | ✅ | ✅ |
+| Syntax highlight for code blocks | ❌ | ❌ |
+| Quote blocks [1] | ✅ | ✅ |
+| Lists [1] | ✅ | ✅ |
+| Task lists | ✅ | ✅ |
+| Breaks | ✅ | ✅ |
+| Pictures [2] | ✅ | ⌛ |
+| Links | ✅ | ✅ |
+| Bookmarks on headings | ✅ | ✅ |
+| HTML inline tags | 🟡 | 🟡 |
+| HTML entities | ✅ | ✅ |
+| Raw HTML blocks | ❌ | ❌ |
+| Tables | ✅ | ⌛ |
+| Math (LaTex blocks) | ❌ | ❌ |
+| Figures | ❌ | ❌ |
+| Footer | ❌ | ❌ |
+| Definition list | ❌ | ❌ |
 
 [1]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
 
-[2]: WebP, AVIF and JXL images are not supported in DOCX.  
-WebP images can be converted using the DocSharp.ImageSharp package or setting the ImageConverter property on a custom converter which returns PNG bytes.  
+[2]: WebP, AVIF and JXL images are not supported in DOCX and RTF, and GIF is also not supported in RTF.  
+JPEG and PNG have the broadest support. To convert other images, you can use the DocSharp.ImageSharp or DocSharp.SystemDrawing package or set the ImageConverter property on a custom converter which returns PNG bytes.  
 The ImagesBaseUri property has to be set in order to support relative URLs, otherwise only images referenced with absolute URLs are processed (see the wiki or sample app for examples).  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.

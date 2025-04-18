@@ -6,7 +6,8 @@ The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
 - DocSharp.Docx: convert DOCX to Markdown, RTF and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
-- DocSharp.Markdown: convert Markdown to DOCX using a custom Markdig renderer.
+- DocSharp.Rtf: convert RTF to HTML, Markdown or plain text.
+- DocSharp.Markdown: convert Markdown to DOCX and RTF using custom Markdig renderers.
 
 Packages can be installed via NuGet:  
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Doc?style=flat-square&label=DocSharp.Binary.Doc)](https://www.nuget.org/packages/DocSharp.Binary.Doc/) 
@@ -50,6 +51,7 @@ Dependencies:
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
+- [RtfPipe](https://github.com/erdomke/RtfPipe)
 - [markdig.docx](https://github.com/morincer/markdig.docx)
 
 Others:
@@ -63,4 +65,4 @@ DocSharp is licensed under MIT license and can be used for both open source and 
 
 DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt); ImageSharp and VectSharp have their own licenses, please visit their repositories for more information.
 
-If you find the library useful, adding a star is highly appreciated.
+If you find the library useful, adding a star is highly appreciated, stars are a way to guide other developers towards helpful libraries and tools.
