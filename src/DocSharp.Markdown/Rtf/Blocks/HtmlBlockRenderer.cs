@@ -7,7 +7,7 @@ using Markdig.Syntax;
 
 namespace Markdig.Renderers.Rtf.Blocks;
 
-public class HtmlInlineRenderer : RtfObjectRenderer<HtmlBlock>
+public class HtmlBlockRenderer : RtfObjectRenderer<HtmlBlock>
 {
     protected override void WriteObject(RtfRenderer renderer, HtmlBlock obj)
     {

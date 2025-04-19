@@ -48,15 +48,15 @@ public class RtfRenderer : RendererBase
         ObjectRenderers.Add(new HtmlEntityInlineRenderer());
         ObjectRenderers.Add(new LinkInlineRenderer());
         ObjectRenderers.Add(new LiteralInlineRenderer());
-        //ObjectRenderers.Add(new HtmlInlineRenderer());
+        ObjectRenderers.Add(new HtmlInlineRenderer());
 
         // Extensions renderers
         ObjectRenderers.Add(new TableRenderer());
+        ObjectRenderers.Add(new TaskListRenderer());
         //ObjectRenderers.Add(new MathInlineRenderer());
         //ObjectRenderers.Add(new MathBlockRenderer());
         //ObjectRenderers.Add(new FooterBlockRenderer());
         //ObjectRenderers.Add(new FigureRenderer());
-        //ObjectRenderers.Add(new TaskListRenderer());
         //ObjectRenderers.Add(new DefinitionListRenderer());
     }
 
