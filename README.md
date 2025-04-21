@@ -35,8 +35,8 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 
 ### Roadmap
 
+- Reverse RTF to DOCX conversion (it's being worked on in the dev branch)
 - Support more elements and attributes, and fix issues on edge cases
-- Reverse RTF to DOCX conversion
 - Async functions/progress callback (some tasks such as downloading images referenced in Markdown may take some time)
 - Improve support for right-to-left and complex script languages
 
