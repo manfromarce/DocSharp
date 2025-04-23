@@ -2,7 +2,7 @@
 
 ## DOCX converters
 
-| Feature       | ➡️ RTF | ➡️ Markdown | ➡️ TXT
+| Feature       | ➡️ RTF | ➡️ Markdown | ➡️ TXT |
 | ------------- | :-----: | :---------: | :-----: |
 | Character formatting | ✅ | ✅ | - |
 | Paragraph formatting | ✅ | - | - |
