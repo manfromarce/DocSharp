@@ -314,13 +314,10 @@ public partial class MainWindow : Window
                     var converter = new MarkdownConverter()
                     {
                         ImagesBaseUri = Path.GetDirectoryName(ofd.FileName),
-                        ImageConverter = new ImageSharpConverter()
+                        ImageConverter = new ImageSharpConverter() // Convert WEBP and GIF images which are not supported in RTF
+                                                                   // (possibly AVIF and JXL too in a future release) 
                     };
-                    using var ms = new MemoryStream();
-                    using (var document = converter.ToWordprocessingDocument(markdown, ms))
-                    {
-                        document.SaveTo(sfd.FileName, DocSharp.IO.SaveFormat.Rtf);
-                    }
+                    converter.ToRtf(markdown, sfd.FileName);
                 }
                 catch (Exception ex)
                 {

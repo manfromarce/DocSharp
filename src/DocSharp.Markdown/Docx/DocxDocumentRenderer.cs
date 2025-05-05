@@ -54,7 +54,7 @@ public class DocxDocumentRenderer : RendererBase
         ObjectRenderers.Add(new CodeBlockRenderer());
         ObjectRenderers.Add(new ListRenderer());
         ObjectRenderers.Add(new HeadingRenderer());
-        // ObjectRenderers.Add(new HtmlBlockRenderer());
+        // ObjectRenderers.Add(new HtmlBlockRenderer()); // Raw HTML is not supported
         ObjectRenderers.Add(new ParagraphRenderer());
         ObjectRenderers.Add(new ListItemRenderer());
         ObjectRenderers.Add(new QuoteBlockRenderer());
@@ -74,11 +74,13 @@ public class DocxDocumentRenderer : RendererBase
         // Extensions renderers
         ObjectRenderers.Add(new TableRenderer());
         ObjectRenderers.Add(new TaskListRenderer());
-        //ObjectRenderers.Add(new MathInlineRenderer());
-        //ObjectRenderers.Add(new MathBlockRenderer());
-        //ObjectRenderers.Add(new FooterBlockRenderer());
-        //ObjectRenderers.Add(new FigureRenderer());
-        //ObjectRenderers.Add(new DefinitionListRenderer());
+        ObjectRenderers.Add(new DefinitionListRenderer());
+        ObjectRenderers.Add(new FooterBlockRenderer());
+        ObjectRenderers.Add(new FootnoteGroupRenderer());
+        ObjectRenderers.Add(new FootnoteLinkRenderer());
+        // ObjectRenderers.Add(new FigureRenderer());
+        // ObjectRenderers.Add(new MathInlineRenderer()); // LaTex blocks are not supported
+        // ObjectRenderers.Add(new MathBlockRenderer());
     }
 
     public void ForceCloseParagraph()

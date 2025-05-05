@@ -1,10 +1,12 @@
 using System.IO;
+using System.Text;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using Markdig;
-using Markdig.Renderers.Docx;
 using Markdig.Syntax;
+using Markdig.Renderers.Docx;
+using Markdig.Renderers.Rtf;
 
 namespace DocSharp.Markdown;
 
@@ -62,6 +64,20 @@ public class MarkdownConverter
         {
             document.Save();
         }        
+    }
+
+    /// <summary>
+    /// Convert Markdown to DOCX bytes.
+    /// </summary>
+    /// <param name="markdown">The input markdown source.</param>
+    /// <param name="openXmlDocumentType">The Open XML document type (Document by default).</param>
+    public byte[] ToDocxBytes(MarkdownSource markdown, WordprocessingDocumentType openXmlDocumentType = WordprocessingDocumentType.Document)
+    {
+        using (var ms = new MemoryStream())
+        {
+            ToDocx(markdown, ms, openXmlDocumentType, false);
+            return ms.ToArray();
+        }
     }
 
     /// <summary>
@@ -185,5 +201,50 @@ public class MarkdownConverter
             ImageConverter = this.ImageConverter
         };
         renderer.Render(markdown.Document);
+    }
+
+    /// <summary>
+    /// Convert Markdown to RTF and save to file.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="outputFilePath">The output RTF file path.</param>
+    public void ToRtf(MarkdownSource markdown, string outputFilePath, MarkdownToRtfSettings? settings = null)
+    {
+        File.WriteAllText(outputFilePath, ToRtfString(markdown));
+    }
+
+    /// <summary>
+    /// Convert Markdown to RTF and save to a Stream.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="outputStream">The output RTF stream.</param>
+    public void ToRtf(MarkdownSource markdown, Stream outputStream, MarkdownToRtfSettings? settings = null)
+    {
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
+        {
+            sw.Write(ToRtfString(markdown));
+        }
+    }
+
+    // public void ToRtf(MarkdownSource markdown, TextWriter output, MarkdownToRtfSettings? settings = null)
+    // {
+    // }
+
+    /// <summary>
+    /// Convert Markdown to RTF and returns a string.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <returns>The RTF document as <see cref="string"/></returns>
+    public string ToRtfString(MarkdownSource markdown, MarkdownToRtfSettings? settings = null)
+    {
+        settings ??= new MarkdownToRtfSettings();
+        var rtfBuilder = new StringBuilder();
+        var renderer = new RtfRenderer(rtfBuilder, settings)
+        {
+            ImagesBaseUri = this.ImagesBaseUri,
+            SkipImages = this.SkipImages
+        };
+        renderer.Render(markdown.Document);
+        return rtfBuilder.ToString();
     }
 }

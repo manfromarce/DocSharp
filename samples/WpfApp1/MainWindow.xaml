@@ -34,17 +34,20 @@
                 Click="BinaryToOpenXml_Click"
                 Content="Binary to Open XML" />
             <Button
-                Click="DocxToMarkdown_Click"
-                Content="Docx to Markdown" />
-            <Button
                 Click="DocxToRtf_Click"
                 Content="Docx to Rtf" />
+            <Button
+                Click="DocxToMarkdown_Click"
+                Content="Docx to Markdown" />
             <Button
                  Click="DocxToTxt_Click"
                  Content="Docx to Txt" />
             <Button
                 Click="MarkdownToDocx_Click"
                 Content="Markdown to Docx" />
+            <Button
+                Click="MarkdownToRtf_Click"
+                Content="Markdown to Rtf" />
             <Button
                 Click="MarkdownToDocxAppend_Click"
                 Content="Markdown to Docx (Append)" />

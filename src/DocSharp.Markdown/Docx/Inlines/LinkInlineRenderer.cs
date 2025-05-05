@@ -207,7 +207,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                     return;
                 }
                 // GetDimensions returns width and height in pixels, except for WMF
-                // whose dimensions are return in inches as it's not device-independent.
+                // whose dimensions are returned in inches as it's not device-independent.
                 var unit = fileType == ImageFormat.Wmf ? DocSharp.UnitMetric.Inch : DocSharp.UnitMetric.Pixel;
                 
                 // Convert to EMUs

@@ -21,6 +21,9 @@ public class DocumentStyles
 
         ["Hyperlink"] = "MDHyperlink", 
         ["CodeInline"] = "CodeInline", 
+
+        ["DefinitionTerm"] = "DefinitionTerm", 
+        ["DefinitionItem"] = "DefinitionItem", 
     };
 
     public Dictionary<int, string?> Headings { get; } = new()

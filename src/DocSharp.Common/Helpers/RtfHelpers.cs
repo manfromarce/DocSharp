@@ -93,6 +93,11 @@ public static class RtfHelpers
         }
     }
 
+    public static string? ToRtfColor(this System.Drawing.Color color)
+    {
+        return $"\\red{color.R}\\green{color.G}\\blue{color.B};";
+    }
+
     public static int GetLanguageCode(string langId)
     {
         try
