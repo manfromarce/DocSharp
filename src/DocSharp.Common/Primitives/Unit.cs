@@ -33,7 +33,7 @@ readonly struct Unit
     {
         this.type = type;
         this.value = value;
-        this.valueInEmus = ComputeInEmus(type, value);
+        this.valueInEmus = CalculateEMUs(type, value);
     }
 
     public static Unit Parse(string? str, UnitMetric defaultMetric = UnitMetric.Unitless)
@@ -85,9 +85,9 @@ readonly struct Unit
     }
 
     /// <summary>
-    /// Gets the value expressed in the English Metrics Units.
+    /// Gets the value expressed in English Metrics Units.
     /// </summary>
-    internal static long ComputeInEmus(UnitMetric type, double value)
+    internal static long CalculateEMUs(UnitMetric type, double value)
     {
         /* Compute width and height in English Metrics Units.
             * There are 360000 EMUs per centimeter, 914400 EMUs per inch, 12700 EMUs per point
@@ -109,22 +109,61 @@ readonly struct Unit
             case UnitMetric.Percent: return 0L; // not applicable
             case UnitMetric.Emus: return (long) value;
             case UnitMetric.Inch: return (long) (value * 914400L);
-            case UnitMetric.Diu: return (long) (value * 9525L);
-            case UnitMetric.HundrethsOfInch: return (long) (value * 9144L);
-            case UnitMetric.Twip: return (long) (value * 45720L);
             case UnitMetric.Centimeter: return (long) (value * 360000L);
-            case UnitMetric.Millimeter: return (long) (value * 36000L);
-            case UnitMetric.Himetric: return (long) (value * 360L);
             case UnitMetric.Point: return (long) (value * 12700L); // 1 point = 1/72 inch
-            case UnitMetric.Pica: return (long) (value * 152400L); // 1 pica = 1/6 inch
+
+            case UnitMetric.HundrethsOfInch: return (long) (value * 9144L);
+            case UnitMetric.Twip: return (long) (value * 635L); // 1 twip = 1/20 point = 12700/20 EMUs = 635 EMUs
+            case UnitMetric.Pica: return (long) (value * 152400L); // 1 pica = 1/6 inch = 914400 / 6 EMUs = 152400 EMUs
+
+            case UnitMetric.Millimeter: return (long) (value * 36000L);
+            case UnitMetric.Himetric: return (long) (value * 360L); // 1 himetric = 1/100 mm
+
             case UnitMetric.EM:
                 // Considering 1em = 12pt (http://sureshjain.wordpress.com/2007/07/06/53/)    
                 return (long) (value / (12700L * 12));
-            case UnitMetric.Ex:
+            case UnitMetric.Ex: // Half of EM
                 return (long) (value / (12700L * 12)) / 2;
+
+            case UnitMetric.Diu:
+                // 1 DIU = 1/96 inch = 914400/96 EMUs = 9525 EMUs
+                return (long) (value * 9525L);
             case UnitMetric.Pixel:
                 // Considering 96 DPI
-                return (long) (value / 96 * 914400L);
+                return (long) (value / 9525L);
+            default: goto case UnitMetric.Pixel;
+        }
+    }
+
+    /// <summary>
+    /// Gets the value expressed in twips / DXA.
+    /// </summary>
+    internal static long CalculateTwips(UnitMetric type, double value)
+    {
+        switch (type)
+        {
+            case UnitMetric.Auto:
+            case UnitMetric.Unitless:
+            case UnitMetric.Percent: return 0L; // not applicable
+
+            case UnitMetric.Twip: return (long)value;
+            case UnitMetric.Point: return (long)(value * 20); // 1 twip = 1/20 point
+            case UnitMetric.Inch: return (long)(value * 1440); // 1 twip = 1/1440 inch
+            case UnitMetric.HundrethsOfInch: return (long)(value * 14.4); // 1/100 inch
+            case UnitMetric.Pica: return (long)(value * 240); // 1 pica = 1/6 inch
+
+            case UnitMetric.Centimeter: return (long)((value * 1440) / 2.54); // 1 cm = 1/2.54 inch
+            case UnitMetric.Millimeter: return (long)((value * 1440) / 25.4); // 1 mm = 1/25.4 inch
+            case UnitMetric.Himetric: return (long)((value * 14.4) / 25.4); // 1 himetric = 1/100 mm; twips = mm*1440/25.4 --> twips = (1440/25.4)/100 himetric
+
+            case UnitMetric.Emus: return (long)(value / 635); // 1 inch = 914400 EMUs = 1440 twips --> 1 twip = 914400 / 1440 = 635
+
+            case UnitMetric.EM: return (long)(value * 20 * 12); // Considering 1 em = 12 pt
+            case UnitMetric.Ex: return (long)(value * 20 * 12 / 2); // Half of em
+            
+            case UnitMetric.Diu: return (long)(value * 15); // 1 DIU = 1/96 inch
+            case UnitMetric.Pixel: return (long)(value * 15); // Considering 96 DPI
+
             default: goto case UnitMetric.Pixel;
         }
     }

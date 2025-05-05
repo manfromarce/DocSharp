@@ -50,7 +50,15 @@ public static class UnitMetricHelper
     /// </summary>
     public static long ConvertToEmus(double value, UnitMetric unitType)
     {
-        return Unit.ComputeInEmus(unitType, value);
+        return Unit.CalculateEMUs(unitType, value);
+    }
+
+    /// <summary>
+    /// Converts value of the specified UnitMetric to twips.
+    /// </summary>
+    public static long ConvertToTwips(double value, UnitMetric unitType)
+    {
+        return Unit.CalculateTwips(unitType, value);
     }
 
     internal static UnitMetric ToUnitMetric(string? type)
