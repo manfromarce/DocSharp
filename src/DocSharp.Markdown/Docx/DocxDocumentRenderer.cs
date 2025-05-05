@@ -74,10 +74,10 @@ public class DocxDocumentRenderer : RendererBase
         // Extensions renderers
         ObjectRenderers.Add(new TableRenderer());
         ObjectRenderers.Add(new TaskListRenderer());
-        ObjectRenderers.Add(new DefinitionListRenderer());
         ObjectRenderers.Add(new FooterBlockRenderer());
         ObjectRenderers.Add(new FootnoteGroupRenderer());
         ObjectRenderers.Add(new FootnoteLinkRenderer());
+        // ObjectRenderers.Add(new DefinitionListRenderer());
         // ObjectRenderers.Add(new FigureRenderer());
         // ObjectRenderers.Add(new MathInlineRenderer()); // LaTex blocks are not supported
         // ObjectRenderers.Add(new MathBlockRenderer());

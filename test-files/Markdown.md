@@ -23,16 +23,7 @@
 
 ## Image 
 
-<!-- ![jj](https://jupyterbook.org/en/stable/_images/C-3PO_droid.png) -->
-
-## Definition list
-
-First Term
-: This is the definition of the first term.
-
-Second Term
-: This is one definition of the second term.
-: This is another definition of the second term.
+![jj](https://jupyterbook.org/en/stable/_images/C-3PO_droid.png)
 
 ## Task list
 

@@ -58,7 +58,6 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | Quote blocks [1] | ✅ | ✅ |
 | Lists [1] | ✅ | ✅ |
 | Task lists | ✅ | ✅ |
-| Definition lists | ✅ | ✅ |
 | Breaks | ✅ | ✅ |
 | Pictures [2] | ✅ | ✅ |
 | Links | ✅ | ✅ |
@@ -67,9 +66,10 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 | HTML entities | ✅ | ✅ |
 | Raw HTML blocks | ❌ | ❌ |
 | Tables | ✅ | ✅ |
+| Footer and footnotes | ✅ | ✅ |
 | Math (LaTex blocks) | ❌ | ❌ |
+| Definition lists | ❌ | ❌ |
 | Figures | ❌ | ❌ |
-| Footer and footnotes | 🟡 | 🟡 |
 
 [1]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
 

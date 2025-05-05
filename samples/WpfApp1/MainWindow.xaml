@@ -76,9 +76,6 @@
                Click="DocToRtf_Click"
                Content="Doc to Rtf" /> 
             <Button
-               Click="MarkdownToRtf_Click"
-               Content="Markdown to Rtf" />
-            <Button
               Click="HtmlToRtf_Click"
               Content="Html to Docx/Rtf (via Html2OpenXml)" />
             <Button
