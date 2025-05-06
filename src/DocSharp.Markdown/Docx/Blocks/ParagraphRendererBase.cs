@@ -18,7 +18,7 @@ public abstract class ParagraphRendererBase<T> : DocxObjectRenderer<T> where T :
 
     protected Paragraph WriteAsParagraph(DocxDocumentRenderer renderer, T obj, string? styleId, string? bookmarkName)
     {
-        if ((obj.Parent is ListItemBlock) && !renderer.IsFirstInContainer)
+        if (obj.Parent is ListItemBlock && !renderer.IsFirstInContainer)
         {
             // In DOCX list items cannot contain multiple paragraphs.            
             renderer.ForceCloseParagraph();            

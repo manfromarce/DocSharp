@@ -64,7 +64,7 @@ public class ParagraphRenderer : LeafBlockParagraphRendererBase<ParagraphBlock>
         }
 
         // Close paragraph
-        if (!(obj.IsLastChild() && (renderer.isInTable || renderer.isInFootnote)))
+        if (!(obj.IsLastChild() && (renderer.isInTable || renderer.isInEndnote)))
         {
             renderer.RtfBuilder.AppendLineCrLf(@"\par");
         }

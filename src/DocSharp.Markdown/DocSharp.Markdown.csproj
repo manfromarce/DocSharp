@@ -13,7 +13,7 @@
     <AssemblyTitle>DocSharp.Markdown</AssemblyTitle>
     <PackageId>DocSharp.Markdown</PackageId>
     <Title>DocSharp.Markdown</Title>
-    <Description>.NET library for converting documents. The DocSharp.Markdown package provides Markdown to DOCX conversion.</Description>
+    <Description>.NET library for converting documents. The DocSharp.Markdown package provides Markdown to DOCX and RTF conversion.</Description>
     <PackageTags>docx doc rtf markdown convert openxml markdig</PackageTags>
   </PropertyGroup>
 

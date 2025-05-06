@@ -1,4 +1,4 @@
-# Esempio di Markdown
+# Title
 
 ## List
 
@@ -10,7 +10,7 @@
 - Third  
   Second line
 
-# Break
+## Break
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## Image 
 
-![jj](https://jupyterbook.org/en/stable/_images/C-3PO_droid.png)
+![img](https://jupyterbook.org/en/stable/_images/C-3PO_droid.png)
 
 ## Task list
 
@@ -50,6 +50,8 @@
 ## Footer
 
 Here's a simple footnote,[^1] and here's a longer one.[^bignote]
+
+Other content.
 
 [^1]: This is the first footnote.
 

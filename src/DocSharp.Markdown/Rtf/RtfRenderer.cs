@@ -27,7 +27,7 @@ public class RtfRenderer : RendererBase
 
     internal bool isInTable = false;
     internal bool isInTableHeader = false;
-    internal bool isInFootnote = false;
+    internal bool isInEndnote = false;
 
     public RtfRenderer(StringBuilder rtfBuilder, MarkdownToRtfSettings settings)
     {

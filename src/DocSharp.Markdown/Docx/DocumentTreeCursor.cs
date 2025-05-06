@@ -12,7 +12,7 @@ public class DocumentTreeCursor
     public OpenXmlCompositeElement Container { get; private set; }
     public OpenXmlElement? InsertAfter { get; private set; }
 
-    private Stack<Tuple<OpenXmlCompositeElement, OpenXmlElement?>> _position = new();
+    internal Stack<Tuple<OpenXmlCompositeElement, OpenXmlElement?>> Position = new();
 
     public DocumentTreeCursor(OpenXmlCompositeElement container, OpenXmlElement? insertAfter)
     {
@@ -22,14 +22,14 @@ public class DocumentTreeCursor
 
     public void GoInto(OpenXmlCompositeElement container)
     {
-        _position.Push(new Tuple<OpenXmlCompositeElement, OpenXmlElement?>(Container, InsertAfter));
+        Position.Push(new Tuple<OpenXmlCompositeElement, OpenXmlElement?>(Container, InsertAfter));
         Container = container;
         InsertAfter = null;
     }
 
     public void PopAndAdvanceAfter(OpenXmlElement? element)
     {
-        var tuple = _position.Pop();
+        var tuple = Position.Pop();
         if (element != null && tuple.Item1 != element.Parent)
         {
             throw new ArgumentException($"Element parent does not match container: expected {tuple.Item1}, got {element.Parent}");

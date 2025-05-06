@@ -16,6 +16,8 @@ namespace Markdig.Renderers.Docx;
 
 public class DocxDocumentRenderer : RendererBase
 {
+    internal bool isInEndnote = false;
+
     public IImageConverter? ImageConverter { get; set; } = null;
 
     public string? ImagesBaseUri { get; set; } = null;
@@ -86,7 +88,7 @@ public class DocxDocumentRenderer : RendererBase
     public void ForceCloseParagraph()
     {
         Paragraph? topParagraphOnStack = null;
-        while (NoParagraph > 0)
+        while (NoParagraph > 0 && Cursor.Position.Count > 0)
         {
             topParagraphOnStack = Cursor.Container as Paragraph;
             Cursor.PopAndAdvanceAfter(null);

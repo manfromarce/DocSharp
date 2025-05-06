@@ -114,23 +114,23 @@ readonly struct Unit
 
             case UnitMetric.HundrethsOfInch: return (long) (value * 9144L);
             case UnitMetric.Twip: return (long) (value * 635L); // 1 twip = 1/20 point = 12700/20 EMUs = 635 EMUs
-            case UnitMetric.Pica: return (long) (value * 152400L); // 1 pica = 1/6 inch = 914400 / 6 EMUs = 152400 EMUs
+            case UnitMetric.Pica: return (long) (value * 152400L); // 1 pica = 1/6 inch = 12 pt = 152400 EMUs
 
             case UnitMetric.Millimeter: return (long) (value * 36000L);
             case UnitMetric.Himetric: return (long) (value * 360L); // 1 himetric = 1/100 mm
 
             case UnitMetric.EM:
                 // Considering 1em = 12pt (http://sureshjain.wordpress.com/2007/07/06/53/)    
-                return (long) (value / (12700L * 12));
-            case UnitMetric.Ex: // Half of EM
-                return (long) (value / (12700L * 12)) / 2;
+                return (long) (value * 152400);
+            case UnitMetric.Ex: // Considering half of EM
+                return (long) (value * 152400) / 2;
 
             case UnitMetric.Diu:
                 // 1 DIU = 1/96 inch = 914400/96 EMUs = 9525 EMUs
                 return (long) (value * 9525L);
             case UnitMetric.Pixel:
                 // Considering 96 DPI
-                return (long) (value / 9525L);
+                return (long) (value * 9525L);
             default: goto case UnitMetric.Pixel;
         }
     }
@@ -159,7 +159,7 @@ readonly struct Unit
             case UnitMetric.Emus: return (long)(value / 635); // 1 inch = 914400 EMUs = 1440 twips --> 1 twip = 914400 / 1440 = 635
 
             case UnitMetric.EM: return (long)(value * 20 * 12); // Considering 1 em = 12 pt
-            case UnitMetric.Ex: return (long)(value * 20 * 12 / 2); // Half of em
+            case UnitMetric.Ex: return (long)(value * 20 * 12 / 2); // Considering half of em
             
             case UnitMetric.Diu: return (long)(value * 15); // 1 DIU = 1/96 inch
             case UnitMetric.Pixel: return (long)(value * 15); // Considering 96 DPI

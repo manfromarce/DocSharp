@@ -22,13 +22,13 @@ public class FootnoteLinkRenderer : RtfObjectRenderer<FootnoteLink>
 {
     protected override void WriteObject(RtfRenderer renderer, FootnoteLink obj)
     {
-        if (!renderer.isInFootnote)
+        if (!renderer.isInEndnote)
         {
-            renderer.isInFootnote = true;
+            renderer.isInEndnote = true;
             renderer.RtfBuilder.Append(@"{\super\chftn {\footnote\ftnalt \super\chftn\nosupersub  ");
             renderer.WriteChildren(obj.Footnote);
             renderer.RtfBuilder.AppendLineCrLf("}}");
-            renderer.isInFootnote = false;
+            renderer.isInEndnote = false;
         }
     }
 }
