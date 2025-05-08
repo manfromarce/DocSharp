@@ -631,7 +631,7 @@ public partial class MainWindow : Window
         var ofd = new OpenFileDialog()
         {
             Multiselect = true,
-            Filter = "Microsoft Excel 97-2003 spreadsheet|*.xls;*.xlt;*.xlr",
+            Filter = "Spreadsheet|*.xlsx;*.xltx;*.xls;*.xlt;*.xlr",
         };
         if (ofd.ShowDialog(this) == true)
         {
@@ -645,17 +645,27 @@ public partial class MainWindow : Window
                 var tempFile = Path.GetTempFileName();
                 try
                 {
-                    using (var reader = new StructuredStorageReader(ofd.FileName))
+                    bool isXls = false;
+                    switch (Path.GetExtension(Path.GetFileNameWithoutExtension(ofd.FileName)).ToLower())
                     {
-                        var xls = new XlsDocument(reader);
-                        using (var xlsx = SpreadsheetDocument.Create(tempFile, SpreadsheetDocumentType.Workbook))
-                        {
-                            DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
-                        }
+                        case ".xls":
+                        case ".xlt":
+                        case ".xlr":
+                            isXls = true;
+                            // Convert XLS to XLSX using DocSharp.Binary if necessary
+                            using (var reader = new StructuredStorageReader(ofd.FileName))
+                            {
+                                var xls = new XlsDocument(reader);
+                                using (var xlsx = SpreadsheetDocument.Create(tempFile, SpreadsheetDocumentType.Workbook))
+                                {
+                                    DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
+                                }
+                            }
+                        break;  
                     }
                     using (var outputStream = new FileStream(sfd.FileName, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        XlsxToHtmlConverter.Converter.ConvertXlsx(tempFile, outputStream);
+                        XlsxToHtmlConverter.Converter.ConvertXlsx(isXls ? tempFile : ofd.FileName, outputStream);
                     }
                 }
                 catch (Exception ex)
