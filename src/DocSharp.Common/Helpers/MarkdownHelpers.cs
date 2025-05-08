@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,6 +57,37 @@ public static class MarkdownHelpers
             else
             {
             sb.Append(s);
+            }
+        }
+    }
+
+    public static void AppendChar(char c, string font, TextWriter writer, bool forceHtmlBreak = false)
+    {
+        if (c == '\r')
+        {
+            // Ignore as it's usually followed by \n
+        }
+        else if (c == '\n')
+        {
+            if (forceHtmlBreak)
+            {
+                writer.Write("<br>");
+            }
+            else
+            {
+                writer.WriteLine("  "); // Markdown soft break (2 trailing spaces).
+            }
+        }
+        else
+        {
+            string s = FontConverter.ToUnicode(font, c);
+            if (s.Length == 1 && _specialChars.Contains(s[0]))
+            {
+                writer.Write(new string(['\\', s[0]]));
+            }
+            else
+            {
+                writer.Write(s);
             }
         }
     }

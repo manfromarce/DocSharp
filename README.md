@@ -6,6 +6,7 @@ The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
 - DocSharp.Docx: convert DOCX to Markdown, RTF and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Rtf: convert RTF to DOCX, HTML, Markdown or plain text. The RTF to DOCX conversion requires the DocSharp.Docx, which will make the RtfSource.ToDocx() extension method available (this way, the Open XML SDK dependency is not mandatory for the RTF package).
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
 
 Packages can be installed via NuGet:  
@@ -13,6 +14,7 @@ Packages can be installed via NuGet:
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Xls?style=flat-square&label=DocSharp.Binary.Xls)](https://www.nuget.org/packages/DocSharp.Binary.Xls/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Ppt?style=flat-square&label=DocSharp.Binary.Ppt)](https://www.nuget.org/packages/DocSharp.Binary.Ppt/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Docx?style=flat-square&label=DocSharp.Docx)](https://www.nuget.org/packages/DocSharp.Docx/)
+<!-- [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Rtf?style=flat-square&label=DocSharp.Rtf)](https://www.nuget.org/packages/DocSharp.Rtf/) -->
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Markdown?style=flat-square&label=DocSharp.Markdown)](https://www.nuget.org/packages/DocSharp.Markdown/)
 
 The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/) and [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> MD).
@@ -51,6 +53,7 @@ Dependencies:
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
 - [markdig.docx](https://github.com/morincer/markdig.docx)
+- [RtfPipe](https://github.com/erdomke/RtfPipe)
 
 Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.

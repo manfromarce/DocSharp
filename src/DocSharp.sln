@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Imaging", "Imaging", "{6C83
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.SystemDrawing", "DocSharp.SystemDrawing\DocSharp.SystemDrawing.csproj", "{C5A5B630-2A06-491C-AF17-97DB195F7050}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Rtf", "DocSharp.Rtf\DocSharp.Rtf.csproj", "{BB385E7D-9F8A-6350-6446-96E0D598262F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{C5A5B630-2A06-491C-AF17-97DB195F7050}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5A5B630-2A06-491C-AF17-97DB195F7050}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5A5B630-2A06-491C-AF17-97DB195F7050}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

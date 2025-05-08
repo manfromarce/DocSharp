@@ -103,8 +103,18 @@ public class DocxToMarkdownConverter : DocxConverterBase
                         break;
                     case "heading 6":
                     case "heading6":
+                    case "heading 7":
+                    case "heading7":
+                    case "heading 8":
+                    case "heading8":
+                    case "heading 9":
+                    case "heading9":
                         sb.Append("###### ");
                         break;
+                    //case "quote":
+                    //case "intense quote":
+                    //    sb.Append("> ");
+                    //    break;
                 }
             }
         }
