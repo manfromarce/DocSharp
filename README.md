@@ -5,7 +5,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
-- DocSharp.Docx: convert DOCX to Markdown, RTF and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Rtf: convert RTF to DOCX, HTML, Markdown or plain text. The RTF to DOCX conversion requires the DocSharp.Docx, which will make the RtfSource.ToDocx() extension method available (this way, the Open XML SDK dependency is not mandatory for the RTF package).
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
 
@@ -58,7 +58,7 @@ Forked:
 Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
 - [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) conversion
-- [OpenXmlToHtml](https://github.com/Codeuctivity/OpenXmlToHtml), [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
+- [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
 
 ### License
 

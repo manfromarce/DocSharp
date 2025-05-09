@@ -2,36 +2,36 @@
 
 ## DOCX converters
 
-| Feature       | ➡️ RTF | ➡️ Markdown | ➡️ TXT |
+| Feature       | ➡️ RTF | ➡️ Markdown | ➡️ HTML | ➡️ TXT |
 | ------------- | :-----: | :---------: | :-----: |
-| Character formatting | ✅ | ✅ | - |
-| Paragraph formatting | ✅ | - | - |
-| Section formatting   | ✅ | - | - |
-| Page setup   | ✅ | - | - |
-| Columns | ✅ | ❌ | ❌ |
-| Pictures [1] | ✅ | ✅ | - |
-| Lists [2]    | 🟡 | ✅ | ✅ |
-| Tables [3]  | ✅ | ✅ | ✅ |
-| Styles [4] | 🟡 | 🟡 | - |
-| Header and footer | ✅ | ❌ | ❌ |
-| Endnotes and footnotes | ✅ | ❌ | ❌ |
-| Hyperlinks | ✅ | ✅ | - |
-| Bookmarks | ✅ | ✅ | - |
-| Drop cap | ✅ | ❌ | ❌ |
-| Symbols | ✅ | ✅ | ✅ |
-| Fields | 🟡 | ❌ | ❌ |
-| Page numbers | ✅ | ❌ | ❌ |
-| Ruby | ❌ | ❌ | ❌ |
-| Shapes | ❌ | ❌ | Text is extracted |
-| Charts | ❌ | ❌ | - |
-| Diagrams | ❌ | ❌ | - |
-| Advanced text effects (includes WordArt) | ❌ | ❌ | - |
-| Image effects | ❌ | ❌ | - |
-| Math | ❌ | ✅ | ❌ |
-| OLE objects | ❌ | - | - |
-| Form fields | ❌ | - | - |
-| Comments | ❌ | - | - |
-| Document information | ❌ | - | - |
+| Character formatting | ✅ | ✅ | | - |
+| Paragraph formatting | ✅ | - | | - |
+| Section formatting   | ✅ | - | | - |
+| Page setup   | ✅ | - | | - |
+| Columns | ✅ | ❌ | | ❌ |
+| Pictures [1] | ✅ | ✅ | | - |
+| Lists [2]    | 🟡 | ✅ | | ✅ |
+| Tables [3]  | ✅ | ✅ | | ✅ |
+| Styles [4] | 🟡 | 🟡 | | - |
+| Header and footer | ✅ | ❌ | | ❌ |
+| Endnotes and footnotes | ✅ | ❌ | | ❌ |
+| Hyperlinks | ✅ | ✅ | | - |
+| Bookmarks | ✅ | ✅ | | - |
+| Drop cap | ✅ | ❌ | | ❌ |
+| Symbols | ✅ | ✅ | | ✅ |
+| Fields | 🟡 | ❌ | | ❌ |
+| Page numbers | ✅ | ❌ | | ❌ |
+| Ruby | ❌ | ❌ | | ❌ |
+| Shapes | ❌ | ❌ | | Text is extracted |
+| Charts | ❌ | ❌ | | - |
+| Diagrams | ❌ | ❌ | | - |
+| Advanced text effects (includes WordArt) | ❌ | ❌ | | - |
+| Image effects | ❌ | ❌ | | - |
+| Math | ❌ | ✅ | | ❌ |
+| OLE objects | ❌ | - | | - |
+| Form fields | ❌ | - | | - |
+| Comments | ❌ | - | | - |
+| Document information | ❌ | - | | - |
 
 [1]: RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
 Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  

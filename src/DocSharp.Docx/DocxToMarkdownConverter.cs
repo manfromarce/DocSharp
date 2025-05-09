@@ -31,12 +31,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
 
     /// <summary>
     /// This property is used in combination with ImagesOutputFolder to determine 
-    /// how the image files are specified in Markdown.
+    /// how the image files URLs are specified in Markdown.
     /// 
     /// If this property is set to null, an absolute path such as "file:///c:/.../image.jpg" 
     /// will be created using the ImagesOutputFolder value and the image file name.
     /// 
-    /// Otherwise, the base path (exluding the image file name) is replaced by this value.
+    /// Otherwise, the base path (excluding the image file name) is replaced by this value.
     /// Possible values:
     /// - empty string or "." : images are expected to be in the same folder as the Markdown file.
     /// - relative paths such as "images" or "../images": images are expected to be in a subfolder or parent folder.
@@ -551,7 +551,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
-                    htmlEntity = FontConverter.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
+                    htmlEntity = FontConverter.ToUnicode(symbolChar!.Font!.Value!, (char)decimalValue);
                 }
             }
             if (string.IsNullOrWhiteSpace(htmlEntity))
@@ -559,7 +559,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
                 htmlEntity = $"&#{decimalValue};";
             }
             sb.Append(htmlEntity);
-        }        
+        }
     }
 
     internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)

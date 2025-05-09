@@ -148,6 +148,39 @@ public partial class MainWindow : Window
         }
     }
 
+    private void DocxToHtml_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToHtmlConverter()
+                    {
+                        ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
+                                                                      // (ImageSharp does not support WMF / EMF yet)
+                    };
+                    converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
     private void DocxToMarkdown_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
@@ -490,7 +523,7 @@ public partial class MainWindow : Window
         }
     }
 
-	private async void HtmlToRtf_Click(object sender, RoutedEventArgs e)
+    private async void HtmlToRtf_Click(object sender, RoutedEventArgs e)
     {
         // Convert HTML to DOCX using the HtmlToOpenXml library and then DOCX to RTF using DocSharp.
         var ofd = new OpenFileDialog()
@@ -583,43 +616,49 @@ public partial class MainWindow : Window
                 }
             }
         }
-    }    
-    
-    private void DocxToHtml_Click(object sender, RoutedEventArgs e)
+    }
+
+    private void DocToHtml_Click(object sender, RoutedEventArgs e)
     {
-        // Please note that other open source libraries exist to convert DOCX to HTML directly, 
-        // e.g. OpenXmlToHtml (based on a fork of OpenXmlPowerTools) will likely produce better results.
-        // This sample is mainly to test the DOCX to RTF and RTF to HTML conversions.
+        // Convert DOC to DOCX and then DOCX to HTML.
         var ofd = new OpenFileDialog()
         {
-            Filter = "Documents|*.docx;*.dotx",
-            Multiselect = false,
+            Multiselect = true,
+            Filter = "Microsoft Word 97-2003 document|*.doc;*.dot",
         };
         if (ofd.ShowDialog(this) == true)
         {
             var sfd = new SaveFileDialog()
             {
                 Filter = "HTML|*.html;*.htm",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".htm"
             };
             if (sfd.ShowDialog(this) == true)
             {
+                var tempFile = Path.GetTempFileName();
                 try
                 {
-                    var converter = new DocxToRtfConverter()
+                    using (var reader = new StructuredStorageReader(ofd.FileName))
                     {
-                    	ImageConverter = new ImageSharpConverter()
-                    };
-                    string rtfContent = converter.ConvertToString(ofd.FileName);
-                    var rtf = RtfSource.FromRtfString(rtfContent);
-                    rtf.ToHtml(sfd.FileName, new RtfToHtmlSettings()
+                        var doc = new WordDocument(reader);
+                        using (var docx = WordprocessingDocument.Create(tempFile, WordprocessingDocumentType.Document))
+                        {
+                            DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                        }
+                    }
+                    var converter = new DocxToHtmlConverter()
                     {
                         ImageConverter = new ImageSharpConverter()
-                    });
+                    };
+                    converter.Convert(tempFile, sfd.FileName);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    File.Delete(tempFile);
                 }
             }
         }
@@ -704,6 +743,50 @@ public partial class MainWindow : Window
                     {
                         ImageConverter = new ImageSharpConverter()
                     });
+                    var pdfConfig = new PdfGenerateConfig()
+                    {
+                        PageSize = PeachPDF.PdfSharpCore.PageSize.Letter,
+                        PageOrientation = PeachPDF.PdfSharpCore.PageOrientation.Portrait
+                    };
+                    var generator = new PdfGenerator();
+                    using (var document = await generator.GeneratePdf(html, pdfConfig))
+                    {
+                        document.Save(sfd.FileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private async void DocxToPdf_Click(object sender, RoutedEventArgs e)
+    {
+        // Convert DOCX to HTML using DocSharp and then HTML to PDF using the PeachPdf library.
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "PDF|*.pdf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToHtmlConverter()
+                    {
+                        ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
+                                                                      // (ImageSharp does not support WMF / EMF yet)
+                    };
+                    string html = converter.ConvertToString(ofd.FileName);
                     var pdfConfig = new PdfGenerateConfig()
                     {
                         PageSize = PeachPDF.PdfSharpCore.PageSize.Letter,
