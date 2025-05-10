@@ -28,6 +28,8 @@ namespace DocSharp.Docx;
 
 public class DocxToHtmlConverter : DocxConverterBase
 {
+    public bool FixedLayout { get; set; } = false;
+
     /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
@@ -110,7 +112,7 @@ public class DocxToHtmlConverter : DocxConverterBase
         }
 
         var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph)?.Val?.Value;
-        var border = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);
+        var borders = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);
         var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph);
         var spacing = OpenXmlHelpers.GetEffectiveProperty<SpacingBetweenLines>(paragraph);
         var contextualSpacing = OpenXmlHelpers.GetEffectiveProperty<ContextualSpacing>(paragraph);
@@ -138,16 +140,20 @@ public class DocxToHtmlConverter : DocxConverterBase
                 styles.Add("text-align: justify;");
         }
 
-        if (border != null)
+        if (borders != null)
         {
-            if (border.TopBorder?.Val != null)
-                styles.Add($"border-top: 1px solid #{border.TopBorder.Color ?? "000000"};");
-            if (border.BottomBorder?.Val != null)
-                styles.Add($"border-bottom: 1px solid #{border.BottomBorder.Color ?? "000000"};");
-            if (border.LeftBorder?.Val != null)
-                styles.Add($"border-left: 1px solid #{border.LeftBorder.Color ?? "000000"};");
-            if (border.RightBorder?.Val != null)
-                styles.Add($"border-right: 1px solid #{border.RightBorder.Color ?? "000000"};");
+            if (borders.TopBorder != null)
+                ProcessBorder(borders.TopBorder, ref styles, false);
+            if (borders.BottomBorder != null)
+                ProcessBorder(borders.BottomBorder, ref styles, false);
+            if (borders.LeftBorder != null)
+                ProcessBorder(borders.LeftBorder, ref styles, false);
+            if (borders.RightBorder != null)
+                ProcessBorder(borders.RightBorder, ref styles, false);
+            if (borders.BarBorder != null)
+                ProcessBorder(borders.BarBorder, ref styles, false);
+            if (borders.BetweenBorder != null)
+                ProcessBorder(borders.BetweenBorder, ref styles, false);
         }
 
         if (shading != null && shading.Fill?.Value is string fill && fill.Length == 6)
@@ -286,6 +292,151 @@ public class DocxToHtmlConverter : DocxConverterBase
         base.ProcessParagraph(paragraph, sb);
 
         sb.AppendLine("</p>");
+    }
+
+    internal void ProcessTableWidthType(TableWidthDxaNilType? width, ref List<string> styles, string cssAttribute)
+    {
+        if (width?.Type != null && width.Width != null && double.TryParse(width.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out double w))
+        {
+            if (width.Type.Value == TableWidthValues.Dxa) // twips
+            {
+                styles.Add($"{cssAttribute}: {(w / 20).ToStringInvariant()}pt;");
+            }
+        }
+    }
+
+    internal void ProcessTableWidthType(TableWidthType? width, ref List<string> styles, string cssAttribute)
+    {
+        if (width?.Type != null && width.Width != null && double.TryParse(width.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out double w))
+        {
+            if (width.Type.Value == TableWidthUnitValues.Pct)  // Fithies of percent
+            {
+                styles.Add($"{cssAttribute}: {(w / 50).ToStringInvariant()}%;");
+            }
+            else if (width.Type.Value == TableWidthUnitValues.Dxa) // twips
+            {
+                styles.Add($"{cssAttribute}: {(w / 20).ToStringInvariant()}pt;");
+            }
+        }
+    }
+
+    internal void ProcessBorder(BorderType? border, ref List<string> styles, bool isTableCell, bool isLastRow = false, bool isLastColumn = false)
+    {
+        if (border == null)
+        {
+            return;
+        }
+        string cssAttribute = "border-left";
+        if (border is RightBorder)
+        {
+            cssAttribute = "border-right";
+        }
+        else if (border is TopBorder)
+        {
+            cssAttribute = "border-top";
+        }
+        else if (border is BottomBorder)
+        {
+            cssAttribute = "border-bottom";
+        }
+        else if (border is BarBorder)
+        {
+            cssAttribute = "border-right";
+        }
+        else if (border is BetweenBorder)
+        {
+            cssAttribute = "border-bottom";
+        }
+        else if (border is StartBorder)
+        {
+            cssAttribute = "border-inline-start";
+        }
+        else if (border is EndBorder)
+        {
+            cssAttribute = "border-inline-end";
+        }
+        else if (border is InsideHorizontalBorder)
+        {
+            if (isLastRow)
+                return;
+            cssAttribute = "border-bottom";
+        }
+        else if (border is InsideVerticalBorder)
+        {
+            if (isLastColumn)
+                return;
+            cssAttribute = "border-inline-end";
+        }
+        else if (border is Border) // Used for characters borders
+        {
+            cssAttribute = "border";
+        }
+
+        string borderStyle = "solid";
+        if (border.Val != null)
+        {
+            if (border.Val.Value == BorderValues.Dashed)
+            {
+                borderStyle = "dashed";
+            }
+            else if (border.Val.Value == BorderValues.Dotted)
+            {
+                borderStyle = "dotted";
+            }
+            else if (border.Val.Value == BorderValues.Double)
+            {
+                borderStyle = "double";
+            }
+            else if (border.Val.Value == BorderValues.Triple)
+            {
+                borderStyle = "double"; // Triple is not supported in CSS
+            }
+            else if (border.Val.Value == BorderValues.None || border.Val.Value == BorderValues.Nil)
+            {
+                borderStyle = "none";
+            }
+            else
+            {
+                borderStyle = "solid"; // Default value
+            }
+            // Other possible CSS values are only: groove, ridge, inset, outset
+        }
+
+        string borderWidth = "1px";
+        if (border.Size != null)
+        {
+            // Open XML uses 1/8 points for border width
+            double sizeInPoints = Math.Round(border.Size.Value / 8.0);
+            borderWidth = $"{sizeInPoints.ToStringInvariant()}pt";
+        }
+
+        string borderColor = "000000";
+        if (border.Color?.Value != null && !string.IsNullOrWhiteSpace(border.Color?.Value) && border.Color!.Value.Length == 6)
+        {
+            borderColor = border.Color.Value;
+        }
+        if (border.Shadow != null && ((!border.Shadow.HasValue) || border.Shadow.Value))
+        {
+            //borderStyle = "inset";
+            borderStyle = "outset";
+        }
+        if (border.Frame != null && ((!border.Frame.HasValue) || border.Frame.Value))
+        {
+            borderStyle = "ridge";
+        }
+
+        styles.Add($"{cssAttribute}: {borderWidth} {borderStyle} #{borderColor};");
+
+        if (isTableCell && border.Space != null && border.Space.Value > 0)
+        {
+            // Open XML uses points for border spacing
+            styles.Add("border-collapse: separate;");
+            styles.Add("border-spacing: " + border.Space.Value.ToStringInvariant() + "pt;");
+        }
+        else
+        {
+            styles.Add("border-collapse: collapse;");
+        }
     }
 
     internal override void ProcessRun(Run run, StringBuilder sb)
@@ -513,7 +664,7 @@ public class DocxToHtmlConverter : DocxConverterBase
 
         if (border?.Val != null)
         {
-            styles.Add($"border: 1px solid #{border.Color ?? "000000"};");
+            ProcessBorder(border, ref styles, false);
         }
 
         if (shadow14 != null)
@@ -755,6 +906,177 @@ public class DocxToHtmlConverter : DocxConverterBase
 
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
+        var rows = table.Elements<TableRow>();
+        int rowNumber = 1;
+        int rowCount = rows.Count();
+        sb.Append("<table>");
+        foreach (var row in rows)
+        {
+            ProcessTableRow(row, sb, rowNumber, rowCount);
+            ++rowNumber;
+        }
+        sb.AppendLine("</table>");
+    }
+
+    internal void ProcessTableRow(TableRow row, StringBuilder sb, int rowNumber, int rowCount)
+    {
+        var rowStyles = new List<string>();
+        var defaultCellStyles = new List<string>();
+
+        var rowProperties = row.TableRowProperties;
+        // These properties are specific to single rows.
+        if (rowProperties?.GetFirstChild<TableRowHeight>() is TableRowHeight tableRowHeight &&
+            tableRowHeight.Val != null && tableRowHeight.HeightType != null &&
+            (tableRowHeight.HeightType.Value == HeightRuleValues.AtLeast || tableRowHeight.HeightType.Value == HeightRuleValues.Exact))
+        {
+            rowStyles.Add($"height: {tableRowHeight.Val.Value / 20.0}pt;"); // Convert twips to points
+        }
+        if (rowProperties?.GetFirstChild<TableHeader>() is TableHeader header &&
+            (header.Val is null || header.Val == OnOffOnlyValues.On))
+        {
+        }
+        if (rowProperties?.GetFirstChild<CantSplit>() is CantSplit cantSplit &&
+            (cantSplit.Val is null || cantSplit.Val == OnOffOnlyValues.On))
+        {
+            // No breaks inside the row
+            rowStyles.Add("break-inside: avoid;");
+        }
+
+        // These properties can appear in rows, tables or TablePropertyExceptions.
+        var justification = row.GetEffectiveProperty<TableJustification>();
+        if (justification != null && justification.Val != null && justification.Val.HasValue)
+        {
+            if (justification.Val.Value == TableRowAlignmentValues.Left)
+            {
+            }
+            else if (justification.Val.Value == TableRowAlignmentValues.Center)
+            {
+            }
+            else if (justification.Val.Value == TableRowAlignmentValues.Right)
+            {
+            }
+        }
+
+        var layout = row.GetEffectiveProperty<TableLayout>();
+        if (layout?.Type != null && layout.Type.Value == TableLayoutValues.Fixed) // otherwise AutoFit
+        {
+            ProcessTableWidthType(row.GetEffectiveProperty<TableWidth>(), ref rowStyles, "width");
+        }
+
+        var ind = row.GetEffectiveProperty<TableIndentation>();
+        if (ind?.Type != null && ind?.Width != null)
+        {
+            if (ind.Type.Value == TableWidthUnitValues.Pct) // Fithies of percent
+            {
+                double width = ind.Width.Value / 50.0; // Convert fifties of percent to percent
+                rowStyles.Add($"margin-left: {width.ToStringInvariant()}%;");
+            }
+            else if (ind.Type.Value == TableWidthUnitValues.Dxa) // Twips
+            {
+                double width = ind.Width.Value / 20.0; // Convert twips to points
+                rowStyles.Add($"margin-left: {width.ToStringInvariant()}pt;");
+            }
+        }
+
+        ProcessTableWidthType(row.GetEffectiveProperty<WidthBeforeTableRow>(), ref rowStyles, "margin-top");
+        ProcessTableWidthType(row.GetEffectiveProperty<WidthAfterTableRow>(), ref rowStyles, "margin-bottom");
+
+        ProcessTableWidthType(row.GetEffectiveProperty<TableCellSpacing>(), ref defaultCellStyles, "margin");
+
+        var topRowBorder = OpenXmlHelpers.GetEffectiveBorder<TopBorder>(row);
+        ProcessBorder(topRowBorder, ref rowStyles, false);
+        var bottomRowBorder = OpenXmlHelpers.GetEffectiveBorder<BottomBorder>(row);
+        ProcessBorder(bottomRowBorder, ref rowStyles, false);
+        var leftRowBorder = OpenXmlHelpers.GetEffectiveBorder<LeftBorder>(row);
+        ProcessBorder(leftRowBorder, ref rowStyles, false);
+        var rightRowBorder = OpenXmlHelpers.GetEffectiveBorder<RightBorder>(row);
+        ProcessBorder(rightRowBorder, ref rowStyles, false);
+        if (leftRowBorder == null && rightRowBorder == null) // Left and right should have priority over start and end as they are more specific
+        {
+            var startRowBorder = OpenXmlHelpers.GetEffectiveBorder<StartBorder>(row);
+            ProcessBorder(leftRowBorder, ref rowStyles, false);
+            var endRowBorder = OpenXmlHelpers.GetEffectiveBorder<EndBorder>(row);
+            ProcessBorder(rightRowBorder, ref rowStyles, false);
+        }
+        var insideHBorder = OpenXmlHelpers.GetEffectiveBorder<InsideHorizontalBorder>(row); 
+        var insideVBorder = OpenXmlHelpers.GetEffectiveBorder<InsideVerticalBorder>(row);
+
+        var marginDefault = OpenXmlHelpers.GetEffectiveProperty<TableCellMarginDefault>(row);
+        ProcessTableWidthType(marginDefault?.TopMargin, ref defaultCellStyles, "padding-top");
+        ProcessTableWidthType(marginDefault?.BottomMargin, ref defaultCellStyles, "padding-bottom");
+        ProcessTableWidthType(marginDefault?.TableCellLeftMargin, ref defaultCellStyles, "padding-left");
+        ProcessTableWidthType(marginDefault?.TableCellRightMargin, ref defaultCellStyles, "padding-right");
+        if (marginDefault?.TableCellLeftMargin == null && marginDefault?.TableCellRightMargin == null) // Left and right should have priority over start and end as they are more specific
+        {
+            ProcessTableWidthType(marginDefault?.StartMargin, ref defaultCellStyles, "padding-inline-start");
+            ProcessTableWidthType(marginDefault?.EndMargin, ref defaultCellStyles, "padding-inline-end");
+        }
+
+        sb.Append($"<tr style=\"{string.Join(" ", rowStyles)}\">");
+
+        var cells = row.Elements<TableCell>();
+        int columnNumber = 1;
+        int columnCount = cells.Count();
+        foreach (var cell in cells)
+        {
+            var cellStyles = new List<string>();
+            cellStyles.AddRange(defaultCellStyles);
+
+            ProcessBorder(insideHBorder, ref cellStyles, true, rowNumber == rowCount, columnNumber == columnCount);
+            ProcessBorder(insideVBorder, ref cellStyles, true, rowNumber == rowCount, columnNumber == columnCount);
+
+            ProcessTableCellProperties(cell, ref cellStyles, rowNumber, columnNumber, rowCount, columnCount);
+            ProcessTableCell(cell, sb, cellStyles);
+            sb.AppendLine();
+            ++columnNumber;
+        }
+
+        sb.Append("</tr>");
+    }
+
+    internal void ProcessTableCellProperties(TableCell cell, ref List<string> cellStyles, int rowNumber, int columnNumber, int rowCount, int columnCount)
+    {
+        // We should replace default padding or horizontal/vertical border determined by rows if cell has its own properties
+
+        var direction = cell.TableCellProperties?.TextDirection;
+
+        var margin = OpenXmlHelpers.GetEffectiveProperty<TableCellMargin>(cell);
+
+        var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TableCellVerticalAlignment>(cell);
+
+        var fitText = OpenXmlHelpers.GetEffectiveProperty<TableCellFitText>(cell);
+
+        var noWrap = OpenXmlHelpers.GetEffectiveProperty<NoWrap>(cell);
+
+        //var hideMark = OpenXmlHelpers.GetEffectiveProperty<HideMark>(cell);
+
+        var vMerge = cell.TableCellProperties?.VerticalMerge;
+        if (vMerge != null)
+        {
+
+        }
+
+        var hMerge = cell.TableCellProperties?.HorizontalMerge;
+        var gridSpan = cell.TableCellProperties?.GridSpan;
+        var cellWidth = OpenXmlHelpers.GetEffectiveProperty<TableCellWidth>(cell);
+
+        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(cell);
+        if (shading?.Fill != null)
+        {
+            cellStyles.Add($"background-color: #{shading?.Fill?.Value};");
+        }
+
+        // TODO
+    }
+
+    internal void ProcessTableCell(TableCell cell, StringBuilder sb, List<string> styles)
+    {
+        sb.Append($"<td style=\"{string.Join(" ", styles)}\">");
+        foreach (var element in cell.Elements())
+        {
+            base.ProcessCompositeElement(element, sb);
+        }
+        sb.Append("</td>");
     }
 
     internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
