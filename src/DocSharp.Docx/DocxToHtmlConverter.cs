@@ -92,10 +92,35 @@ public class DocxToHtmlConverter : DocxConverterBase
         }
     }
 
+    internal override void ProcessBodyElement(OpenXmlElement element, StringBuilder sb)
+    {
+        if (element is SectionProperties)
+        {
+            // TODO: process SectionProperties
+        }
+        base.ProcessBodyElement(element, sb);
+    }
+
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
+        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        if (numberingProperties != null)
+        {
+            // TODO: process list item
+        }
+
         var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph)?.Val?.Value;
         var border = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);
+        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph);
+        var spacing = OpenXmlHelpers.GetEffectiveProperty<SpacingBetweenLines>(paragraph);
+        var contextualSpacing = OpenXmlHelpers.GetEffectiveProperty<ContextualSpacing>(paragraph);
+        var indent = OpenXmlHelpers.GetEffectiveProperty<Indentation>(paragraph);
+        var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
+        var keepLines = OpenXmlHelpers.GetEffectiveProperty<KeepLines>(paragraph);
+        var keepNext = OpenXmlHelpers.GetEffectiveProperty<KeepNext>(paragraph);
+        var widowControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
+        var direction = OpenXmlHelpers.GetEffectiveProperty<TextDirection>(paragraph);
+        var frameProperties = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph);
 
         // Build CSS style string
         var styles = new List<string>();
@@ -123,6 +148,135 @@ public class DocxToHtmlConverter : DocxConverterBase
                 styles.Add($"border-left: 1px solid #{border.LeftBorder.Color ?? "000000"};");
             if (border.RightBorder?.Val != null)
                 styles.Add($"border-right: 1px solid #{border.RightBorder.Color ?? "000000"};");
+        }
+
+        if (shading != null && shading.Fill?.Value is string fill && fill.Length == 6)
+        {
+            styles.Add($"background-color: #{fill};");
+        }
+
+        if (spacing != null)
+        {
+            // Spacing includes line spacing, space before and space after
+            if (spacing.LineRule?.Value != null)
+            {
+                if (spacing.LineRule.Value == LineSpacingRuleValues.Exact || spacing.LineRule.Value == LineSpacingRuleValues.AtLeast)
+                {
+                    if (spacing.Line?.Value != null && double.TryParse(spacing.Line.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double lineSpacing))
+                    {
+                        double spacingValue = lineSpacing / 20.0; // Convert twips to points
+                        styles.Add($"line-height: {spacingValue}pt;");
+                    }
+                }
+                else if (spacing.LineRule.Value == LineSpacingRuleValues.Auto)
+                {
+                    // Should be interpreted as multiple of lines (1.15, 1.5, etc.)
+                    if (spacing.Line?.Value != null && double.TryParse(spacing.Line.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double lineSpacing))
+                    {
+                        double spacingValue = (lineSpacing / 20.0) * 100; // Convert to lines and then to percentage
+                        styles.Add($"line-height: {spacingValue}%;");
+                    }
+                }
+            }
+
+            if (contextualSpacing != null && (contextualSpacing.Val == null || contextualSpacing.Val != false))
+            {
+                // Remove spacing between paragraphs of the same styles
+            }
+            else
+            {
+                if (spacing.Before?.Value != null && double.TryParse(spacing.Before.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double beforeSpacing))
+                {
+                    double beforeValue = beforeSpacing / 20.0; // Convert twips to points
+                    styles.Add($"margin-top: {beforeValue}pt;");
+                }
+
+                if (spacing.After?.Value != null && double.TryParse(spacing.After.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double afterSpacing))
+                {
+                    double afterValue = afterSpacing / 20.0; // Convert twips to points
+                    styles.Add($"margin-bottom: {afterValue}pt;");
+                }
+            }
+
+            // TODO: BeforeLines, AfterLines, BeforeAutoSpacing, AfterAutoSpacing
+        }
+
+
+        if (indent != null)
+        {
+            if (indent.LeftChars != null)
+            {
+                styles.Add($"padding-left: {indent.LeftChars}ch;");
+            }
+            else if (indent.Left != null && double.TryParse(indent.Left.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double li))
+            {
+                double leftIndent = li / 20.0; // Convert twips to points
+                styles.Add($"padding-left: {leftIndent}pt;");
+            }
+
+            if (indent.RightChars != null)
+            {
+                styles.Add($"padding-right: {indent.RightChars}ch;");
+            }
+            else if (indent.Right != null && double.TryParse(indent.Right.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double ri))
+            {
+                double rightIndent = ri / 20.0; // Convert twips to points
+                styles.Add($"padding-right: {rightIndent}pt;");
+            }
+
+            if (indent.FirstLineChars != null)
+            {
+                styles.Add($"text-indent: {indent.FirstLineChars}ch;");
+            }
+            else if (indent.FirstLine != null && double.TryParse(indent.FirstLine.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double fi))
+            {
+                double firstLineIndent = fi / 20.0; // Convert twips to points
+                styles.Add($"text-indent: {firstLineIndent}pt;");
+            }
+            else if (indent.HangingChars != null)
+            {
+                styles.Add($"text-indent: -{indent.HangingChars}ch;");
+            }
+            else if (indent.Hanging != null && double.TryParse(indent.Hanging.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double hi))
+            {
+                double hangingIndent = hi / 20.0; // Convert twips to points
+                styles.Add($"text-indent: -{hangingIndent}pt;");
+            }
+        }
+
+        if (verticalAlignment?.Val != null)
+        {
+            if (verticalAlignment.Val == VerticalTextAlignmentValues.Top)
+                styles.Add("vertical-align: top;");
+            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Center)
+                styles.Add("vertical-align: middle;");
+            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Bottom)
+                styles.Add("vertical-align: bottom;");
+            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Baseline)
+                styles.Add("vertical-align: baseline;");
+        }
+
+        if (widowControl != null || keepLines != null)
+        {
+            // Avoid breaks inside the paragraph
+            styles.Add("break-inside: avoid;");
+        }
+        if (keepNext != null)
+        {
+            styles.Add("break-after: avoid;");
+        }
+
+        var wordWrap = OpenXmlHelpers.GetEffectiveProperty<WordWrap>(paragraph);
+        if (wordWrap?.Val != null && !wordWrap.Val)
+        {
+            // By default text breaks in new lines at the word level.
+            // If WordWrap is set to off the document allows to break at character level.
+            styles.Add("word-break: break-all;");
+        }
+        var noAutoHyphen = OpenXmlHelpers.GetEffectiveProperty<SuppressAutoHyphens>(paragraph);
+        if (noAutoHyphen != null && (noAutoHyphen.Val == null || noAutoHyphen.Val))
+        {
+            sb.Append(@"hyphens: none;");
         }
 
         // Add HTML span with styles
@@ -185,7 +339,7 @@ public class DocxToHtmlConverter : DocxConverterBase
         if (!string.IsNullOrEmpty(font)) styles.Add($"font-family: {font};");
         if (bold != null && (bold.Val == null || bold.Val != false)) styles.Add("font-weight: bold;");
         if (italic != null && (italic.Val == null || italic.Val != false)) styles.Add("font-style: italic;");
-        if (!string.IsNullOrEmpty(fontSize)) styles.Add($"font-size: {int.Parse(fontSize) / 2}px;"); // Font size in half-points
+        if (!string.IsNullOrEmpty(fontSize)) styles.Add($"font-size: {int.Parse(fontSize) / 2}pt;"); // Font size in half-points
 
         // Spacing (letter-spacing)
         if (fontStretch?.Val != null)
@@ -224,7 +378,7 @@ public class DocxToHtmlConverter : DocxConverterBase
         if (position != null && position.Val != null && position.Val.Value != null)
         {
             // Value is in half-points
-            if(int.TryParse(position.Val.Value, out int value))
+            if(int.TryParse(position.Val.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out int value))
             {
                 if (value > 0)
                 {
@@ -238,7 +392,6 @@ public class DocxToHtmlConverter : DocxConverterBase
         }
 
         int underlineThickness = 10;
-        //int underlineThickness = 8;
         if (underline?.Val != null)
         {
             if (underline.Val.Value == UnderlineValues.None)
@@ -419,7 +572,7 @@ public class DocxToHtmlConverter : DocxConverterBase
                 // Extract the first color from the gradient
                 outlineColor = OpenXmlHelpers.GetColor(firstGradientStop, outlineColor);
             }
-            else if (outline14.Elements<W14.NoFillEmpty>().FirstOrDefault() is W14.NoFillEmpty)
+            else if (outline14.Elements<W14.NoFillEmpty>().FirstOrDefault() is not null)
             {
                 outlineColor = "transparent";
             }
@@ -457,7 +610,28 @@ public class DocxToHtmlConverter : DocxConverterBase
         }
 
         // Add HTML span with styles
-        sb.Append($"<span style=\"{string.Join(" ", styles)}\">");
+        sb.Append($"<span style=\"{string.Join(" ", styles)}\"");
+
+        var languages = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
+        //var noProof = OpenXmlHelpers.GetEffectiveProperty<NoProof>(run);
+        //if (noProof != null)
+        //{
+        //    // Is this relevant for HTML?
+        //}
+        //else if (languages != null)
+        if (languages != null)
+        {
+            // Set language for this span
+            if (!string.IsNullOrEmpty(languages.Val?.Value))
+            {
+                sb.Append($" lang=\"{languages.Val!.Value}\"");
+            }
+            //if (!string.IsNullOrEmpty(languages?.Bidi?.Value))
+            //{
+            //    // ?
+            //}
+        }
+        sb.Append('>'); // Close span tag
 
         if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
         {
@@ -511,8 +685,7 @@ public class DocxToHtmlConverter : DocxConverterBase
                 hexValue = hexValue.Substring(2);
             }
             string htmlEntity = string.Empty;
-            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
-                             out int decimalValue))
+            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int decimalValue))
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
@@ -568,7 +741,15 @@ public class DocxToHtmlConverter : DocxConverterBase
     {
         if (@break.Type != null && @break.Type == BreakValues.Page)
         {
-            sb.Append("<div style=\"page-break-before: always;\"></div>");
+            sb.Append("<div style=\"break-after: page;\"></div>");
+        }
+        else if (@break.Type != null && @break.Type == BreakValues.Column)
+        {
+            sb.Append("<div style=\"break-after: column;\"></div>");
+        }
+        else
+        {
+            sb.Append("<br />");
         }
     }
 
@@ -695,7 +876,7 @@ public class DocxToHtmlConverter : DocxConverterBase
     {
         string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
 #if NETFRAMEWORK
-    string actualFilePath = Path.Combine(ImagesOutputFolder, fileName);
+        string actualFilePath = Path.Combine(ImagesOutputFolder, fileName);
 #else
         string actualFilePath = Path.Join(ImagesOutputFolder, fileName);
 #endif
@@ -733,19 +914,13 @@ public class DocxToHtmlConverter : DocxConverterBase
             string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
             return new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute).ToString();
         }
-    }
-
-    internal override void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb)
-    {
-    }   
-
-    internal override void ProcessFieldChar(FieldChar field, StringBuilder sb)
-    {
-    }
+    } 
 
     internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
     {
-    }   
+        // This function is called for all DocumentFormat.OpenXml.Math elements. 
+        // We should convert them to MathML in MathConverter (similar to DocxToMarkdownConverter).
+    }
 
     internal override void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb)
     {
@@ -776,6 +951,14 @@ public class DocxToHtmlConverter : DocxConverterBase
     }
 
     internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb)
+    {
+    }
+
+    internal override void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb)
+    {
+    }
+
+    internal override void ProcessFieldChar(FieldChar field, StringBuilder sb)
     {
     }
 
