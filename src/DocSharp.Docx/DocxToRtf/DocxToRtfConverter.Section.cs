@@ -279,6 +279,24 @@ public partial class DocxToRtfConverter
             {
                 sb.Append(@"\linebetcol");
             }
+            if (cols.EqualWidth != null && cols.EqualWidth.HasValue && !cols.EqualWidth.Value)
+            {
+                // If equal width is disabled, get the width of each column
+                int colIndex = 1;
+                foreach (var col in cols.Elements<Column>())
+                {
+                    sb.Append($"\\colno{colIndex}");
+                    if (col.Space != null)
+                    {
+                        sb.Append($"\\colsr{col.Space.Value}");
+                    }
+                    if (col.Width != null)
+                    {
+                        sb.Append($"\\colw{col.Width.Value}");
+                    }
+                    ++colIndex;
+                }
+            }
         }
         if (sectionProperties.GetFirstChild<TitlePage>() is TitlePage titlePage && 
             (titlePage.Val is null || titlePage.Val))
