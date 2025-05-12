@@ -402,8 +402,6 @@ public class DocxToMarkdownConverter : DocxConverterBase
         {
             if (run != null && run.GetFirstChild<Text>() is Text runText)
                 ProcessText(runText, displayTextBuilder);
-
-            displayTextBuilder.Append(' ');
         }
         if (hyperlink.Id?.Value is string rId)
         {
@@ -411,12 +409,12 @@ public class DocxToMarkdownConverter : DocxConverterBase
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 string url = relationship.Uri.ToString();             
-                sb.Append($" [{displayTextBuilder.ToString().Trim()}]({url}) ");
+                sb.Append($"[{displayTextBuilder.ToString()}]({url})");
             }
         }
         else if (hyperlink.Anchor?.Value is string anchor)
         {
-            sb.Append($" [{displayTextBuilder.ToString().Trim()}](#{anchor}) ");
+            sb.Append($"[{displayTextBuilder.ToString()}](#{anchor})");
         }
     }
 
