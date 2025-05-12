@@ -544,7 +544,7 @@ public class DocxToMarkdownConverter : DocxConverterBase
                     htmlEntity = FontConverter.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
                 }
             }
-            if (string.IsNullOrWhiteSpace(htmlEntity))
+            if (string.IsNullOrEmpty(htmlEntity)) // If htmlEntity is empty, use the original char code
             {
                 htmlEntity = $"&#{decimalValue};";
             }
