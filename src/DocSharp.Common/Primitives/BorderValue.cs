@@ -13,5 +13,7 @@ public enum BorderValue
     Right,
     Bottom,
     TopLeftToBottomRightDiagonal,
-    TopRightToBottomLeftDiagonal
+    TopRightToBottomLeftDiagonal,
+    Start,
+    End
 }

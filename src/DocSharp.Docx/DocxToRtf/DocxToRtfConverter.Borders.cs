@@ -24,7 +24,7 @@ public  partial class DocxToRtfConverter
         }
         if (border.Space != null)
         {
-            // Open XML uses points for border width, while RTF uses twips
+            // Open XML uses points for border spacing, while RTF uses twips
             uint twipsSize = border.Space.Value * 20;
             sb.Append($"\\brsp{twipsSize}");
         }

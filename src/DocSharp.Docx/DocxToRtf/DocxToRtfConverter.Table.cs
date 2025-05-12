@@ -448,16 +448,19 @@ public partial class DocxToRtfConverter
             if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
                 direction.Val == TextDirectionValues.LeftToRightTopToBottom2010)
             {
+                // Horizontal text, left to right (default)
                 sb.Append(@"\cltxlrtb");
             }
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeft2010)
             {
+                // Horizontal text, right to left
                 sb.Append(@"\cltxtbrl");
             }
             if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
                 direction.Val == TextDirectionValues.BottomToTopLeftToRight2010)
             {
+                // Horizontal text, bottom to top
                 sb.Append(@"\cltxbtlr");
             }
             if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
@@ -465,11 +468,13 @@ public partial class DocxToRtfConverter
                 direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated ||
                 direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated2010)
             {
+                // Vertical text
                 sb.Append(@"\cltxlrtbv");
             }
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
             {
+                // Vertical text
                 sb.Append(@"\cltxtbrlv");
             }
         }
@@ -554,6 +559,7 @@ public partial class DocxToRtfConverter
         var noWrap = OpenXmlHelpers.GetEffectiveProperty<NoWrap>(cell);
         if (noWrap != null && (noWrap.Val is null || noWrap.Val == OnOffOnlyValues.On))
         {
+            // Do not wrap text for the cell. Only has an effect if the table cell does not have a preferred \clwWidthN, which overrides \trautofitN
             sb.Append(@"\clNoWrap");
         }
 
@@ -577,6 +583,21 @@ public partial class DocxToRtfConverter
                 sb.Append(@"\clvmrg");
             }
         }
+        var hMerge = cell.TableCellProperties?.HorizontalMerge;
+        if (hMerge != null)
+        {
+            if (hMerge.Val != null && hMerge.Val == MergedCellValues.Restart)
+            {
+                sb.Append(@"\clmgf");
+            }
+            else
+            {
+                // If the val attribute is omitted, its value should be assumed as "continue"
+                // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.horizontalmerge.val)
+                sb.Append(@"\clmrg");
+            }
+        }
+        //var gridSpan = cell.TableCellProperties?.GridSpan;
 
         // The GetEffectiveBorder function deals with various complexities in retrieving borders
         // (e.g. start / end / insideHorizontal / insideVertical are considered depending on the case).

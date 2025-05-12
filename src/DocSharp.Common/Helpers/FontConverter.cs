@@ -1226,6 +1226,21 @@ public static class FontConverter
     /// </summary>
     /// <param name="symbol">The Wingdings / Webdisngs / Symbol char</param>
     /// <returns></returns>
+    public static string ToUnicode(string fontName, string symbol)
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (char c in symbol)
+        {
+            sb.Append(ToUnicode(fontName, c));
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Convert Wingdings / Webdisngs / Symbol font char to Unicode char or emoji.
+    /// </summary>
+    /// <param name="symbol">The Wingdings / Webdisngs / Symbol char</param>
+    /// <returns></returns>
     public static string ToUnicode(string fontName, char symbol)
     {
         switch (fontName.ToLowerInvariant())
