@@ -345,7 +345,11 @@ public partial class DocxToHtmlConverter : DocxConverterBase
         }
 
         // Add HTML span with styles
-        sb.Append($"<span style=\"{string.Join(" ", styles)}\"");
+        sb.Append($"<span");
+        if (styles.Count > 0)
+        {
+            sb.Append($" style=\"{string.Join(" ", styles)}\"");
+        }
 
         var languages = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
         //var noProof = OpenXmlHelpers.GetEffectiveProperty<NoProof>(run);

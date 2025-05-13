@@ -88,7 +88,12 @@ public partial class DocxToHtmlConverter : DocxConverterBase
             ProcessTableWidthType(marginDefault?.EndMargin, ref defaultCellStyles, "padding-inline-end");
         }
 
-        sb.Append($"<tr style=\"{string.Join(" ", rowStyles)}\">");
+        sb.Append($"<tr");
+        if (rowStyles.Count > 0)
+        {
+            sb.Append($" style=\"{string.Join(" ", rowStyles)}\"");
+        }
+        sb.Append('>');
 
         var cells = row.Elements<TableCell>();
         int columnNumber = 1;
@@ -317,7 +322,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase
         }
 
         // Add styles
-        if (styles.Any())
+        if (styles.Count > 0)
         {
             sb.Append($" style=\"{string.Join(" ", styles)}\"");
         }

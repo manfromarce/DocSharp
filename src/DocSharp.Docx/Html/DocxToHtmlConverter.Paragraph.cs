@@ -198,8 +198,13 @@ public partial class DocxToHtmlConverter : DocxConverterBase
             sb.Append(@"hyphens: none;");
         }
 
-        // Add HTML span with styles
-        sb.Append($"<p style=\"{string.Join(" ", styles)}\">");
+        // Add HTML paragraph with styles
+        sb.Append($"<p");
+        if (styles.Count > 0)
+        {
+            sb.Append($" style=\"{string.Join(" ", styles)}\"");
+        }
+        sb.Append('>');
 
         // Process paragraph content
         base.ProcessParagraph(paragraph, sb);
