@@ -14,7 +14,6 @@ using A = DocumentFormat.OpenXml.Drawing;
 using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 using V = DocumentFormat.OpenXml.Vml;
-using DocumentFormat.OpenXml.Vml;
 
 namespace DocSharp.Docx;
 
@@ -23,7 +22,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
     {
         // VML picture
-        if (picture.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
+        if (picture.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
         {
             // For VML, width and height should be in a v:shape element with this attribute: 
