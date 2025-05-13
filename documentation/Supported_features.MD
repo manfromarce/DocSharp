@@ -6,30 +6,31 @@
 | ------------- | :-----: | :---------: | :-----: |
 | Character formatting | ✅ | ✅ | ✅ | - |
 | Paragraph formatting | ✅ | - | ✅ | - |
-| Section formatting   | ✅ | - | ⏳ | - |
-| Page setup   | ✅ | - | ⏳ | - |
-| Columns | ✅ | ❌ | ⏳ | ❌ |
+| Section formatting   | ✅ | - | ❌ | - |
+| Page setup   | ✅ | - | ❌ | - |
+| Columns | ✅ | ❌ | ✅ | ❌ |
 | Pictures [1] | ✅ | ✅ | ✅ | - |
 | Lists [2]    | 🟡 | ✅ | ⏳ | ✅ |
-| Tables [3]  | ✅ | ✅ | ⏳ | ✅ |
+| Tables [3]  | ✅ | ✅ | ✅ | ✅ |
 | Styles [4] | 🟡 | 🟡 | 🟡 | - |
 | Header and footer | ✅ | ❌ | ⏳ | ❌ |
 | Endnotes and footnotes | ✅ | ❌ | ⏳ | ❌ |
 | Hyperlinks | ✅ | ✅ | ✅ | - |
 | Bookmarks | ✅ | ✅ | ✅ | - |
 | Drop cap | ✅ | ❌ | ⏳ | ❌ |
-| Symbols | ✅ | ✅ | ✅ | ✅ |
+| Symbols | ✅ | ✅[7] | ✅[7] | ✅[7] |
 | Fields and standard parts [5] | 🟡 | 🟡 | 🟡 | 🟡 |
 | Page numbers | ✅ | ❌ | ❌ | ❌ |
 | Ruby | ❌ | ❌ | ⏳ | ❌ |
-| Shapes | ❌ | ❌ | ⏳ | Text is extracted |
+| Shapes | ❌ | ❌ | ❌ | Text is extracted |
+| Text boxes | ❌ | ❌ | ❌ | Text is extracted |
 | Charts | ❌ | ❌ | ❌ | - |
 | Diagrams | ❌ | ❌ | ❌ | - |
-| Advanced text effects (includes WordArt) | ❌ | ❌ | ❌ | - |
+| Advanced text effects (includes WordArt) | ❌ | ❌ | 🟡 [6] | - |
 | Image effects | ❌ | ❌ | ❌ | - |
 | Math | ❌ | ✅ | ⏳ | ❌ |
 | OLE objects | ❌ | - | - | - |
-| Form fields | ❌ | - | ⏳ | - |
+| Form fields | ❌ | - | ❌ | - |
 | Comments | ❌ | - | ❌ | - |
 | Document information | ❌ | - | ❌ | - |
 
@@ -46,6 +47,10 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 [4]: Styles are converted to inline formatting.
 
 [5]: Only the field result is preserved. The field code is preserved in RTF only.  
+
+[6]: Shadow, outline and fill are partially supported; other effects are not supported.  
+
+[7]: Special fonts such as Wingdings, Webdings and Symbol are converted to Unicode characters.  
 
 ## RTF converters
 

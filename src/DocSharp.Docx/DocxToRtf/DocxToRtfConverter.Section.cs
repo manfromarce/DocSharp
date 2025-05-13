@@ -19,7 +19,8 @@ public partial class DocxToRtfConverter
     {
         if (currentSectionProperties == null && !noSections)
         {
-            // Search the next SectionProperties element, which may also be a child of the current element.
+            // Search the next SectionProperties element, which may also be a child of the current element
+            // (e.g. in ParagraphProperties).
             currentSectionProperties = element.NextElement<SectionProperties>();
             if (currentSectionProperties != null)
             {

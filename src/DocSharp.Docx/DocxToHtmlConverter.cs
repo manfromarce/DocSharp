@@ -73,56 +73,15 @@ public partial class DocxToHtmlConverter : DocxConverterBase
         {
             ProcessDocumentBackground(bg, sb);
         }
+
         // Process body content
         if (document.Body is Body body)
         {
             base.ProcessBody(body, sb);
-        }
+        }               
+        
         sb.AppendLine("</body>");
         sb.Append("</html>");
-    }
-
-    internal override void ProcessBody(Body body, StringBuilder sb)
-    {
-        bool inSection = false;
-
-        foreach (var element in body.Elements())
-        {
-            if (element is SectionProperties sectionProperties)
-            {
-                // Close previous section if it exists
-                if (inSection)
-                {
-                    sb.AppendLine("</div>");
-                }
-
-                // Create new section
-                sb.AppendLine("<div");
-                var styles = new List<string>();
-                ProcessSectionProperties(sectionProperties, ref styles, sb);
-                if (styles.Count > 0)
-                {
-                    sb.Append($" style=\"{string.Join(" ", styles)}\"");
-                }
-                sb.AppendLine(">");
-                inSection = true;
-            }
-            else
-            {
-                // Processa l'elemento normalmente
-                ProcessBodyElement(element, sb);
-            }
-        }
-
-        if (inSection) // Close the last section div
-        {
-            sb.AppendLine("</div>");
-        }
-    }
-
-    internal override void ProcessBodyElement(OpenXmlElement element, StringBuilder sb)
-    {
-        base.ProcessBodyElement(element, sb);
     }
 
     internal override void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb)
@@ -132,6 +91,10 @@ public partial class DocxToHtmlConverter : DocxConverterBase
             string color = $"#{background.Color.Value}";
             sb.Append($"<style>body {{ background-color: {color}; }}</style>");
         }
+        //else if (background.Background != null)
+        //{
+        // TODO (requires VML support)
+        //}
     }    
 
     private void ProcessTextDirection(TextDirectionValues value, ref List<string> styles)
