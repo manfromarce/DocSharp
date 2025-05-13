@@ -125,28 +125,6 @@ public partial class DocxToHtmlConverter : DocxConverterBase
         base.ProcessBodyElement(element, sb);
     }
 
-    private void ProcessSectionProperties(SectionProperties sectionProperties, ref List<string> styles, StringBuilder sb)
-    {
-        var columns = sectionProperties.GetFirstChild<Columns>();
-        if (columns != null)
-        {
-            if (columns.ColumnCount != null)
-            {
-                styles.Add($"column-count: {columns.ColumnCount.Value};");
-            }
-
-            if (columns.Space != null && double.TryParse(columns.Space.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double columnGap))
-            {
-                styles.Add($"column-gap: {(columnGap / 20.0).ToStringInvariant()}pt;");
-            }
-
-            if (columns.EqualWidth != null && columns.EqualWidth.Value == false)
-            {
-                // CSS does not support different column widths directly
-            }
-        }
-    }
-
     internal override void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb)
     {
         if (background.Color != null)
@@ -192,35 +170,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase
         }
     }
 
-    internal override void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb)
-    {
-    }
-
     internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb)
-    {
-    }
-
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb)
-    {
-    }
-
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb)
-    {
-    }
-
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb)
-    {
-    }
-
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb)
-    {
-    }
-
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb)
-    {
-    }
-
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb)
     {
     }
 

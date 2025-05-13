@@ -11,8 +11,13 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxConverterBase
 {
-    internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
+    internal void ProcessHeader(Header header, StringBuilder sb, HeaderReference reference)
     {
-        // This function is called for all DocumentFormat.OpenXml.Math elements. 
+
+    }
+
+    internal void ProcessFooter(Footer footer, StringBuilder sb, FooterReference reference)
+    {
+
     }
 }

@@ -55,4 +55,8 @@ public partial class DocxToHtmlConverter : DocxConverterBase
             sb.Append(htmlEntity);
         }
     }
+
+    internal override void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb)
+    {
+    }
 }

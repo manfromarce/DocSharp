@@ -325,16 +325,4 @@ public partial class DocxToRtfConverter
         }
     }
 
-    internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
-    {
-        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) && 
-            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
-        {
-            fonts.TryAddAndGetIndex(symbolChar.Font.Value, out int fontIndex);
-            sb.Append('{');
-            sb.Append($"\\f{fontIndex} ");
-            sb.AppendRtfUnicodeChar(symbolChar.Char.Value);
-            sb.Append('}');
-        }
-    }
 }
