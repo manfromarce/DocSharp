@@ -272,8 +272,11 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal void ProcessContentPart(ContentPart contentPart, StringBuilder sb)
+    internal virtual void ProcessContentPart(ContentPart contentPart, StringBuilder sb)
     {
+        // This element specifies a reference to XML content in a format not defined by Open XML,
+        // such as MathML, SVG or SMIL.
+        // Override if supported in the output format.
     }
 
     internal virtual bool ProcessRunElement(OpenXmlElement? element, StringBuilder sb)

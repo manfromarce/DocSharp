@@ -133,6 +133,41 @@ public partial class DocxToHtmlConverter : DocxConverterBase
         }
     }
 
+    internal override void ProcessContentPart(ContentPart contentPart, StringBuilder sb)
+    {
+        // MathML, SVG and SMIL are supported by most browsers
+        var id = contentPart.Id;
+        var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(contentPart);
+        if (id?.Value != null)
+        {
+            var part = mainDocumentPart?.GetPartById(id.Value);
+            if (part != null)
+            {
+                // Read the part content
+                using (var stream = part.GetStream())
+                {
+                    // Check if the part is a MathML, SVG or SMIL
+                    if(part.ContentType == "application/mathml+xml" ||
+                       part.ContentType == "application/mathml-presentation+xml" ||
+                       part.ContentType == "application/mathml-content+xml" ||
+                       part.ContentType == "image/svg+xml" ||
+                       part.ContentType == "application/smil+xml")
+                    {
+                        // Read the content and append it to the HTML
+                        using (var reader = new StreamReader(stream))
+                        {
+                            string content = reader.ReadToEnd();
+                            if (content != null)
+                            {
+                                sb.AppendLine(content);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb)
     {
     }
