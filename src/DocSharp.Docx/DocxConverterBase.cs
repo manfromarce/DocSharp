@@ -260,6 +260,9 @@ public abstract class DocxConverterBase
             case SimpleFieldRuby simpleFieldRuby:
                 ProcessSimpleFieldRuby(simpleFieldRuby, sb);
                 break;
+            case ContentPart contentPart:
+                ProcessContentPart(contentPart, sb);
+                break;
             default:
                 if (element.NamespaceUri.Equals(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase))
                 {
@@ -267,6 +270,10 @@ public abstract class DocxConverterBase
                 }
                 break;
         }
+    }
+
+    internal void ProcessContentPart(ContentPart contentPart, StringBuilder sb)
+    {
     }
 
     internal virtual bool ProcessRunElement(OpenXmlElement? element, StringBuilder sb)

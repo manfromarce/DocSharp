@@ -304,7 +304,7 @@ internal class MLMathNode : MLNodeBase
     //    return null;
     //}
 
-    // Get text from 'r' element and try convert them to latex symbols
+    // Get text from Run element and try convert them to latex symbols
     private TeXNode? DoR(XmlNode elm)
     {
         var t = elm.GetChildByName("m:t");

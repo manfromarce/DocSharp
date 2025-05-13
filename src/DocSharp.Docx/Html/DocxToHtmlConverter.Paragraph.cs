@@ -16,7 +16,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)
         {
-            // TODO: process list item
+            ProcessListItem(numberingProperties, sb);
         }
 
         var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph)?.Val?.Value;

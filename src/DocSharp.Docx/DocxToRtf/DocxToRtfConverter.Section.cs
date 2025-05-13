@@ -344,8 +344,8 @@ public partial class DocxToRtfConverter
         {
             if (pageNumberType.Start != null)
             {
-                //sb.Append($"\\pgnstart{pageNumberType.Start.Value}");
-                sb.Append($"\\pgnstarts{pageNumberType.Start.Value}");
+                //sb.Append($"\\pgnstart{pageNumberType.Start.Value}"); // for document
+                sb.Append($"\\pgnstarts{pageNumberType.Start.Value}"); // for section
             }
             if (pageNumberType.Format != null)
             {
