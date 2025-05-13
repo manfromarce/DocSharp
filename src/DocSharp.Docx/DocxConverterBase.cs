@@ -260,6 +260,9 @@ public abstract class DocxConverterBase
             case SimpleFieldRuby simpleFieldRuby:
                 ProcessSimpleFieldRuby(simpleFieldRuby, sb);
                 break;
+            case ContentPart contentPart:
+                ProcessContentPart(contentPart, sb);
+                break;
             default:
                 if (element.NamespaceUri.Equals(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase))
                 {
@@ -267,6 +270,13 @@ public abstract class DocxConverterBase
                 }
                 break;
         }
+    }
+
+    internal virtual void ProcessContentPart(ContentPart contentPart, StringBuilder sb)
+    {
+        // This element specifies a reference to XML content in a format not defined by Open XML,
+        // such as MathML, SVG or SMIL.
+        // Override if supported in the output format.
     }
 
     internal virtual bool ProcessRunElement(OpenXmlElement? element, StringBuilder sb)
