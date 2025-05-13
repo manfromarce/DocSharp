@@ -10,5 +10,6 @@ public enum SaveFormat
 {
     Docx,
     Rtf,
+    Html,
     Markdown
 }
