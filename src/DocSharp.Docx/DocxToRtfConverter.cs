@@ -41,6 +41,54 @@ public partial class DocxToRtfConverter : DocxConverterBase
     {
         sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
 
+        // Insert generic properties such as title, author, etc. if present in DOCX
+        if (document.GetWordprocessingDocument() is WordprocessingDocument doc)
+        {
+            var coreProps = doc.PackageProperties;
+            sb.Append(@"{\info");
+            if (!string.IsNullOrEmpty(coreProps.Creator))
+            {
+                sb.Append(@"{\author ");
+                sb.AppendRtfEscaped(coreProps.Creator!);
+                sb.Append('}');
+            }
+            if (!string.IsNullOrEmpty(coreProps.Title))
+            {
+                sb.Append(@"{\title ");
+                sb.AppendRtfEscaped(coreProps.Title!);
+                sb.Append('}');
+            }
+            if (!string.IsNullOrEmpty(coreProps.Subject))
+            {
+                sb.Append(@"{\subject ");
+                sb.AppendRtfEscaped(coreProps.Subject!);
+                sb.Append('}');
+            }
+            if (!string.IsNullOrEmpty(coreProps.Category))
+            {
+                sb.Append(@"{\category ");
+                sb.AppendRtfEscaped(coreProps.Category!);
+                sb.Append('}');
+            }
+            if (!string.IsNullOrEmpty(coreProps.Keywords))
+            {
+                sb.Append(@"{\keywords ");
+                sb.AppendRtfEscaped(coreProps.Keywords!);
+                sb.Append('}');
+            }
+            if (coreProps.Created != null)
+            {
+                sb.Append(@"{\creatim");
+                sb.Append($"\\yr{coreProps.Created.Value.Year}");
+                sb.Append($"\\mo{coreProps.Created.Value.Month}");
+                sb.Append($"\\dy{coreProps.Created.Value.Day}");
+                sb.Append($"\\hr{coreProps.Created.Value.Hour}");
+                sb.Append($"\\min{coreProps.Created.Value.Minute}");
+                sb.Append('}');
+            }
+            sb.Append('}');
+        }
+
         // Prepare fonts table 
         sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 ");
         sb.Append(DefaultSettings.FontName);
