@@ -61,6 +61,16 @@ public static class OpenXmlHelpers
         return null;
     }
 
+    public static WordprocessingDocument? GetWordprocessingDocument(this OpenXmlElement element)
+    {
+        var root = element.GetRoot();
+        if (root is OpenXmlPartRootElement rootElement)
+        {
+            return rootElement.OpenXmlPart?.OpenXmlPackage as WordprocessingDocument;
+        }
+        return null;
+    }
+
     public static OpenXmlElement GetRoot(this OpenXmlElement element)
     {
         OpenXmlElement rootElement = element;       
