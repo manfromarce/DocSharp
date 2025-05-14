@@ -9,7 +9,11 @@ namespace DocSharp.IO;
 public enum SaveFormat
 {
     Docx,
+    Dotx,
+    Docm,
+    Dotm,
     Rtf,
     Html,
-    Markdown
+    Markdown,
+    Txt
 }

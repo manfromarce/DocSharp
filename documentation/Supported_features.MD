@@ -32,6 +32,7 @@
 | OLE objects | ❌ | - | - | - |
 | Form fields | ❌ | - | ❌ | - |
 | Comments | ❌ | - | ❌ | - |
+| Content part | ❌ | ❌ | ✅ SVG, MathML, SMIL | ❌ |
 | Document information (title, author, ...) | ✅ | - | ❌ | - |
 
 [1]: RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
