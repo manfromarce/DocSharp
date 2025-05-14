@@ -41,7 +41,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 
 [2]: There are some known issues with lists, due to the fact that other formats support a subset of DOCX features, and figuring out the correct visual representation is not always easy.
 
-[3]: Nested tables, conditional formatting and few other advanced properties are not supported yet for DOCX --> RTF; while for DOCX --> MD / TXT only basic cell content can be preserved.
+[3]: Nested tables and conditional formatting are not supported yet for DOCX --> RTF; while for DOCX --> MD / TXT only basic cell content can be preserved.
 
 [4]: Styles are converted to inline formatting  
 
