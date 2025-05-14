@@ -19,9 +19,10 @@
 | Bookmarks | ✅ | ✅ | - |
 | Drop cap | ✅ | ❌ | ❌ |
 | Symbols | ✅ | ✅ | ✅ |
-| Fields | 🟡 | ❌ | ❌ |
+| Fields and standard parts | 🟡 | ❌ | ❌ |
 | Page numbers | ✅ | ❌ | ❌ |
 | Ruby | ❌ | ❌ | ❌ |
+| Text boxes | ❌ | ❌ | Text is extracted |
 | Shapes | ❌ | ❌ | Text is extracted |
 | Charts | ❌ | ❌ | - |
 | Diagrams | ❌ | ❌ | - |
@@ -31,7 +32,7 @@
 | OLE objects | ❌ | - | - |
 | Form fields | ❌ | - | - |
 | Comments | ❌ | - | - |
-| Document information | ❌ | - | - |
+| Document information (title, author, ...) | ✅ | - | - |
 
 [1]: RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
 Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  
