@@ -13,30 +13,143 @@ public partial class DocxToRtfConverter
 
     internal override void ProcessTable(Table table, StringBuilder sb)
     {
-        //var pos = table.GetEffectiveProperty<TablePositionProperties>();
-        //if (pos != null)
-        //{
-        //}
+        StringBuilder tableProperties = new StringBuilder();
 
-        //var overlap = table.GetEffectiveProperty<TableOverlap>();
-        //if (overlap != null)
-        //{
-        //}
+        // Positioned Wrapped Tables (the following properties must be the same for all rows in the table)
+        var pos = table.GetEffectiveProperty<TablePositionProperties>();
+        if (pos != null)
+        {
+            if (pos.LeftFromText != null)
+            {
+                tableProperties.Append(@$"\tdfrmtxtLeft{pos.LeftFromText.Value}");
+            }
+            if (pos.TopFromText != null)
+            {
+                tableProperties.Append(@$"\tdfrmtxtTop{pos.TopFromText.Value}");
+            }
+            if (pos.RightFromText != null)
+            {
+                tableProperties.Append(@$"\tdfrmtxtRight{pos.RightFromText.Value}");
+            }
+            if (pos.BottomFromText != null)
+            {
+                tableProperties.Append(@$"\tdfrmtxtBottom{pos.BottomFromText.Value}");
+            }
+            if (pos.TablePositionX != null)
+            {
+                tableProperties.Append(@$"\tposx{pos.TablePositionX.Value}");
+            }
+            if (pos.TablePositionXAlignment != null)
+            {
+                if (pos.TablePositionXAlignment.Value == HorizontalAlignmentValues.Left)
+                {
+                    tableProperties.Append(@"\tposxl");
+                }
+                else if (pos.TablePositionXAlignment.Value == HorizontalAlignmentValues.Right)
+                {
+                    tableProperties.Append(@"\tposxr");
+                }
+                else if (pos.TablePositionXAlignment.Value == HorizontalAlignmentValues.Center)
+                {
+                    tableProperties.Append(@"\tposxc");
+                }
+                else if (pos.TablePositionXAlignment.Value == HorizontalAlignmentValues.Inside)
+                {
+                    tableProperties.Append(@"\tposxi");
+                }
+                else if (pos.TablePositionXAlignment.Value == HorizontalAlignmentValues.Outside)
+                {
+                    tableProperties.Append(@"\tposxo");
+                }
+            }
+            if (pos.TablePositionY != null)
+            {
+                tableProperties.Append(@$"\tposy{pos.TablePositionY.Value}");
+            }
+            if (pos.TablePositionYAlignment != null)
+            {
+                if (pos.TablePositionYAlignment.Value == VerticalAlignmentValues.Top)
+                {
+                    tableProperties.Append(@"\tposyt");
+                }
+                else if (pos.TablePositionYAlignment.Value == VerticalAlignmentValues.Bottom)
+                {
+                    tableProperties.Append(@"\tposyb");
+                }
+                else if (pos.TablePositionYAlignment.Value == VerticalAlignmentValues.Center)
+                {
+                    tableProperties.Append(@"\tposyb");
+                }
+                else if (pos.TablePositionYAlignment.Value == VerticalAlignmentValues.Inline)
+                {
+                    tableProperties.Append(@"\tposyil");
+                }
+                else if (pos.TablePositionYAlignment.Value == VerticalAlignmentValues.Inside)
+                {
+                    tableProperties.Append(@"\tposyin");
+                }
+                else if (pos.TablePositionYAlignment.Value == VerticalAlignmentValues.Outside)
+                {
+                    tableProperties.Append(@"\tposyout");
+                }
+            }
+            if (pos.HorizontalAnchor != null)
+            {
+                if (pos.HorizontalAnchor.Value == HorizontalAnchorValues.Text)
+                {
+                    tableProperties.Append(@"\tphcol"); // ?
+                }
+                else if (pos.HorizontalAnchor.Value == HorizontalAnchorValues.Page)
+                {
+                    tableProperties.Append(@"\tphpg");
+                }
+                else if (pos.HorizontalAnchor.Value == HorizontalAnchorValues.Margin)
+                {
+                    tableProperties.Append(@"\tphmrg");
+                }
+            }
+            if (pos.VerticalAnchor?.Value != null)
+            {
+                if (pos.VerticalAnchor.Value == VerticalAnchorValues.Text)
+                {
+                    tableProperties.Append(@"\tpvpara"); // ?
+                }
+                else if (pos.VerticalAnchor.Value == VerticalAnchorValues.Page)
+                {
+                    tableProperties.Append(@"\tpvpg");
+                }
+                else if (pos.VerticalAnchor.Value == VerticalAnchorValues.Margin)
+                {
+                    tableProperties.Append(@"\tpvpg");
+                }
+            }
+        }
+
+        var overlap = table.GetEffectiveProperty<TableOverlap>();
+        if (overlap != null)
+        {
+            if(overlap.Val != null && overlap.Val == TableOverlapValues.Never)
+            {
+                tableProperties.Append(@"\tabsnoovrlp");
+            }
+        }
 
         var rows = table.Elements<TableRow>();
         int rowNumber = 1;
         int rowCount = rows.Count();
         foreach (var row in rows)
         {
-            ProcessTableRow(row, sb, rowNumber, rowCount);
+            ProcessTableRow(row, sb, rowNumber, rowCount, tableProperties.ToString());
             ++rowNumber;
         }
         sb.AppendLineCrLf();
     }
 
-    internal void ProcessTableRow(TableRow row, StringBuilder sb, int rowNumber, int rowCount)
+    internal void ProcessTableRow(TableRow row, StringBuilder sb, int rowNumber, int rowCount, string tableProperties = "")
     {
         sb.Append(@"\trowd");
+
+        sb.Append(tableProperties);
 
         bool isRightToLeft = false;
         var biDiVisual = row.GetEffectiveProperty<BiDiVisual>();
