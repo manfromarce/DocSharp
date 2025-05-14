@@ -28,6 +28,13 @@ namespace DocSharp.Docx;
 public partial class DocxToHtmlConverter : DocxConverterBase
 {
     /// <summary>
+    /// Generates HTML with a fixed layout which preserves page size and margins.
+    /// Fixed layout is necessary for floating images, shapes and text boxes (not necessary if inline with text).
+    /// NOTE: fixed layout is experimental.
+    /// </summary>
+    public bool FixedLayout { get; set; } = false;
+
+    /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
     /// this property can be set to a new instance of ImageSharpConverter or SystemDrawingConverter. 
