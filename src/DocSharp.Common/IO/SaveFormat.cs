@@ -13,5 +13,6 @@ public enum SaveFormat
     Docm,
     Dotm,
     Rtf,
-    Markdown
+    Markdown,
+    Txt
 }
