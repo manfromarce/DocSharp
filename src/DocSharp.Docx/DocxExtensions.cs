@@ -17,8 +17,8 @@ public static class DocxExtensions
     /// the Save() method should be used for that.
     /// </summary>
     /// <param name="document"></param>
-    /// <param name="outputStream"></param>
-    /// <param name="format"></param>
+    /// <param name="outputStream">The output file path.</param>
+    /// <param name="format">The output format.</param>
     public static void SaveTo(this WordprocessingDocument document, Stream outputStream, SaveFormat format)
     {
         switch (format)
@@ -26,6 +26,40 @@ public static class DocxExtensions
             case SaveFormat.Docx:
                 using (var clone = document.Clone(outputStream))
                 {
+                    if (clone.DocumentType != WordprocessingDocumentType.Document)
+                    {
+                        clone.ChangeDocumentType(WordprocessingDocumentType.Document);
+                    }
+                    clone.Save();
+                }
+                break;
+            case SaveFormat.Dotx:
+                using (var clone = document.Clone(outputStream))
+                {
+                    if (clone.DocumentType != WordprocessingDocumentType.Template)
+                    {
+                        clone.ChangeDocumentType(WordprocessingDocumentType.Template);
+                    }
+                    clone.Save();
+                }
+                break;
+            case SaveFormat.Docm:
+                using (var clone = document.Clone(outputStream))
+                {
+                    if (clone.DocumentType != WordprocessingDocumentType.MacroEnabledDocument)
+                    {
+                        clone.ChangeDocumentType(WordprocessingDocumentType.MacroEnabledDocument);
+                    }
+                    clone.Save();
+                }
+                break;
+            case SaveFormat.Dotm:
+                using (var clone = document.Clone(outputStream))
+                {
+                    if (clone.DocumentType != WordprocessingDocumentType.MacroEnabledTemplate)
+                    {
+                        clone.ChangeDocumentType(WordprocessingDocumentType.MacroEnabledTemplate);
+                    }
                     clone.Save();
                 }
                 break;
@@ -37,6 +71,10 @@ public static class DocxExtensions
                 var docxToMdConverter = new DocxToMarkdownConverter();
                 docxToMdConverter.Convert(document, outputStream);
                 break;
+            case SaveFormat.Txt:
+                var docxToTxtConverter = new DocxToTxtConverter();
+                docxToTxtConverter.Convert(document, outputStream);
+                break;
         }
     }
 
@@ -46,7 +84,7 @@ public static class DocxExtensions
     /// the Save() method should be used for that.
     /// </summary>
     /// <param name="document"></param>
-    /// <param name="outputFilePath"></param>
+    /// <param name="outputFilePath">The output file path.</param>
     /// <param name="format">If null, the file format is detected from the output file extension.</param>
     public static void SaveTo(this WordprocessingDocument document, string outputFilePath, SaveFormat? format = null)
     {
@@ -56,6 +94,15 @@ public static class DocxExtensions
             {
                 case ".docx":
                     format = SaveFormat.Docx;
+                    break;
+                case ".dotx":
+                    format = SaveFormat.Dotx;
+                    break;
+                case ".docm":
+                    format = SaveFormat.Docm;
+                    break;
+                case ".dotm":
+                    format = SaveFormat.Dotm;
                     break;
                 case ".rtf":
                     format = SaveFormat.Rtf;
@@ -72,6 +119,9 @@ public static class DocxExtensions
                 case ".mdtext":
                 case ".text":
                     format = SaveFormat.Markdown;
+                    break;
+                case ".txt":
+                    format = SaveFormat.Txt;
                     break;
                 default:
                     throw new NotImplementedException("Unsupported save format.");
