@@ -331,9 +331,38 @@ public partial class DocxToHtmlConverter : DocxConverterBase
                 }
                 else if (presetGeometry.Preset.Value == A.ShapeTypeValues.LeftRightArrow)
                 {
+                    //x1 = y1 = 0;
+                    double x2 = width / 4;
+                    double x3 = width * 3 / 4;
+                    double x4 = width;
+
+                    double y2 = height / 4;
+                    double y3 = height / 2;
+                    double y4 = height * 3 / 4;
+                    double y5 = height;
+
+                    sb.Append($"<svg width=\"{width.ToStringInvariant()}\" height=\"{height.ToStringInvariant()}\" viewBox=\"0 0 {width.ToStringInvariant()} {height.ToStringInvariant()}\" xmlns=\"http://www.w3.org/2000/svg\">");
+                    sb.Append($"<polygon points=\"0,{y3.ToStringInvariant()} {x2.ToStringInvariant()},0 {x2.ToStringInvariant()},{y2.ToStringInvariant()} {x3.ToStringInvariant()},{y2.ToStringInvariant()} {x3.ToStringInvariant()},0 {x4.ToStringInvariant()},{y3.ToStringInvariant()} {x3.ToStringInvariant()},{y5.ToStringInvariant()} {x3.ToStringInvariant()},{y4.ToStringInvariant()} {x2.ToStringInvariant()},{y4.ToStringInvariant()} {x2.ToStringInvariant()},{y5.ToStringInvariant()}\"");
+                    ProcessFill(shapePr, drawing, width, height, sb);
+                    sb.Append("/>");
+                    sb.AppendLine("</svg>");
                 }
                 else if (presetGeometry.Preset.Value == A.ShapeTypeValues.UpDownArrow)
                 {
+                    double y2 = height / 4;
+                    double y3 = height * 3 / 4;
+                    double y4 = height;
+
+                    double x2 = width / 4;
+                    double x3 = width / 2;
+                    double x4 = width * 3 / 4;
+                    double x5 = width;
+
+                    sb.Append($"<svg width=\"{width.ToStringInvariant()}\" height=\"{height.ToStringInvariant()}\" viewBox=\"0 0 {width.ToStringInvariant()} {height.ToStringInvariant()}\" xmlns=\"http://www.w3.org/2000/svg\">");
+                    sb.Append($"<polygon points=\"{x3.ToStringInvariant()},0 0,{y2.ToStringInvariant()} {x2.ToStringInvariant()},{y2.ToStringInvariant()} {x2.ToStringInvariant()},{y3.ToStringInvariant()} 0,{y3.ToStringInvariant()} {x3.ToStringInvariant()},{y4.ToStringInvariant()} {x5.ToStringInvariant()},{y3.ToStringInvariant()} {x4.ToStringInvariant()},{y3.ToStringInvariant()} {x4.ToStringInvariant()},{y2.ToStringInvariant()} {x5.ToStringInvariant()},{y2.ToStringInvariant()}\"");
+                    ProcessFill(shapePr, drawing, width, height, sb);
+                    sb.Append("/>");
+                    sb.AppendLine("</svg>");
                 }
             }
         }
