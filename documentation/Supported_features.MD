@@ -22,7 +22,7 @@
 | Page numbers | ✅ | ❌ | ❌ |
 | Ruby | ❌ | ❌ | ❌ |
 | Shapes and text boxes (DrawingML) | ❌ | ❌ | Text is extracted |
-| Shapes and text boxes (VML) | ❌ | ❌ | ❌ |
+| Shapes and text boxes (VML) | ❌ | ❌ | Text is extracted |
 | Charts | ❌ | ❌ | - |
 | Diagrams | ❌ | ❌ | - |
 | Advanced text effects (includes WordArt) | ❌ | ❌ | - |
@@ -55,7 +55,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 [7]: Field code is supported in most cases in RTF; in other formats only the field result/text can be preserved. 
 
 [7]: Modern form fields are not supported in RTF (Microsoft Word does not allow to create them) but the result/text is preserved;  
-legacy (VML) form fields depend on VML which is not supported yet;  
+legacy form fields using field code/char are mostly supported;  
 ActiveX controls are preserved as images (like OLE objects).
 
 ## Markdown renderers
