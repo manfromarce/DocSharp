@@ -15,11 +15,12 @@ public partial class DocxToRtfConverter
 {
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
-        if (!run.HasChildren)
+        //skipRunClose = false;
+        if (!run.HasContent())
             return;
 
-        if (!isInField)
-            sb.Append('{');
+        //if (openFields == 0)
+        sb.Append('{');
 
         ProcessRunFormatting(run, sb);
         sb.Append(' ');
@@ -29,8 +30,11 @@ public partial class DocxToRtfConverter
             base.ProcessRunElement(element, sb);
         }
 
-        if (!isInField)
-            sb.Append('}');
+        sb.Append('}');
+        //if (openFields == 0 && !skipRunClose)
+        //{
+        //}
+        //skipRunClose = false;
     }
 
     internal void ProcessRunFormatting(DocumentFormat.OpenXml.Math.Run run, StringBuilder sb)

@@ -27,6 +27,14 @@ public static class OpenXmlHelpers
         return element.NamespaceUri.StartsWith(OpenXmlConstants.VmlNamespace, StringComparison.OrdinalIgnoreCase);
     }
 
+    public static bool HasContent(this Run run)
+    {
+        // If run contains only RunProperties or unsupported elements, return false
+        return run.HasChildren && !run.Elements().All(x => x is RunProperties ||
+                                                              x is DeletedText ||
+                                                              x is DeletedFieldCode);
+    }
+
     public static T? NextElement<T>(this OpenXmlElement? element) where T : OpenXmlElement
     {
         if (element != null && element.GetFirstAncestor<Document>() is Document document)

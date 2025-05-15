@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
@@ -9,7 +10,6 @@ namespace DocSharp.Docx;
 public partial class DocxToRtfConverter
 {
 
-    bool isInField = false;
     internal override void ProcessFieldChar(FieldChar fieldChar, StringBuilder sb)
     {
         // Note: the content between the begin, separate and end parts is not processed here.
@@ -17,8 +17,7 @@ public partial class DocxToRtfConverter
         {
             if (fieldChar.FieldCharType == FieldCharValues.Begin)
             {
-                isInField = true;
-                sb.Append(@"{\field");
+                sb.AppendLineCrLf(@"{\field");
                 if (fieldChar.FieldLock != null && ((!fieldChar.FieldLock.HasValue) || fieldChar.FieldLock.Value))
                 {
                     sb.Append("\\fldlock");
@@ -34,11 +33,6 @@ public partial class DocxToRtfConverter
                 //    sb.Append(@"{{\*\datafield ");
                 //    // ...
                 //    sb.Append(@"}}");
-                //}
-
-                //if (fieldChar.NumberingChange != null)
-                //{
-
                 //}
 
                 if (fieldChar.FormFieldData != null)
@@ -243,25 +237,24 @@ public partial class DocxToRtfConverter
                     sb.Append(@"}}");
                 }
 
-                sb.Append(@"{\*\fldinst {");
+                sb.Append(@"{\*\fldinst {"); // Open field instruction group.
+                //The last bracket is closed by the parent Run
             }
             else if (fieldChar.FieldCharType == FieldCharValues.Separate)
             {
-                sb.Append(@"}}{\fldrslt ");
+                sb.Append(@"}}{\fldrslt {"); // Close field instruction and open field result group.
+                //The last bracket is closed by the parent Run.
             }
             else if (fieldChar.FieldCharType == FieldCharValues.End)
             {
-                sb.Append("}}");
-                isInField = false;
+                sb.AppendLineCrLf("}}}"); // Close field result and field destination.
             }
         }
     }
 
     internal override void ProcessFieldCode(FieldCode fieldCode, StringBuilder sb)
     {
-        if (isInField)
-        {
-            sb.Append(fieldCode.InnerText); // Should we escape it?
-        }
+        // Complex fields such as table of contents may contain special characters such as '\' that need to be escaped.
+        sb.AppendRtfEscaped(fieldCode.InnerText);
     }
 }

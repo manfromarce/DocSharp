@@ -52,10 +52,11 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 
 [6]: OLE objects are preserved as images in most cases when converting to RTF.  
 
-[7]: Field code is supported in most cases in RTF; in other formats only the field result/text can be preserved. 
+[7]: Fields (including table of contents) are supported in RTF; in other formats only the field result/text can be preserved.  
+Standard parts are converted to regular (static) content (same behavior as Microsoft Word).
 
-[7]: Modern form fields are not supported in RTF (Microsoft Word does not allow to create them) but the result/text is preserved;  
-legacy form fields using field code/char are mostly supported;  
+[8]: Modern form fields are not supported in RTF but the result/text is preserved (same behavior as Microsoft Word);  
+legacy form fields using field code/char are supported;  
 ActiveX controls are preserved as images (like OLE objects).
 
 ## Markdown renderers
