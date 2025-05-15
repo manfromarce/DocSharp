@@ -34,8 +34,11 @@ public static class RtfHelpers
         sb.AppendFormat("\\uc1\\u{0}?", charCode.ToString("D4"));
     }
 
-    public static void AppendRtfEscaped(this StringBuilder sb, string value)
+    public static void AppendRtfEscaped(this StringBuilder sb, string? value)
     {
+        if (value == null)
+            return;
+
         foreach (char c in value)
         {
             if (c == '\\' || c == '{' || c == '}')

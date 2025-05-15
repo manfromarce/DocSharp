@@ -174,24 +174,4 @@ public partial class DocxToRtfConverter : DocxConverterBase
             }
         }
     }
-
-    internal override void ProcessText(Text text, StringBuilder sb)
-    {
-        sb.AppendRtfEscaped(text.InnerText);
-    }
-
-    internal override void ProcessBreak(Break @break, StringBuilder sb)
-    {
-        if (@break.Type != null && @break.Type == BreakValues.Page)
-            sb.Append(@"\page ");
-        else if (@break.Type != null && @break.Type == BreakValues.Column)
-            sb.Append(@"\column ");
-        else
-            sb.Append(@"\line ");
-    }
-
-    internal override void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb)
-    {
-        sb.Append("\\chpgn ");
-    }
 }

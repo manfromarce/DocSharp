@@ -22,6 +22,11 @@ public static class OpenXmlHelpers
         return element.NamespaceUri.StartsWith(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase);
     }
 
+    public static bool IsVmlElement(this OpenXmlElement element)
+    {
+        return element.NamespaceUri.StartsWith(OpenXmlConstants.VmlNamespace, StringComparison.OrdinalIgnoreCase);
+    }
+
     public static T? NextElement<T>(this OpenXmlElement? element) where T : OpenXmlElement
     {
         if (element != null && element.GetFirstAncestor<Document>() is Document document)
@@ -97,6 +102,35 @@ public static class OpenXmlHelpers
     public static Numbering? GetNumberingPart(this OpenXmlElement element)
     {
         return GetMainDocumentPart(element)?.NumberingDefinitionsPart?.Numbering;
+    }
+
+    public static T? GetEffectiveProperty<T>(this OpenXmlElement element) where T : OpenXmlElement
+    {
+        if (element is Paragraph p)
+        {
+            return GetEffectiveProperty<T>(p);
+        }
+        else if (element is Run run)
+        {
+            return GetEffectiveProperty<T>(run);
+        }
+        else if (element is DocumentFormat.OpenXml.Math.Run mathRun)
+        {
+            return GetEffectiveProperty<T>(mathRun);
+        }
+        else if (element is Table table)
+        {
+            return GetEffectiveProperty<T>(table);
+        }
+        else if (element is TableRow tableRow)
+        {
+            return GetEffectiveProperty<T>(tableRow);
+        }
+        else if (element is TableCell tableCell)
+        {
+            return GetEffectiveProperty<T>(tableCell);
+        }
+        return null;
     }
 
     // Helper function to get paragraph formatting from paragraph properties, style or default style.
@@ -191,6 +225,34 @@ public static class OpenXmlHelpers
 
         // Check default run style for the current document
         return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>();
+    }
+
+    public static T? GetEffectiveProperty<T>(this DocumentFormat.OpenXml.Math.Run run) where T : OpenXmlElement
+    {
+        // Check run properties
+        T? propertyValue = run.RunProperties?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        var stylesPart = GetStylesPart(run);
+
+        // Check run style
+        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character) ??
+                       stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Paragraph);
+        while (runStyle != null)
+        {
+            propertyValue = runStyle.StyleRunProperties?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            runStyle = stylesPart.GetBaseStyle(runStyle);
+        }
+        return null;
     }
 
     // Helper function to get table formatting from table properties or style.

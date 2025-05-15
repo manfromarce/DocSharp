@@ -10,31 +10,34 @@
 | Page setup   | ✅ | - | - |
 | Columns | ✅ | ❌ | ❌ |
 | Pictures [1] | ✅ | ✅ | - |
-| Lists [2]    | 🟡 | ✅ | ✅ |
-| Tables [3]  | ✅ | ✅ | ✅ |
+| Lists [2]    | ✅ | ✅ | ✅ |
+| Tables [3]  | ✅ | 🟡 | 🟡 |
 | Styles [4] | 🟡 | 🟡 | - |
 | Header and footer | ✅ | ❌ | ❌ |
 | Endnotes and footnotes | ✅ | ❌ | ❌ |
 | Hyperlinks | ✅ | ✅ | - |
 | Bookmarks | ✅ | ✅ | - |
 | Drop cap | ✅ | ❌ | ❌ |
-| Symbols | ✅ | ✅ | ✅ |
-| Fields and standard parts | 🟡 | ❌ | ❌ |
+| Symbols | ✅ | ✅[5] | ✅[5] |
 | Page numbers | ✅ | ❌ | ❌ |
 | Ruby | ❌ | ❌ | ❌ |
-| Text boxes | ❌ | ❌ | Text is extracted |
-| Shapes | ❌ | ❌ | Text is extracted |
+| Shapes and text boxes (DrawingML) | ❌ | ❌ | Text is extracted |
+| Shapes and text boxes (VML) | ❌ | ❌ | ❌ |
 | Charts | ❌ | ❌ | - |
 | Diagrams | ❌ | ❌ | - |
 | Advanced text effects (includes WordArt) | ❌ | ❌ | - |
 | Image effects | ❌ | ❌ | - |
-| Math | ❌ | ✅ | ❌ |
-| OLE objects | ❌ | - | - |
-| Form fields | ❌ | - | - |
+| Math | ✅ | ✅ | ❌ |
+| OLE objects | ❌[6] | - | - |
+| Fields and standard parts [7] | ✅ | 🟡 | 🟡 |
+| Form fields | 🟡[8] | - | - |
+| Content part (SVG, MathML, SMIL, ...) | ❌ | ❌ | - |
 | Comments | ❌ | - | - |
+| Revisions | ❌ | - | - |
 | Document information (title, author, ...) | ✅ | - | - |
 
-[1]: RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
+[1]: Only inline images are supported. Floating and wrap-positioned images depend on DrawingML/VML shapes which are not implemented yet.  
+RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
 Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  
 For Markdown, the ImagesOutputFolder has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
@@ -44,6 +47,16 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 [3]: Nested tables and conditional formatting are not supported yet for DOCX --> RTF; while for DOCX --> MD / TXT only basic cell content can be preserved.
 
 [4]: Styles are converted to inline formatting  
+
+[5]: Special fonts such as Wingdings, Webdings and Symbol are converted to Unicode characters.  
+
+[6]: OLE objects are preserved as images in most cases when converting to RTF.  
+
+[7]: Field code is supported in most cases in RTF; in other formats only the field result/text can be preserved. 
+
+[7]: Modern form fields are not supported in RTF (Microsoft Word does not allow to create them) but the result/text is preserved;  
+legacy (VML) form fields depend on VML which is not supported yet;  
+ActiveX controls are preserved as images (like OLE objects).
 
 ## Markdown renderers
 

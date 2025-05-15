@@ -33,13 +33,4 @@ public partial class DocxToRtfConverter
         sb.Append(@"}}}");
     }
 
-    internal override void ProcessBookmarkStart(BookmarkStart bookmarkStart, StringBuilder sb)
-    {
-        sb.Append(@"{\*\bkmkstart " + bookmarkStart.Name + "}");
-    }
-
-    internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, StringBuilder sb)
-    {
-        sb.Append(@"{\*\bkmkend " + bookmarkEnd.GetBookmarkName() + "}");
-    }
 }

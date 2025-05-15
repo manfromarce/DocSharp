@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using V = DocumentFormat.OpenXml.Vml;
 
@@ -13,18 +14,23 @@ public partial class DocxToRtfConverter
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
     {
         // VML picture
-        if (picture.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
+        ProcessVml(picture, sb);
+    }
+
+    internal void ProcessVml(OpenXmlElement element, StringBuilder sb)
+    {
+        if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
         {
-            // For VML, width and height should be in a v:shape element with this attribute: 
+            // Width and height should be in a v:shape element in the style attribute: 
             // style="width:165.6pt;height:110.4pt;visibility:visible..."
-        
-            var shape = picture.Elements<V.Shape>().FirstOrDefault();
+
+            var shape = element as V.Shape ?? element.Elements<V.Shape>().FirstOrDefault();
             var style = shape?.Style;
             if (style?.Value != null)
             {
                 var properties = new PictureProperties();
-        
+
                 var values = style.Value.Split(';');
                 long width = 0;
                 long height = 0;
@@ -60,7 +66,7 @@ public partial class DocxToRtfConverter
                 properties.Height = height + properties.CropTop + properties.CropBottom;
                 if (width > 0 && height > 0)
                 {
-                    var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
+                    var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(element);
                     ProcessImagePart(mainDocumentPart, relId, properties, sb);
                 }
             }

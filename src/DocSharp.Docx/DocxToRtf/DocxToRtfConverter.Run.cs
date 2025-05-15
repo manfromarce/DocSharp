@@ -7,6 +7,7 @@ using Shadow14 = DocumentFormat.OpenXml.Office2010.Word.Shadow;
 using Outline14 = DocumentFormat.OpenXml.Office2010.Word.TextOutlineEffect;
 using DocSharp.Helpers;
 using DocSharp.Docx.Rtf;
+using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
@@ -32,7 +33,17 @@ public partial class DocxToRtfConverter
             sb.Append('}');
     }
 
+    internal void ProcessRunFormatting(DocumentFormat.OpenXml.Math.Run run, StringBuilder sb)
+    {
+        ProcessRunFormattingInternal(run, sb);
+    }
+
     internal void ProcessRunFormatting(Run run, StringBuilder sb)
+    {
+        ProcessRunFormattingInternal(run, sb);
+    }
+
+    internal void ProcessRunFormattingInternal(OpenXmlElement run, StringBuilder sb)
     {
         var rtl = OpenXmlHelpers.GetEffectiveProperty<RightToLeftText>(run);
         if (rtl != null && (rtl.Val == null || rtl.Val))
@@ -322,19 +333,6 @@ public partial class DocxToRtfConverter
         if (snapToGrid?.Val != null && !snapToGrid.Val) // True by default
         {
             sb.Append(@"\cgrid0");
-        }
-    }
-
-    internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
-    {
-        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) && 
-            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
-        {
-            fonts.TryAddAndGetIndex(symbolChar.Font.Value, out int fontIndex);
-            sb.Append('{');
-            sb.Append($"\\f{fontIndex} ");
-            sb.AppendRtfUnicodeChar(symbolChar.Char.Value);
-            sb.Append('}');
         }
     }
 }
