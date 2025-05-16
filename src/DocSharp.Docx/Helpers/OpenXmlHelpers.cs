@@ -138,7 +138,10 @@ public static class OpenXmlHelpers
         {
             return GetEffectiveProperty<T>(tableCell);
         }
-        return null;
+        else
+        {
+            return TryGetRunPropertiesProperty<T>(element);
+        }
     }
 
     // Helper function to get paragraph formatting from paragraph properties, style or default style.
@@ -259,6 +262,17 @@ public static class OpenXmlHelpers
 
             // Check styles from which the current style inherits
             runStyle = stylesPart.GetBaseStyle(runStyle);
+        }
+        return null;
+    }
+
+    public static T? TryGetRunPropertiesProperty<T>(this OpenXmlElement element) where T : OpenXmlElement
+    {
+        // Check run properties
+        T? propertyValue = element.GetFirstChild<RunProperties>()?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
         }
         return null;
     }

@@ -22,7 +22,7 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mmath{\*\moMathPara");
                 if (oMathPara.ParagraphProperties != null)
                 {
-                    sb.Append(@"{\moMathParaPr{\mctrlPr}");
+                    sb.Append(@"{\moMathParaPr");
                     if (oMathPara.ParagraphProperties.Justification?.Val != null)
                     {
                         if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Left)
@@ -149,7 +149,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\macc");
                 if (accent.AccentProperties != null)
                 {
-                    sb.Append(@"{\maccPr{\mctrlPr}");
+                    sb.Append(@"{\maccPr");
+                    ProcessMathElementFormatting(accent.AccentProperties.ControlProperties, sb);
                     ProcessAccentChar(accent.AccentProperties.AccentChar, sb);
                     sb.Append('}');
                 }
@@ -160,7 +161,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mbar");
                 if (bar.BarProperties != null)
                 {
-                    sb.Append(@"{\mbarPr{\mctrlPr}");
+                    sb.Append(@"{\mbarPr");
+                    ProcessMathElementFormatting(bar.BarProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(bar.Base, sb);
@@ -170,7 +172,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mborderBox");
                 if (borderBox.BorderBoxProperties != null)
                 {
-                    sb.Append(@"{\mborderBoxPr{\mctrlPr}");
+                    sb.Append(@"{\mborderBoxPr");
+                    ProcessMathElementFormatting(borderBox.BorderBoxProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(borderBox.Base, sb);
@@ -180,7 +183,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mbox");
                 if (box.BoxProperties != null)
                 {
-                    sb.Append(@"{\mboxPr{\mctrlPr}");
+                    sb.Append(@"{\mboxPr");
+                    ProcessMathElementFormatting(box.BoxProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(box.Base, sb);
@@ -190,7 +194,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\md");
                 if (delimiter.DelimiterProperties != null)
                 {
-                    sb.Append(@"{\mdPr{\mctrlPr}");
+                    sb.Append(@"{\mdPr");
+                    ProcessMathElementFormatting(delimiter.DelimiterProperties.ControlProperties, sb);
                     if (delimiter.DelimiterProperties.BeginChar?.Val != null)
                     {
                         sb.Append("{\\mbegChr ");
@@ -225,7 +230,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\meqArr");
                 if (eqArray.EquationArrayProperties != null)
                 {
-                    sb.Append(@"{\meqArrPr{\mctrlPr}");
+                    sb.Append(@"{\meqArrPr");
+                    ProcessMathElementFormatting(eqArray.EquationArrayProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 foreach (var eq in eqArray.Elements<M.Base>())
@@ -238,7 +244,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mf");
                 if (fraction.FractionProperties != null)
                 {
-                    sb.Append(@"{\mfPr{\mctrlPr}");
+                    sb.Append(@"{\mfPr");
+                    ProcessMathElementFormatting(fraction.FractionProperties.ControlProperties, sb);
                     if (fraction.FractionProperties.FractionType?.Val != null)
                     {
                         sb.Append(@"{\mtype ");
@@ -279,7 +286,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mfunc");
                 if (mathFunction.FunctionProperties != null)
                 {
-                    sb.Append(@"{\mfuncPr{\mctrlPr}");
+                    sb.Append(@"{\mfuncPr");
+                    ProcessMathElementFormatting(mathFunction.FunctionProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(mathFunction.Base, sb);
@@ -296,7 +304,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mgroupChr");
                 if (groupChar.GroupCharProperties != null)
                 {
-                    sb.Append(@"{\mgroupChrPr{\mctrlPr}");
+                    sb.Append(@"{\mgroupChrPr");
+                    ProcessMathElementFormatting(groupChar.GroupCharProperties.ControlProperties, sb);
                     ProcessAccentChar(groupChar.GroupCharProperties.AccentChar, sb);
                     sb.Append('}');
                 }
@@ -307,7 +316,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mlimLow");
                 if (limitLower.LimitLowerProperties != null)
                 {
-                    sb.Append(@"{\mlimLowPr{\mctrlPr}");
+                    sb.Append(@"{\mlimLowPr");
+                    ProcessMathElementFormatting(limitLower.LimitLowerProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(limitLower.Base, sb);
@@ -318,7 +328,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mlimUpp");
                 if (limitUpper.LimitUpperProperties != null)
                 {
-                    sb.Append(@"{\mlimUppPr{\mctrlPr}");
+                    sb.Append(@"{\mlimUppPr");
+                    ProcessMathElementFormatting(limitUpper.LimitUpperProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(limitUpper.Base, sb);
@@ -329,7 +340,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mm");
                 if (matrix.MatrixProperties != null)
                 {
-                    sb.Append(@"{\mmPr{\mctrlPr}");
+                    sb.Append(@"{\mmPr");
+                    ProcessMathElementFormatting(matrix.MatrixProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 foreach (var row in matrix.Elements<M.MatrixRow>())
@@ -347,7 +359,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mnary");
                 if (nary.NaryProperties != null)
                 {
-                    sb.Append(@"{\mnaryPr{\mctrlPr}");
+                    sb.Append(@"{\mnaryPr");
+                    ProcessMathElementFormatting(nary.NaryProperties.ControlProperties, sb);
                     if (nary.NaryProperties.HideSubArgument != null && (nary.NaryProperties.HideSubArgument.Val == null || IsOn(nary.NaryProperties.HideSubArgument.Val)))
                     {
                         sb.Append(@"{\msubHide on}");
@@ -368,7 +381,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mphant");
                 if (phantom.PhantomProperties != null)
                 {
-                    sb.Append(@"{\mphantPr{\mctrlPr}");
+                    sb.Append(@"{\mphantPr");
+                    ProcessMathElementFormatting(phantom.PhantomProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(phantom.Base, sb);
@@ -378,8 +392,9 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\mrad");
                 if (radical.RadicalProperties != null)
                 {
-                    sb.Append(@"{\mradPr{\mctrlPr}");
-                    if (radical.RadicalProperties.HideDegree != null && 
+                    sb.Append(@"{\mradPr");
+                    ProcessMathElementFormatting(radical.RadicalProperties.ControlProperties, sb);
+                    if (radical.RadicalProperties.HideDegree != null &&
                         (radical.RadicalProperties.HideDegree.Val == null || IsOn(radical.RadicalProperties.HideDegree.Val)))
                     {
                         sb.Append(@"{\mdegHide on}");
@@ -400,7 +415,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\msPre");
                 if (preSubSuper.PreSubSuperProperties != null)
                 {
-                    sb.Append(@"{\msPrePr{\mctrlPr}");
+                    sb.Append(@"{\msPrePr");
+                    ProcessMathElementFormatting(preSubSuper.PreSubSuperProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(preSubSuper.Base, sb);
@@ -412,7 +428,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\msSub");
                 if (subscript.SubscriptProperties != null)
                 {
-                    sb.Append(@"{\msSubPr{\mctrlPr}");
+                    sb.Append(@"{\msSubPr");
+                    ProcessMathElementFormatting(subscript.SubscriptProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(subscript.Base, sb);
@@ -423,7 +440,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\msSup");
                 if (superscript.SuperscriptProperties != null)
                 {
-                    sb.Append(@"{\msSupPr{\mctrlPr}");
+                    sb.Append(@"{\msSupPr");
+                    ProcessMathElementFormatting(superscript.SuperscriptProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(superscript.Base, sb);
@@ -434,7 +452,8 @@ public partial class DocxToRtfConverter
                 sb.Append(@"{\msSubSup");
                 if (subSuperscript.SubSuperscriptProperties != null)
                 {
-                    sb.Append(@"{\msSubSupPr{\mctrlPr}");
+                    sb.Append(@"{\msSubSupPr");
+                    ProcessMathElementFormatting(subSuperscript.SubSuperscriptProperties.ControlProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(subSuperscript.Base, sb);
@@ -443,6 +462,16 @@ public partial class DocxToRtfConverter
                 sb.Append('}');
                 break;
         }
+    }
+
+    internal void ProcessMathElementFormatting(ControlProperties? ctrlProperties, StringBuilder sb)
+    {
+        sb.Append(@"{\mctrlPr");
+        if (ctrlProperties != null)
+        {
+            ProcessRunFormattingInternal(ctrlProperties, sb);
+        }
+        sb.Append('}');
     }
 
     private void ProcessAccentChar(AccentChar? accentChar, StringBuilder sb)
@@ -466,7 +495,6 @@ public partial class DocxToRtfConverter
         {
             return;
         }
-        //sb.Append(@"{\mrPr{\mctrlPr}");
         if (mathRunProperties.Literal != null)
         {
 
