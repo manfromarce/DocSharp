@@ -70,203 +70,132 @@ public partial class DocxToRtfConverter
                     }
                     else if (listType == NumberFormatValues.Aiueo)
                     {
-                        sb.Append(@"\pnaiu");
+                        sb.Append(@"\pnaiu"); // 46 phonetic katakana characters in "aiueo" order (AIUEO)
                     }
                     else if (listType == NumberFormatValues.AiueoFullWidth)
                     {
-                        sb.Append(@"\pnaiud");
+                        sb.Append(@"\pnaiud"); // 46 phonetic double-byte katakana characters (AIUEO DBCHAR)
                     }
-                    else if (listType == NumberFormatValues.ArabicAbjad)
+                    else if (listType == NumberFormatValues.ArabicAbjad || 
+                             listType == NumberFormatValues.Hebrew2)
                     {
+                        sb.Append(@"\pnbidib"); // Alif Ba Tah if language is Arabic and Non-standard Decimal if language is Hebrew
                     }
-                    else if (listType == NumberFormatValues.ArabicAlpha)
+                    else if (listType == NumberFormatValues.ArabicAlpha || 
+                             listType == NumberFormatValues.Hebrew1)
                     {
+                        sb.Append(@"\pnbidia"); // Abjad Jawaz if language is Arabic and Biblical Standard if language is Hebrew
                     }
-                    else if (listType == NumberFormatValues.BahtText)
+                    else if (listType == NumberFormatValues.ChineseCounting ||
+                             listType == NumberFormatValues.IdeographDigital ||
+                             listType == NumberFormatValues.KoreanDigital ||
+                             listType == NumberFormatValues.TaiwaneseCounting)
                     {
+                        sb.Append(@"\pndbnum"); // Kanji numbering without the digit character (DBNUM1)
+                    }
+                    else if (listType == NumberFormatValues.ChineseLegalSimplified ||
+                             listType == NumberFormatValues.IdeographLegalTraditional ||
+                             listType == NumberFormatValues.JapaneseCounting ||
+                             listType == NumberFormatValues.KoreanCounting)
+                    {
+                        sb.Append(@"\pndbnumd"); // Kanji numbering with the digit character (DBNUM2)
+                    }
+                    else if (listType == NumberFormatValues.ChineseCountingThousand ||
+                             listType == NumberFormatValues.JapaneseLegal ||
+                             listType == NumberFormatValues.KoreanLegal ||
+                             listType == NumberFormatValues.TaiwaneseCountingThousand)
+                    {
+                        sb.Append(@"\pndbnumt"); // Kanji numbering 3 (DBNUM3), alias for \pndbnuml
+                    }
+                    else if (listType == NumberFormatValues.KoreanDigital2 ||
+                            listType == NumberFormatValues.TaiwaneseDigital)
+                    {
+                        sb.Append(@"\pndbnumk"); // Kanji numbering 4 (DBNUM4)
                     }
                     else if (listType == NumberFormatValues.CardinalText)
                     {
-                        sb.Append(@"\pncard");
-                    }
-                    else if (listType == NumberFormatValues.Chicago)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.ChineseCounting)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.ChineseCountingThousand)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.ChineseLegalSimplified)
-                    {
+                        sb.Append(@"\pncard"); // One, Two, Three
                     }
                     else if (listType == NumberFormatValues.Chosung)
                     {
-                        sb.Append(@"\pnchosung");
-                    }
-                    else if (listType == NumberFormatValues.Decimal)
-                    {
-                        sb.Append(@"\pndec");
-                    }
+                        sb.Append(@"\pnchosung"); // Korean numbering 1 (CHOSUNG)
+                    }                    
                     else if (listType == NumberFormatValues.DecimalEnclosedCircle)
                     {
-                        sb.Append(@"\pncnum");
-                    }
-                    else if (listType == NumberFormatValues.DecimalEnclosedCircleChinese)
-                    {
+                        sb.Append(@"\pncnum"); // 20 numbered list in circle (CIRCLENUM)
                     }
                     else if (listType == NumberFormatValues.DecimalEnclosedFullstop)
                     {
+                        sb.Append(@"\pngbnum"); // Chinese numbering 1 (GB1)
                     }
                     else if (listType == NumberFormatValues.DecimalEnclosedParen)
                     {
+                        sb.Append(@"\pngbnumd"); // Chinese numbering 2 (GB2)
                     }
-                    else if (listType == NumberFormatValues.DecimalFullWidth)
+                    else if (listType == NumberFormatValues.DecimalEnclosedCircleChinese)
                     {
-                        sb.Append(@"\pndecd");
-                    }
-                    else if (listType == NumberFormatValues.DecimalFullWidth2)
-                    {
-                        sb.Append(@"\pndecd");
-                    }
-                    else if (listType == NumberFormatValues.DecimalHalfWidth)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.DecimalZero)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.DollarText)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.Ganada)
-                    {
-                        sb.Append(@"\pnganada");
-                    }
-                    else if (listType == NumberFormatValues.Hebrew1)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.Hebrew2)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.Hex)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.HindiConsonants)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.HindiCounting)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.HindiNumbers)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.HindiVowels)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.IdeographDigital)
-                    {
+                        sb.Append(@"\pngbnuml"); // Chinese numbering 3 (GB3)
                     }
                     else if (listType == NumberFormatValues.IdeographEnclosedCircle)
                     {
+                        sb.Append(@"\pngbnumk"); // Chinese numbering 4 (GB4)
                     }
-                    else if (listType == NumberFormatValues.IdeographLegalTraditional)
+                    else if (listType == NumberFormatValues.DecimalFullWidth ||
+                             listType == NumberFormatValues.DecimalFullWidth2)
                     {
+                        sb.Append(@"\pndecd"); // Double-byte decimal numbering (Arabic DBCHAR)
                     }
-                    else if (listType == NumberFormatValues.IdeographTraditional)
+                    else if (listType == NumberFormatValues.Ganada)
                     {
-                    }
-                    else if (listType == NumberFormatValues.IdeographZodiac)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.IdeographZodiacTraditional)
-                    {
+                        sb.Append(@"\pnganada"); // Korean numbering 2 (GANADA)
                     }
                     else if (listType == NumberFormatValues.Iroha)
                     {
-                        sb.Append(@"\pniroha");
+                        sb.Append(@"\pniroha"); // 46 phonetic katakana characters in "iroha" order (IROHA)
                     }
                     else if (listType == NumberFormatValues.IrohaFullWidth)
                     {
-                        sb.Append(@"\pnirohad");
-                    }
-                    else if (listType == NumberFormatValues.JapaneseCounting)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.JapaneseDigitalTenThousand)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.JapaneseLegal)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.KoreanCounting)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.KoreanDigital)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.KoreanDigital2)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.KoreanLegal)
-                    {
+                        sb.Append(@"\pnirohad"); // 46 phonetic double-byte katakana characters (IROHA DBCHAR)
                     }
                     else if (listType == NumberFormatValues.LowerLetter)
                     {
-                        sb.Append(@"\pnlcltr");
+                        sb.Append(@"\pnlcltr"); // a, b, c
                     }
                     else if (listType == NumberFormatValues.LowerRoman)
                     {
-                        sb.Append(@"\pnlcrm");
-                    }
-                    else if (listType == NumberFormatValues.NumberInDash)
-                    {
+                        sb.Append(@"\pnlcrm"); // i, ii, iii
                     }
                     else if (listType == NumberFormatValues.Ordinal)
                     {
-                        sb.Append(@"\pnord");
+                        sb.Append(@"\pnord"); // 1st, 2nd, 3rd
                     }
                     else if (listType == NumberFormatValues.OrdinalText)
                     {
-                        sb.Append(@"\pnordt");
-                    }
-                    else if (listType == NumberFormatValues.RussianLower)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.RussianUpper)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.TaiwaneseCounting)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.TaiwaneseCountingThousand)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.TaiwaneseDigital)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.ThaiCounting)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.ThaiLetters)
-                    {
-                    }
-                    else if (listType == NumberFormatValues.ThaiNumbers)
-                    {
+                        sb.Append(@"\pnordt"); // First, Second, Third
                     }
                     else if (listType == NumberFormatValues.UpperLetter)
                     {
-                        sb.Append(@"\pnucltr");
+                        sb.Append(@"\pnucltr"); // A, B, C
                     }
                     else if (listType == NumberFormatValues.UpperRoman)
                     {
-                        sb.Append(@"\pnucrm");
+                        sb.Append(@"\pnucrm"); // I, II, III
                     }
-                    else if (listType == NumberFormatValues.VietnameseCounting)
+                    else if (listType == NumberFormatValues.IdeographTraditional)
                     {
+                        sb.Append(@"\pnzodiac"); //Chinese Zodiac numbering 1 (ZODIAC1)
                     }
-                    else if (listType == NumberFormatValues.Custom)
+                    else if (listType == NumberFormatValues.IdeographZodiac)
                     {
+                        sb.Append(@"\pnzodiacd"); //Chinese Zodiac numbering 2 (ZODIAC2)
+                    }
+                    else if (listType == NumberFormatValues.IdeographZodiacTraditional)
+                    {
+                        sb.Append(@"\pnzodiacl"); //Chinese Zodiac numbering 3 (ZODIAC3)
+                    }
+                    else
+                    {
+                        sb.Append(@"\pndec"); // Decimal numbering (1, 2, 3)
                     }
 
                     if (!isBulleted)

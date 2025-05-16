@@ -21,7 +21,7 @@ public partial class DocxToRtfConverter
         }
         else
         {
-            sb.Append("{\\headerr ");
+            sb.Append("{\\headerr "); // Default
         }
         foreach(var element in header.Elements())
         {

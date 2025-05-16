@@ -40,7 +40,7 @@ public partial class DocxToRtfConverter
                 {
                     base.ProcessBodyElement(element, sb);
                 }
-                sb.Append("}");
+                sb.Append('}');
             }
         }
     }
@@ -73,7 +73,7 @@ public partial class DocxToRtfConverter
                 {
                     base.ProcessBodyElement(element, sb);
                 }
-                sb.Append("}");
+                sb.Append('}');
             }
         }
     }

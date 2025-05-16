@@ -112,6 +112,8 @@ public partial class DocxToRtfConverter : DocxConverterBase
         }
         sb.AppendLineCrLf("}");
 
+        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);
+
         if (document.MainDocumentPart?.FootnotesPart != null)
         {
             ProcessFootnotesPart(document.MainDocumentPart.FootnotesPart, sb);

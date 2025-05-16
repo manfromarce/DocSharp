@@ -34,6 +34,7 @@
 | Content part (SVG, MathML, SMIL, ...) | ❌ | ❌ | - |
 | Comments | ❌ | - | - |
 | Revisions | ❌ | - | - |
+| Mail merge | ❌ | - | - |
 | Document information (title, author, ...) | ✅ | - | - |
 
 [1]: Only inline images are supported. Floating and wrap-positioned images depend on DrawingML/VML shapes which are not implemented yet.  
