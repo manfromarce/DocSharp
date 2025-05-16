@@ -17,7 +17,7 @@
 | Endnotes and footnotes | ✅ | ❌ | ❌ |
 | Hyperlinks | ✅ | ✅ | - |
 | Bookmarks | ✅ | ✅ | - |
-| Drop cap | ✅ | ❌ | ❌ |
+| Drop cap and frame properties | ✅ | ❌ | ❌ |
 | Symbols | ✅ | ✅[5] | ✅[5] |
 | Page numbers | ✅ | ❌ | ❌ |
 | Ruby | ❌ | ❌ | ❌ |
@@ -25,7 +25,7 @@
 | Shapes and text boxes (VML) | ❌ | ❌ | Text is extracted |
 | Charts | ❌ | ❌ | - |
 | Diagrams | ❌ | ❌ | - |
-| Advanced text effects (includes WordArt) | ❌ | ❌ | - |
+| Advanced text effects and WordArt | ❌ | ❌ | - |
 | Image effects | ❌ | ❌ | - |
 | Math | ✅ | ✅ | ❌ |
 | OLE objects | ❌[6] | - | - |
