@@ -303,7 +303,7 @@ public partial class DocxToRtfConverter
         }
         else
         {
-            sb.Append(@"\widowctrl"); // True by default
+            sb.Append(@"\widctlpar"); // True by default
         }
 
         var wordWrap = OpenXmlHelpers.GetEffectiveProperty<WordWrap>(paragraph);
