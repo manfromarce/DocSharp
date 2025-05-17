@@ -27,6 +27,7 @@ public partial class DocxToRtfConverter
         {
             base.ProcessBodyElement(element, sb);
         }
+        sb.Append("\\par");
         sb.Append('}');
     }
 
@@ -48,6 +49,8 @@ public partial class DocxToRtfConverter
         {
             base.ProcessBodyElement(element, sb);
         }
+        sb.Append("\\par"); // \par is normally not added for the last paragraph to avoid an unnecessary line
+                            // (e.g. in table cells), but in header and footer the missing \par seems to cause formatting issues
         sb.Append('}');
     }
 }
