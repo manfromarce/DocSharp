@@ -50,8 +50,8 @@ public partial class DocxToRtfConverter
             properties.Height = h + properties.CropTop + properties.CropBottom;
             if (blipFill?.Blip?.Embed?.Value is string relId)
             {
-                var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
-                ProcessImagePart(mainDocumentPart, relId, properties, sb);
+                var rootPart = OpenXmlHelpers.GetRootPart(drawing);
+                ProcessImagePart(rootPart, relId, properties, sb);
             }
         }
     }

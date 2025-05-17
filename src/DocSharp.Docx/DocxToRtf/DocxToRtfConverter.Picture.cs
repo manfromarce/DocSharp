@@ -14,9 +14,9 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter
 {
-    internal void ProcessImagePart(MainDocumentPart? mainDocumentPart, string relId, PictureProperties properties, StringBuilder sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, StringBuilder sb)
     {
-        if (mainDocumentPart?.GetPartById(relId) is ImagePart imagePart)
+        if (rootPart?.GetPartById(relId) is ImagePart imagePart)
         {
             using (var stream = imagePart.GetStream(FileMode.Open, FileAccess.Read))
             {

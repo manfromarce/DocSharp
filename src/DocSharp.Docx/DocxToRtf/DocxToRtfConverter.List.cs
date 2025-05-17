@@ -65,6 +65,46 @@ public partial class DocxToRtfConverter
             }
             sb.AppendLineCrLf('}');
         }
+
+        if (numbering.Elements<NumberingPictureBullet>().Any()) 
+        { 
+            sb.Append(@"{\*\listpicture");
+            foreach (var pictureBullet in numbering.Elements<NumberingPictureBullet>())
+            {
+                //if (pictureBullet.NumberingPictureBulletId != null)
+                //{
+                // Not available in RTF, add picture bullets in order instead
+                //}
+                if (pictureBullet.PictureBulletBase != null)
+                {
+                    ProcessPictureBulletBase(pictureBullet.PictureBulletBase, sb);
+                }
+                else if (pictureBullet.Drawing != null)
+                {
+                    ProcessDrawing(pictureBullet.Drawing, sb);
+                }
+                else if (pictureBullet.Elements<Picture>().FirstOrDefault() is Picture pict)
+                {
+                    ProcessPicture(pict, sb); // PictureBulletBase might incorrectly be interpreted as Picture
+                }
+                else if (pictureBullet.GetFirstChild<AlternateContent>() is AlternateContent alternateContent)
+                {
+                    if (alternateContent.Descendants<PictureBulletBase>().FirstOrDefault() is PictureBulletBase pbb)
+                    {
+                        ProcessPictureBulletBase(pbb, sb);
+                    }
+                    else if (alternateContent.Descendants<Drawing>().FirstOrDefault() is Drawing drawing1)
+                    {
+                        ProcessDrawing(drawing1, sb);
+                    }
+                    else if (alternateContent.Descendants<Picture>().FirstOrDefault() is Picture pict1)
+                    {
+                        ProcessPicture(pict1, sb);
+                    }
+                }
+            }
+            sb.AppendLineCrLf('}');
+        }
     }
 
     private void ProcessLevel(Level level, StringBuilder sb)

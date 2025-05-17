@@ -17,6 +17,11 @@ public partial class DocxToRtfConverter
         ProcessVml(picture, sb);
     }
 
+    internal void ProcessPictureBulletBase(PictureBulletBase pictureBullet, StringBuilder sb)
+    {
+        ProcessVml(pictureBullet, sb);
+    }
+
     internal void ProcessVml(OpenXmlElement element, StringBuilder sb)
     {
         if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
@@ -51,13 +56,37 @@ public partial class DocxToRtfConverter
                     else if (v.StartsWith("height:"))
                     {
                         string h = v.Substring(7);
-                        if (h.EndsWith("pt"))
+                        if (h.EndsWith("pt") || h.EndsWith("px"))
                         {
                             h = h.Substring(0, h.Length - 2);
+                            if (double.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out double hValue))
+                            {
+                                height = (long)Math.Round(hValue * 20); // Convert points to twips, for pixels assume 96 DPI (used by Word)
+                            }
                         }
-                        if (double.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out double hValue))
+                        else if (h.EndsWith("in"))
                         {
-                            height = (long)Math.Round(hValue * 20); // Convert points to twips
+                            h = h.Substring(0, h.Length - 2);
+                            if (double.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out double hValue))
+                            {
+                                height = (long)Math.Round(hValue * 1440); // Convert inches to twips
+                            }
+                        }
+                        else if (h.EndsWith("cm"))
+                        {
+                            h = h.Substring(0, h.Length - 2);
+                            if (double.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out double hValue))
+                            {
+                                height = (long)Math.Round((hValue / 2.54) * 1440); // Convert centimeters to twips
+                            }
+                        }
+                        else if (h.EndsWith("mm"))
+                        {
+                            h = h.Substring(0, h.Length - 2);
+                            if (double.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out double hValue))
+                            {
+                                height = (long)Math.Round((hValue / 25.4) * 1440); // Convert millimeters to twips
+                            }
                         }
                     }
                 }
@@ -66,8 +95,8 @@ public partial class DocxToRtfConverter
                 properties.Height = height + properties.CropTop + properties.CropBottom;
                 if (width > 0 && height > 0)
                 {
-                    var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(element);
-                    ProcessImagePart(mainDocumentPart, relId, properties, sb);
+                    var rootPart = OpenXmlHelpers.GetRootPart(element);
+                    ProcessImagePart(rootPart, relId, properties, sb);
                 }
             }
         }

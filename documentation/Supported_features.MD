@@ -10,7 +10,7 @@
 | Page setup   | ✅ | - | - |
 | Columns | ✅ | ❌ | ❌ |
 | Pictures [1] | ✅ | ✅ | - |
-| Lists [2]    | ✅ | ✅ | ✅ |
+| Lists | ✅ | ✅[2] | ✅[2] |
 | Tables [3]  | ✅ | 🟡 | 🟡 |
 | Styles [4] | 🟡 | 🟡 | - |
 | Header and footer | ✅ | ❌ | ❌ |
@@ -43,7 +43,7 @@ Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.S
 For Markdown, the ImagesOutputFolder has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
 
-[2]: There are some known issues with lists, due to the fact that other formats support a subset of DOCX features, and figuring out the correct visual representation is not always easy.
+[2]: Very limited support for number format and indentation in Markdown and TXT.  
 
 [3]: Nested tables and conditional formatting are not supported yet for DOCX --> RTF; while for DOCX --> MD / TXT only basic cell content can be preserved.
 
