@@ -246,21 +246,21 @@ public partial class DocxToRtfConverter
         {
             if (ind.Type.Value == TableWidthUnitValues.Nil)
             {
-                sb.Append(@"\tblindtype2");
+                sb.Append(@"\tblindtype0");
             }
             else if (ind.Width != null)
             {
                 if (ind.Type.Value == TableWidthUnitValues.Auto)
                 {
-                    sb.Append($"\\tblind{ind.Width.Value}\\tblindtype0");
+                    sb.Append($"\\tblind{ind.Width.Value}\\tblindtype1");
                 }
                 else if (ind.Type.Value == TableWidthUnitValues.Pct)
                 {
-                    sb.Append($"\\tblind{ind.Width.Value}\\tblindtype3");
+                    sb.Append($"\\tblind{ind.Width.Value}\\tblindtype2");
                 }
                 else // twips
                 {
-                    sb.Append($"\\tblind{ind.Width.Value}\\tblindtype1");
+                    sb.Append($"\\tblind{ind.Width.Value}\\tblindtype3");
                 }
             }
         }
