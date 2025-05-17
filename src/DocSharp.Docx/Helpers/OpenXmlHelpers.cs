@@ -74,6 +74,20 @@ public static class OpenXmlHelpers
         return null;
     }
 
+    /// <summary>
+    /// Helper function to retrieve main document part from an Open XML element.
+    /// </summary>
+    /// <returns></returns>
+    public static OpenXmlPart? GetRootPart(this OpenXmlElement element)
+    {
+        var root = element.GetRoot();
+        if (root is OpenXmlPartRootElement rootElement)
+        {
+            return rootElement.OpenXmlPart;
+        }
+        return null;
+    }
+
     public static WordprocessingDocument? GetWordprocessingDocument(this OpenXmlElement element)
     {
         var root = element.GetRoot();
