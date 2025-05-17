@@ -11,6 +11,14 @@ public partial class DocxToRtfConverter
 {
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
+        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish hidden)
+        {
+            // Don't add paragraph with the vanish attribute.
+            if (hidden.Val is null || hidden.Val)
+            {
+                return;
+            }
+        }
         sb.Append("\\pard");
         if (isInTable)
         {

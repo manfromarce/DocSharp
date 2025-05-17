@@ -57,9 +57,17 @@ public static class RtfHelpers
 
     public static string EscapeChar(char c)
     {
-        if (c == '\\' || c == '{' || c == '}')
+        if (c == '{')
         {
-            return new string(['\\', c]);
+            return "\\'7b";
+        }
+        else if (c == '}')
+        {
+            return "\\'7d";
+        }
+        else if (c == '\\')
+        {
+            return "\\'5C";
         }
         else if (c == '\t')
         {
