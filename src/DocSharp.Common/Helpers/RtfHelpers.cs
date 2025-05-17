@@ -24,6 +24,11 @@ public static class RtfHelpers
 
     public static void AppendRtfUnicodeChar(this StringBuilder sb, int charCode)
     {
+        sb.Append(ConvertUnicodeChar(charCode));
+    }
+
+    public static string ConvertUnicodeChar(int charCode)
+    {
         if (charCode > 32767)
         {
             // Unicode values greater than 32767 are expressed as negative numbers.
@@ -31,7 +36,7 @@ public static class RtfHelpers
             // subtract 65536 to get \u-4064.
             charCode -= 65536;
         }
-        sb.AppendFormat("\\uc1\\u{0}?", charCode.ToString("D4"));
+        return $"\\uc1\\u{charCode.ToString("D4")}?";
     }
 
     public static void AppendRtfEscaped(this StringBuilder sb, string? value)
@@ -41,34 +46,45 @@ public static class RtfHelpers
 
         foreach (char c in value)
         {
-            if (c == '\\' || c == '{' || c == '}')
-            {
-                sb.Append(new string(['\\', c]));
-            }
-            else if (c == '\t')
-            {
-                sb.Append("\\tab ");
-            }
-            else if (c == '\f')
-            {
-                sb.Append("\\page ");
-            }
-            else if (c == '\r')
-            {
-                // Ignore as it's usually followed by \n
-            }
-            else if (c == '\n')
-            {
-                sb.Append("\\line ");
-            }
-            else if (c < 32 || c > 127)
-            {
-                sb.AppendRtfUnicodeChar(c);
-            }
-            else
-            {
-                sb.Append(c);
-            }
+            sb.AppendRtfEscaped(c);
+        }
+    }
+
+    public static void AppendRtfEscaped(this StringBuilder sb, char c)
+    {
+        sb.Append(EscapeChar(c));
+    }
+
+    public static string EscapeChar(char c)
+    {
+        if (c == '\\' || c == '{' || c == '}')
+        {
+            return new string(['\\', c]);
+        }
+        else if (c == '\t')
+        {
+            return "\\tab ";
+        }
+        else if (c == '\f')
+        {
+            return "\\page ";
+        }
+        else if (c == '\r')
+        {
+            // Ignore as it's usually followed by \n and two \line are not correct.
+            return string.Empty;
+        }
+        else if (c == '\n')
+        {
+            return "\\line ";
+        }
+        else if (c < 32 || c > 127)
+        {
+            return ConvertUnicodeChar(c);
+        }
+        else
+        {
+            return new string([c]);
         }
     }
 

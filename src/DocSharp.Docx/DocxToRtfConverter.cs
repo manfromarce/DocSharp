@@ -112,6 +112,11 @@ public partial class DocxToRtfConverter : DocxConverterBase
         }
         sb.AppendLineCrLf("}");
 
+        if (document.MainDocumentPart?.NumberingDefinitionsPart?.Numbering != null)
+        {
+            ProcessNumberingPart(document.MainDocumentPart.NumberingDefinitionsPart.Numbering, sb);
+        }
+
         ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);
 
         if (document.MainDocumentPart?.FootnotesPart != null)

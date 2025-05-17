@@ -140,7 +140,7 @@ public partial class DocxToRtfConverter
                         sb.AppendFormat("{0:X2}", byteValue);
                     }
                 }
-                sb.AppendLineCrLf("}");
+                sb.AppendLineCrLf('}');
             }
         }
     }

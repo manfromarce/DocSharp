@@ -42,6 +42,12 @@ public static class StringHelpers
         sb.Append("\r\n");
     }
 
+    public static void AppendLineCrLf(this StringBuilder sb, char val)
+    {
+        sb.Append(val);
+        sb.Append("\r\n");
+    }
+
     public static void AppendLineLf(this StringBuilder sb)
     {
         sb.Append('\n');

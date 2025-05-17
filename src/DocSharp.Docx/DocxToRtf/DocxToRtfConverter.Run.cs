@@ -15,11 +15,9 @@ public partial class DocxToRtfConverter
 {
     internal override void ProcessRun(Run run, StringBuilder sb)
     {
-        //skipRunClose = false;
         if (!run.HasContent())
             return;
 
-        //if (openFields == 0)
         sb.Append('{');
 
         ProcessRunFormatting(run, sb);
@@ -31,24 +29,15 @@ public partial class DocxToRtfConverter
         }
 
         sb.Append('}');
-        //if (openFields == 0 && !skipRunClose)
-        //{
-        //}
-        //skipRunClose = false;
     }
 
-    internal void ProcessRunFormatting(DocumentFormat.OpenXml.Math.Run run, StringBuilder sb)
+    internal void ProcessRunFormatting(OpenXmlElement? run, StringBuilder sb)
     {
-        ProcessRunFormattingInternal(run, sb);
-    }
+        if (run == null)
+        {
+            return;
+        }
 
-    internal void ProcessRunFormatting(Run run, StringBuilder sb)
-    {
-        ProcessRunFormattingInternal(run, sb);
-    }
-
-    internal void ProcessRunFormattingInternal(OpenXmlElement run, StringBuilder sb)
-    {
         var rtl = OpenXmlHelpers.GetEffectiveProperty<RightToLeftText>(run);
         if (rtl != null && (rtl.Val == null || rtl.Val))
         {

@@ -628,6 +628,13 @@ public partial class DocxToRtfConverter
             }
         }
 
+
+        if (sectionProperties.GetFirstChild<FormProtection>() == null || 
+            (sectionProperties.GetFirstChild<FormProtection>()?.Val is OnOffValue val && val == false))
+        {
+            sb.Append(@"\sectunlocked");
+        }
+
         sb.AppendLineCrLf();
     }
 

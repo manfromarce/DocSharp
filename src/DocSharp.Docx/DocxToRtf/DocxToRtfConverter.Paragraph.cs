@@ -206,35 +206,94 @@ public partial class DocxToRtfConverter
         else if (ind?.Left != null)
             sb.Append($"\\li{ind.Left}");
 
-        if (ind?.RightChars != null)
-            sb.Append($"\\curi{ind.RightChars}"); // overwrites \riN
-        else if (ind?.Right != null)
-            sb.Append($"\\ri{ind.Right}");
-
-        if (ind?.Left == null && ind?.LeftChars == null && ind?.Right == null && ind?.RightChars == null)
+        if (numberingProperties == null)
         {
-            if (ind?.Start != null)
-                sb.Append($"\\lin{ind.Start}");
-           
-            if (ind?.End != null)
-                sb.Append($"\\rin{ind.End}");
+            if (ind?.RightChars != null)
+                sb.Append($"\\curi{ind.RightChars}"); // overwrites \riN
+            else if (ind?.Right != null)
+                sb.Append($"\\ri{ind.Right}");
 
-            // StartCharacters and EndCharacters have no equivalent in RTF.
+            if (ind?.Left == null && ind?.LeftChars == null && ind?.Right == null && ind?.RightChars == null)
+            {
+                if (ind?.Start != null)
+                    sb.Append($"\\lin{ind.Start}");
+
+                if (ind?.End != null)
+                    sb.Append($"\\rin{ind.End}");
+
+                // StartCharacters and EndCharacters have no equivalent in RTF.
+            }
+
+            if (ind?.FirstLineChars != null)
+                sb.Append($"\\cufi{ind.FirstLineChars}"); // overwrites \fiN
+            else if (ind?.FirstLine != null)
+                sb.Append($"\\fi{ind.FirstLine}");
+            else if (ind?.HangingChars != null)
+                sb.Append($"\\cufi-{ind.HangingChars}"); // overwrites \fiN
+            else if (ind?.Hanging != null)
+                sb.Append($"\\fi-{ind.Hanging}");
         }
+        else
+        {
+            // TODO: should we consider direct paragraph indentation (if any)
+            // to have priority over list table?
+            // For now, ignore left and hanging/first line indent as the
+            // GetEffectiveProperty function retrieves them from default paragraph style if not present,
+            // which is not correct for lists; get these values from list table instead.
 
-        if (ind?.FirstLineChars != null)
-            sb.Append($"\\cufi{ind.FirstLineChars}"); // overwrites \fiN
-        else if (ind?.FirstLine != null)
-            sb.Append($"\\fi{ind.FirstLine}");
-        else if (ind?.HangingChars != null)
-            sb.Append($"\\cufi-{ind.HangingChars}"); // overwrites \fiN
-        else if (ind?.Hanging != null)
-            sb.Append($"\\fi-{ind.Hanging}");
+            if (numberingProperties.NumberingLevelReference?.Val != null && 
+                numberingProperties.NumberingId?.Val != null)
+            {
+                var numPart = paragraph.GetNumberingPart();
+                if (numPart?.NumberingDefinitionsPart?.Numbering is Numbering numbering)
+                {
+                    if (numbering.Elements<NumberingInstance>().FirstOrDefault(x => x.NumberID != null && 
+                                                                                    x.NumberID.Value == numberingProperties.NumberingId.Val)
+                        is NumberingInstance num){
+                        Level? level = null;
+                        // If NumberingInstance has a LevelOverride, use it.
+                        level = num.Elements<LevelOverride>()
+                            .FirstOrDefault(x => x.Level?.LevelIndex != null && 
+                                                 x.Level.LevelIndex == numberingProperties.NumberingLevelReference.Val)?.Level;
+                        // Otherwise get level from AbstractNum
+                        if (num.AbstractNumId?.Val != null)
+                        {
+                            level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null && 
+                                                                                      x.AbstractNumberId.Value == num.AbstractNumId.Val)?
+                                         .Elements<Level>()
+                                         .FirstOrDefault(x => x.LevelIndex != null &&
+                                                         x.LevelIndex == numberingProperties.NumberingLevelReference.Val);
+                        }
+                        // Get paragraph properties for list level
+                        if (level?.PreviousParagraphProperties != null)
+                        {
+                            ProcessPreviousParagraphProperties(level.PreviousParagraphProperties, sb);
+                            // TODO: 
+                            // ProcessPreviousParagraphProperties processes
+                            // left, hanging and first line indents only, because
+                            // \listlevel in RTF does not support other properties.
+                            // We could preserve others here.
+                        }
+                    }
+                }
+            }
+
+            // Process right indent normally
+
+            if (ind?.RightChars != null)
+                sb.Append($"\\curi{ind.RightChars}"); // overwrites \riN
+            else if (ind?.Right != null)
+                sb.Append($"\\ri{ind.Right}");
+            else if (ind?.End != null)
+                sb.Append($"\\rin{ind.End}");
+            
+            // EndCharacters have no equivalent in RTF.
+        }
 
         var mirrorIndent = OpenXmlHelpers.GetEffectiveProperty<MirrorIndents>(paragraph);
         if (mirrorIndent != null && (mirrorIndent.Val is null || mirrorIndent.Val))
         {
-            sb.Append(@"\indmirror");
+            sb.Append(@"\indmirror"); // Should we avoid this for lists ?
         }
 
         var wControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);

@@ -27,19 +27,19 @@ public partial class DocxToRtfConverter
                     {
                         if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Left)
                         {
-                            sb.Append(@"\mdefJc3");
+                            sb.Append(@"\mJc3");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Right)
                         {
-                            sb.Append(@"\mdefJc4");
+                            sb.Append(@"\mJc4");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Center)
                         {
-                            sb.Append(@"\mdefJc2");
+                            sb.Append(@"\mJc2");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.CenterGroup)
                         {
-                            sb.Append(@"\mdefJc1");
+                            sb.Append(@"\mJc1");
                         }
                     }
                     sb.Append('}');
@@ -135,10 +135,7 @@ public partial class DocxToRtfConverter
             case M.Run run:
                 sb.Append(@"{\mr");
                 ProcessMathRunProperties(run.MathRunProperties, sb);
-                if (run.RunProperties != null)
-                {
-                    ProcessRunFormatting(run, sb);
-                }
+                ProcessRunFormatting(run.RunProperties, sb);
                 ProcessMathChildren(run, sb);
                 sb.Append('}');
                 break;
@@ -214,7 +211,7 @@ public partial class DocxToRtfConverter
                         sb.AppendRtfEscaped(delimiter.DelimiterProperties.SeparatorChar.Val.Value);
                         sb.Append('}');
                     }
-                    if (delimiter.DelimiterProperties.GrowOperators != null && (delimiter.DelimiterProperties.GrowOperators.Val == null || IsOn(delimiter.DelimiterProperties.GrowOperators.Val)))
+                    if (delimiter.DelimiterProperties.GrowOperators != null && (delimiter.DelimiterProperties.GrowOperators.Val == null || delimiter.DelimiterProperties.GrowOperators.Val.ToBool()))
                     {
                         sb.Append(@"{\mgrow on}");
                     }
@@ -361,11 +358,11 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\mnaryPr");
                     ProcessMathElementFormatting(nary.NaryProperties.ControlProperties, sb);
-                    if (nary.NaryProperties.HideSubArgument != null && (nary.NaryProperties.HideSubArgument.Val == null || IsOn(nary.NaryProperties.HideSubArgument.Val)))
+                    if (nary.NaryProperties.HideSubArgument != null && (nary.NaryProperties.HideSubArgument.Val == null || nary.NaryProperties.HideSubArgument.Val.ToBool()))
                     {
                         sb.Append(@"{\msubHide on}");
                     }
-                    if (nary.NaryProperties.HideSuperArgument != null && (nary.NaryProperties.HideSuperArgument.Val == null || IsOn(nary.NaryProperties.HideSuperArgument.Val)))
+                    if (nary.NaryProperties.HideSuperArgument != null && (nary.NaryProperties.HideSuperArgument.Val == null || nary.NaryProperties.HideSuperArgument.Val.ToBool()))
                     {
                         sb.Append(@"{\msupHide on}");
                     }
@@ -395,7 +392,7 @@ public partial class DocxToRtfConverter
                     sb.Append(@"{\mradPr");
                     ProcessMathElementFormatting(radical.RadicalProperties.ControlProperties, sb);
                     if (radical.RadicalProperties.HideDegree != null &&
-                        (radical.RadicalProperties.HideDegree.Val == null || IsOn(radical.RadicalProperties.HideDegree.Val)))
+                        (radical.RadicalProperties.HideDegree.Val == null || radical.RadicalProperties.HideDegree.Val.ToBool()))
                     {
                         sb.Append(@"{\mdegHide on}");
                     }
@@ -469,7 +466,7 @@ public partial class DocxToRtfConverter
         sb.Append(@"{\mctrlPr");
         if (ctrlProperties != null)
         {
-            ProcessRunFormattingInternal(ctrlProperties, sb);
+            ProcessRunFormatting(ctrlProperties.GetFirstChild<W.RunProperties>(), sb);
         }
         sb.Append('}');
     }
@@ -484,11 +481,6 @@ public partial class DocxToRtfConverter
         }
     }
 
-    private bool IsOn(EnumValue<BooleanValues> val)
-    {
-        return val == BooleanValues.True || val == BooleanValues.On || val == BooleanValues.One;
-    }
-
     private void ProcessMathRunProperties(M.RunProperties? mathRunProperties, StringBuilder sb)
     {
         if (mathRunProperties == null)
@@ -497,18 +489,38 @@ public partial class DocxToRtfConverter
         }
         if (mathRunProperties.Literal != null)
         {
-
+            sb.Append(@"\mlit1");
         }
         foreach (var subElement in mathRunProperties)
         {
             switch (subElement)
             {
                 case M.NormalText normalText:
-                    sb.Append(@"\mnor");
+                    if (normalText.Val != null && normalText.Val.ToBool())
+                    {
+                        sb.Append(@"\mnor1"); // Should be \mnor ?
+                    }
                     break;
                 case M.Break br:
+                    sb.Append(@"\mbrk");
+                    if (br.AlignAt != null)
+                    {
+                        sb.Append(br.AlignAt.Value);
+                    }
+                    else if (br.Val != null)
+                    {
+                        sb.Append(br.Val.Value);
+                    }
+                    else
+                    {
+                        sb.Append('0');
+                    }
                     break;
                 case M.Alignment alignment:
+                    if (alignment.Val != null && alignment.Val.ToBool())
+                    {
+                        sb.Append(@"\malnScr1");
+                    }
                     break;
                 case M.Script script:
                     if (script.Val != null)

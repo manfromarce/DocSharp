@@ -122,10 +122,6 @@ public static class OpenXmlHelpers
         {
             return GetEffectiveProperty<T>(run);
         }
-        else if (element is DocumentFormat.OpenXml.Math.Run mathRun)
-        {
-            return GetEffectiveProperty<T>(mathRun);
-        }
         else if (element is Table table)
         {
             return GetEffectiveProperty<T>(table);
@@ -138,9 +134,17 @@ public static class OpenXmlHelpers
         {
             return GetEffectiveProperty<T>(tableCell);
         }
+        else if (element is RunProperties runPr)
+        {
+            return GetEffectiveProperty<T>(runPr);
+        }
+        else if (element is NumberingSymbolRunProperties runPr2)
+        {
+            return GetEffectiveProperty<T>(runPr2);
+        }
         else
         {
-            return TryGetRunPropertiesProperty<T>(element);
+            return null;
         }
     }
 
@@ -238,20 +242,20 @@ public static class OpenXmlHelpers
         return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>();
     }
 
-    public static T? GetEffectiveProperty<T>(this DocumentFormat.OpenXml.Math.Run run) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this RunProperties runPr) where T : OpenXmlElement
     {
         // Check run properties
-        T? propertyValue = run.RunProperties?.GetFirstChild<T>();
+        T? propertyValue = runPr.GetFirstChild<T>();
         if (propertyValue != null)
         {
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(run);
+        var stylesPart = GetStylesPart(runPr);
 
         // Check run style
-        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character) ??
-                       stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Paragraph);
+        var runStyle = stylesPart.GetStyleFromId(runPr.RunStyle?.Val, StyleValues.Character) ??
+                       stylesPart.GetStyleFromId(runPr.RunStyle?.Val, StyleValues.Paragraph);
         while (runStyle != null)
         {
             propertyValue = runStyle.StyleRunProperties?.GetFirstChild<T>();
@@ -266,14 +270,15 @@ public static class OpenXmlHelpers
         return null;
     }
 
-    public static T? TryGetRunPropertiesProperty<T>(this OpenXmlElement element) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this NumberingSymbolRunProperties runPr) where T : OpenXmlElement
     {
         // Check run properties
-        T? propertyValue = element.GetFirstChild<RunProperties>()?.GetFirstChild<T>();
+        T? propertyValue = runPr.GetFirstChild<T>();
         if (propertyValue != null)
         {
             return propertyValue;
         }
+
         return null;
     }
 
