@@ -209,28 +209,115 @@ public partial class DocxToRtfConverter
         }
 
         var ind = OpenXmlHelpers.GetEffectiveProperty<Indentation>(paragraph);
-        if (ind?.LeftChars != null)
-            sb.Append($"\\culi{ind.LeftChars}"); // overwrites \liN
-        else if (ind?.Left != null)
-            sb.Append($"\\li{ind.Left}");
 
-        if (numberingProperties == null)
+        if (numberingProperties?.NumberingLevelReference?.Val != null &&
+            numberingProperties?.NumberingId?.Val != null &&
+            paragraph.GetNumberingPart()?.NumberingDefinitionsPart?.Numbering is Numbering numbering)
         {
+            if (numbering.Elements<NumberingInstance>().FirstOrDefault(x => x.NumberID != null &&
+                                                                                    x.NumberID.Value == numberingProperties.NumberingId.Val)
+                        is NumberingInstance num)
+            {
+                Level? level = null;
+                // If NumberingInstance has a LevelOverride, use it.
+                level = num.Elements<LevelOverride>()
+                    .FirstOrDefault(x => x.Level?.LevelIndex != null &&
+                                         x.Level.LevelIndex == numberingProperties.NumberingLevelReference.Val)?.Level;
+                // Otherwise get level from AbstractNum
+                if (num.AbstractNumId?.Val != null)
+                {
+                    level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null &&
+                                                                              x.AbstractNumberId.Value == num.AbstractNumId.Val)?
+                                 .Elements<Level>()
+                                 .FirstOrDefault(x => x.LevelIndex != null &&
+                                                 x.LevelIndex == numberingProperties.NumberingLevelReference.Val);
+                }
+                // Get paragraph properties for list level
+                if (level?.PreviousParagraphProperties != null)
+                {
+                    if (paragraph.ParagraphProperties?.Indentation?.LeftChars != null)
+                    {
+                        sb.Append($"\\culi{paragraph.ParagraphProperties.Indentation.LeftChars}"); // overwrites \liN
+                    }
+                    else if (paragraph.ParagraphProperties?.Indentation?.Left != null)
+                    {
+                        sb.Append($"\\li{paragraph.ParagraphProperties.Indentation.Left}");
+                    }
+                    else if (level.PreviousParagraphProperties.Indentation?.Left != null)
+                    {
+                        sb.Append($"\\li{level.PreviousParagraphProperties.Indentation.Left}");
+                    }
+
+                    if (paragraph.ParagraphProperties?.Indentation?.Start != null)
+                    {
+                        sb.Append($"\\lin{paragraph.ParagraphProperties.Indentation.Start}");
+                    }
+                    else if (level.PreviousParagraphProperties.Indentation?.Start != null)
+                    {
+                        sb.Append($"\\lin{level.PreviousParagraphProperties.Indentation.Start}");
+                    }
+
+                    if (paragraph.ParagraphProperties?.Indentation?.FirstLineChars != null)
+                    {
+                        sb.Append($"\\cufi{paragraph.ParagraphProperties?.Indentation.FirstLineChars}"); // overwrites \fiN
+                    }
+                    if (paragraph.ParagraphProperties?.Indentation?.FirstLine != null)
+                    {
+                        sb.Append($"\\fi{paragraph.ParagraphProperties?.Indentation.FirstLine}");
+                    }
+                    else if (level.PreviousParagraphProperties.Indentation?.FirstLine != null)
+                    {
+                        sb.Append($"\\fi{level.PreviousParagraphProperties.Indentation?.FirstLine}");
+                    }
+                    else if (paragraph.ParagraphProperties?.Indentation?.HangingChars != null)
+                    {
+                        sb.Append($"\\cufi-{paragraph.ParagraphProperties?.Indentation.HangingChars}"); // overwrites \fiN
+                    }
+                    else if (paragraph.ParagraphProperties?.Indentation?.Hanging != null)
+                    {
+                        sb.Append($"\\fi-{paragraph.ParagraphProperties?.Indentation.Hanging}");
+                    }
+                    else if (level.PreviousParagraphProperties.Indentation?.Hanging != null)
+                    {
+                        sb.Append($"\\fi-{level.PreviousParagraphProperties.Indentation?.Hanging}");
+                    }
+
+                    // TODO: 
+                    // ProcessPreviousParagraphProperties processes
+                    // left, hanging and first line indents only, because
+                    // \listlevel in RTF does not support other properties.
+                    // We could preserve others here.
+
+                    if (ind?.RightChars != null)
+                        sb.Append($"\\curi{ind.RightChars}"); // overwrites \riN
+                    else if (ind?.Right != null)
+                        sb.Append($"\\ri{ind.Right}");
+                    else if (ind?.End != null)
+                        sb.Append($"\\rin{ind.End}");
+
+                    // StartCharacters and EndCharacters have no equivalent in RTF.
+                }
+            }
+        }
+        else
+        {
+            if (ind?.LeftChars != null)
+                sb.Append($"\\culi{ind.LeftChars}"); // overwrites \liN
+            else if (ind?.Left != null)
+                sb.Append($"\\li{ind.Left}");
+
+            if (ind?.Start != null)
+                sb.Append($"\\lin{ind.Start}");
+
             if (ind?.RightChars != null)
                 sb.Append($"\\curi{ind.RightChars}"); // overwrites \riN
             else if (ind?.Right != null)
                 sb.Append($"\\ri{ind.Right}");
 
-            if (ind?.Left == null && ind?.LeftChars == null && ind?.Right == null && ind?.RightChars == null)
-            {
-                if (ind?.Start != null)
-                    sb.Append($"\\lin{ind.Start}");
+            if (ind?.End != null)
+                sb.Append($"\\rin{ind.End}");
 
-                if (ind?.End != null)
-                    sb.Append($"\\rin{ind.End}");
-
-                // StartCharacters and EndCharacters have no equivalent in RTF.
-            }
+            // StartCharacters and EndCharacters have no equivalent in RTF.
 
             if (ind?.FirstLineChars != null)
                 sb.Append($"\\cufi{ind.FirstLineChars}"); // overwrites \fiN
@@ -240,63 +327,8 @@ public partial class DocxToRtfConverter
                 sb.Append($"\\cufi-{ind.HangingChars}"); // overwrites \fiN
             else if (ind?.Hanging != null)
                 sb.Append($"\\fi-{ind.Hanging}");
-        }
-        else
-        {
-            // TODO: should we consider direct paragraph indentation (if any)
-            // to have priority over list table?
-            // For now, ignore left and hanging/first line indent as the
-            // GetEffectiveProperty function retrieves them from default paragraph style if not present,
-            // which is not correct for lists; get these values from list table instead.
+        }        
 
-            if (numberingProperties.NumberingLevelReference?.Val != null && 
-                numberingProperties.NumberingId?.Val != null)
-            {
-                var numPart = paragraph.GetNumberingPart();
-                if (numPart?.NumberingDefinitionsPart?.Numbering is Numbering numbering)
-                {
-                    if (numbering.Elements<NumberingInstance>().FirstOrDefault(x => x.NumberID != null && 
-                                                                                    x.NumberID.Value == numberingProperties.NumberingId.Val)
-                        is NumberingInstance num){
-                        Level? level = null;
-                        // If NumberingInstance has a LevelOverride, use it.
-                        level = num.Elements<LevelOverride>()
-                            .FirstOrDefault(x => x.Level?.LevelIndex != null && 
-                                                 x.Level.LevelIndex == numberingProperties.NumberingLevelReference.Val)?.Level;
-                        // Otherwise get level from AbstractNum
-                        if (num.AbstractNumId?.Val != null)
-                        {
-                            level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null && 
-                                                                                      x.AbstractNumberId.Value == num.AbstractNumId.Val)?
-                                         .Elements<Level>()
-                                         .FirstOrDefault(x => x.LevelIndex != null &&
-                                                         x.LevelIndex == numberingProperties.NumberingLevelReference.Val);
-                        }
-                        // Get paragraph properties for list level
-                        if (level?.PreviousParagraphProperties != null)
-                        {
-                            ProcessPreviousParagraphProperties(level.PreviousParagraphProperties, sb);
-                            // TODO: 
-                            // ProcessPreviousParagraphProperties processes
-                            // left, hanging and first line indents only, because
-                            // \listlevel in RTF does not support other properties.
-                            // We could preserve others here.
-                        }
-                    }
-                }
-            }
-
-            // Process right indent normally
-
-            if (ind?.RightChars != null)
-                sb.Append($"\\curi{ind.RightChars}"); // overwrites \riN
-            else if (ind?.Right != null)
-                sb.Append($"\\ri{ind.Right}");
-            else if (ind?.End != null)
-                sb.Append($"\\rin{ind.End}");
-            
-            // EndCharacters have no equivalent in RTF.
-        }
 
         var mirrorIndent = OpenXmlHelpers.GetEffectiveProperty<MirrorIndents>(paragraph);
         if (mirrorIndent != null && (mirrorIndent.Val is null || mirrorIndent.Val))

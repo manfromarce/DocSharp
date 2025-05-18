@@ -229,7 +229,7 @@ public partial class DocxToRtfConverter
             }
             else if (ind?.Start != null)
             {
-                sb.Append($"\\lin{ind.Left}");                 
+                sb.Append($"\\lin{ind.Start}");                 
             }
 
             if (ind?.FirstLine != null)
@@ -526,7 +526,6 @@ public partial class DocxToRtfConverter
                     sb.Append('}');
                 }
             }
-
             sb.AppendLineCrLf('}');
         }
     }
@@ -535,9 +534,10 @@ public partial class DocxToRtfConverter
     {
         if (numPr.NumberingLevelReference?.Val != null && numPr.NumberingId?.Val != null)
         {
-            sb.Append(@"{\listtext }"); 
-            // TODO (for RTF readers that don't support automatic numbering or Word 97-2007 (or newer) lists)
-            // e.g.: //sb.Append("{\\listtext\\pard\\plain \\rtlch\\af4 \\ltrch\\hich\\af4\\loch\\f4\\dbch\\af4 \\u8226\\'95\\tab}");
+            // TODO: Calculate list text for RTF readers that don't support automatic numbering
+            // or Word 97-2007 (or newer) lists. For now, just use a generic bullet.
+            fonts.TryAddAndGetIndex("Arial", out int fontIndex);
+            sb.Append($@"{{\listtext \f{fontIndex}\bullet\tab}}");
 
             sb.Append($@"\ls{numPr.NumberingId.Val}\ilvl{numPr.NumberingLevelReference.Val}");
         }
