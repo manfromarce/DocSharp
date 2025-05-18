@@ -526,108 +526,15 @@ public partial class DocxToRtfConverter
             // Not available in RTF.
         }
 
-        // Don't add FootnoteProperties is there are no footnotes 
-        if (_footnotesEndnotes != FootnotesEndnotesType.EndnotesOnly && 
-            sectionProperties.Elements<FootnoteProperties>().FirstOrDefault() is FootnoteProperties footnoteProperties)
+        ProcessFootnoteProperties(sectionProperties.GetFirstChild<FootnoteProperties>(), sb);
+        ProcessEndnoteProperties(sectionProperties.GetFirstChild<EndnoteProperties>(), sb);
+
+        if (FootnotesEndnotes != FootnotesEndnotesType.FootnotesOnlyOrNothing)
         {
-            if (footnoteProperties.FootnotePosition?.Val != null)
-            {
-                if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.BeneathText)
-                {
-                    sb.Append("\\sftntj");
-                }
-                else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.PageBottom)
-                {
-                    sb.Append("\\sftnbj");
-                }
-                else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.SectionEnd)
-                {
-                    sb.Append("\\endnotes"); // Not added before, as the mode is not EndnotesOnly if footnotes are present and 
-                }
-            }
-
-            if (footnoteProperties.NumberingFormat?.Val != null)
-            {
-                sb.Append(@"\sftn"); // Footnote number format for section
-                ProcessFootnoteNumberFormat(footnoteProperties.NumberingFormat.Val, sb); // Append number format
-            }
-
-            if (footnoteProperties.NumberingRestart?.Val != null)
-            {
-                if (footnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
-                {
-                    sb.Append("\\ftnrstpg");
-                }
-                else if (footnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
-                {
-                    sb.Append("\\ftnrestart");
-                }
-            }
-            else
-            {
-                sb.Append("\\ftnrstcont");
-            }
-            if (footnoteProperties.NumberingStart?.Val != null)
-            {
-                sb.Append($"\\ftnstart{footnoteProperties.NumberingStart.Val}"); 
-            }
+            // TODO: check if this section actually contains endnotes 
+            // (adding \endnhere is not harmful anyway)
+            sb.Append("\\endnhere");
         }
-
-        // Don't add EndnoteProperties is there are no endnotes 
-        if (_footnotesEndnotes != FootnotesEndnotesType.FootnotesOnlyOrNothing && 
-            sectionProperties.Elements<EndnoteProperties>().FirstOrDefault() is EndnoteProperties endnoteProperties)
-        {
-            if (endnoteProperties.EndnotePosition?.Val != null &&
-                endnoteProperties.EndnotePosition.Val == EndnotePositionValues.DocumentEnd)
-            {
-                sb.Append("\\aenddoc"); // Endnotes at end of document
-                if (_footnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
-                {
-                    sb.Append("\\enddoc"); // for compatibility
-                }
-            }
-            else
-            {
-                sb.Append("\\aendnotes"); // Endnotes at end of section (default in RTF).
-                if (_footnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
-                {
-                    sb.Append("\\endnotes"); // for compatibility
-                }
-                if (_footnotesEndnotes != FootnotesEndnotesType.FootnotesOnlyOrNothing)
-                {
-                    sb.Append("\\endnhere");
-                }
-            }
-
-            if (endnoteProperties.NumberingFormat?.Val != null)
-            {
-                sb.Append(@"\saftn"); // Endnote number format
-                ProcessFootnoteNumberFormat(endnoteProperties.NumberingFormat.Val, sb); // Append number format
-            }
-
-            if (endnoteProperties.NumberingRestart?.Val != null)
-            {
-                if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
-                {
-                    // Restart at each page not available for endnotes in RTF
-                    sb.Append("\\aftnrestart");
-                }
-                else if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
-                {
-                    sb.Append("\\aftnrestart");
-                }
-            }
-            else
-            {
-                sb.Append("\\aftnrstcont");
-            }
-
-            if (endnoteProperties.NumberingStart != null)
-            {
-                sb.Append($"\\aftnstart{endnoteProperties.NumberingStart.Val}");
-            }
-        }
-
 
         if (sectionProperties.GetFirstChild<FormProtection>() == null || 
             (sectionProperties.GetFirstChild<FormProtection>()?.Val is OnOffValue val && val == false))
@@ -636,105 +543,6 @@ public partial class DocxToRtfConverter
         }
 
         sb.AppendLineCrLf();
-    }
-
-    internal void ProcessFootnoteNumberFormat(NumberFormatValues numberFormat, StringBuilder sb)
-    {
-        if (numberFormat == NumberFormatValues.LowerLetter)
-        {
-            sb.Append(@"nalc"); // a, b, c, ...
-        }
-        else if (numberFormat == NumberFormatValues.UpperLetter)
-        {
-            sb.Append(@"nauc"); // A, B, C, ...
-        }
-        else if (numberFormat == NumberFormatValues.LowerRoman)
-        {
-            sb.Append(@"nrlc"); // i, ii, iii, ...
-        }
-        else if (numberFormat == NumberFormatValues.UpperRoman)
-        {
-            sb.Append(@"nruc"); // I, II, III, ...
-        }
-        else if (numberFormat == NumberFormatValues.Chicago)
-        {
-            sb.Append(@"nchi"); // *, †, ‡, §
-        }
-        else if (numberFormat == NumberFormatValues.Chosung)
-        {
-            sb.Append(@"nchosung"); // Korean numbering 1 (CHOSUNG)
-        }
-        else if (numberFormat == NumberFormatValues.DecimalEnclosedCircle)
-        {
-            sb.Append(@"ncnum"); // Circle numbering (CIRCLENUM)
-        }
-        else if (numberFormat == NumberFormatValues.ChineseCounting ||
-                 numberFormat == NumberFormatValues.IdeographDigital ||
-                 numberFormat == NumberFormatValues.KoreanDigital ||
-                 numberFormat == NumberFormatValues.TaiwaneseCounting)
-        {
-            sb.Append(@"ndbnum"); // Kanji numbering without the digit character (DBNUM1)
-        }
-        else if (numberFormat == NumberFormatValues.ChineseLegalSimplified ||
-                 numberFormat == NumberFormatValues.IdeographLegalTraditional ||
-                 numberFormat == NumberFormatValues.JapaneseCounting ||
-                 numberFormat == NumberFormatValues.KoreanCounting)
-        {
-            sb.Append(@"ndbnumd"); // Kanji numbering with the digit character (DBNUM2)
-        }
-        else if (numberFormat == NumberFormatValues.ChineseCountingThousand ||
-                 numberFormat == NumberFormatValues.JapaneseLegal ||
-                 numberFormat == NumberFormatValues.KoreanLegal ||
-                 numberFormat == NumberFormatValues.TaiwaneseCountingThousand)
-        {
-            sb.Append(@"ndbnumt"); // Kanji numbering 3 (DBNUM3)
-        }
-        else if (numberFormat == NumberFormatValues.KoreanDigital2 ||
-                 numberFormat == NumberFormatValues.TaiwaneseDigital)
-        {
-            sb.Append(@"ndbnumk"); // Kanji numbering 4 (DBNUM4)
-        }
-        else if (numberFormat == NumberFormatValues.DecimalFullWidth ||
-                 numberFormat == NumberFormatValues.DecimalFullWidth2)
-        {
-            sb.Append(@"ndbar"); // Double-byte numbering (DBCHAR)
-        }
-        else if (numberFormat == NumberFormatValues.Ganada)
-        {
-            sb.Append(@"nganada"); // Korean numbering 2 (GANADA)
-        }
-        else if (numberFormat == NumberFormatValues.DecimalEnclosedFullstop)
-        {
-            sb.Append(@"ngbnum"); // Chinese numbering 1 (GB1)
-        }
-        else if (numberFormat == NumberFormatValues.DecimalEnclosedParen)
-        {
-            sb.Append(@"ngbnumd"); // Chinese numbering 2 (GB2)
-        }
-        else if (numberFormat == NumberFormatValues.DecimalEnclosedCircleChinese)
-        {
-            sb.Append(@"ngbnuml"); // Chinese numbering 3 (GB3)
-        }
-        else if (numberFormat == NumberFormatValues.IdeographEnclosedCircle)
-        {
-            sb.Append(@"ngbnumk"); // Chinese numbering 4 (GB4)
-        }
-        else if (numberFormat == NumberFormatValues.IdeographTraditional)
-        {
-            sb.Append(@"nzodiac"); // Chinese Zodiac numbering 1 (ZODIAC1)
-        }
-        else if (numberFormat == NumberFormatValues.IdeographZodiac)
-        {
-            sb.Append(@"nzodiacd"); // Chinese Zodiac numbering 2 (ZODIAC2)
-        }
-        else if (numberFormat == NumberFormatValues.IdeographZodiacTraditional)
-        {
-            sb.Append(@"nzodiacl"); // Chinese Zodiac numbering 3 (ZODIAC3)
-        }
-        else
-        {
-            sb.Append(@"nar"); // Arabic numbers (1, 2, 3, …) 
-        }
     }
 
     internal void ProcessFirstSectionProperties(SectionProperties? sectionProperties, StringBuilder sb)

@@ -41,7 +41,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
     {
         sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
 
-        // Insert generic properties such as title, author, etc. if present in DOCX
+        // Insert generic information such as title, author, etc. if present in DOCX
         if (document.GetWordprocessingDocument() is WordprocessingDocument doc)
         {
             var coreProps = doc.PackageProperties;
@@ -94,6 +94,19 @@ public partial class DocxToRtfConverter : DocxConverterBase
         sb.Append(DefaultSettings.FontName);
         sb.Append(";}");
 
+        // Determine footnotes / endnotes type
+        if (document.MainDocumentPart?.EndnotesPart != null)
+        {
+            if (document.MainDocumentPart.FooterParts == null)
+            {
+                FootnotesEndnotes = FootnotesEndnotesType.EndnotesOnly;
+            }
+            else
+            {
+                FootnotesEndnotes = FootnotesEndnotesType.Both;
+            }
+        }
+
         // Process body content and document background in another StringBuilder
         var contentSb = new StringBuilder();
         base.ProcessDocument(document, contentSb);
@@ -104,6 +117,7 @@ public partial class DocxToRtfConverter : DocxConverterBase
             sb.Append(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
         }
         sb.AppendLineCrLf("}");
+
         sb.Append(@"{\colortbl ;");
         foreach (var color in colors)
         {
@@ -112,33 +126,24 @@ public partial class DocxToRtfConverter : DocxConverterBase
         }
         sb.AppendLineCrLf("}");
 
+        // Insert list table
         if (document.MainDocumentPart?.NumberingDefinitionsPart?.Numbering != null)
         {
             ProcessNumberingPart(document.MainDocumentPart.NumberingDefinitionsPart.Numbering, sb);
         }
 
-        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);
-
-        if (document.MainDocumentPart?.FootnotesPart != null)
+        // Insert document properties
+        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);        
+        if (document.MainDocumentPart?.DocumentSettingsPart?.Settings is Settings documentSettings)
         {
-            ProcessFootnotesPart(document.MainDocumentPart.FootnotesPart, sb);
-            sb.AppendLineCrLf();
+            ProcessFootnoteProperties(documentSettings.GetFirstChild<FootnoteDocumentWideProperties>(), sb);
+            ProcessEndnoteProperties(documentSettings.GetFirstChild<EndnoteDocumentWideProperties>(), sb);
         }
-        if (document.MainDocumentPart?.EndnotesPart != null)
+        switch (FootnotesEndnotes)
         {
-            if (document.MainDocumentPart.FooterParts == null)
-            {
-                _footnotesEndnotes = FootnotesEndnotesType.EndnotesOnly;
-            }
-            else
-            {
-                _footnotesEndnotes = FootnotesEndnotesType.Both;
-            }
-            ProcessEndnotesPart(document.MainDocumentPart.EndnotesPart, sb);
-            sb.AppendLineCrLf();
-        }
-        switch (_footnotesEndnotes)
-        {
+            case FootnotesEndnotesType.FootnotesOnlyOrNothing:
+                sb.Append("\\fet0 ");
+                break;
             case FootnotesEndnotesType.EndnotesOnly:
                 sb.Append("\\fet1 ");
                 break;
@@ -147,7 +152,19 @@ public partial class DocxToRtfConverter : DocxConverterBase
                 break;
         }
 
-        // Add content
+        // Insert footnotes and endnotes content             
+        if (document.MainDocumentPart?.FootnotesPart != null)
+        {
+            ProcessFootnotesPart(document.MainDocumentPart.FootnotesPart, sb);
+            sb.AppendLineCrLf();
+        }
+        if (document.MainDocumentPart?.EndnotesPart != null)
+        {
+            ProcessEndnotesPart(document.MainDocumentPart.EndnotesPart, sb);
+            sb.AppendLineCrLf();
+        }
+
+        // Add body content
         sb.Append(contentSb);
 
         // Close RTF document
