@@ -789,11 +789,13 @@ public partial class DocxToRtfConverter
     internal void ProcessTableCell(TableCell cell, StringBuilder sb)
     {
         this.isInTable = true;
-        foreach (var element in cell.Elements<Paragraph>())
+        foreach (var element in cell.Elements())
         {
-            // Paragraphs cover most cases (text, inline images, math ...) for cell content.
-            // Other elements (such as nested tables) can cause issues and are ignored for now.
-            ProcessParagraph(element, sb);
+            // Nested tables are not currently supported.
+            if (element is not Table)
+            {
+                ProcessCompositeElement(element, sb);
+            }
         }
         this.isInTable = false;
         sb.Append(@"\cell");
