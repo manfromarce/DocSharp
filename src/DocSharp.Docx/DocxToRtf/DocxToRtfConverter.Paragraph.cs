@@ -12,7 +12,7 @@ public partial class DocxToRtfConverter
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
 
-        sb.Append("\\pard");
+        sb.Append("\\pard\\plain");
         if (isInTable)
         {
             sb.Append(@"\intbl");

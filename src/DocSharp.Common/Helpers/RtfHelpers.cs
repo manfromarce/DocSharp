@@ -36,6 +36,13 @@ public static class RtfHelpers
             // subtract 65536 to get \u-4064.
             charCode -= 65536;
         }
+
+        //if (charCode > 0xFFFF)
+        //{
+        //    char[] surrogates = char.ConvertFromUtf32(charCode).ToCharArray();
+        //    return $"\\u{(int)surrogates[0]}\\u{(int)surrogates[1]}?";
+        //}
+
         return $"\\uc1\\u{charCode.ToString("D4")}?";
     }
 
@@ -59,23 +66,23 @@ public static class RtfHelpers
     {
         if (c == '{')
         {
-            return "\\'7b";
+            return @"\'7b";
         }
         else if (c == '}')
         {
-            return "\\'7d";
+            return @"\'7d";
         }
         else if (c == '\\')
         {
-            return "\\'5C";
+            return @"\'5c";
         }
         else if (c == '\t')
         {
-            return "\\tab ";
+            return @"\tab ";
         }
         else if (c == '\f')
         {
-            return "\\page ";
+            return @"\page ";
         }
         else if (c == '\r')
         {
@@ -86,7 +93,11 @@ public static class RtfHelpers
         {
             return "\\line ";
         }
-        else if (c < 32 || c > 127)
+        else if (c < 32)
+        {
+            return $@"\'{((int)c).ToString("X2")}";
+        }
+        else if (c > 127)
         {
             return ConvertUnicodeChar(c);
         }

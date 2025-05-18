@@ -41,6 +41,28 @@ public partial class DocxToRtfConverter : DocxConverterBase
     {
         sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
 
+        if (document.MainDocumentPart?.StyleDefinitionsPart?.Styles is Styles styles)
+        {
+            if (styles.DocDefaults?.RunPropertiesDefault?.RunPropertiesBaseStyle is RunPropertiesBaseStyle rPr)
+            {
+                if (rPr.Languages?.Val?.Value != null)
+                {
+                    sb.Append(@"\deflang");
+                    sb.Append(RtfHelpers.GetLanguageCode(rPr.Languages.Val.Value));
+                }
+                if (rPr.Languages?.EastAsia?.Value != null)
+                {
+                    sb.Append(@"\deflangfe");
+                    sb.Append(RtfHelpers.GetLanguageCode(rPr.Languages.EastAsia.Value));
+                }                
+                if (rPr.Languages?.Bidi?.Value != null)
+                {
+                    sb.Append(@"\adeflang");
+                    sb.Append(RtfHelpers.GetLanguageCode(rPr.Languages.Bidi.Value));
+                }
+            }
+        }
+
         // Insert generic information such as title, author, etc. if present in DOCX
         if (document.GetWordprocessingDocument() is WordprocessingDocument doc)
         {

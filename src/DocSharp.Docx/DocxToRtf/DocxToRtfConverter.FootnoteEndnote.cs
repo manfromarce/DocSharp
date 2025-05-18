@@ -14,14 +14,15 @@ public partial class DocxToRtfConverter
 
     internal void ProcessFootnoteProperties(FootnoteDocumentWideProperties? footnoteProperties, StringBuilder sb)
     {
-        if (footnoteProperties == null)
-        {
-            return;
-        }
-
         // Don't add FootnoteProperties is there are no footnotes 
         if (FootnotesEndnotes != FootnotesEndnotesType.EndnotesOnly)
         {
+            if (footnoteProperties == null)
+            {
+                sb.Append($"\\ftnbj"); // Footnotes at page bottom by default
+                return;
+            }
+
             if (footnoteProperties.FootnotePosition?.Val != null)
             {
                 if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.BeneathText)
@@ -70,26 +71,17 @@ public partial class DocxToRtfConverter
 
     internal void ProcessEndnoteProperties(EndnoteDocumentWideProperties? endnoteProperties, StringBuilder sb)
     {
-        if (endnoteProperties == null)
-        {
-            return;
-        }
-
         // Don't add EndnoteProperties is there are no endnotes 
         if (FootnotesEndnotes != FootnotesEndnotesType.FootnotesOnlyOrNothing)
         {
-            if (endnoteProperties.EndnotePosition?.Val != null &&
-                endnoteProperties.EndnotePosition.Val == EndnotePositionValues.DocumentEnd)
+            if (endnoteProperties == null)
             {
-                sb.Append("\\aenddoc"); // Endnotes at end of document
-                if (FootnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
-                {
-                    // For compatibility reasons, if \fet1 (endnotes only) is emitted 
-                    // add \enddoc in addition to \aenddoc.
-                    sb.Append("\\enddoc"); // for compatibility
-                }
+                sb.Append("\\aenddoc"); // Endnotes at end of document (default in DOCX)
+                return;
             }
-            else
+
+            if (endnoteProperties.EndnotePosition?.Val != null &&
+                endnoteProperties.EndnotePosition.Val == EndnotePositionValues.SectionEnd)
             {
                 sb.Append("\\aendnotes"); // Endnotes at end of section (default in RTF).
                 if (FootnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
@@ -97,6 +89,16 @@ public partial class DocxToRtfConverter
                     // For compatibility reasons, if \fet1 (endnotes only) is emitted 
                     // add \endnotes in addition to \aendnotes.
                     sb.Append("\\endnotes");
+                }
+            }
+            else
+            {
+                sb.Append("\\aenddoc"); // Endnotes at end of document (default in DOCX)
+                if (FootnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
+                {
+                    // For compatibility reasons, if \fet1 (endnotes only) is emitted 
+                    // add \enddoc in addition to \aenddoc.
+                    sb.Append("\\enddoc"); // for compatibility
                 }
             }
 
