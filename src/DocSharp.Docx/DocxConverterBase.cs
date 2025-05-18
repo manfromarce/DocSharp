@@ -332,7 +332,7 @@ public abstract class DocxConverterBase
                 return true;
             case PageNumber pageNumber:
                 ProcessPageNumber(pageNumber, sb);
-                break;
+                return true;
             case SymbolChar symbolChar:
                 ProcessSymbolChar(symbolChar, sb);
                 return true;
@@ -347,19 +347,19 @@ public abstract class DocxConverterBase
                 return true;
             case DayShort:
                 ProcessText(new Text(DateTime.Now.ToString("dd")), sb);
-                break;
+                return true;
             case DayLong:
                 ProcessText(new Text(DateTime.Now.ToString("dddd")), sb);
-                break;
+                return true;
             case MonthShort:
                 ProcessText(new Text(DateTime.Now.ToString("MM")), sb);
-                break;
+                return true;
             case MonthLong:
                 ProcessText(new Text(DateTime.Now.ToString("MMMM")), sb);
-                break;
+                return true;
             case YearShort:
                 ProcessText(new Text(DateTime.Now.ToString("YY")), sb);
-                break;
+                return true;
             case YearLong:
                 ProcessText(new Text(DateTime.Now.ToString("YYYY")), sb);
                 return true;
