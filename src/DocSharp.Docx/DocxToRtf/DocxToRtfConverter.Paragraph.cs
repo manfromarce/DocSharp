@@ -11,29 +11,46 @@ public partial class DocxToRtfConverter
 {
     internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
     {
-        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish hidden)
-        {
-            // Don't add paragraph with the vanish attribute.
-            if (hidden.Val is null || hidden.Val)
-            {
-                return;
-            }
-        }
+
         sb.Append("\\pard");
         if (isInTable)
         {
             sb.Append(@"\intbl");
         }
 
-        ProcessParagraphFormatting(paragraph, sb);
-        sb.Append(' ');
+        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish hidden && 
+            (hidden.Val is null || hidden.Val))
+        {
+            // Special handling of paragraphs with the vanish attribute 
+            // (can be used by word processors to increment the list item numbers)
+            sb.Append("\\v ");
 
-        base.ProcessParagraph(paragraph, sb);
+            var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+            if (numberingProperties != null)
+            {
+                ProcessListItem(numberingProperties, sb);
+            }
+        }
+        else
+        {
+            ProcessParagraphFormatting(paragraph, sb);
+            sb.Append(' ');
+
+            base.ProcessParagraph(paragraph, sb);
+        }
 
         if (paragraph.NextSibling() != null)
         {
             sb.Append("\\par");
         }
+
+        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
+            (h.Val is null || h.Val))
+        {
+            // Special handling of paragraphs with the vanish attribute
+            sb.Append("\\v0 ");
+        }
+
         sb.AppendLineCrLf();
     }
 
