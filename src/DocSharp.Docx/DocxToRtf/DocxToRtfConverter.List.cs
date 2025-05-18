@@ -190,10 +190,17 @@ public partial class DocxToRtfConverter
         {
             sb.Append($@"\levelstartat{level.StartNumberingValue.Val}");
         }
+
         if (level.NumberingFormat is NumberingFormat numberingFormat)
         {
             ProcessNumberingFormat(numberingFormat, sb);
         }
+        // The numbering format might be specified in an <mc:Choice> or <mc:Fallback> element
+        else if (level.Descendants<NumberingFormat>().FirstOrDefault() is NumberingFormat nf)
+        {
+            ProcessNumberingFormat(nf, sb);
+        }
+
         if (level.IsLegalNumberingStyle != null && (level.IsLegalNumberingStyle.Val == null || level.IsLegalNumberingStyle.Val))
         {
             sb.Append($@"\levellegal1");
@@ -285,6 +292,20 @@ public partial class DocxToRtfConverter
         {
             sb.Append(@"\levelnfc7"); // First, Second, Third
         }
+        else if (numberingFormat.Val == NumberFormatValues.ChineseCounting ||
+                 numberingFormat.Val == NumberFormatValues.IdeographDigital ||
+                 numberingFormat.Val == NumberFormatValues.KoreanDigital ||
+                 numberingFormat.Val == NumberFormatValues.TaiwaneseCounting)
+        {
+            sb.Append(@"\levelnfc10"); // Kanji numbering without the digit character (DBNUM1)
+        }
+        else if (numberingFormat.Val == NumberFormatValues.ChineseLegalSimplified ||
+                 numberingFormat.Val == NumberFormatValues.IdeographLegalTraditional ||
+                 numberingFormat.Val == NumberFormatValues.JapaneseCounting ||
+                 numberingFormat.Val == NumberFormatValues.KoreanCounting)
+        {
+            sb.Append(@"\levelnfc11"); // Kanji numbering with the digit character (DBNUM2)
+        }
         else if (numberingFormat.Val == NumberFormatValues.Aiueo)
         {
             sb.Append(@"\levelnfc12"); // 46 phonetic katakana characters in "aiueo" order (AIUEO) (newer form – “あいうえお。。。” based on phonem matrix) 
@@ -292,6 +313,18 @@ public partial class DocxToRtfConverter
         else if (numberingFormat.Val == NumberFormatValues.Iroha)
         {
             sb.Append(@"\levelnfc13"); // 46 phonetic katakana characters in "iroha" order (IROHA) (old form – “いろはにほへとちりぬるお。。。” based on haiku from long ago) 
+        }
+        else if (numberingFormat.Val == NumberFormatValues.ChineseCountingThousand ||
+                numberingFormat.Val == NumberFormatValues.JapaneseLegal ||
+                numberingFormat.Val == NumberFormatValues.KoreanLegal ||
+                numberingFormat.Val == NumberFormatValues.TaiwaneseCountingThousand)
+        {
+            sb.Append(@"\levelnfc14"); // Kanji numbering 3 (DBNUM3)
+        }
+        else if (numberingFormat.Val == NumberFormatValues.KoreanDigital2 ||
+                numberingFormat.Val == NumberFormatValues.TaiwaneseDigital)
+        {
+            sb.Append(@"\levelnfc15"); // Kanji numbering 4 (DBNUM4)
         }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedCircle)
         {
@@ -313,6 +346,34 @@ public partial class DocxToRtfConverter
         else if (numberingFormat.Val == NumberFormatValues.Chosung)
         {
             sb.Append(@"\levelnfc25"); // Korean numbering 1 (Chosung) 
+        }
+        else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedFullstop)
+        {
+            sb.Append(@"\levelnfc26"); // Chinese numbering 1 (GB1)
+        }
+        else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedParen)
+        {
+            sb.Append(@"\levelnfc27"); // Chinese numbering 2 (GB2)
+        }
+        else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedCircleChinese)
+        {
+            sb.Append(@"\levelnfc28"); // Chinese numbering 3 (GB3)
+        }
+        else if (numberingFormat.Val == NumberFormatValues.IdeographEnclosedCircle)
+        {
+            sb.Append(@"\levelnfc29"); // Chinese numbering 4 (GB4)
+        }
+        else if (numberingFormat.Val == NumberFormatValues.IdeographTraditional)
+        {
+            sb.Append(@"\levelnfc30"); // Chinese Zodiac numbering 1 (ZODIAC1) 
+        }
+        else if (numberingFormat.Val == NumberFormatValues.IdeographZodiac)
+        {
+            sb.Append(@"\levelnfc31"); // Chinese Zodiac numbering 2 (ZODIAC2) 
+        }
+        else if (numberingFormat.Val == NumberFormatValues.IdeographZodiacTraditional)
+        {
+            sb.Append(@"\levelnfc32"); // Chinese Zodiac numbering 3 (ZODIAC3) 
         }
         else if (numberingFormat.Val == NumberFormatValues.Hebrew1)
         {
@@ -374,13 +435,35 @@ public partial class DocxToRtfConverter
         {
             sb.Append(@"\levelnfc59"); 
         }
+        else if (numberingFormat.Val == NumberFormatValues.Custom)
+        {
+            if (numberingFormat.Format != null)
+            {
+                switch (numberingFormat.Format.Value)
+                {
+                    // These are few standard formats created by Microsoft Word
+                    case "01, 02, 03, ...":
+                        sb.Append(@"\levelnfc22");
+                        break;
+                    case "001, 002, 003, ...":
+                        sb.Append(@"\levelnfc62");
+                        break;
+                    case "0001, 0002, 0003, ...":
+                        sb.Append(@"\levelnfc63");
+                        break;
+                    case "00001, 00002, 00003, ...":
+                        sb.Append(@"\levelnfc64"); 
+                        break;
+                }
+            }
+        }
         else if (numberingFormat.Val == NumberFormatValues.None)
         {
             sb.Append(@"\levelnfc255");
         }
         else
         {
-            // Default
+            // Default (decimal numbers)
             sb.Append(@"\levelnfc0");
         }
     }
