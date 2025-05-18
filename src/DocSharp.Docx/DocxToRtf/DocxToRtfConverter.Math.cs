@@ -148,7 +148,7 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\maccPr");
                     ProcessMathElementFormatting(accent.AccentProperties.ControlProperties, sb);
-                    ProcessAccentChar(accent.AccentProperties.AccentChar, sb);
+                    ProcessMathAccentChar(accent.AccentProperties.AccentChar, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(accent.Base, sb);
@@ -160,6 +160,7 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\mbarPr");
                     ProcessMathElementFormatting(bar.BarProperties.ControlProperties, sb);
+                    ProcessMathPosition(bar.BarProperties.Position, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(bar.Base, sb);
@@ -171,6 +172,7 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\mborderBoxPr");
                     ProcessMathElementFormatting(borderBox.BorderBoxProperties.ControlProperties, sb);
+                    ProcessMathBorderProperties(borderBox.BorderBoxProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(borderBox.Base, sb);
@@ -182,6 +184,7 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\mboxPr");
                     ProcessMathElementFormatting(box.BoxProperties.ControlProperties, sb);
+                    ProcessMathBoxProperties(box.BoxProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(box.Base, sb);
@@ -211,9 +214,17 @@ public partial class DocxToRtfConverter
                         sb.AppendRtfEscaped(delimiter.DelimiterProperties.SeparatorChar.Val.Value);
                         sb.Append('}');
                     }
-                    if (delimiter.DelimiterProperties.GrowOperators != null && (delimiter.DelimiterProperties.GrowOperators.Val == null || delimiter.DelimiterProperties.GrowOperators.Val.ToBool()))
+                    ProcessMathGrow(delimiter.DelimiterProperties.GrowOperators, sb);
+                    if (delimiter.DelimiterProperties.Shape?.Val != null)
                     {
-                        sb.Append(@"{\mgrow on}");
+                        if (delimiter.DelimiterProperties.Shape.Val == ShapeDelimiterValues.Centered)
+                        {
+                            sb.Append(@"{\mshp centered}");
+                        }
+                        else if (delimiter.DelimiterProperties.Shape.Val == ShapeDelimiterValues.Match)
+                        {
+                            sb.Append(@"{\mshp match}");
+                        }
                     }
                     sb.Append('}');
                 }
@@ -229,6 +240,30 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\meqArrPr");
                     ProcessMathElementFormatting(eqArray.EquationArrayProperties.ControlProperties, sb);
+                    ProcessMathBaseJustification(eqArray.EquationArrayProperties.BaseJustification, sb);
+                    if (eqArray.EquationArrayProperties.MaxDistribution != null)
+                    {
+                        if (eqArray.EquationArrayProperties.MaxDistribution.Val == null || eqArray.EquationArrayProperties.MaxDistribution.Val.ToBool())
+                        {
+                            sb.Append(@"{\mmaxDist on}");
+                        }
+                        else 
+                        { 
+                            sb.Append(@"{\mmaxDist off}");
+                        }
+                    }
+                    if (eqArray.EquationArrayProperties.ObjectDistribution != null)
+                    {
+                        if (eqArray.EquationArrayProperties.ObjectDistribution.Val == null || eqArray.EquationArrayProperties.ObjectDistribution.Val.ToBool())
+                        {
+                            sb.Append(@"{\mobjDist on}");
+                        }
+                        else
+                        {
+                            sb.Append(@"{\mobjDist off}");
+                        }
+                    }
+                    ProcessMathRowSpacing(eqArray.EquationArrayProperties.RowSpacingRule, eqArray.EquationArrayProperties.RowSpacing, sb);
                     sb.Append('}');
                 }
                 foreach (var eq in eqArray.Elements<M.Base>())
@@ -303,7 +338,9 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\mgroupChrPr");
                     ProcessMathElementFormatting(groupChar.GroupCharProperties.ControlProperties, sb);
-                    ProcessAccentChar(groupChar.GroupCharProperties.AccentChar, sb);
+                    ProcessMathAccentChar(groupChar.GroupCharProperties.AccentChar, sb);
+                    ProcessMathPosition(groupChar.GroupCharProperties.Position, sb);
+                    ProcessMathVerticalJustification(groupChar.GroupCharProperties.VerticalJustification, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(groupChar.Base, sb);
@@ -339,6 +376,16 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\mmPr");
                     ProcessMathElementFormatting(matrix.MatrixProperties.ControlProperties, sb);
+                    ProcessMathBaseJustification(matrix.MatrixProperties.BaseJustification, sb);
+                    ProcessMathColumnGap(matrix.MatrixProperties.ColumnGapRule, matrix.MatrixProperties.ColumnGap, sb);
+                    ProcessMathColumnSpacing(matrix.MatrixProperties.ColumnSpacing, sb);
+                    ProcessMathRowSpacing(matrix.MatrixProperties.RowSpacingRule, matrix.MatrixProperties.RowSpacing, sb);
+                    ProcessMatrixColumns(matrix.MatrixProperties.MatrixColumns, sb);
+                    if (matrix.MatrixProperties.HidePlaceholder != null &&
+                        (matrix.MatrixProperties.HidePlaceholder.Val == null || matrix.MatrixProperties.HidePlaceholder.Val.ToBool()))
+                    {
+                        sb.Append(@"{\mplcHide on}");
+                    }
                     sb.Append('}');
                 }
                 foreach (var row in matrix.Elements<M.MatrixRow>())
@@ -366,7 +413,9 @@ public partial class DocxToRtfConverter
                     {
                         sb.Append(@"{\msupHide on}");
                     }
-                    ProcessAccentChar(nary.NaryProperties.AccentChar, sb);
+                    ProcessMathAccentChar(nary.NaryProperties.AccentChar, sb);
+                    ProcessMathLimitLocation(nary.NaryProperties.LimitLocation, sb);
+                    ProcessMathGrow(nary.NaryProperties.GrowOperators, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(nary.Base, sb);
@@ -380,6 +429,7 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\mphantPr");
                     ProcessMathElementFormatting(phantom.PhantomProperties.ControlProperties, sb);
+                    ProcessPhantomProperties(phantom.PhantomProperties, sb);
                     sb.Append('}');
                 }
                 ProcessMathBase(phantom.Base, sb);
@@ -451,6 +501,17 @@ public partial class DocxToRtfConverter
                 {
                     sb.Append(@"{\msSubSupPr");
                     ProcessMathElementFormatting(subSuperscript.SubSuperscriptProperties.ControlProperties, sb);
+                    if (subSuperscript.SubSuperscriptProperties.AlignScripts != null)
+                    {
+                        if (subSuperscript.SubSuperscriptProperties.AlignScripts.Val == null || subSuperscript.SubSuperscriptProperties.AlignScripts.Val.ToBool())
+                        {
+                            sb.Append(@"{\malnScr on}");
+                        }
+                        else
+                        {
+                            sb.Append(@"{\malnScr off}");
+                        }
+                    }
                     sb.Append('}');
                 }
                 ProcessMathBase(subSuperscript.Base, sb);
@@ -458,6 +519,364 @@ public partial class DocxToRtfConverter
                 ProcessSuperArgument(subSuperscript.SuperArgument, sb);
                 sb.Append('}');
                 break;
+        }
+    }
+
+    private void ProcessMatrixColumns(MatrixColumns? matrixColumns, StringBuilder sb)
+    {
+        if (matrixColumns == null)
+        {
+            return;
+        }
+
+        sb.Append(@"{\mmcs ");
+        foreach (var column in matrixColumns.Elements<MatrixColumn>())
+        {
+            sb.Append(@"{\mmc ");
+            ProcessMathColumnProperties(column, sb);
+            sb.Append('}');
+        }
+        sb.Append('}');
+    }
+
+    private void ProcessMathColumnProperties(MatrixColumn column, StringBuilder sb)
+    {
+        if (column.MatrixColumnProperties != null)
+        {
+            sb.Append(@"{\mmcPr");
+            if (column.MatrixColumnProperties.MatrixColumnCount?.Val != null &&
+                column.MatrixColumnProperties.MatrixColumnCount.Val.HasValue)
+            {
+                sb.Append($@"{{\mcount {column.MatrixColumnProperties.MatrixColumnCount.Val.Value}}}");
+            }
+            if (column.MatrixColumnProperties.MatrixColumnJustification?.Val != null &&
+                column.MatrixColumnProperties.MatrixColumnJustification.Val.HasValue)
+            {
+                if (column.MatrixColumnProperties.MatrixColumnJustification.Val.Value == M.HorizontalAlignmentValues.Left)
+                {
+                    sb.Append(@"{\mmjc left}");
+                }
+                else if (column.MatrixColumnProperties.MatrixColumnJustification.Val.Value == M.HorizontalAlignmentValues.Center)
+                {
+                    sb.Append(@"{\mmjc center}");
+                }
+                else if (column.MatrixColumnProperties.MatrixColumnJustification.Val.Value == M.HorizontalAlignmentValues.Right)
+                {
+                    sb.Append(@"{\mmjc right}");
+                }
+            }
+            sb.Append('}');
+        }
+    }
+
+    private void ProcessMathColumnSpacing(ColumnSpacing? columnSpacing, StringBuilder sb)
+    {
+        if (columnSpacing?.Val != null && columnSpacing.Val.HasValue)
+        {
+            sb.Append(@$"{{\mcSp{columnSpacing.Val.Value}}}");
+        }
+    }
+
+    private void ProcessMathColumnGap(ColumnGapRule? columnGapRule, ColumnGap? columnGap, StringBuilder sb)
+    {
+        if (columnGapRule?.Val != null && columnGapRule.Val.HasValue)
+        {
+            sb.Append(@$"{{\mcGpRule{columnGapRule.Val.Value}}}");
+        }
+        if (columnGap?.Val != null && columnGap.Val.HasValue)
+        {
+            sb.Append(@$"{{\mcGp{columnGap.Val.Value}}}");
+        }
+    }
+
+    internal void ProcessMathRowSpacing(RowSpacingRule? rowSpacingRule, RowSpacing? rowSpacing, StringBuilder sb)
+    {
+        if (rowSpacingRule?.Val != null && rowSpacingRule.Val.HasValue)
+        {
+            sb.Append(@$"{{\mrSpRule{rowSpacingRule.Val.Value}}}");
+        }
+        if (rowSpacing?.Val != null && rowSpacing.Val.HasValue)
+        {
+            sb.Append(@$"{{\mrSp{rowSpacing.Val.Value}}}");
+        }
+    }
+
+    internal void ProcessMathGrow(GrowOperators? growOperators, StringBuilder sb)
+    {
+        if (growOperators != null)
+        {
+            if (growOperators.Val == null || growOperators.Val.ToBool())
+            {
+                sb.Append(@"{\mgrow on}");
+            }
+            else
+            {
+                sb.Append(@"{\mgrow off}");
+            }
+        }
+    }
+
+    internal void ProcessPhantomProperties(PhantomProperties phantomProperties, StringBuilder sb)
+    {
+        if (phantomProperties.ShowPhantom != null)
+        {
+            if (phantomProperties.ShowPhantom.Val == null || phantomProperties.ShowPhantom.Val.ToBool())
+            {
+                sb.Append(@"{\mshow on}");
+            }
+            else
+            {
+                sb.Append(@"{\mshow off}");
+            }
+        }
+        if (phantomProperties.Transparent != null)
+        {
+            if (phantomProperties.Transparent.Val == null || phantomProperties.Transparent.Val.ToBool())
+            {
+                sb.Append(@"{\mtransp on}");
+            }
+            else
+            {
+                sb.Append(@"{\mtransp off}");
+            }
+        }
+        if (phantomProperties.ZeroAscent != null)
+        {
+            if (phantomProperties.ZeroAscent.Val == null || phantomProperties.ZeroAscent.Val.ToBool())
+            {
+                sb.Append(@"{\mzeroAsc on}");
+            }
+            else
+            {
+                sb.Append(@"{\mzeroAsc off}");
+            }
+        }
+        if (phantomProperties.ZeroDescent != null)
+        {
+            if (phantomProperties.ZeroDescent.Val == null || phantomProperties.ZeroDescent.Val.ToBool())
+            {
+                sb.Append(@"{\mzeroDesc on}");
+            }
+            else
+            {
+                sb.Append(@"{\mzeroDesc off}");
+            }
+        }
+        if (phantomProperties.ZeroWidth != null)
+        {
+            if (phantomProperties.ZeroWidth.Val == null || phantomProperties.ZeroWidth.Val.ToBool())
+            {
+                sb.Append(@"{\mzeroWid on}");
+            }
+            else
+            {
+                sb.Append(@"{\mzeroWid off}");
+            }
+        }
+    }
+
+    internal void ProcessMathBorderProperties(BorderBoxProperties borderBoxProperties, StringBuilder sb)
+    {
+        if (borderBoxProperties.HideBottom != null)
+        {
+            if (borderBoxProperties.HideBottom.Val == null || borderBoxProperties.HideBottom.Val.ToBool())
+            {
+                sb.Append(@"{\mhideBot on}");
+            }
+            else
+            {
+                sb.Append(@"{\mhideBot off}");
+            }
+        }
+        if (borderBoxProperties.HideLeft != null)
+        {
+            if (borderBoxProperties.HideLeft.Val == null || borderBoxProperties.HideLeft.Val.ToBool())
+            {
+                sb.Append(@"{\mhideLeft on}");
+            }
+            else
+            {
+                sb.Append(@"{\mhideLeft off}");
+            }
+        }
+        if (borderBoxProperties.HideTop != null)
+        {
+            if (borderBoxProperties.HideTop.Val == null || borderBoxProperties.HideTop.Val.ToBool())
+            {
+                sb.Append(@"{\mhideTop on}");
+            }
+            else
+            {
+                sb.Append(@"{\mhideTop off}");
+            }
+        }
+        if (borderBoxProperties.HideRight != null)
+        {
+            if (borderBoxProperties.HideRight.Val == null || borderBoxProperties.HideRight.Val.ToBool())
+            {
+                sb.Append(@"{\mhideRight on}");
+            }
+            else
+            {
+                sb.Append(@"{\mhideRight off}");
+            }
+        }
+        if (borderBoxProperties.StrikeBottomLeftToTopRight != null)
+        {
+            if (borderBoxProperties.StrikeBottomLeftToTopRight.Val == null || borderBoxProperties.StrikeBottomLeftToTopRight.Val.ToBool())
+            {
+                sb.Append(@"{\mstrikeBLTR on}");
+            }
+            else
+            {
+                sb.Append(@"{\mstrikeBLTR off}");
+            }
+        }
+        if (borderBoxProperties.StrikeTopLeftToBottomRight != null)
+        {
+            if (borderBoxProperties.StrikeTopLeftToBottomRight.Val == null || borderBoxProperties.StrikeTopLeftToBottomRight.Val.ToBool())
+            {
+                sb.Append(@"{\mstrikeTLBR on}");
+            }
+            else
+            {
+                sb.Append(@"{\mstrikeTLBR off}");
+            }
+        }
+        if (borderBoxProperties.StrikeHorizontal != null)
+        {
+            if (borderBoxProperties.StrikeHorizontal.Val == null || borderBoxProperties.StrikeHorizontal.Val.ToBool())
+            {
+                sb.Append(@"{\mstrikeH on}");
+            }
+            else
+            {
+                sb.Append(@"{\mstrikeH off}");
+            }
+        }
+        if (borderBoxProperties.StrikeVertical != null)
+        {
+            if (borderBoxProperties.StrikeVertical.Val == null || borderBoxProperties.StrikeVertical.Val.ToBool())
+            {
+                sb.Append(@"{\mstrikeV on}");
+            }
+            else
+            {
+                sb.Append(@"{\mstrikeV off}");
+            }
+        }
+    }
+
+    internal void ProcessMathBoxProperties(BoxProperties boxProperties, StringBuilder sb)
+    {
+        if (boxProperties.Alignment != null)
+        {
+            if (boxProperties.Alignment.Val == null || boxProperties.Alignment.Val.ToBool())
+            {
+                sb.Append(@"{\maln on}");
+            }
+            else
+            {
+                sb.Append(@"{\maln off}");
+            }
+        }
+        if (boxProperties.Differential != null)
+        {
+            if (boxProperties.Differential.Val == null || boxProperties.Differential.Val.ToBool())
+            {
+                sb.Append(@"{\mdiff on}");
+            }
+            else
+            {
+                sb.Append(@"{\mdiff off}");
+            }
+        }
+        if (boxProperties.NoBreak != null)
+        {
+            if (boxProperties.NoBreak.Val == null || boxProperties.NoBreak.Val.ToBool())
+            {
+                sb.Append(@"{\mnoBreak on}");
+            }
+            else
+            {
+                sb.Append(@"{\mnoBreak off}");
+            }
+        }
+        if (boxProperties.OperatorEmulator != null)
+        {
+            if (boxProperties.OperatorEmulator.Val == null || boxProperties.OperatorEmulator.Val.ToBool())
+            {
+                sb.Append(@"{\mopEmu on}");
+            }
+            else
+            {
+                sb.Append(@"{\mopEmu off}");
+            }
+        }
+
+        if (boxProperties.Break != null)
+        {
+            ProcessMathBreak(boxProperties.Break, sb);
+        }
+    }
+
+    internal void ProcessMathBaseJustification(BaseJustification? baseJustification, StringBuilder sb)
+    {
+        if (baseJustification?.Val != null)
+        {
+            if (baseJustification.Val.Value == M.VerticalAlignmentValues.Top)
+            {
+                sb.Append("{\\mbaseJc top}");
+            }
+            else if(baseJustification.Val.Value == M.VerticalAlignmentValues.Bottom)
+            {
+                sb.Append("{\\mbaseJc bot}");
+            }
+        }
+    }
+
+    internal void ProcessMathLimitLocation(LimitLocation? limitLocation, StringBuilder sb)
+    {
+        if (limitLocation?.Val != null)
+        {
+            if (limitLocation.Val.Value == M.LimitLocationValues.SubscriptSuperscript)
+            {
+                sb.Append("{\\mlimLoc subsup}");
+            }
+            else if (limitLocation.Val.Value == M.LimitLocationValues.UnderOver)
+            {
+                sb.Append("{\\mlimLoc undovr}");
+            }
+        }
+    }
+
+    internal void ProcessMathVerticalJustification(VerticalJustification? verticalJustification, StringBuilder sb)
+    {
+        if (verticalJustification?.Val != null)
+        {
+            if (verticalJustification.Val.Value == M.VerticalJustificationValues.Top)
+            {
+                sb.Append("{\\mvertJc top}");
+            }
+            else if (verticalJustification.Val.Value == M.VerticalJustificationValues.Bottom)
+            {
+                sb.Append("{\\mvertJc bot}");
+            }
+        }
+    }
+
+    internal void ProcessMathPosition(M.Position? position, StringBuilder sb)
+    {
+        if (position?.Val != null)
+        {
+            if (position.Val.Value == M.VerticalJustificationValues.Top)
+            {
+                sb.Append("{\\mpos top}");
+            }
+            else if (position.Val.Value == M.VerticalJustificationValues.Bottom)
+            {
+                sb.Append("{\\mpos bot}");
+            }
         }
     }
 
@@ -471,9 +890,9 @@ public partial class DocxToRtfConverter
         sb.Append('}');
     }
 
-    private void ProcessAccentChar(AccentChar? accentChar, StringBuilder sb)
+    private void ProcessMathAccentChar(AccentChar? accentChar, StringBuilder sb)
     {
-        if (accentChar?.Val != null)
+        if (accentChar?.Val != null && accentChar.Val.HasValue)
         {
             sb.Append("{\\mchr ");
             sb.AppendRtfEscaped(accentChar.Val.Value);
@@ -487,39 +906,41 @@ public partial class DocxToRtfConverter
         {
             return;
         }
+        //sb.Append(@"{\mrPr ");
         if (mathRunProperties.Literal != null)
         {
-            sb.Append(@"\mlit1");
+            if (mathRunProperties.Literal.Val == null || mathRunProperties.Literal.Val.ToBool())
+            {
+                sb.Append(@"\mlit1");
+            }
+            else
+            {
+                sb.Append(@"\mlit0");
+            }
         }
         foreach (var subElement in mathRunProperties)
         {
             switch (subElement)
             {
                 case M.NormalText normalText:
-                    if (normalText.Val != null && normalText.Val.ToBool())
+                    if (normalText.Val == null || normalText.Val.ToBool())
                     {
-                        sb.Append(@"\mnor1"); // Should be \mnor ?
+                        sb.Append(@"\mnor"); // Should be \mnor1 ?
                     }
                     break;
                 case M.Break br:
-                    sb.Append(@"\mbrk");
-                    if (br.AlignAt != null)
+                    ProcessMathBreak(br, sb);
+                    break;
+                case M.Alignment alignment:
+                    // ?
+                    // Not mentioned in RTF documentation, assuming it's the same as in BorderBoxProperties
+                    if (alignment.Val == null || alignment.Val.ToBool())
                     {
-                        sb.Append(br.AlignAt.Value);
-                    }
-                    else if (br.Val != null)
-                    {
-                        sb.Append(br.Val.Value);
+                        sb.Append(@"\maln1");
                     }
                     else
                     {
-                        sb.Append('0');
-                    }
-                    break;
-                case M.Alignment alignment:
-                    if (alignment.Val != null && alignment.Val.ToBool())
-                    {
-                        sb.Append(@"\malnScr1");
+                        sb.Append(@"\maln0");
                     }
                     break;
                 case M.Script script:
@@ -573,6 +994,24 @@ public partial class DocxToRtfConverter
                     }
                     break;
             }
+        }
+        //sb.Append('}');
+    }
+
+    internal void ProcessMathBreak(M.Break br, StringBuilder sb)
+    {
+        sb.Append(@"\mbrk");
+        if (br.AlignAt != null)
+        {
+            sb.Append(br.AlignAt.Value);
+        }
+        else if (br.Val != null)
+        {
+            sb.Append(br.Val.Value);
+        }
+        else
+        {
+            sb.Append('0');
         }
     }
 
