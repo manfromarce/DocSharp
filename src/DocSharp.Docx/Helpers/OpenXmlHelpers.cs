@@ -11,6 +11,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.Office2010.Word;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace DocSharp.Docx;
@@ -675,5 +676,73 @@ public static class OpenXmlHelpers
         // If not found, return A4 portrait.
         // A4 page size is 210 mm x 297 mm = 11906 x 16838
         return new Size(11906, 16838);
+    }
+
+    public static string GetColor(OpenXmlElement element, string defaultValue = "")
+    {
+        if (element.Elements<RgbColorModelHex>().FirstOrDefault() is RgbColorModelHex rgbColorModelHex)
+        {
+            string? hex = rgbColorModelHex.Val;
+            if (hex == null)
+            {
+                return defaultValue;
+            }
+            string hexWithAlpha = ApplyAlpha(rgbColorModelHex, hex);
+            return $"#{hexWithAlpha}";
+        }
+        else if (element.Elements<SchemeColor>().FirstOrDefault() is SchemeColor schemeColor)
+        {
+            return ConvertSchemeColorToRgb(schemeColor);
+        }
+        return defaultValue;
+    }
+
+    public static string ConvertSchemeColorToRgb(SchemeColor schemeColor, string defaultColor = "#000000")
+    {
+        if (schemeColor.Val == null) return defaultColor;
+
+        var themePart = GetMainDocumentPart(schemeColor)?.ThemePart;
+        if (themePart == null) return defaultColor;
+
+        var colorScheme = themePart.Theme?.ThemeElements?.ColorScheme;
+        if (colorScheme == null) return defaultColor;
+
+        foreach (var color in colorScheme.Elements())
+        {
+            if (color.LocalName == schemeColor.Val.ToString())
+            {
+                var rgbColor = color.GetFirstChild<DocumentFormat.OpenXml.Drawing.RgbColorModelHex>();
+                if (rgbColor?.Val != null)
+                {
+                    string hexWithAlpha = ApplyAlpha(rgbColor, rgbColor.Val!);
+                    return $"#{hexWithAlpha}";
+                }
+            }
+        }
+        return defaultColor;
+    }
+
+    internal static string ApplyAlpha(OpenXmlElement element, string hex)
+    {
+        if (element.Elements<Alpha>().FirstOrDefault() is Alpha alpha && alpha.Val != null)
+        {
+            // Apply alpha value to hex color
+
+            // Percentage is multiplied by 1000 in Open XML, convert to 0-255 range
+            int alphaValue = (int)((alpha.Val.Value / 100000.0) * 255);
+            // Clamp between 0 and 255
+            alphaValue = Math.Max(0, Math.Min(255, alphaValue));
+
+            // Alpha is the transparency value (80% = 20% opacity), so we need to invert it
+            alphaValue = 255 - alphaValue;
+
+            string alphaHex = alphaValue.ToString("X2");
+            if (alphaHex.Length == 1)
+            {
+                alphaHex = "0" + alphaHex;
+            }
+            return hex + alphaHex;
+        }
+        return hex;
     }
 }
