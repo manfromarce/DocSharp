@@ -14,21 +14,22 @@ using A = DocumentFormat.OpenXml.Drawing;
 using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 using V = DocumentFormat.OpenXml.Vml;
+using System.IO;
+using System.Diagnostics;
 
 namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxConverterBase
 {
-    internal override void ProcessPicture(Picture picture, StringBuilder sb)
+    internal override void ProcessVml(OpenXmlElement element, StringBuilder sb)
     {
-        // VML picture
-        if (picture.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
-                imageData.RelationshipId?.Value is string relId)
+        if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
+            imageData.RelationshipId?.Value is string relId)
         {
             // For VML, width and height should be in a v:shape element with this attribute: 
             // style="width:165.6pt;height:110.4pt;visibility:visible..."
 
-            var shape = picture.Elements<V.Shape>().FirstOrDefault();
+            var shape = element as V.Shape ?? element.Elements<V.Shape>().FirstOrDefault();
             var style = shape?.Style;
             if (style?.Value != null)
             {
@@ -64,8 +65,8 @@ public partial class DocxToHtmlConverter : DocxConverterBase
                 }
                 if (width > 0 && height > 0)
                 {
-                    var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
-                    ProcessImagePart(mainDocumentPart, relId, width, height, sb);
+                    var rootPart = OpenXmlHelpers.GetRootPart(element);
+                    ProcessImagePart(rootPart, relId, width, height, sb);
                 }
             }
         }

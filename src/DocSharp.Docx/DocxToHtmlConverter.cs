@@ -175,10 +175,6 @@ public partial class DocxToHtmlConverter : DocxConverterBase
     {
     }
 
-    internal override void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb)
-    {
-    }
-
     internal override void ProcessFieldChar(FieldChar field, StringBuilder sb)
     {
     }

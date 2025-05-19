@@ -28,7 +28,7 @@
 | Advanced text effects and WordArt | ❌ | 🟡[10] | ❌ | - |
 | Image effects | ❌ | ❌ | ❌ | - |
 | Math | ✅ | ❌ | ✅ | ❌ |
-| OLE objects | 🟡[6] | - | - | - |
+| OLE objects [6] | 🟡 | 🟡 | 🟡 | - |
 | Fields and standard parts [7] | ✅ | 🟡 | 🟡 | 🟡 |
 | Form fields | 🟡[8] | ❌ | - | - |
 | Content part (SVG, MathML, SMIL, ...) | ❌ | ✅ SVG, MathML, SMIL | ❌ | - |
@@ -51,7 +51,7 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 
 [5]: Special fonts such as Wingdings, Webdings and Symbol are converted to Unicode characters.  
 
-[6]: OLE objects are preserved as images in most cases when converting to RTF.
+[6]: OLE objects are preserved as images when possible.
 
 [7]: Fields (including table of contents) are supported in RTF; in other formats only the field result/text can be preserved.  
 Standard parts are converted to regular (static) content (same behavior as Microsoft Word).

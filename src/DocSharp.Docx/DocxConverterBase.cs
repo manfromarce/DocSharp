@@ -237,7 +237,7 @@ public abstract class DocxConverterBase
                 ProcessBookmarkEnd(bookmarkEnd, sb);
                 break;
             case Picture picture:
-                ProcessPicture(picture, sb);
+                ProcessVml(picture, sb);
                 break;
             case Drawing drawing:
                 ProcessDrawing(drawing, sb);
@@ -287,7 +287,7 @@ public abstract class DocxConverterBase
                 ProcessText(textElement, sb);
                 return true;
             case Picture picture:
-                ProcessPicture(picture, sb);
+                ProcessVml(picture, sb);
                 return true;
             case Drawing drawing:
                 ProcessDrawing(drawing, sb);
@@ -478,19 +478,35 @@ public abstract class DocxConverterBase
         ProcessSimpleField(field, sb);
     }
 
+    internal virtual void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb)
+    {
+        foreach (var child in obj.ChildElements)
+        {
+            if (child.IsVmlElement())
+            {
+                // VML image/drawing
+                ProcessVml(child, sb);
+            }
+            else if (child is Drawing drawing)
+            {
+                // DrawingML object
+                ProcessDrawing(drawing, sb);
+            }
+        }
+    }
+
     internal abstract void ProcessRun(Run run, StringBuilder sb);
     internal abstract void ProcessBreak(Break @break, StringBuilder sb);
     internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, StringBuilder sb);
     internal abstract void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, StringBuilder sb);
     internal abstract void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb);
     internal abstract void ProcessDrawing(Drawing picture, StringBuilder sb);
-    internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
+    internal abstract void ProcessVml(OpenXmlElement picture, StringBuilder sb);
     internal abstract void ProcessTable(Table table, StringBuilder sb);
     internal abstract void ProcessText(Text text, StringBuilder sb);
     internal abstract void ProcessFieldChar(FieldChar field, StringBuilder sb);
     internal abstract void ProcessFieldCode(FieldCode field, StringBuilder sb);
     internal abstract void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb);
-    internal abstract void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb);
     internal abstract void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb);
     internal abstract void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb);
     internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb);

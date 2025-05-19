@@ -23,11 +23,11 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxConverterBase
 {
-    internal void ProcessImagePart(MainDocumentPart? mainDocumentPart, string relId, double width, double height, StringBuilder sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, StringBuilder sb)
     {
         try
         {
-            if (mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
+            if (rootPart?.GetPartById(relId!) is ImagePart imagePart)
             {
                 if (string.IsNullOrWhiteSpace(ImagesOutputFolder))
                 {
@@ -40,6 +40,23 @@ public partial class DocxToHtmlConverter : DocxConverterBase
                 }
                 else
                 {
+                    try
+                    {
+                        // Try to create the directory if it doesn't exist.
+                        if (!Directory.Exists(ImagesOutputFolder))
+                        {
+                            Directory.CreateDirectory(ImagesOutputFolder);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Filesystem error, don't stop the conversion.
+#if DEBUG
+                        Debug.WriteLine("ProcessImagePart - Directory.Create error: " + ex.Message);
+#endif
+                        return;
+                    }
+
                     // Save image to disk and append URI to HTML
                     string imageUri = WriteImageToDisk(imagePart, relId);
                     if (!string.IsNullOrEmpty(imageUri))
