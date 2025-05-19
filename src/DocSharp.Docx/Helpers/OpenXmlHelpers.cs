@@ -424,7 +424,7 @@ public static class OpenXmlHelpers
 
     // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
     public static BorderType? GetEffectiveBorder(this TableCell cell, Primitives.BorderValue borderValue,
-                                                 int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft)
+                                                 int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft = false)
     {
         bool isFirstRow = rowNumber == 1;
         bool isFirstColumn = columnNumber == 1;
@@ -455,6 +455,28 @@ public static class OpenXmlHelpers
                 {
                     targetTypesTable.Add(typeof(RightBorder));
                     targetTypesTable.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
+                }
+                else
+                {
+                    targetTypesTable.Add(typeof(InsideVerticalBorder));
+                }
+                break;
+            case Primitives.BorderValue.Start:
+                targetTypesCell.Add(typeof(StartBorder));
+                if (isLastColumn)
+                {
+                    targetTypesTable.Add(typeof(StartBorder));
+                }
+                else
+                {
+                    targetTypesTable.Add(typeof(InsideVerticalBorder));
+                }
+                break;
+            case Primitives.BorderValue.End:
+                targetTypesCell.Add(typeof(EndBorder));
+                if (isLastColumn)
+                {
+                    targetTypesTable.Add(typeof(EndBorder));
                 }
                 else
                 {
