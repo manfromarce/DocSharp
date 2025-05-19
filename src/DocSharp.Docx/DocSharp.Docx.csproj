@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DocSharp.Common\DocSharp.Common.csproj" />
+    <ProjectReference Include="..\DocSharp.Rtf\DocSharp.Rtf.csproj" />
   </ItemGroup>
 
 </Project>

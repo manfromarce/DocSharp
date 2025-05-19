@@ -1,0 +1,622 @@
+using System.IO;
+using System.Xml;
+using System.Linq;
+using System.Text;
+using System;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Rtf.Tokens;
+using DocumentFormat.OpenXml;
+using System.Collections.Generic;
+using FontSize = DocumentFormat.OpenXml.Wordprocessing.FontSize;
+using System.Globalization;
+
+namespace DocSharp.Rtf
+{
+    internal class DocxBuilder
+    {
+        private WordprocessingDocument _doc;
+        private MainDocumentPart _mainPart;
+        private DocumentFormat.OpenXml.Wordprocessing.Document _document;
+        private Body _body;
+        private SectionProperties? _currentSectionProperties;
+        private SectionProperties? _defaultSectionProperties;
+        private ParagraphProperties? _currentParagraphProperties;
+        private RunProperties? _currentRunProperties;
+        private Stack<RunProperties> _formattingStack = new Stack<RunProperties>();
+        private Paragraph? _currentParagraph;
+
+        public DocxBuilder(WordprocessingDocument doc)
+        {
+            _doc = doc;
+            _mainPart = doc.AddMainDocumentPart();
+            _document = _mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
+            _body = _mainPart.Document.AppendChild(new Body());
+            _defaultSectionProperties = CreateDefaultSectionProperties();
+        }
+
+        /// <summary>
+        /// Convert RTF to Open XML and add to the document.
+        /// </summary>
+        /// <param name="document">The parsed RTF document</param>
+        public void AddRtf(Document document)
+        {
+            foreach (var token in document.Contents)
+            {
+                if (token is FontTableTag || token is ColorTable)
+                {
+                    break;
+                }
+                if (token.Type == TokenType.Group)
+                {
+                    ProcessGroup((Group)token);
+                }
+                else if (token.Type == TokenType.Text)
+                {
+                    ProcessText((TextToken)token);
+                }
+                else
+                {
+                    ProcessDocumentFormatting(token);
+                    ProcessSectionFormatting(token);
+                    ProcessParagraphFormatting(token);
+                    ProcessCharacterFormatting(token);
+                }
+            }
+        }
+
+        private void ProcessText(TextToken textToken)
+        {
+            EnsureCurrentParagraph();
+
+            var run = new Run();
+
+            if (_currentRunProperties != null)
+            {
+                run.AppendChild(_currentRunProperties.CloneNode(true));
+            }
+
+            run.AppendChild(new Text(textToken.Value) { Space = SpaceProcessingModeValues.Preserve });
+
+            _currentParagraph?.AppendChild(run);
+        }
+
+        private void ProcessGroup(Group group)
+        {
+            if (group.Destination is not GeneratorTag && group.Contents.Count > 0 && group.Contents[0] is not IgnoreUnrecognized)
+            {
+                var newRunProperties = _currentRunProperties?.CloneNode(true) as RunProperties ?? new RunProperties();
+                _formattingStack.Push(newRunProperties);
+
+                // Process child tokens
+                foreach (var token in group.Contents)
+                {
+                    if (token is FontTableTag || token is ColorTable)
+                    {
+                        break;
+                    }
+                    if (token.Type == TokenType.Group)
+                    {
+                        ProcessGroup((Group)token);
+                    }
+                    else if (token.Type == TokenType.Text)
+                    {
+                        ProcessText((TextToken)token);
+                    }
+                    else
+                    {
+                        ProcessDocumentFormatting(token);
+                        ProcessSectionFormatting(token);
+                        ProcessParagraphFormatting(token);
+                        ProcessCharacterFormatting(token);
+                    }
+                }
+
+                _formattingStack.Pop();
+                _currentRunProperties = _formattingStack.Any() ? _formattingStack.Peek() : null;
+            }
+        }
+
+        internal void ProcessDocumentFormatting(IToken token)
+        {
+            if (token is IWord word)
+            {
+                switch (word.Name)
+                {
+                    case "rtlgutter":
+                        _defaultSectionProperties ??= CreateDefaultSectionProperties();
+                        if (!_defaultSectionProperties.Elements<GutterOnRight>().Any())
+                        {
+                            _defaultSectionProperties.AppendChild(new GutterOnRight());
+                        }
+                        return;
+                }
+            }
+            ProcessPageInformation(token);
+        }
+
+        internal void ProcessSectionFormatting(IToken token)
+        {
+            if (token is IWord word)
+            {
+                switch (word.Name)
+                {
+                    case "sect":
+                        _currentSectionProperties = CreateSectionProperties();
+                        return;
+                    case "sectd":
+                        if (_defaultSectionProperties != null)
+                        {
+                            _currentSectionProperties = (SectionProperties)_defaultSectionProperties.CloneNode(true);
+                        }
+                        else
+                        {
+                            // Should not happen
+                            _currentSectionProperties = CreateDefaultSectionProperties();
+                        }
+                        return;
+                    case "sbkpage":
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        SetSectionType(_currentSectionProperties, SectionMarkValues.NextPage);
+                        return;
+                    case "sbkcol":
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        SetSectionType(_currentSectionProperties, SectionMarkValues.NextColumn);
+                        return;
+                    case "sbkcont":
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        SetSectionType(_currentSectionProperties, SectionMarkValues.Continuous);
+                        return;
+                    case "sbkodd":
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        SetSectionType(_currentSectionProperties, SectionMarkValues.OddPage);
+                        return;
+                    case "sbkeven":
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        SetSectionType(_currentSectionProperties, SectionMarkValues.EvenPage);
+                        return;
+                    case "titlepg":
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        if (!_currentSectionProperties.Elements<TitlePage>().Any())
+                        {
+                            _currentSectionProperties.AppendChild(new TitlePage());
+                        }
+                        return;
+                }
+            }
+            ProcessPageInformation(token);
+        }
+
+        internal void ProcessParagraphFormatting(IToken token)
+        {
+            if (token is IWord word)
+            {
+                switch (word.Name)
+                {
+                    case "par":
+                        _currentParagraph = null;
+                        return;
+
+                    case "pard":
+                        _currentParagraphProperties = CreateDefaultParagraphProperties();
+                        return;
+                }
+            }
+        }
+
+        internal void ProcessCharacterFormatting(IToken token)
+        {
+            if (token is IWord word)
+            {
+                switch (word.Name)
+                {
+                    case "b": // Bold
+                        SetRunProperty<Bold>(bold => bold.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "i": // Italic
+                        SetRunProperty<Italic>(italic => italic.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "strike": 
+                        SetRunProperty<Strike>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "striked": // Double strike
+                        SetRunProperty<DoubleStrike>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "ul": // Single solid underline
+                        SetRunProperty<Underline>(u => u.Val = ((ControlWord<bool>)word).Value ? UnderlineValues.Single : UnderlineValues.None);
+                        return;
+                    case "uld": // Dotted underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.Dotted);
+                        return;
+                    case "uldash": // Dashed underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.Dash);
+                        return;
+                    case "uldashd": // Dash-dot underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DotDash);
+                        return;
+                    case "uldashdd": // Dash-dot-dot underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DotDotDash);
+                        return;
+                    case "ulldash": // Long dash underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DashLong);
+                        return;
+                    case "ulthldash": // Thick long dash underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DashLongHeavy);
+                        return;
+                    case "ulth": // Thick underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.Thick);
+                        return;
+                    case "ulthd": // Thick dotted underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DottedHeavy);
+                        return;
+                    case "ulthdash": // Thick dashed underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DashedHeavy);
+                        return;
+                    case "ulthdashd": // Thick dash-dot underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DashDotHeavy);
+                        return;
+                    case "ulthdashdd": // Thick dash-dot-dot underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.DashDotDotHeavy);
+                        return;
+                    case "uldb": // Double underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.Double);
+                        return;
+                    case "ulwave": // Wavy underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.Wave);
+                        return;
+                    case "ululdbwave": // Double wavy underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.WavyDouble);
+                        return;
+                    case "ulhwave": // Thick wavy underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.WavyHeavy);
+                        return;
+                    case "ulw": // Words underline
+                        SetRunProperty<Underline>(u => u.Val = UnderlineValues.Words);
+                        return;
+                    case "ulc": // Underline color
+                        SetRunProperty<Underline>(u => u.Color = ((ControlWord<ColorValue>)word).Value.Red.ToString("X2") + ((ControlWord<ColorValue>)word).Value.Green.ToString("X2") + ((ControlWord<ColorValue>)word).Value.Blue.ToString("X2"));
+                        return;
+                    case "outl": // Outline
+                        SetRunProperty<Outline>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "shad": // Shadow
+                        SetRunProperty<Shadow>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "embo": // Embossed
+                        SetRunProperty<Shadow>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "impr": // Engraved
+                        SetRunProperty<Imprint>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "v": // Hidden
+                        SetRunProperty<Hidden>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "scaps": // Small caps
+                        SetRunProperty<SmallCaps>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "caps": // All caps
+                        SetRunProperty<Caps>(s => s.Val = OnOffValue.FromBoolean(((ControlWord<bool>)word).Value));
+                        return;
+                    case "super": // Superscript
+                        SetRunProperty<VerticalTextAlignment>(s => s.Val = VerticalPositionValues.Superscript);
+                        return;
+                    case "sub": // Subscript
+                        SetRunProperty<VerticalTextAlignment>(s => s.Val = VerticalPositionValues.Subscript);
+                        return;
+                    case "nosupersub": // Disable superscript/subscript
+                        SetRunProperty<VerticalTextAlignment>(s => s.Val = VerticalPositionValues.Baseline);
+                        return;
+                    case "cf": // Font color
+                        SetRunProperty<Color>(c => c.Val = ((ControlWord<ColorValue>)word).Value.Red.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Green.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Blue.ToString("X2", CultureInfo.InvariantCulture));
+                        return;
+                    case "fs": // Font size
+                        SetRunProperty<FontSize>(c => c.Val = (((ControlWord<UnitValue>)word).Value.ToPt() * 2).ToString(CultureInfo.InvariantCulture));
+                        return;
+                    //case "f": // Font family
+                    //    SetRunProperty<RunFonts>(c => c.Ascii = ((ControlWord<string>)word).Value.Value.ToString(CultureInfo.InvariantCulture));
+                    //    return;
+                    case "highlight": // Highlight color
+                        return;
+                    case "chcbpat": // Character background color
+                        return;
+                    case "chcfpat": // Character foreground color
+                        return;
+                    case "charscalex": // Font scaling
+                        return;
+                    case "kerning": // Characters kerning
+                        return;
+                    case "fittext": // Fit text
+                        return;
+                    case "expnd": // Font spacing in half points
+                        return;
+                    case "expndtw": // Font spacing in twips
+                        return;
+                }
+            }
+        }
+
+        private void SetRunProperty<T>(Action<T> setProperty) where T : OpenXmlElement, new()
+        {
+            _currentRunProperties ??= new RunProperties();
+            var element = _currentRunProperties.Elements<T>().FirstOrDefault();
+            if (element == null)
+            {
+                element = new T();
+                _currentRunProperties.AppendChild(element);
+            }
+            setProperty(element);
+        }
+
+        internal void ProcessPageInformation(IToken token)
+        {
+            if (token is ControlWord<int> intWord)
+            {
+                switch (intWord.Name)
+                {
+                    case "paperw":
+                    case "paperh":
+                        bool isWidth = intWord.Name.Equals("paperw", StringComparison.OrdinalIgnoreCase);
+                        _defaultSectionProperties ??= CreateDefaultSectionProperties();
+                        SetPageDimensions(_defaultSectionProperties, intWord.Value, isWidth);
+                        return;
+                    case "margl":
+                    case "margr":
+                    case "margt":
+                    case "margb":
+                        _defaultSectionProperties ??= CreateDefaultSectionProperties();
+                        string marginType = intWord.Name switch
+                        {
+                            "margl" => "Left",
+                            "margr" => "Right",
+                            "margt" => "Top",
+                            "margb" => "Bottom",
+                            "gutter" => "Gutter",
+                            _ => throw new InvalidOperationException()
+                        };
+                        SetPageMargin(_defaultSectionProperties, intWord.Value, marginType);
+                        return;
+                    case "pgwsxn":
+                    case "pghsxn":
+                        bool isSectionWidth = intWord.Name.Equals("pgwsxn", StringComparison.OrdinalIgnoreCase);
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        SetPageDimensions(_currentSectionProperties, intWord.Value, isSectionWidth);
+                        return;
+                    case "marglsxn":
+                    case "margrsxn":
+                    case "margtsxn":
+                    case "margbsxn":
+                    case "guttersxn":
+                        _currentSectionProperties ??= CreateSectionProperties();
+                        string sectionMarginType = intWord.Name switch
+                        {
+                            "marglsxn" => "Left",
+                            "margrsxn" => "Right",
+                            "margtsxn" => "Top",
+                            "margbsxn" => "Bottom",
+                            "guttersxn" => "Gutter",
+                            "headery" => "Header",
+                            "footery" => "Footer",
+                            _ => throw new InvalidOperationException()
+                        };
+                        SetPageMargin(_currentSectionProperties, intWord.Value, sectionMarginType);
+                        return;
+                    
+                }
+            }
+        }
+
+        internal SectionProperties CreateSectionProperties()
+        {
+            var sectionProperties = new SectionProperties();
+
+            // Copy from previous section properties if present (RTF behavior, unless \sectd is specified)
+            if (_currentSectionProperties != null)
+            {
+                foreach (var element in _currentSectionProperties.Elements())
+                {
+                    sectionProperties.AppendChild(element.CloneNode(true));
+                }
+            }
+
+            // Insert the new section properties before the last section properties (which is the default)
+            _body.InsertBefore(sectionProperties, _body.Elements<SectionProperties>().LastOrDefault());
+            return sectionProperties;
+        }
+
+        internal SectionProperties CreateDefaultSectionProperties()
+        {
+            var sectionProperties = new SectionProperties();
+
+            // Set default RTF 1.9.1 properties unless already set
+            SetMissingSectionProperty<PageSize>(sectionProperties, pgSize =>
+            {
+                pgSize.Width = 12240;  
+                pgSize.Height = 15840; 
+            });
+            SetMissingSectionProperty<PageMargin>(sectionProperties, pgMargin =>
+            {
+                pgMargin.Left = 1800;   
+                pgMargin.Right = 1800;  
+                pgMargin.Top = 1440;    
+                pgMargin.Bottom = 1440;
+                pgMargin.Header = 720;
+                pgMargin.Footer = 720;
+            });
+
+            _body.AppendChild(sectionProperties);
+            return sectionProperties;
+        }
+
+
+        internal void SetSectionProperty<T>(SectionProperties sectionProperties, Action<T> setProperty) where T : OpenXmlElement, new()
+        {
+            var element = sectionProperties.Elements<T>().FirstOrDefault();
+            if (element == null)
+            {
+                element = new T();
+                sectionProperties.AppendChild(element);
+            }
+            setProperty(element);
+        }
+
+        internal void SetPageDimensions(SectionProperties sectionProperties, int widthOrHeight, bool isWidth)
+        {
+            SetSectionProperty<PageSize>(sectionProperties, pgSize =>
+            {
+                if (isWidth)
+                    pgSize.Width = (uint)widthOrHeight;
+                else
+                    pgSize.Height = (uint)widthOrHeight;
+            });
+        }
+
+        internal void SetPageMargin(SectionProperties sectionProperties, int value, string marginType)
+        {
+            SetSectionProperty<PageMargin>(sectionProperties, pgMargin =>
+            {
+                switch (marginType)
+                {
+                    case "Left":
+                        pgMargin.Left = (uint)value;
+                        break;
+                    case "Right":
+                        pgMargin.Right = (uint)value;
+                        break;
+                    case "Top":
+                        pgMargin.Top = value;
+                        break;
+                    case "Bottom":
+                        pgMargin.Bottom = value;
+                        break;
+                    case "Gutter":
+                        pgMargin.Gutter = (uint)value;
+                        break;
+                    case "Header":
+                        pgMargin.Header = (uint)value;
+                        break;
+                    case "Footer":
+                        pgMargin.Footer = (uint)value;
+                        break;
+                }
+            });
+        }
+
+        internal void SetSectionType(SectionProperties sectionProperties, SectionMarkValues sectionType)
+        {
+            SetSectionProperty<SectionType>(sectionProperties, sectionTypeElement =>
+            {
+                sectionTypeElement.Val = sectionType;
+            });
+        }
+
+        internal ParagraphProperties CreateDefaultParagraphProperties()
+        {
+            var paragraphProperties = new ParagraphProperties();
+
+            // Set default properties unless already set
+            SetMissingParagraphProperty<Justification>(paragraphProperties, justification =>
+            {
+                justification.Val = JustificationValues.Left; // Default alignment
+            });
+
+            return paragraphProperties;
+        }
+
+
+        internal void SetParagraphProperty<T>(ParagraphProperties paragraphProperties, Action<T> setProperty) where T : OpenXmlElement, new()
+        {
+            var element = paragraphProperties.Elements<T>().FirstOrDefault();
+            if (element == null)
+            {
+                element = new T();
+                paragraphProperties.AppendChild(element);
+            }
+            setProperty(element);
+        }
+
+        internal void SetParagraphAlignment(ParagraphProperties paragraphProperties, JustificationValues alignment)
+        {
+            SetParagraphProperty<Justification>(paragraphProperties, justification =>
+            {
+                justification.Val = alignment;
+            });
+        }
+
+        internal void SetParagraphIndentation(ParagraphProperties paragraphProperties, int left, int right, int firstLine)
+        {
+            SetParagraphProperty<Indentation>(paragraphProperties, indentation =>
+            {
+                indentation.Left = left.ToString();
+                indentation.Right = right.ToString();
+                indentation.FirstLine = firstLine.ToString();
+            });
+        }
+
+        internal void SetMissingSectionProperty<T>(SectionProperties sectionProperties, Action<T> setProperty) where T : OpenXmlElement, new()
+        {
+            var element = sectionProperties.Elements<T>().FirstOrDefault();
+            if (element == null)
+            {
+                element = new T();
+                sectionProperties.AppendChild(element);
+                setProperty(element);
+            }
+        }
+
+        internal void SetMissingParagraphProperty<T>(ParagraphProperties paragraphProperties, Action<T> setProperty) where T : OpenXmlElement, new()
+        {
+            var element = paragraphProperties.Elements<T>().FirstOrDefault();
+            if (element == null)
+            {
+                element = new T();
+                paragraphProperties.AppendChild(element);
+                setProperty(element);
+            }
+        }
+
+        internal void AddContentElement(OpenXmlElement? element)
+        {
+            if (element != null)
+            {
+                if (_currentSectionProperties != null)
+                {
+                    if (element is Paragraph paragraph || element is Table)
+                    {
+                        _body.InsertBefore(element, _currentSectionProperties);
+                    }
+                }
+                else if (_defaultSectionProperties != null && element is Paragraph)
+                {
+                    if (element is Paragraph paragraph || element is Table)
+                    {
+                        _body.InsertBefore(element, _defaultSectionProperties);
+                    }
+                }
+                else if (element is SectionProperties || element is Table)
+                {
+                    // Should not happen
+                    _body.AppendChild(element);
+                }
+            }
+        }
+
+        private void EnsureCurrentParagraph()
+        {
+            if (_currentParagraph == null)
+            {
+                _currentParagraph = new Paragraph();
+
+                if (_currentParagraphProperties != null)
+                {
+                    _currentParagraph.AppendChild(_currentParagraphProperties.CloneNode(true));
+                }
+                else
+                {
+                    _currentParagraph.AppendChild(CreateDefaultParagraphProperties());
+                }
+
+                AddContentElement(_currentParagraph);
+            }
+        }
+    }
+}
