@@ -11,7 +11,7 @@ using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     internal override void ProcessRun(Run run, StringBuilder sb)
     {

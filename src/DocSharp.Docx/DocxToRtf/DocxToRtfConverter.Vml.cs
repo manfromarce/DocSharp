@@ -9,7 +9,7 @@ using V = DocumentFormat.OpenXml.Vml;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     internal override void ProcessPicture(Picture picture, StringBuilder sb)
     {

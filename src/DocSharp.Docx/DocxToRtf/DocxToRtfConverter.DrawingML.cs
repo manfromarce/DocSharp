@@ -11,7 +11,7 @@ using BlipFill = DocumentFormat.OpenXml.Drawing.Pictures.BlipFill;
 using Pictures = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace DocSharp.Docx;
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
     {

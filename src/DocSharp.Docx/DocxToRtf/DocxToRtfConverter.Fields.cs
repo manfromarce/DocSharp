@@ -7,9 +7,8 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
-
     internal override void ProcessFieldChar(FieldChar fieldChar, StringBuilder sb)
     {
         // Note: the content between the begin, separate and end parts is not processed here.

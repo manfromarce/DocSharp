@@ -12,7 +12,7 @@ using DrawingML = DocumentFormat.OpenXml.Drawing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     /// <summary>
     /// Gets or set the default font and paragraph properties used in (rare) cases where 

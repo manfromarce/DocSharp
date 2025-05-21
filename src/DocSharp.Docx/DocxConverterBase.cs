@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public abstract class DocxConverterBase
+public abstract class DocxConverterBase<TOutput>
 {
 
 #if !NETFRAMEWORK
@@ -15,159 +15,9 @@ public abstract class DocxConverterBase
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
-#endif
+#endif    
 
-    /// <summary>
-    /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
-    /// </summary>
-    /// <param name="inputDocument">The DOCX document to use.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(WordprocessingDocument inputDocument)
-    {
-        var sb = new StringBuilder();
-        var document = inputDocument.MainDocumentPart?.Document;
-        if (document != null)
-        {
-            ProcessDocument(document, sb);
-        }        
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Convert a DOCX <see cref="Stream"/> to a string in the output format.
-    /// </summary>
-    /// <param name="inputStream">The DOCX Stream to use.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(Stream inputStream)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
-            return ConvertToString(wordDocument);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to a string in the output format.
-    /// </summary>
-    /// <param name="inputFilePath">The DOCX file path.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(string inputFilePath)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
-            return ConvertToString(wordDocument);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to a string in the output format.
-    /// </summary>
-    /// <param name="inputBytes">The DOCX file bytes.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(byte[] inputBytes)
-    {
-        using (var memoryStream = new MemoryStream(inputBytes))
-        {
-            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
-            {
-                return ConvertToString(wordDocument);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(WordprocessingDocument inputDocument, string outputFilePath)
-    {
-        File.WriteAllText(outputFilePath, ConvertToString(inputDocument));
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(WordprocessingDocument inputDocument, Stream outputStream)
-    {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
-        {
-            sw.Write(ConvertToString(inputDocument));
-        }
-    }
-    
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputFilePath">The DOCX file path.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(string inputFilePath, string outputFilePath)
-    {
-        File.WriteAllText(outputFilePath, ConvertToString(inputFilePath));
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputFilePath">The DOCX file path.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(string inputFilePath, Stream outputStream)
-    {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
-        {
-            sw.Write(ConvertToString(inputFilePath));
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputStream">The input DOCX stream to use.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(Stream inputStream, string outputFilePath)
-    {
-        File.WriteAllText(outputFilePath, ConvertToString(inputStream));
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputStream">The input DOCX stream to use.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(Stream inputStream, Stream outputStream)
-    {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
-        {
-            sw.Write(ConvertToString(inputStream));
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputBytes">The DOCX file bytes.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(byte[] inputBytes, string outputFilePath)
-    {
-        File.WriteAllText(outputFilePath, ConvertToString(inputBytes));
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputBytes">The DOCX file bytes.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(byte[] inputBytes, Stream outputStream)
-    {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
-        {
-            sw.Write(ConvertToString(inputBytes));
-        }
-    }
-
-    internal virtual void ProcessDocument(Document document, StringBuilder sb)
+    internal virtual void ProcessDocument(Document document, TOutput sb)
     {
         if (document.DocumentBackground is DocumentBackground bg)
         {
@@ -179,7 +29,7 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessBody(Body body, StringBuilder sb)
+    internal virtual void ProcessBody(Body body, TOutput sb)
     {
         foreach (var element in body.Elements())
         {
@@ -187,12 +37,12 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessBodyElement(OpenXmlElement element, StringBuilder sb)
+    internal virtual void ProcessBodyElement(OpenXmlElement element, TOutput sb)
     {
         ProcessCompositeElement(element, sb);
     }
 
-    internal virtual void ProcessCompositeElement(OpenXmlElement element, StringBuilder sb)
+    internal virtual void ProcessCompositeElement(OpenXmlElement element, TOutput sb)
     {
         switch (element)
         {
@@ -214,7 +64,7 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
+    internal virtual void ProcessParagraph(Paragraph paragraph, TOutput sb)
     {
         foreach(var element in paragraph.Elements())
         {
@@ -223,7 +73,7 @@ public abstract class DocxConverterBase
     }
 
     // Used for paragraphs and other composite elements
-    internal virtual void ProcessParagraphElement(OpenXmlElement element, StringBuilder sb)
+    internal virtual void ProcessParagraphElement(OpenXmlElement element, TOutput sb)
     {
         switch (element)
         {
@@ -272,14 +122,14 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessContentPart(ContentPart contentPart, StringBuilder sb)
+    internal virtual void ProcessContentPart(ContentPart contentPart, TOutput sb)
     {
         // This element specifies a reference to XML content in a format not defined by Open XML,
         // such as MathML, SVG or SMIL.
         // Override if supported in the output format.
     }
 
-    internal virtual bool ProcessRunElement(OpenXmlElement? element, StringBuilder sb)
+    internal virtual bool ProcessRunElement(OpenXmlElement? element, TOutput sb)
     {
         switch (element)
         {
@@ -373,7 +223,7 @@ public abstract class DocxConverterBase
         return false;
     }
 
-    internal virtual void ProcessSimpleField(SimpleField field, StringBuilder sb)
+    internal virtual void ProcessSimpleField(SimpleField field, TOutput sb)
     {
         foreach (var element in field.Elements())
         {
@@ -381,7 +231,7 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessSdtRun(SdtRun sdtRun, StringBuilder sb)
+    internal virtual void ProcessSdtRun(SdtRun sdtRun, TOutput sb)
     {
         if (sdtRun.SdtContentRun != null)
         {
@@ -404,7 +254,7 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessSdtBlock(SdtBlock sdtBlock, StringBuilder sb)
+    internal virtual void ProcessSdtBlock(SdtBlock sdtBlock, TOutput sb)
     {
         if (sdtBlock.SdtContentBlock != null)
         {
@@ -427,7 +277,7 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessRuby(Ruby ruby, StringBuilder sb)
+    internal virtual void ProcessRuby(Ruby ruby, TOutput sb)
     {
         // Only the base content is currently handled.
         // Converters can override this method and process the guide text (RubyContent).
@@ -460,45 +310,45 @@ public abstract class DocxConverterBase
         }
     }
 
-    internal virtual void ProcessHyperlinkRuby(HyperlinkRuby hyperlinkRuby, StringBuilder sb)
+    internal virtual void ProcessHyperlinkRuby(HyperlinkRuby hyperlinkRuby, TOutput sb)
     {
         var hyperlink = new Hyperlink(hyperlinkRuby.OuterXml);
         ProcessHyperlink(hyperlink, sb);
     }
 
-    internal virtual void ProcessSdtRunRuby(SdtRunRuby sdtRunRuby, StringBuilder sb)
+    internal virtual void ProcessSdtRunRuby(SdtRunRuby sdtRunRuby, TOutput sb)
     {
         var sdtRun = new SdtRun(sdtRunRuby.OuterXml);
         ProcessSdtRun(sdtRun, sb);
     }
 
-    internal virtual void ProcessSimpleFieldRuby(SimpleFieldRuby fieldRuby, StringBuilder sb)
+    internal virtual void ProcessSimpleFieldRuby(SimpleFieldRuby fieldRuby, TOutput sb)
     {
         var field = new SimpleField(fieldRuby.OuterXml);
         ProcessSimpleField(field, sb);
     }
 
-    internal abstract void ProcessRun(Run run, StringBuilder sb);
-    internal abstract void ProcessBreak(Break @break, StringBuilder sb);
-    internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, StringBuilder sb);
-    internal abstract void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, StringBuilder sb);
-    internal abstract void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb);
-    internal abstract void ProcessDrawing(Drawing picture, StringBuilder sb);
-    internal abstract void ProcessPicture(Picture picture, StringBuilder sb);
-    internal abstract void ProcessTable(Table table, StringBuilder sb);
-    internal abstract void ProcessText(Text text, StringBuilder sb);
-    internal abstract void ProcessFieldChar(FieldChar field, StringBuilder sb);
-    internal abstract void ProcessFieldCode(FieldCode field, StringBuilder sb);
-    internal abstract void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb);
-    internal abstract void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb);
-    internal abstract void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb);
-    internal abstract void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb);
-    internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb);
-    internal abstract void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb);
-    internal abstract void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb);
-    internal abstract void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb);
-    internal abstract void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb);
-    internal abstract void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb);
-    internal abstract void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb);
-    internal abstract void ProcessMathElement(OpenXmlElement element, StringBuilder sb);
+    internal abstract void ProcessRun(Run run, TOutput sb);
+    internal abstract void ProcessBreak(Break @break, TOutput sb);
+    internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, TOutput sb);
+    internal abstract void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, TOutput sb);
+    internal abstract void ProcessHyperlink(Hyperlink hyperlink, TOutput sb);
+    internal abstract void ProcessDrawing(Drawing picture, TOutput sb);
+    internal abstract void ProcessPicture(Picture picture, TOutput sb);
+    internal abstract void ProcessTable(Table table, TOutput sb);
+    internal abstract void ProcessText(Text text, TOutput sb);
+    internal abstract void ProcessFieldChar(FieldChar field, TOutput sb);
+    internal abstract void ProcessFieldCode(FieldCode field, TOutput sb);
+    internal abstract void ProcessSymbolChar(SymbolChar symbolChar, TOutput sb);
+    internal abstract void ProcessEmbeddedObject(EmbeddedObject obj, TOutput sb);
+    internal abstract void ProcessPositionalTab(PositionalTab posTab, TOutput sb);
+    internal abstract void ProcessPageNumber(PageNumber pageNumber, TOutput sb);
+    internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, TOutput sb);
+    internal abstract void ProcessEndnoteReference(EndnoteReference endnoteReference, TOutput sb);
+    internal abstract void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, TOutput sb);
+    internal abstract void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TOutput sb);
+    internal abstract void ProcessSeparatorMark(SeparatorMark separatorMark, TOutput sb);
+    internal abstract void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, TOutput sb);
+    internal abstract void ProcessDocumentBackground(DocumentBackground background, TOutput sb);
+    internal abstract void ProcessMathElement(OpenXmlElement element, TOutput sb);
 }

@@ -18,7 +18,7 @@ using Path = System.IO.Path;
 
 namespace DocSharp.Docx;
 
-public class DocxToMarkdownConverter : DocxConverterBase
+public class DocxToMarkdownConverter : DocxToTextConverterBase
 {
     /// <summary>
     /// If this property is set to an existing directory, images will be exported to that folder
