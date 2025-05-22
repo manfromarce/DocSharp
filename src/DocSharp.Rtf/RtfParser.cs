@@ -11,10 +11,10 @@ namespace DocSharp.Rtf;
 /// <summary>
 /// Tokenize an RTF document and create a heirarchical document structure of the groups
 /// </summary>
-public partial class Parser
+public partial class RtfParser
 {
 #if !NETFRAMEWORK
-    static Parser()
+    static RtfParser()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
@@ -28,33 +28,15 @@ public partial class Parser
     private readonly HexBuffer _hexBuffer = new HexBuffer();
     private readonly Stack<EncodingContext> _context = new Stack<EncodingContext>();
     private int _ignoreDepth = int.MaxValue;
-    private readonly Document _document = new Document();
+    private readonly RtfDocument _document = new RtfDocument();
 
     private int Depth { get { return _context.Count; } }
-
-    /// <summary>
-    /// Parse RTF stored in a string
-    /// </summary>
-    /// <param name="rtf">RTF string</param>
-    public Parser(string rtf)
-    {
-        _reader = new StringReader(rtf);
-    }
-
-    /// <summary>
-    /// Parse RTF from a stream
-    /// </summary>
-    /// <param name="stream">Binary RTF data</param>
-    public Parser(Stream stream)
-    {
-        _reader = new RtfStreamReader(stream);
-    }
 
     /// <summary>
     /// Parse RTF from a text reader
     /// </summary>
     /// <param name="reader">RTF</param>
-    public Parser(TextReader reader)
+    public RtfParser(TextReader reader)
     {
         _reader = reader;
     }
@@ -62,7 +44,7 @@ public partial class Parser
     /// <summary>
     /// Build a document structure
     /// </summary>
-    public Document Parse()
+    public RtfDocument Parse()
     {
         var groups = new Stack<Group>();
         var infoGroup = default(Group);
@@ -115,7 +97,7 @@ public partial class Parser
         return _document;
     }
 
-    private void ParseInfo(Document document, Group info)
+    private void ParseInfo(RtfDocument document, Group info)
     {
         foreach (var item in info.Contents.Skip(1))
         {

@@ -13,5 +13,5 @@ internal class RtfXml
     
     public Element Root { get; set; }
 
-    public Document RtfDocument { get; set; }
+    public RtfDocument RtfDocument { get; set; }
 }

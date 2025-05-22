@@ -22,7 +22,7 @@ namespace DocSharp.Rtf
         }
 #endif
 
-        public Document RtfDocument { get; set; }
+        public RtfDocument RtfDocument { get; set; }
 
         /// <summary>
         /// Create an RTF source from a text reader.
@@ -30,7 +30,7 @@ namespace DocSharp.Rtf
         /// <param name="reader">The <see cref="TextReader"/> to use</param>
         public RtfSource(TextReader reader)
         {
-            var parser = new Parser(reader);
+            var parser = new RtfParser(reader);
             RtfDocument = parser.Parse();
             // In this case the application is responsible for closing the reader.
         }
@@ -43,7 +43,7 @@ namespace DocSharp.Rtf
         {
             using (var reader = new RtfStreamReader(stream))
             {
-                var parser = new Parser(reader);
+                var parser = new RtfParser(reader);
                 RtfDocument = parser.Parse();
                 // In this case the application is responsible for disposing the stream.
             }

@@ -10,6 +10,8 @@ using DocumentFormat.OpenXml;
 using System.Collections.Generic;
 using FontSize = DocumentFormat.OpenXml.Wordprocessing.FontSize;
 using System.Globalization;
+using System.Web;
+using System.Net;
 
 namespace DocSharp.Rtf
 {
@@ -33,13 +35,14 @@ namespace DocSharp.Rtf
             _document = _mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
             _body = _mainPart.Document.AppendChild(new Body());
             _defaultSectionProperties = CreateDefaultSectionProperties();
+            _currentSectionProperties = _defaultSectionProperties;
         }
 
         /// <summary>
         /// Convert RTF to Open XML and add to the document.
         /// </summary>
         /// <param name="document">The parsed RTF document</param>
-        public void AddRtf(Document document)
+        public void AddRtf(RtfDocument document)
         {
             foreach (var token in document.Contents)
             {
@@ -76,45 +79,654 @@ namespace DocSharp.Rtf
                 run.AppendChild(_currentRunProperties.CloneNode(true));
             }
 
-            run.AppendChild(new Text(textToken.Value) { Space = SpaceProcessingModeValues.Preserve });
+            string escapedText = WebUtility.HtmlEncode(textToken.Value);
+
+            run.AppendChild(new Text(escapedText) { Space = SpaceProcessingModeValues.Preserve });
 
             _currentParagraph?.AppendChild(run);
         }
 
         private void ProcessGroup(Group group)
         {
-            if (group.Destination is not GeneratorTag && group.Contents.Count > 0 && group.Contents[0] is not IgnoreUnrecognized)
+            if (group.Destination == null)
             {
-                var newRunProperties = _currentRunProperties?.CloneNode(true) as RunProperties ?? new RunProperties();
-                _formattingStack.Push(newRunProperties);
-
-                // Process child tokens
-                foreach (var token in group.Contents)
-                {
-                    if (token is FontTableTag || token is ColorTable)
-                    {
-                        break;
-                    }
-                    if (token.Type == TokenType.Group)
-                    {
-                        ProcessGroup((Group)token);
-                    }
-                    else if (token.Type == TokenType.Text)
-                    {
-                        ProcessText((TextToken)token);
-                    }
-                    else
-                    {
-                        ProcessDocumentFormatting(token);
-                        ProcessSectionFormatting(token);
-                        ProcessParagraphFormatting(token);
-                        ProcessCharacterFormatting(token);
-                    }
-                }
-
-                _formattingStack.Pop();
-                _currentRunProperties = _formattingStack.Any() ? _formattingStack.Peek() : null;
+                ProcessGroupContent(group);
             }
+            else
+            {
+                switch (group.Destination.Name)
+                {
+                    case "aftncn":
+                        break;
+
+                    case "aftnsep":
+                        break;
+                    case "aftnsepc":
+                        break;
+                    case "annotation":
+                        break;
+                    case "atnauthor":
+                        break;
+                    case "atndate":
+                        break;
+                    case "atnicn":
+                        break;
+                    case "atnid":
+                        break;
+                    case "atnparent":
+                        break;
+                    case "atnref":
+                        break;
+                    case "atntime":
+                        break;
+                    case "atrfend":
+                        break;
+                    case "atrfstart":
+                        break;
+                    case "author":
+                        break;
+
+                    case "background":
+                        break;
+                    case "bkmkend":
+                        break;
+                    case "bkmkstart":
+                        break;
+                    case "blipuid":
+                        break;
+
+                    case "buptim":
+                        break;
+
+                    case "category":
+                        break;
+
+                    case "colorschememapping":
+                        break;
+                    case "colortbl":
+                        break;
+                    case "comment":
+                        break;
+                    case "company":
+                        break;
+                    case "creatim":
+                        break;
+                    case "datastore":
+                        break;
+                    case "datafield":
+                        break;
+                    case "defchp":
+                        break;
+
+                    case "defpap":
+                        break;
+                    case "do":
+                        break;
+                    case "doccomm":
+                        break;
+                    case "docvar":
+                        break;
+
+                    case "dptxbxtext":
+                        break;
+
+                    case "ebcend":
+                        break;
+                    case "ebcstart":
+                        break;
+                    case "factoidname":
+                        break;
+                    case "falt":
+                        break;
+
+                    case "fchars":
+                        break;
+                    case "ffdeftext":
+                        break;
+                    case "ffentrymcr":
+                        break;
+                    case "ffexitmcr":
+                        break;
+                    case "ffformat":
+                        break;
+                    case "ffhelptext":
+                        break;
+                    case "ffl":
+                        break;
+                    case "ffname":
+                        break;
+                    case "ffstattext":
+                        break;
+                    case "field":
+                        break;
+                    case "file":
+                        break;
+                    case "filetbl":
+                        break;
+
+                    case "fldinst":
+                        break;
+                    case "fldrslt":
+                        break;
+                    //case "fldtype":
+                    //    break;
+                    case "fname":
+                        break;
+                    case "fontemb":
+                        break;
+                    case "fontfile":
+                        break;
+                    case "fonttbl":
+                        break;
+                    case "footer":
+                        break;
+                    case "footerf":
+                        break;
+                    case "footerl":
+                        break;
+                    case "footerr":
+                        break;
+                    case "footnote":
+                        break;
+                    case "formfield":
+                        break;
+
+                    case "ftncn":
+                        break;
+                    case "ftnsep":
+                        break;
+                    case "ftnsepc":
+                        break;
+
+                    case "g":
+                        break;
+                    case "generator":
+                        break;
+                    case "gridtbl":
+                        break;
+                    case "header":
+                        break;
+                    case "headerf":
+                        break;
+                    case "headerl":
+                        break;
+                    case "headerr":
+                        break;
+                    case "hl":
+                        break;
+                    case "hlfr":
+                        break;
+                    case "hlinkbase":
+                        break;
+                    case "hlloc":
+                        break;
+                    case "hlsrc":
+                        break;
+                    case "hsv":
+                        break;
+                    case "htmltag":
+                        break;
+
+                    case "info":
+                        break;
+                    case "keycode":
+                        break;
+                    case "keywords":
+                        break;
+
+                    case "latentstyles":
+                        break;
+                    case "lchars":
+                        break;
+                    case "levelnumbers":
+                    case "leveltext":
+                    case "lfolevel":
+                        break;
+                    case "linkval":
+                        break;
+                    case "list":
+                    case "listlevel":
+                    case "listname":
+                    case "listoverride":
+                    case "listoverridetable":
+                    case "listpicture":
+                    case "liststylename":
+                    case "listtable":
+                    case "listtext":
+                        break;
+                    case "lsdlockedexcept":
+                        break;
+                    case "macc":
+                        break;
+                    case "maccPr":
+                        break;
+                    case "mailmerge":
+                        break;
+                    case "maln":
+                        break;
+                    case "malnScr":
+                        break;
+                    case "manager":
+                        break;
+                    case "margPr":
+                        break;
+                    case "mbar":
+                        break;
+                    case "mbarPr":
+                        break;
+                    case "mbaseJc":
+                        break;
+                    case "mbegChr":
+                        break;
+                    case "mborderBox":
+                        break;
+                    case "mborderBoxPr":
+                        break;
+                    case "mbox":
+                        break;
+                    case "mboxPr":
+                        break;
+                    case "mchr":
+                        break;
+                    case "mcount":
+                        break;
+                    case "mctrlPr":
+                        break;
+                    case "md":
+                        break;
+                    case "mdeg":
+                        break;
+                    case "mdegHide":
+                        break;
+                    case "mden":
+                        break;
+                    case "mdiff":
+                        break;
+                    case "mdPr":
+                        break;
+                    case "me":
+                        break;
+                    case "mendChr":
+                        break;
+                    case "meqArr":
+                        break;
+                    case "meqArrPr":
+                        break;
+                    case "mf":
+                        break;
+                    case "mfName":
+                        break;
+                    case "mfPr":
+                        break;
+                    case "mfunc":
+                        break;
+                    case "mfuncPr":
+                        break;
+                    case "mgroupChr":
+                        break;
+                    case "mgroupChrPr":
+                        break;
+                    case "mgrow":
+                        break;
+                    case "mhideBot":
+                        break;
+                    case "mhideLeft":
+                        break;
+                    case "mhideRight":
+                        break;
+                    case "mhideTop":
+                        break;
+                    case "mhtmltag":
+                        break;
+                    case "mlim":
+                        break;
+                    case "mlimloc":
+                        break;
+                    case "mlimlow":
+                        break;
+                    case "mlimlowPr":
+                        break;
+                    case "mlimupp":
+                        break;
+                    case "mlimuppPr":
+                        break;
+                    case "mm":
+                        break;
+                    case "mmaddfieldname":
+                        break;
+                    case "mmath":
+                        break;
+                    case "mmathPict":
+                        break;
+                    case "mmathPr":
+                        break;
+                    case "mmaxdist":
+                        break;
+                    case "mmc":
+                        break;
+                    case "mmcJc":
+                        break;
+                    case "mmconnectstr":
+                        break;
+                    case "mmconnectstrdata":
+                        break;
+                    case "mmcPr":
+                        break;
+                    case "mmcs":
+                        break;
+                    case "mmdatasource":
+                    case "mmheadersource":
+                    case "mmmailsubject":
+                    case "mmodso":
+                    case "mmodsomappedname":
+                    case "mmodsofilter":
+                    case "mmodsofldmpdata":
+                    case "mmodsoname":
+                    case "mmodsorecipdata":
+                    case "mmodsosort":
+                    case "mmodsosrc":
+                    case "mmodsotable":
+                    case "mmodsoudl":
+                    case "mmodsoudldata":
+                    case "mmodsouniquetag":
+                        break;
+                    case "mmPr":
+                        break;
+                    case "mmquery":
+                        break;
+                    case "mmr":
+                        break;
+                    case "mnary":
+                        break;
+                    case "mnaryPr":
+                        break;
+                    case "mnoBreak":
+                        break;
+                    case "mnum":
+                        break;
+                    case "mobjDist":
+                        break;
+                    case "moMath":
+                        break;
+                    case "moMathPara":
+                        break;
+                    case "moMathParaPr":
+                        break;
+                    case "mopEmu":
+                        break;
+                    case "mphant":
+                        break;
+                    case "mphantPr":
+                        break;
+                    case "mplcHide":
+                        break;
+                    case "mpos":
+                        break;
+                    case "mr":
+                        break;
+                    case "mrad":
+                        break;
+                    case "mradPr":
+                        break;
+                    case "mrPr":
+                        break;
+                    case "msepChr":
+                        break;
+                    case "mshow":
+                        break;
+                    case "mshp":
+                        break;
+                    case "msPre":
+                        break;
+                    case "msPrePr":
+                        break;
+                    case "msSub":
+                        break;
+                    case "msSubPr":
+                        break;
+                    case "msSubSup":
+                        break;
+                    case "msSubSupPr":
+                        break;
+                    case "msSup":
+                        break;
+                    case "msSupPr":
+                        break;
+                    case "mstrikeBLTR":
+                        break;
+                    case "mstrikeH":
+                        break;
+                    case "mstrikeTLBR":
+                        break;
+                    case "mstrikeV":
+                        break;
+                    case "msub":
+                        break;
+                    case "msubHide":
+                        break;
+                    case "msup":
+                        break;
+                    case "msupHide":
+                        break;
+                    case "mtransp":
+                        break;
+                    case "mtype":
+                        break;
+                    case "mvertJc":
+                        break;
+                    case "mvfmf":
+                    case "mvfml":
+                    case "mvtof":
+                    case "mvtol":
+                        break;
+                    case "mzeroAsc":
+                        break;
+                    case "mzeroDesc":
+                        break;
+                    case "mzeroWid":
+                        break;
+                    case "nesttableprops":
+                        break;
+                    case "nextfile":
+                        break;
+                    case "nonesttables":
+                        break;
+                    case "nonshppict":
+                        break;
+                    case "objalias":
+                        break;
+                    case "objclass":
+                        break;
+                    case "object":
+                        break;
+                    case "objdata":
+                        break;
+                    case "objname":
+                        break;
+                    case "objsect":
+                        break;
+                    case "objtime":
+                        break;
+                    case "oldcprops":
+                        break;
+                    case "oldpprops":
+                        break;
+                    case "oldsprops":
+                        break;
+                    case "oldtprops":
+                        break;
+                    case "oleclsid":
+                        break;
+                    case "operator":
+                        break;
+                    case "panose":
+                        break;
+                    case "password":
+                        break;
+                    case "passwordhash":
+                        break;
+                    case "pgp":
+                        break;
+                    case "pgptbl":
+                        break;
+                    case "picprop":
+                        break;
+                    case "pict":
+                        break;
+                    case "pn":
+                        break;
+                    case "pntext":
+                        break;
+                    case "pntxta":
+                        break;
+                    case "pntxtb":
+                        break;
+                    case "printim":
+                        break;
+                    case "private":
+                        break;
+                    case "propname":
+                        break;
+                    case "protend":
+                        break;
+                    case "protstart":
+                        break;
+                    case "protusertbl":
+                        break;
+                    case "pxe":
+                        break;
+                    case "result":
+                        break;
+                    case "revtbl":
+                        break;
+                    case "revtim":
+                        break;
+                    case "rsidtbl":
+                        break;
+                    case "rtf":
+                        break;
+                    case "rxe":
+                        break;
+                    case "shp":
+                        break;
+                    case "shpgrp":
+                        break;
+                    case "shpinst":
+                        break;
+                    case "shppict":
+                        break;
+                    case "shprslt":
+                        break;
+                    case "shptxt":
+                        break;
+                    case "sn":
+                        break;
+                    case "sp":
+                        break;
+                    case "staticval":
+                        break;
+                    case "stylesheet":
+                        break;
+                    case "subject":
+                        break;
+                    case "sv":
+                        break;
+                    case "svb":
+                        break;
+                    case "tc":
+                        break;
+                    case "template":
+                        break;
+                    case "themedata":
+                        break;
+                    case "title":
+                        break;
+                    case "txe":
+                        break;
+                    case "ud":
+                        break;
+                    case "upr":
+                        break;
+                    case "userprops":
+                        break;
+                    case "wgrffmtfilter":
+                        break;
+                    case "windowcaption":
+                        break;
+                    case "writereservation":
+                        break;
+                    case "writereservhash":
+                        break;
+                    case "xe":
+                        break;
+                    case "xform":
+                        break;
+                    case "xmlattrname":
+                        break;
+                    case "xmlattrvalue":
+                        break;
+                    case "xmlclose":
+                        break;
+                    case "xmlname":
+                        break;
+                    case "xmlnstbl":
+                        break;
+                    case "xmlopen":
+                        break;
+                    case "fldtype":
+                        break;
+                    case "*":
+                        break;
+                    default:
+                        if (group.Destination.Name.StartsWith("htmltag", StringComparison.OrdinalIgnoreCase) ||
+                            group.Destination.Name.StartsWith("mhtmltag", StringComparison.OrdinalIgnoreCase) ||
+                            group.Destination.Name.StartsWith("pnseclvl", StringComparison.OrdinalIgnoreCase) ||
+                            group.Destination.Name.StartsWith("ebcstart", StringComparison.OrdinalIgnoreCase) ||
+                            group.Destination.Name.StartsWith("ebcend", StringComparison.OrdinalIgnoreCase))
+                        {
+
+                        }
+                        else if (group.Contents.Count > 0 && group.Contents[0] is IgnoreUnrecognized)
+                        {
+
+                        }
+                        else
+                        {
+                            ProcessGroupContent(group);
+                        }
+                        break;
+                }
+            }
+        }
+
+        internal void ProcessGroupContent(Group group)
+        {
+            var newRunProperties = _currentRunProperties?.CloneNode(true) as RunProperties ?? new RunProperties();
+            // TODO: paragraph properties?
+            _formattingStack.Push(newRunProperties);
+
+            // Process child tokens
+            foreach (var token in group.Contents)
+            {
+                if (token.Type == TokenType.Group)
+                {
+                    ProcessGroup((Group)token);
+                }
+                else if (token.Type == TokenType.Text)
+                {
+                    ProcessText((TextToken)token);
+                }
+                else
+                {
+                    ProcessDocumentFormatting(token);
+                    ProcessSectionFormatting(token);
+                    ProcessParagraphFormatting(token);
+                    ProcessCharacterFormatting(token);
+                }
+            }
+
+            _formattingStack.Pop();
+            _currentRunProperties = _formattingStack.Any() ? _formattingStack.Peek() : null;
         }
 
         internal void ProcessDocumentFormatting(IToken token)
@@ -353,6 +965,7 @@ namespace DocSharp.Rtf
             {
                 switch (intWord.Name)
                 {
+                    // These apply to the document by default
                     case "paperw":
                     case "paperh":
                         bool isWidth = intWord.Name.Equals("paperw", StringComparison.OrdinalIgnoreCase);
@@ -375,6 +988,8 @@ namespace DocSharp.Rtf
                         };
                         SetPageMargin(_defaultSectionProperties, intWord.Value, marginType);
                         return;
+
+                    // These apply to the current section only
                     case "pgwsxn":
                     case "pghsxn":
                         bool isSectionWidth = intWord.Name.Equals("pgwsxn", StringComparison.OrdinalIgnoreCase);
@@ -400,7 +1015,6 @@ namespace DocSharp.Rtf
                         };
                         SetPageMargin(_currentSectionProperties, intWord.Value, sectionMarginType);
                         return;
-                    
                 }
             }
         }
@@ -418,12 +1032,11 @@ namespace DocSharp.Rtf
                 }
             }
 
-            // Insert the new section properties before the last section properties (which is the default)
-            _body.InsertBefore(sectionProperties, _body.Elements<SectionProperties>().LastOrDefault());
+            AddSectionProperties(sectionProperties);
             return sectionProperties;
         }
 
-        internal SectionProperties CreateDefaultSectionProperties()
+        internal SectionProperties CreateDefaultSectionProperties(bool addToDocument = true)
         {
             var sectionProperties = new SectionProperties();
 
@@ -443,10 +1056,51 @@ namespace DocSharp.Rtf
                 pgMargin.Footer = 720;
             });
 
-            _body.AppendChild(sectionProperties);
+            if (addToDocument)
+            {
+                AddDefaultSectionProperties(sectionProperties);
+            }
             return sectionProperties;
         }
 
+        internal void AddSectionProperties(SectionProperties sectionProperties)
+        {
+            if (sectionProperties.Parent == null)
+            {
+                // Insert the new section properties before the last section properties (which is the default)
+                if (_body.Elements<SectionProperties>().LastOrDefault() is SectionProperties lastSection)
+                {
+                    if (lastSection != sectionProperties)
+                    {
+                        _body.InsertBefore(sectionProperties, lastSection);
+                    }
+                }
+                else
+                {
+                    // If the last section properties is not present, append the new one
+                    _body.AppendChild(sectionProperties);
+                }
+            }
+        }
+
+        internal void AddDefaultSectionProperties(SectionProperties sectionProperties, bool forceReplace = true)
+        {
+            if (sectionProperties.Parent != null)
+                return;
+
+            if (_body.Elements().LastOrDefault() is SectionProperties existing)
+            {
+                if (forceReplace)
+                {
+                    existing.Remove();
+                    _body.AppendChild(sectionProperties);
+                }
+            }
+            else
+            {
+                _body.AppendChild(sectionProperties);
+            }
+        }
 
         internal void SetSectionProperty<T>(SectionProperties sectionProperties, Action<T> setProperty) where T : OpenXmlElement, new()
         {
@@ -582,20 +1236,31 @@ namespace DocSharp.Rtf
                 {
                     if (element is Paragraph paragraph || element is Table)
                     {
+                        AddSectionProperties(_currentSectionProperties);
                         _body.InsertBefore(element, _currentSectionProperties);
                     }
                 }
-                else if (_defaultSectionProperties != null && element is Paragraph)
+                else if (_defaultSectionProperties != null)
                 {
+                    if (element is Paragraph paragraph || element is Table)
+                    {
+                        AddDefaultSectionProperties(_defaultSectionProperties, false);
+                        _body.InsertBefore(element, _defaultSectionProperties);
+                    }
+                }
+                else if (element is SectionProperties)
+                {
+                    // Should not happen
+                    _body.AppendChild(element);
+                }
+                else
+                {
+                    // Should not happen
+                    _defaultSectionProperties = CreateDefaultSectionProperties();
                     if (element is Paragraph paragraph || element is Table)
                     {
                         _body.InsertBefore(element, _defaultSectionProperties);
                     }
-                }
-                else if (element is SectionProperties || element is Table)
-                {
-                    // Should not happen
-                    _body.AppendChild(element);
                 }
             }
         }

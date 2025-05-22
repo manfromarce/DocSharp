@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace DocSharp.Rtf;
@@ -15,15 +16,15 @@ internal class HtmlTextWriter : XmlWriter
 
     internal static HashSet<string> VoidElements = new HashSet<string>(new string[]
     {
-  "area", "base", "basefont", "bgsound", "br", "col", "embed", "frame", "hr", "img", "input", "keygen", "link", "meta", "param", "source", "track", "wbr"
+        "area", "base", "basefont", "bgsound", "br", "col", "embed", "frame", "hr", "img", "input", "keygen", "link", "meta", "param", "source", "track", "wbr"
     }, StringComparer.OrdinalIgnoreCase);
 
     private readonly StringBuilder _attrValue = new StringBuilder();
-    private string _lastTagName;
+    private string? _lastTagName;
     private int _line = 1;
     private readonly Stack<TagInfo> _openTags = new Stack<TagInfo>();
     private string? _prefixForXmlNs = null;
-    private readonly List<NamespaceScope> _scopes = new List<NamespaceScope>();
+    private readonly List<NamespaceScope?> _scopes = new();
     private InternalState _state = InternalState.Start;
     private bool _xHtml;
     private int _xmlDepth = -1;
@@ -84,44 +85,44 @@ internal class HtmlTextWriter : XmlWriter
         _writer.Flush();
     }
 
-#if ASYNC
-public override Task FlushAsync()
-{
-  CloseCurrElement(false);
-  return _writer.FlushAsync();
-}
-#endif
+    public override Task FlushAsync()
+    {
+      CloseCurrElement(false);
+      return _writer.FlushAsync();
+    }
+
 #if NETFULL
-public override void Close()
-{
+    public override void Close()
+    {
 
-}
+    }
 #endif
 
-    public override string LookupPrefix(string ns)
+    public override string? LookupPrefix(string ns)
     {
         for (var i = _scopes.Count - 1; i >= 0; i--)
         {
-            if (_scopes[i] != null)
+            if (_scopes[i] is NamespaceScope n)
             {
-                if (_scopes[i].Default == ns)
+                if (n.Default == ns)
                     return string.Empty;
-                var nSpace = _scopes[i].FirstOrDefault(n => n.Ns == ns);
+                var nSpace = n.FirstOrDefault(n => n.Ns == ns);
                 if (!string.IsNullOrEmpty(nSpace.Prefix))
                     return nSpace.Prefix;
             }
         }
         return null;
     }
-    private string LookupNs(string prefix)
+
+    private string? LookupNs(string prefix)
     {
         for (var i = _scopes.Count - 1; i >= 0; i--)
         {
-            if (_scopes[i] != null)
+            if (_scopes[i] is NamespaceScope n)
             {
-                if (string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty(_scopes[i].Default))
-                    return _scopes[i].Default;
-                var ns = _scopes[i].FirstOrDefault(n => n.Prefix == prefix);
+                if (string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty(n.Default))
+                    return n.Default;
+                var ns = n.FirstOrDefault(n => n.Prefix == prefix);
                 if (!string.IsNullOrEmpty(ns.Ns))
                     return ns.Ns;
             }
@@ -134,7 +135,7 @@ public override void Close()
         WriteString(Convert.ToBase64String(buffer, index, count));
     }
 
-    public override void WriteCData(string text)
+    public override void WriteCData(string? text)
     {
         _writer.Write("<![CDATA[");
         _writer.Write(text);
@@ -183,10 +184,12 @@ public override void Close()
         WriteString(new string(buffer, index, count));
     }
 
-    public override void WriteComment(string text)
+    public override void WriteComment(string? text)
     {
-        WriteComment(text, false);
+        if (text != null)
+            WriteComment(text, false);
     }
+
     public void WriteComment(string text, bool downlevelRevealedConditional)
     {
         CloseCurrElement(false);
@@ -209,13 +212,13 @@ public override void Close()
             _writer.Write("-->");
     }
 
-    public override void WriteDocType(string name, string pubid, string sysid, string subset)
+    public override void WriteDocType(string? name, string? pubid, string? sysid, string? subset)
     {
         _writer.Write("<!DOCTYPE ");
         _writer.Write(name);
         if (!string.IsNullOrEmpty(pubid))
         {
-            if (pubid.StartsWith("-//W3C//DTD XHTML", StringComparison.OrdinalIgnoreCase))
+            if (pubid!.StartsWith("-//W3C//DTD XHTML", StringComparison.OrdinalIgnoreCase))
                 _xHtml = true;
             _writer.Write(" PUBLIC ");
             _writer.Write(_settings.QuoteChar);
@@ -288,7 +291,8 @@ public override void Close()
         }
         _lastTagName = name;
     }
-    private TagInfo WriteEndElement(bool forceFull, string name = null)
+
+    private TagInfo WriteEndElement(bool forceFull, string? name = null)
     {
         var tag = _openTags.Count > 0 ? _openTags.Pop() : new TagInfo();
         name = tag.Name ?? name;
@@ -298,14 +302,14 @@ public override void Close()
             _xmlDepth--;
         if (_state == InternalState.Element)
         {
-            if (VoidElements.Contains(name))
+            if (name != null && VoidElements.Contains(name))
             {
                 CloseCurrElement(true);
                 return tag;
             }
 
             CloseCurrElement(inXml || _xHtml);
-            if (!forceFull && (VoidElements.Contains(name) || inXml))
+            if (!forceFull && ((name != null && VoidElements.Contains(name)) || inXml))
                 return tag;
         }
         if (_scopes.Count > 0)
@@ -340,7 +344,7 @@ public override void Close()
         WriteEndElement(true);
     }
 
-    public override void WriteProcessingInstruction(string name, string text)
+    public override void WriteProcessingInstruction(string name, string? text)
     {
         throw new NotSupportedException();
     }
@@ -355,7 +359,7 @@ public override void Close()
         _writer.Write(buffer, index, count);
     }
 
-    public override void WriteStartAttribute(string? prefix, string? localName, string ns)
+    public override void WriteStartAttribute(string? prefix, string? localName, string? ns)
     {
         if (localName == null)
             throw new ArgumentException("Invalid attribute name", localName);
@@ -432,7 +436,7 @@ public override void Close()
         _state = InternalState.AttributeStart;
     }
 
-    private void PushNamespace(string prefix, string ns)
+    private void PushNamespace(string? prefix, string ns)
     {
         var curr = _scopes.Last();
         if (curr == null)
@@ -451,11 +455,11 @@ public override void Close()
             var match = curr.FirstOrDefault(n => n.Prefix == prefix);
             if (!string.IsNullOrEmpty(match.Ns))
                 curr.Remove(match);
-            curr.Add(new Namespace() { IsWritten = true, Ns = ns, Prefix = prefix });
+            curr.Add(new Namespace() { IsWritten = true, Ns = ns, Prefix = prefix! });
         }
     }
 
-    private void VerifyPrefixXml(string prefix, string ns)
+    private void VerifyPrefixXml(string? prefix, string ns)
     {
         if (prefix != null && prefix.Length == 3
           && (prefix[0] == 'x' || prefix[0] == 'X')
@@ -477,7 +481,7 @@ public override void Close()
         // Do nothing
     }
 
-    public override void WriteStartElement(string prefix, string localName, string ns)
+    public override void WriteStartElement(string? prefix, string? localName, string? ns)
     {
         _lastTagName = null;
         CloseCurrElement(false);
@@ -537,7 +541,7 @@ public override void Close()
         _state = InternalState.Element;
     }
 
-    public override void WriteString(string text)
+    public override void WriteString(string? text)
     {
         text = text ?? "";
         if (_state == InternalState.AttributeStart)
@@ -626,7 +630,7 @@ public override void Close()
         WriteInternal(";");
     }
 
-    public override void WriteWhitespace(string ws)
+    public override void WriteWhitespace(string? ws)
     {
         WriteString(ws);
     }

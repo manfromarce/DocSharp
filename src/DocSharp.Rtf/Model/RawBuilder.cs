@@ -9,7 +9,7 @@ namespace DocSharp.Rtf.Model;
 
 internal class RawBuilder
 {
-    public void Build(Document document, XmlWriter writer)
+    public void Build(RtfDocument document, XmlWriter writer)
     {
         var body = new List<IToken>();
         var defaultStyles = new List<IToken>

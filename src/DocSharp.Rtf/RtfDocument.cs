@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DocSharp.Rtf;
 
-public class Document : Group
+public class RtfDocument : Group
 {
     public List<ColorValue> ColorTable { get; } = new List<ColorValue>();
     public Dictionary<int, Font> FontTable { get; } = new Dictionary<int, Font>();

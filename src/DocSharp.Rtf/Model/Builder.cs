@@ -8,7 +8,7 @@ namespace DocSharp.Rtf.Model;
 
 internal class Builder
 {
-    public RtfXml Build(Document document)
+    public RtfXml Build(RtfDocument document)
     {
         var body = new List<IToken>();
         var defaultStyles = new List<IToken>
@@ -55,7 +55,7 @@ internal class Builder
         return result;
     }
 
-    private Element Build(List<IToken> body, Document document, List<IToken> defaultStyles)
+    private Element Build(List<IToken> body, RtfDocument document, List<IToken> defaultStyles)
     {
         var attachmentIndex = 0;
         var footnotes = new List<IToken>();
@@ -489,7 +489,7 @@ internal class Builder
         return null;
     }
 
-    private void AddFootnotes(Element root, List<IToken> footnoteGroup, Document document, List<IToken> defaultStyles)
+    private void AddFootnotes(Element root, List<IToken> footnoteGroup, RtfDocument document, List<IToken> defaultStyles)
     {
         if (footnoteGroup.Count < 1)
             return;
@@ -858,7 +858,7 @@ internal class Builder
             _defaultStyles = previous._defaultStyles;
         }
 
-        public IEnumerable<IToken> ParagraphStyles(Document document)
+        public IEnumerable<IToken> ParagraphStyles(RtfDocument document)
         {
             var styleId = Styles.OfType<ListStyleId>().FirstOrDefault();
             if (styleId == null || !document.ListStyles.TryGetValue(styleId.Value, out var listStyle))
@@ -873,7 +873,7 @@ internal class Builder
             return result;
         }
 
-        public IEnumerable<IToken> CellStyles(Document document)
+        public IEnumerable<IToken> CellStyles(RtfDocument document)
         {
             return ParagraphStyles(document)
               .Where(t => !(t is BorderToken && t.Type == TokenType.ParagraphFormat)

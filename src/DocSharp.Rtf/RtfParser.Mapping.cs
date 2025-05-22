@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DocSharp.Rtf;
 
-public partial class Parser
+public partial class RtfParser
 {
     private IToken? GetControlWord(string name, int number = int.MinValue)
     {
