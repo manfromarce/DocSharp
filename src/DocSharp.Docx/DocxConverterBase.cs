@@ -87,7 +87,7 @@ public abstract class DocxConverterBase<TOutput>
                 ProcessBookmarkEnd(bookmarkEnd, sb);
                 break;
             case Picture picture:
-                ProcessPicture(picture, sb);
+                ProcessVml(picture, sb);
                 break;
             case Drawing drawing:
                 ProcessDrawing(drawing, sb);
@@ -137,7 +137,7 @@ public abstract class DocxConverterBase<TOutput>
                 ProcessText(textElement, sb);
                 return true;
             case Picture picture:
-                ProcessPicture(picture, sb);
+                ProcessVml(picture, sb);
                 return true;
             case Drawing drawing:
                 ProcessDrawing(drawing, sb);
@@ -328,19 +328,40 @@ public abstract class DocxConverterBase<TOutput>
         ProcessSimpleField(field, sb);
     }
 
+    internal virtual void ProcessEmbeddedObject(EmbeddedObject obj, TOutput sb)
+    {
+        foreach (var child in obj.ChildElements)
+        {
+            if (child.IsVmlElement())
+            {
+                // VML image/drawing
+                ProcessVml(child, sb);
+            }
+            else if (child is Drawing drawing)
+            {
+                // DrawingML object
+                ProcessDrawing(drawing, sb);
+            }
+        }
+    }
+
+    internal virtual void ProcessPicture(Picture picture, TOutput sb)
+    {
+        ProcessVml(picture, sb);
+    }
+
     internal abstract void ProcessRun(Run run, TOutput sb);
     internal abstract void ProcessBreak(Break @break, TOutput sb);
     internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, TOutput sb);
     internal abstract void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, TOutput sb);
     internal abstract void ProcessHyperlink(Hyperlink hyperlink, TOutput sb);
     internal abstract void ProcessDrawing(Drawing picture, TOutput sb);
-    internal abstract void ProcessPicture(Picture picture, TOutput sb);
+    internal abstract void ProcessVml(OpenXmlElement picture, TOutput sb);
     internal abstract void ProcessTable(Table table, TOutput sb);
     internal abstract void ProcessText(Text text, TOutput sb);
     internal abstract void ProcessFieldChar(FieldChar field, TOutput sb);
     internal abstract void ProcessFieldCode(FieldCode field, TOutput sb);
     internal abstract void ProcessSymbolChar(SymbolChar symbolChar, TOutput sb);
-    internal abstract void ProcessEmbeddedObject(EmbeddedObject obj, TOutput sb);
     internal abstract void ProcessPositionalTab(PositionalTab posTab, TOutput sb);
     internal abstract void ProcessPageNumber(PageNumber pageNumber, TOutput sb);
     internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, TOutput sb);

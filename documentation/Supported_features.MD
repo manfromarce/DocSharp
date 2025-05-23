@@ -28,7 +28,7 @@
 | Advanced text effects and WordArt | ❌ | ❌ | - |
 | Image effects | ❌ | ❌ | - |
 | Math | ✅ | ✅ | ❌ |
-| OLE objects | ❌[6] | - | - |
+| OLE objects [6] | 🟡 | 🟡 | - |
 | Fields and standard parts [7] | ✅ | 🟡 | 🟡 |
 | Form fields | 🟡[8] | - | - |
 | Content part (SVG, MathML, SMIL, ...) | ❌ | ❌ | - |

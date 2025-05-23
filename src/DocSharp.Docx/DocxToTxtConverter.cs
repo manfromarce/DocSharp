@@ -415,8 +415,6 @@ public class DocxToTxtConverter : DocxToTextConverterBase
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, StringBuilder sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, StringBuilder sb) { }
-    internal override void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb) { }
-    internal override void ProcessPicture(Picture picture, StringBuilder sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb) { }
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb) { }
     internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb) { }
@@ -426,5 +424,6 @@ public class DocxToTxtConverter : DocxToTextConverterBase
     internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb) { }
     internal override void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb) { }
+    internal override void ProcessVml(OpenXmlElement picture, StringBuilder sb) { }
 
 }

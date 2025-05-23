@@ -21,9 +21,10 @@ namespace DocSharp.Docx;
 public class DocxToMarkdownConverter : DocxToTextConverterBase
 {
     /// <summary>
-    /// If this property is set to an existing directory, images will be exported to that folder
+    /// If this property is set to a directory, images will be exported to that folder
     /// and a reference will be added in Markdown syntax,
     /// otherwise images are not converted. 
+    /// If the directory does not exist, it will be created.
     /// NOTE: if the directory contains image files with the same names as in the DOCX document archive 
     /// (usually image1.*, image2.*, ...), they will be overwritten.
     /// </summary>
@@ -420,7 +421,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
 
     internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
     {
-        if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)) && Directory.Exists(ImagesOutputFolder))
+        if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)))
         {
             if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
             {
@@ -439,26 +440,43 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessPicture(Picture picture, StringBuilder sb)
+    internal override void ProcessVml(OpenXmlElement element, StringBuilder sb)
     {
-        if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)) && Directory.Exists(ImagesOutputFolder))
+        if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
         {
-            if (picture.Descendants<ImageData>().FirstOrDefault() is ImageData imageData && 
+            if (element.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
             {
-                var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(picture);
-                ProcessImagePart(mainDocumentPart, relId, sb);
+                var rootPart = OpenXmlHelpers.GetRootPart(element);
+                ProcessImagePart(rootPart, relId, sb);
             }
         }
     }
 
-    internal void ProcessImagePart(MainDocumentPart? mainDocumentPart, string relId, StringBuilder sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, StringBuilder sb)
     {
         try
         {
             if (ImagesOutputFolder != null &&
-                mainDocumentPart?.GetPartById(relId!) is ImagePart imagePart)
+                rootPart?.GetPartById(relId!) is ImagePart imagePart)
             {
+                try
+                {
+                    // Try to create the output directory if it doesn't exist.
+                    if (!Directory.Exists(ImagesOutputFolder))
+                    {
+                        Directory.CreateDirectory(ImagesOutputFolder);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Filesystem error, don't stop the conversion.
+#if DEBUG
+                    Debug.WriteLine("ProcessImagePart - Directory.Create error: " + ex.Message);
+#endif
+                    return;
+                }
+
                 string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
 #if NETFRAMEWORK
                 string actualFilePath = Path.Combine(ImagesOutputFolder, fileName);
@@ -643,7 +661,6 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, StringBuilder sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, StringBuilder sb) { }
-    internal override void ProcessEmbeddedObject(EmbeddedObject obj, StringBuilder sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb) { }
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb) { }
     internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb) { }

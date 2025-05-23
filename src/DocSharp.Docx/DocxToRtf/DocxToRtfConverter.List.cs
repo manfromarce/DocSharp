@@ -77,7 +77,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                 //}
                 if (pictureBullet.PictureBulletBase != null)
                 {
-                    ProcessPictureBulletBase(pictureBullet.PictureBulletBase, sb);
+                    ProcessVml(pictureBullet.PictureBulletBase, sb);
                 }
                 else if (pictureBullet.Drawing != null)
                 {
@@ -85,13 +85,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                 }
                 else if (pictureBullet.Elements<Picture>().FirstOrDefault() is Picture pict)
                 {
-                    ProcessPicture(pict, sb); // PictureBulletBase might incorrectly be interpreted as Picture
+                    ProcessVml(pict, sb); // PictureBulletBase might incorrectly be interpreted as Picture
                 }
                 else if (pictureBullet.GetFirstChild<AlternateContent>() is AlternateContent alternateContent)
                 {
                     if (alternateContent.Descendants<PictureBulletBase>().FirstOrDefault() is PictureBulletBase pbb)
                     {
-                        ProcessPictureBulletBase(pbb, sb);
+                        ProcessVml(pbb, sb);
                     }
                     else if (alternateContent.Descendants<Drawing>().FirstOrDefault() is Drawing drawing1)
                     {
@@ -99,7 +99,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                     }
                     else if (alternateContent.Descendants<Picture>().FirstOrDefault() is Picture pict1)
                     {
-                        ProcessPicture(pict1, sb);
+                        ProcessVml(pict1, sb);
                     }
                 }
             }

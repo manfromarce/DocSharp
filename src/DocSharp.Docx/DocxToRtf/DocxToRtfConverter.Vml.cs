@@ -11,18 +11,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
-    internal override void ProcessPicture(Picture picture, StringBuilder sb)
-    {
-        // VML picture
-        ProcessVml(picture, sb);
-    }
-
-    internal void ProcessPictureBulletBase(PictureBulletBase pictureBullet, StringBuilder sb)
-    {
-        ProcessVml(pictureBullet, sb);
-    }
-
-    internal void ProcessVml(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessVml(OpenXmlElement element, StringBuilder sb)
     {
         if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
