@@ -8,7 +8,7 @@ using DocSharp.Docx.Rtf;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     private void ProcessTabs(Tabs tabs, StringBuilder sb)
     {

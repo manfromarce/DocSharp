@@ -18,12 +18,13 @@ using Path = System.IO.Path;
 
 namespace DocSharp.Docx;
 
-public class DocxToMarkdownConverter : DocxConverterBase
+public class DocxToMarkdownConverter : DocxToTextConverterBase
 {
     /// <summary>
-    /// If this property is set to an existing directory, images will be exported to that folder
+    /// If this property is set to a directory, images will be exported to that folder
     /// and a reference will be added in Markdown syntax,
     /// otherwise images are not converted. 
+    /// If the directory does not exist, it will be created.
     /// NOTE: if the directory contains image files with the same names as in the DOCX document archive 
     /// (usually image1.*, image2.*, ...), they will be overwritten.
     /// </summary>
@@ -452,8 +453,8 @@ public class DocxToMarkdownConverter : DocxConverterBase
     internal override void ProcessVml(OpenXmlElement element, StringBuilder sb)
     {
         if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
-        {           
-            if (element.Descendants<ImageData>().FirstOrDefault() is ImageData imageData && 
+        {
+            if (element.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
             {
                 var rootPart = OpenXmlHelpers.GetRootPart(element);

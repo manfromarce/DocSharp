@@ -12,7 +12,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, StringBuilder sb)
     {

@@ -10,7 +10,7 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     internal override void ProcessText(Text text, StringBuilder sb)
     {

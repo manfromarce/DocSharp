@@ -12,7 +12,7 @@ using DocSharp.Helpers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
     {

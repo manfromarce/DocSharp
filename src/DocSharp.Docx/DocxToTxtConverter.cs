@@ -10,7 +10,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public class DocxToTxtConverter : DocxConverterBase
+public class DocxToTxtConverter : DocxToTextConverterBase
 {
     internal override void ProcessRun(Run run, StringBuilder sb)
     {

@@ -9,7 +9,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     private bool firstSection = true;
     private SectionProperties? currentSectionProperties = null;

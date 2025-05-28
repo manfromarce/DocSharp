@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public  partial class DocxToRtfConverter
+public partial class DocxToRtfConverter : DocxToTextConverterBase
 {
     // This function is used for page, paragraph and table borders.
     internal void ProcessBorder(BorderType border, StringBuilder sb)
