@@ -9,7 +9,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, StringBuilder sb)
     {

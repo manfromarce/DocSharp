@@ -21,7 +21,7 @@ using System.Diagnostics;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, StringBuilder sb)
     {

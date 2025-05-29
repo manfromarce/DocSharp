@@ -9,7 +9,7 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb)
     {

@@ -9,7 +9,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     internal void ProcessBorder(BorderType? border, ref List<string> styles, bool isTableCell, bool isLastRow = false, bool isLastColumn = false)
     {

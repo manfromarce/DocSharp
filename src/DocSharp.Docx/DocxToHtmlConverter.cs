@@ -25,7 +25,7 @@ using System.Globalization;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     // Experimental - produce HTML with a fixed layout to preserve page setup (size, margins, ...) and page breaks.
     public bool FixedLayout { get; set; } = false;

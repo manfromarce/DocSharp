@@ -11,7 +11,7 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     private SectionProperties? currentSectionProperties = null;
     private bool noSections = false;

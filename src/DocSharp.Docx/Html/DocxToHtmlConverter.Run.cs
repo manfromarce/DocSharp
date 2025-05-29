@@ -11,7 +11,7 @@ using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     internal override void ProcessRun(Run run, StringBuilder sb)
     {

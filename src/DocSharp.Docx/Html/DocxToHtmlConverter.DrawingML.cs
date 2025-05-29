@@ -17,7 +17,7 @@ using DocumentFormat.OpenXml.Office2019.Drawing.SVG;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
     {

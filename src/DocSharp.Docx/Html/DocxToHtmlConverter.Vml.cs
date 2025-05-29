@@ -19,7 +19,7 @@ using System.Diagnostics;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase
+public partial class DocxToHtmlConverter : DocxToTextConverterBase
 {
     internal override void ProcessVml(OpenXmlElement element, StringBuilder sb)
     {
