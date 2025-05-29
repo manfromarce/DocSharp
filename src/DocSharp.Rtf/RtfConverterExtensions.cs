@@ -46,7 +46,7 @@ namespace DocSharp.Rtf
         {
             using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
             {
-                sw.Write(ToPlainText(source));
+                ToPlainText(source, sw);
             }
         }
 
@@ -57,7 +57,10 @@ namespace DocSharp.Rtf
         /// <param name="outputFilePath">The output text file path.</param>
         public static void ToPlainText(this RtfSource source, string outputFilePath)
         {
-            File.WriteAllText(outputFilePath, ToPlainText(source));
+            using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+            {
+                ToPlainText(source, sw);
+            }
         }
 
         /// <summary>
@@ -95,7 +98,7 @@ namespace DocSharp.Rtf
         {
             using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
             {
-                sw.Write(ToMarkdown(source, settings));
+                ToMarkdown(source, sw, settings);
             }
         }
 
@@ -106,7 +109,10 @@ namespace DocSharp.Rtf
         /// <param name="outputFilePath">The output Markdown file path.</param>
         public static void ToMarkdown(this RtfSource source, string outputFilePath, RtfToMdSettings? settings = null)
         {
-            File.WriteAllText(outputFilePath, ToMarkdown(source, settings));
+            using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+            {
+                ToMarkdown(source, sw, settings);
+            }
         }
 
         /// <summary>
@@ -184,7 +190,10 @@ namespace DocSharp.Rtf
         {
             using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
             {
-                sw.Write(ToHtml(source, settings));
+                using (var xmlWriter = new HtmlTextWriter(sw, settings))
+                {
+                    ToHtml(source, xmlWriter, settings);
+                }
             }
         }
 
@@ -196,7 +205,13 @@ namespace DocSharp.Rtf
         /// <param name="settings">The settings used in the HTML rendering</param>
         public static void ToHtml(this RtfSource source, string outputFilePath, RtfToHtmlSettings? settings = null)
         {
-            File.WriteAllText(outputFilePath, ToHtml(source, settings));
+            using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+            {
+                using (var xmlWriter = new HtmlTextWriter(sw, settings))
+                {
+                    ToHtml(source, xmlWriter, settings);
+                }
+            }
         }
     }
 }
