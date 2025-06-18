@@ -94,7 +94,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         Hyperlink hl;
         if (isExternal)
         {
-            renderer.Document.MainDocumentPart.AddHyperlinkRelationship(uri!, isExternal, linkId);
+            renderer.Document.MainDocumentPart?.AddHyperlinkRelationship(uri!, isExternal, linkId);
             hl = new Hyperlink()
             {
                 Id = linkId,
