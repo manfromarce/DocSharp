@@ -394,10 +394,14 @@ public partial class RtfParser
                 return new IsAllCaps(number != 0);
             case "cbpat":
                 return new ParagraphBackgroundColor(ColorByIndex(number));
+            case "cfpat":
+                return new ParagraphForegroundColor(number == 0 ? new ColorValue(255, 255, 255) : ColorByIndex(number));
             case "cb":
             case "chcbpat":
             case "highlight":
                 return new BackgroundColor(number == 0 ? new ColorValue(255, 255, 255) : ColorByIndex(number));
+            case "chcfpat":
+                return new ShadingForegroundColor(number == 0 ? new ColorValue(255, 255, 255) : ColorByIndex(number));
             case "shading":
                 var shade = (byte)(255 - Math.Min(Math.Max(0, number * 255 / 10000), 255));
                 return new ParagraphBackgroundColor(new ColorValue(shade, shade, shade));
@@ -627,6 +631,8 @@ public partial class RtfParser
                 return new CellVerticalAlign(VerticalAlignment.Bottom);
             case "clcbpat":
                 return new CellBackgroundColor(ColorByIndex(number));
+            case "clcfpat":
+                return new CellForegroundColor(number == 0 ? new ColorValue(255, 255, 255) : ColorByIndex(number));
             case "nesttableprops":
                 return new NestedTableProperties();
             case "nonesttables":

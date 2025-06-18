@@ -8,12 +8,28 @@ public class BackgroundColor : ControlWord<ColorValue>
     public BackgroundColor(ColorValue value) : base(value) { }
 }
 
+public class ShadingForegroundColor : ControlWord<ColorValue>
+{
+    public override string Name => "chcfpat";
+    public override TokenType Type => TokenType.CharacterFormat;
+
+    public ShadingForegroundColor(ColorValue value) : base(value) { }
+}
+
 public class ParagraphBackgroundColor : ControlWord<ColorValue>
 {
     public override string Name => "cbpat";
     public override TokenType Type => TokenType.ParagraphFormat;
 
     public ParagraphBackgroundColor(ColorValue value) : base(value) { }
+}
+
+public class ParagraphForegroundColor : ControlWord<ColorValue>
+{
+    public override string Name => "cfpat";
+    public override TokenType Type => TokenType.ParagraphFormat;
+
+    public ParagraphForegroundColor(ColorValue value) : base(value) { }
 }
 
 public class IsBold : ControlWord<bool>

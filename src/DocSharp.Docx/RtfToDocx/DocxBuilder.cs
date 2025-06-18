@@ -818,7 +818,19 @@ namespace DocSharp.Rtf
 
         internal void ProcessCharacterFormatting(IToken token)
         {
-            if (token is IWord word)
+            if (token is Font font)
+            {
+                //switch (font.Category)
+                //{
+                //    case FontFamilyCategory.Nil:
+                        SetRunProperty<RunFonts>(c => c.Ascii = font.Name);
+                        SetRunProperty<RunFonts>(c => c.ComplexScript = font.Name);
+                        SetRunProperty<RunFonts>(c => c.EastAsia = font.Name);
+                        SetRunProperty<RunFonts>(c => c.HighAnsi = font.Name);
+                //        break;
+                //}
+            }
+            else if (token is IWord word)
             {
                 switch (word.Name)
                 {
@@ -924,15 +936,24 @@ namespace DocSharp.Rtf
                     case "fs": // Font size
                         SetRunProperty<FontSize>(c => c.Val = (((ControlWord<UnitValue>)word).Value.ToPt() * 2).ToString(CultureInfo.InvariantCulture));
                         return;
-                    //case "f": // Font family
-                    //    SetRunProperty<RunFonts>(c => c.Ascii = ((ControlWord<string>)word).Value.Value.ToString(CultureInfo.InvariantCulture));
+                    //case "f": // FontRef (only if font could not be determined previously)
                     //    return;
                     case "highlight": // Highlight color
+                        EnumValue<HighlightColorValues>? highlight = ((ControlWord<ColorValue>)word).Value.ToHighlight();
+                        if (highlight != null)
+                            SetRunProperty<Highlight>(c => c.Val = highlight);
                         return;
                     case "chcbpat": // Character background color
+                        SetRunProperty<Shading>(c => c.Fill = ((ControlWord<ColorValue>)word).Value.Red.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Green.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Blue.ToString("X2", CultureInfo.InvariantCulture));
                         return;
                     case "chcfpat": // Character foreground color
+                        SetRunProperty<Shading>(c => c.Color = ((ControlWord<ColorValue>)word).Value.Red.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Green.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Blue.ToString("X2", CultureInfo.InvariantCulture));
                         return;
+                    case "chshdng":
+                        EnumValue<ShadingPatternValues>? shadingPattern = ((ControlWord<int>)word).ToShadingPattern();
+                        if (shadingPattern != null)
+                            SetRunProperty<Shading>(c => c.Val = shadingPattern);
+                        break;
                     case "charscalex": // Font scaling
                         return;
                     case "kerning": // Characters kerning
@@ -1175,7 +1196,6 @@ namespace DocSharp.Rtf
 
             return paragraphProperties;
         }
-
 
         internal void SetParagraphProperty<T>(ParagraphProperties paragraphProperties, Action<T> setProperty) where T : OpenXmlElement, new()
         {

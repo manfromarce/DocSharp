@@ -304,6 +304,14 @@ public class CellBackgroundColor : ControlWord<ColorValue>
     public CellBackgroundColor(ColorValue value) : base(value) { }
 }
 
+public class CellForegroundColor : ControlWord<ColorValue>
+{
+    public override string Name => "clcfpat";
+    public override TokenType Type => TokenType.CellFormat;
+
+    public CellForegroundColor(ColorValue value) : base(value) { }
+}
+
 public class HeaderRow : ControlTag
 {
     public override string Name => "trhdr";
