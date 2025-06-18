@@ -5,13 +5,14 @@ using System.Text;
 using System;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using W = DocumentFormat.OpenXml.Wordprocessing;
 using DocSharp.Rtf.Tokens;
 using DocumentFormat.OpenXml;
 using System.Collections.Generic;
-using FontSize = DocumentFormat.OpenXml.Wordprocessing.FontSize;
 using System.Globalization;
 using System.Web;
 using System.Net;
+using DocSharp.Helpers;
 
 namespace DocSharp.Rtf
 {
@@ -930,13 +931,21 @@ namespace DocSharp.Rtf
                     case "nosupersub": // Disable superscript/subscript
                         SetRunProperty<VerticalTextAlignment>(s => s.Val = VerticalPositionValues.Baseline);
                         return;
+                    case "dn": // Move down N half-points (default is 6)
+                        SetRunProperty<Position>(c => c.Val = ((ControlWord<int>)word).Value.ToStringInvariant());
+                        return;
+                    //case "f": // FontRef (only if font could not be determined previously)
+                    //    return;
+                    case "fs": // Font size
+                        SetRunProperty<W.FontSize>(c => c.Val = (((ControlWord<UnitValue>)word).Value.ToPt() * 2).ToString(CultureInfo.InvariantCulture));
+                        return;
+                    case "up": // Move up N half-points (default is 6)
+                        SetRunProperty<Position>(c => c.Val = ((ControlWord<int>)word).Value.ToStringInvariant());
+                        return;
                     case "cf": // Font color
                         SetRunProperty<Color>(c => c.Val = ((ControlWord<ColorValue>)word).Value.Red.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Green.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Blue.ToString("X2", CultureInfo.InvariantCulture));
                         return;
-                    case "fs": // Font size
-                        SetRunProperty<FontSize>(c => c.Val = (((ControlWord<UnitValue>)word).Value.ToPt() * 2).ToString(CultureInfo.InvariantCulture));
-                        return;
-                    //case "f": // FontRef (only if font could not be determined previously)
+                    //case "cb": // Background color (Word has never supported this control word and uses chcbpat or highlight instead)
                     //    return;
                     case "highlight": // Highlight color
                         EnumValue<HighlightColorValues>? highlight = ((ControlWord<ColorValue>)word).Value.ToHighlight();
@@ -953,17 +962,93 @@ namespace DocSharp.Rtf
                         EnumValue<ShadingPatternValues>? shadingPattern = ((ControlWord<int>)word).ToShadingPattern();
                         if (shadingPattern != null)
                             SetRunProperty<Shading>(c => c.Val = shadingPattern);
-                        break;
+                        return;
+                    case "chbgdkcross":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.HorizontalCross);
+                        return;
+                    case "chbgcross":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.ThinHorizontalCross);
+                        return;
+                    case "chbgdkhoriz":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.HorizontalStripe);
+                        return;
+                    case "chbghoriz":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.ThinHorizontalStripe);
+                        return;
+                    case "chbgdkvert":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.VerticalStripe);
+                        return;
+                    case "chbgvert":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.ThinVerticalStripe);
+                        return;
+                    case "chbgdkdcross":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.DiagonalCross);
+                        return;
+                    case "chbgdcross":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.ThinDiagonalCross);
+                        return;
+                    case "chbgdkbdiag":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.DiagonalStripe);
+                        return;
+                    case "chbgbdiag":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.ThinDiagonalStripe);
+                        return;
+                    case "chbgdkfdiag":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.ReverseDiagonalStripe);
+                        return;
+                    case "chbgfdiag":
+                        SetRunProperty<Shading>(c => c.Val = ShadingPatternValues.ThinReverseDiagonalStripe);
+                        return;
                     case "charscalex": // Font scaling
+                        SetRunProperty<CharacterScale>(c => c.Val = ((ControlWord<int>)word).Value);
                         return;
                     case "kerning": // Characters kerning
+                        SetRunProperty<Kern>(c => c.Val = (uint)((ControlWord<int>)word).Value);
                         return;
                     case "fittext": // Fit text
+                        SetRunProperty<W.FitText>(c => c.Val = (uint)((ControlWord<int>)word).Value);
                         return;
-                    case "expnd": // Font spacing in half points
+                    case "expnd": // Font spacing in quarter-points; convert to twips
+                        SetRunProperty<Spacing>(c => c.Val = ((ControlWord<int>)word).Value / 5);
                         return;
                     case "expndtw": // Font spacing in twips
+                        SetRunProperty<Spacing>(c => c.Val = ((ControlWord<int>)word).Value);
                         return;
+                    case "noproof":
+                        SetRunProperty<NoProof>(c => c.Val = OnOffValue.FromBoolean(true));
+                        return;
+                    case "accnone":
+                        SetRunProperty<Emphasis>(c => c.Val = EmphasisMarkValues.None);
+                        return;
+                    case "accdot":
+                        SetRunProperty<Emphasis>(c => c.Val = EmphasisMarkValues.Dot);
+                        return;
+                    case "acccomma":
+                        SetRunProperty<Emphasis>(c => c.Val = EmphasisMarkValues.Comma);
+                        return;
+                    case "acccircle":
+                        SetRunProperty<Emphasis>(c => c.Val = EmphasisMarkValues.Circle);
+                        return;
+                    case "accunderdot":
+                        SetRunProperty<Emphasis>(c => c.Val = EmphasisMarkValues.UnderDot);
+                        return;
+                    //case "animtext" // Animation (not supported by Word 2007 and newer)
+                    //case "gridtbl": // Destination keyword related to character grids (not emitted by Word)
+
+                    // TODO
+                    //case "chbrdr":
+                    //case "cchs":
+                    //case "cgrid":
+                    //case "gcw":
+                    //case "lang":
+                    //case "langnp":
+                    //case "langfe":
+                    //case "langfenp":
+                    //case "ltrch":
+                    //case "rtlch":
+                    //case "nosectexpand":
+                    //case "webhidden":
+                        //return;
                 }
             }
         }
