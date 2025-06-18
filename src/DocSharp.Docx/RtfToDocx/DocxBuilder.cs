@@ -28,6 +28,7 @@ namespace DocSharp.Rtf
         private RunProperties? _currentRunProperties;
         private Stack<RunProperties> _formattingStack = new Stack<RunProperties>();
         private Paragraph? _currentParagraph;
+        private Run? _currentRun;
 
         public DocxBuilder(WordprocessingDocument doc)
         {
@@ -55,6 +56,10 @@ namespace DocSharp.Rtf
                 {
                     ProcessGroup((Group)token);
                 }
+                else if (token.Type == TokenType.BreakTag)
+                {
+                    ProcessBreak(token);
+                }
                 else if (token.Type == TokenType.Text)
                 {
                     ProcessText((TextToken)token);
@@ -65,6 +70,37 @@ namespace DocSharp.Rtf
                     ProcessSectionFormatting(token);
                     ProcessParagraphFormatting(token);
                     ProcessCharacterFormatting(token);
+                }
+            }
+        }
+
+        private void ProcessBreak(IToken token)
+        {
+            if (token is IWord word)
+            {
+                if (word.Name == "pagebb" || word.Name == "page")
+                {
+                    EnsureCurrentRun();
+                    _currentRun!.AppendChild(new Break() { Type = BreakValues.Page });
+                }
+                else if (word.Name == "line")
+                {
+                    EnsureCurrentRun();
+                    _currentRun!.AppendChild(new Break() { Type = BreakValues.TextWrapping });
+                }
+                else if (word.Name == "column")
+                {
+                    EnsureCurrentRun();
+                    _currentRun!.AppendChild(new Break() { Type = BreakValues.Column });
+                }
+                else if (word.Name == "par")
+                {
+                    _currentParagraph = null;
+                    EnsureCurrentParagraph();
+                }
+                else if (word.Name == "sect")
+                {
+                    _currentSectionProperties = CreateSectionProperties();
                 }
             }
         }
@@ -85,6 +121,7 @@ namespace DocSharp.Rtf
             run.AppendChild(new Text(escapedText) { Space = SpaceProcessingModeValues.Preserve });
 
             _currentParagraph?.AppendChild(run);
+            _currentRun = run;
         }
 
         private void ProcessGroup(Group group)
@@ -713,6 +750,10 @@ namespace DocSharp.Rtf
                 {
                     ProcessGroup((Group)token);
                 }
+                else if (token.Type == TokenType.BreakTag)
+                {
+                    ProcessBreak(token);
+                }
                 else if (token.Type == TokenType.Text)
                 {
                     ProcessText((TextToken)token);
@@ -754,9 +795,6 @@ namespace DocSharp.Rtf
             {
                 switch (word.Name)
                 {
-                    case "sect":
-                        _currentSectionProperties = CreateSectionProperties();
-                        return;
                     case "sectd":
                         if (_defaultSectionProperties != null)
                         {
@@ -806,15 +844,90 @@ namespace DocSharp.Rtf
             {
                 switch (word.Name)
                 {
-                    case "par":
-                        _currentParagraph = null;
+                    case "pard":
+                        ResetParagraphProperties();
                         return;
 
-                    case "pard":
-                        _currentParagraphProperties = CreateDefaultParagraphProperties();
+                    case "li":
+                        SetParagraphProperty<Indentation>(c => c.Left = ((ControlWord<UnitValue>)word).Value.ToTwip().ToStringInvariant());
                         return;
+                    case "ri":
+                        SetParagraphProperty<Indentation>(c => c.Right = ((ControlWord<UnitValue>)word).Value.ToTwip().ToStringInvariant());
+                        return;
+                    case "fi":
+                        int firstLineIndent = ((ControlWord<UnitValue>)word).Value.ToTwip();
+                        if (firstLineIndent >= 0)
+                            SetParagraphProperty<Indentation>(c => c.FirstLine = firstLineIndent.ToStringInvariant());
+                        else 
+                            SetParagraphProperty<Indentation>(c => c.Hanging = Math.Abs(firstLineIndent).ToStringInvariant());
+                        return;
+                    case "culi":
+                        SetParagraphProperty<Indentation>(c => c.LeftChars = ((ControlWord<int>)word).Value);
+                        return;
+                    case "curi":
+                        SetParagraphProperty<Indentation>(c => c.RightChars = ((ControlWord<int>)word).Value);
+                        return;
+                    case "cufi":
+                        int firstLineIndentChars = ((ControlWord<int>)word).Value;
+                        if (firstLineIndentChars >= 0)
+                            SetParagraphProperty<Indentation>(c => c.FirstLineChars = firstLineIndentChars);
+                        else
+                            SetParagraphProperty<Indentation>(c => c.HangingChars = Math.Abs(firstLineIndentChars));
+                        return;
+                    case "contextualspace":
+                        SetParagraphProperty<ContextualSpacing>(c => c.Val = true);
+                        return;
+                    case "ql":
+                        SetParagraphProperty<Justification>(c => c.Val = JustificationValues.Left);
+                        return;
+                    case "qc":
+                        SetParagraphProperty<Justification>(c => c.Val = JustificationValues.Center);
+                        return;
+                    case "qr":
+                        SetParagraphProperty<Justification>(c => c.Val = JustificationValues.Right);
+                        return;
+                    case "qj":
+                        SetParagraphProperty<Justification>(c => c.Val = JustificationValues.Both);
+                        return;
+                    case "qd":
+                        SetParagraphProperty<Justification>(c => c.Val = JustificationValues.Distribute);
+                        return;
+                    case "qt":
+                        SetParagraphProperty<Justification>(c => c.Val = JustificationValues.ThaiDistribute);
+                        return;
+                    case "qk":
+                        int qkVal = ((ControlWord<int>)word).Value;
+                        if (qkVal == 0)
+                            SetParagraphProperty<Justification>(c => c.Val = JustificationValues.LowKashida);
+                        else if (qkVal == 10)
+                            SetParagraphProperty<Justification>(c => c.Val = JustificationValues.MediumKashida);
+                        else if (qkVal == 20)
+                            SetParagraphProperty<Justification>(c => c.Val = JustificationValues.HighKashida);
+                        return;
+                        //case "sa":
+                        //case "saauto":
+                        //case "sb":
+                        //case "sbauto":
+                        //case "lisa":
+                        //case "lisb":
+                        //case "sl":
+                        //case "slmult":
+                        //case "adjustright":
+                        //case "nosnaplinegrid":
+                        //    return;
                 }
             }
+        }
+
+        private void ResetParagraphProperties()
+        {
+            EnsureCurrentParagraph();
+            if (_currentParagraph!.GetFirstChild<ParagraphProperties>() is ParagraphProperties pPr)
+            {
+                _currentParagraph.RemoveChild(pPr);
+            }
+            _currentParagraphProperties = CreateDefaultParagraphProperties();
+            _currentParagraph!.PrependChild(_currentParagraphProperties);
         }
 
         internal void ProcessCharacterFormatting(IToken token)
@@ -830,6 +943,17 @@ namespace DocSharp.Rtf
                         SetRunProperty<RunFonts>(c => c.HighAnsi = font.Name);
                 //        break;
                 //}
+            }
+            else if (token is PositionOffset offset)
+            {
+                if (offset.Name == "up")
+                {
+                    SetRunProperty<Position>(c => c.Val = offset.Value.ToHalfPoints().ToStringInvariant());
+                }
+                else if (offset.Name == "dn")
+                {
+                    SetRunProperty<Position>(c => c.Val = "-" + offset.Value.ToHalfPoints().ToStringInvariant());
+                }
             }
             else if (token is IWord word)
             {
@@ -931,17 +1055,11 @@ namespace DocSharp.Rtf
                     case "nosupersub": // Disable superscript/subscript
                         SetRunProperty<VerticalTextAlignment>(s => s.Val = VerticalPositionValues.Baseline);
                         return;
-                    case "dn": // Move down N half-points (default is 6)
-                        SetRunProperty<Position>(c => c.Val = ((ControlWord<int>)word).Value.ToStringInvariant());
-                        return;
                     //case "f": // FontRef (only if font could not be determined previously)
                     //    return;
                     case "fs": // Font size
-                        SetRunProperty<W.FontSize>(c => c.Val = (((ControlWord<UnitValue>)word).Value.ToPt() * 2).ToString(CultureInfo.InvariantCulture));
-                        return;
-                    case "up": // Move up N half-points (default is 6)
-                        SetRunProperty<Position>(c => c.Val = ((ControlWord<int>)word).Value.ToStringInvariant());
-                        return;
+                        SetRunProperty<W.FontSize>(c => c.Val = (((ControlWord<UnitValue>)word).Value.ToPt() * 2).ToStringInvariant());
+                        return;                   
                     case "cf": // Font color
                         SetRunProperty<Color>(c => c.Val = ((ControlWord<ColorValue>)word).Value.Red.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Green.ToString("X2", CultureInfo.InvariantCulture) + ((ControlWord<ColorValue>)word).Value.Blue.ToString("X2", CultureInfo.InvariantCulture));
                         return;
@@ -1274,12 +1392,23 @@ namespace DocSharp.Rtf
             var paragraphProperties = new ParagraphProperties();
 
             // Set default properties unless already set
-            SetMissingParagraphProperty<Justification>(paragraphProperties, justification =>
-            {
-                justification.Val = JustificationValues.Left; // Default alignment
-            });
+            //SetMissingParagraphProperty<Justification>(paragraphProperties, justification =>
+            //{
+            //    justification.Val = JustificationValues.Left; // Default alignment
+            //});
 
             return paragraphProperties;
+        }
+
+        internal void SetParagraphProperty<T>(Action<T> setProperty) where T : OpenXmlElement, new()
+        {
+            EnsureCurrentParagraph();
+            if (_currentParagraphProperties == null)
+            {
+                _currentParagraphProperties = new ParagraphProperties();
+                _currentParagraph!.PrependChild(_currentParagraphProperties);
+            }
+            SetParagraphProperty(_currentParagraphProperties, setProperty);
         }
 
         internal void SetParagraphProperty<T>(ParagraphProperties paragraphProperties, Action<T> setProperty) where T : OpenXmlElement, new()
@@ -1367,6 +1496,16 @@ namespace DocSharp.Rtf
                         _body.InsertBefore(element, _defaultSectionProperties);
                     }
                 }
+            }
+        }
+
+        private void EnsureCurrentRun()
+        {
+            EnsureCurrentParagraph();
+            if (_currentRun == null)
+            {
+                _currentRun = new Run();
+                _currentParagraph!.AppendChild(_currentRun);
             }
         }
 

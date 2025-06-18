@@ -386,6 +386,8 @@ public partial class RtfParser
                 return new SectionBreak();
             case "sectd":
                 return new SectionDefault();
+            case "column":
+                return new ColumnBreak();
 
             // Character Tags
             case "b":

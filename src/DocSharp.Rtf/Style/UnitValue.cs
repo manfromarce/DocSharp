@@ -76,6 +76,15 @@ public struct UnitValue : IEquatable<UnitValue>, IComparable<UnitValue>
     }
 
     /// <summary>
+    /// Convert the measurement to half-points
+    /// </summary>
+    /// <returns>The measuremet value in half-points</returns>
+    public double ToHalfPoints()
+    {
+        return ToPx() * 144.0 / 96;
+    }
+
+    /// <summary>
     /// Convert the measurement to twips
     /// </summary>
     /// <returns>The measurement in twips</returns>

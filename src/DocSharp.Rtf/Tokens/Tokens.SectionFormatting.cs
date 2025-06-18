@@ -16,6 +16,12 @@ public class SectionDefault : ControlTag
     public override TokenType Type => TokenType.SectionFormat;
 }
 
+public class ColumnBreak : ControlTag
+{
+    public override string Name => "column";
+    public override TokenType Type => TokenType.BreakTag;
+}
+
 public class HtmlTagToken : ControlWord<HtmlEncapsulation>
 {
     public override string Name => "htmltag";
