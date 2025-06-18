@@ -874,9 +874,13 @@ namespace DocSharp.Rtf
                         else
                             SetParagraphProperty<Indentation>(c => c.HangingChars = Math.Abs(firstLineIndentChars));
                         return;
-                    case "contextualspace":
-                        SetParagraphProperty<ContextualSpacing>(c => c.Val = true);
+                    case "adjustright":
+                        SetParagraphProperty<AdjustRightIndent>(c => c.Val = true);
                         return;
+                    case "indmirror":
+                        SetParagraphProperty<MirrorIndents>(c => c.Val = true);
+                        return;
+
                     case "ql":
                         SetParagraphProperty<Justification>(c => c.Val = JustificationValues.Left);
                         return;
@@ -904,17 +908,53 @@ namespace DocSharp.Rtf
                         else if (qkVal == 20)
                             SetParagraphProperty<Justification>(c => c.Val = JustificationValues.HighKashida);
                         return;
-                        //case "sa":
-                        //case "saauto":
-                        //case "sb":
-                        //case "sbauto":
-                        //case "lisa":
-                        //case "lisb":
-                        //case "sl":
-                        //case "slmult":
-                        //case "adjustright":
-                        //case "nosnaplinegrid":
-                        //    return;
+
+                    case "sa":
+                        var spaceAfter = (((ControlWord<UnitValue>)word).Value).ToTwip();
+                        SetParagraphProperty<SpacingBetweenLines>(v => v.After = spaceAfter.ToStringInvariant());
+                        return;
+                    case "sb":
+                        var spaceBefore = (((ControlWord<UnitValue>)word).Value).ToTwip();
+                        SetParagraphProperty<SpacingBetweenLines>(v => v.Before = spaceBefore.ToStringInvariant());
+                        return;
+                    case "lisa":
+                        SetParagraphProperty<SpacingBetweenLines>(v => v.AfterLines = ((ControlWord<int>)word).Value);
+                        return;
+                    case "lisb":
+                        SetParagraphProperty<SpacingBetweenLines>(v => v.BeforeLines = ((ControlWord<int>)word).Value);
+                        return;
+                    case "contextualspace":
+                        SetParagraphProperty<ContextualSpacing>(c => c.Val = true);
+                        return;
+                    case "saauto":
+                        SetParagraphProperty<SpacingBetweenLines>(v => v.AfterAutoSpacing = true);
+                        return;
+                    case "sbauto":
+                        SetParagraphProperty<SpacingBetweenLines>(v => v.BeforeAutoSpacing = true);
+                        return;
+                    case "sl":
+                        var spacing = ((ControlWord<int>)word).Value;
+                        if (spacing < 0)
+                        {
+                            SetParagraphProperty<SpacingBetweenLines>(v => v.Line = Math.Abs(spacing).ToStringInvariant());
+                            SetParagraphProperty<SpacingBetweenLines>(v => v.LineRule = LineSpacingRuleValues.Exact);
+                        }
+                        else if (spacing > 0)
+                        {
+                            SetParagraphProperty<SpacingBetweenLines>(v => v.Line = spacing.ToStringInvariant());
+                            SetParagraphProperty<SpacingBetweenLines>(v => v.LineRule = LineSpacingRuleValues.AtLeast);
+                        }
+                        // if (spacing == 0) -> auto
+                        return;
+                    case "slmult":
+                        var spacingRule = ((ControlWord<int>)word).Value;
+                        if (spacingRule == 1) // "\sl" should be interpreted as multiple of lines
+                        {
+                            SetParagraphProperty<SpacingBetweenLines>(v => v.LineRule = LineSpacingRuleValues.Auto);
+                        }
+                        return;
+                    
+                    //case "nosnaplinegrid":
                 }
             }
         }
@@ -1391,7 +1431,7 @@ namespace DocSharp.Rtf
         {
             var paragraphProperties = new ParagraphProperties();
 
-            // Set default properties unless already set
+            // Set default properties
             //SetMissingParagraphProperty<Justification>(paragraphProperties, justification =>
             //{
             //    justification.Val = JustificationValues.Left; // Default alignment
