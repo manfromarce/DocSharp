@@ -27,7 +27,7 @@
 | Diagrams | ❌ | ❌ | ❌ | - |
 | Advanced text effects and WordArt | ❌ | 🟡[10] | ❌ | - |
 | Image effects | ❌ | ❌ | ❌ | - |
-| Math | ✅ | ❌ | ✅ | ❌ |
+| Math | ✅ | 🟡 | ✅ | ❌ |
 | OLE objects [6] | 🟡 | 🟡 | 🟡 | - |
 | Fields and standard parts [7] | ✅ | 🟡 | 🟡 | 🟡 |
 | Form fields | 🟡[8] | ❌ | - | - |

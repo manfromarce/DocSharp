@@ -20,7 +20,7 @@ namespace DocSharp.Rtf
     {
         private WordprocessingDocument _doc;
         private MainDocumentPart _mainPart;
-        private DocumentFormat.OpenXml.Wordprocessing.Document _document;
+        private Document _document;
         private Body _body;
         private SectionProperties? _currentSectionProperties;
         private SectionProperties? _defaultSectionProperties;
@@ -34,7 +34,7 @@ namespace DocSharp.Rtf
         {
             _doc = doc;
             _mainPart = doc.AddMainDocumentPart();
-            _document = _mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
+            _document = _mainPart.Document = new Document();
             _body = _mainPart.Document.AppendChild(new Body());
             _defaultSectionProperties = CreateDefaultSectionProperties();
             _currentSectionProperties = _defaultSectionProperties;

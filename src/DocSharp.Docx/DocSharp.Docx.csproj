@@ -18,6 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\OMML2MML.XSL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\OMML2MML.XSL" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
   </ItemGroup>
 
