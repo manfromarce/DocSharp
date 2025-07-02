@@ -8,6 +8,8 @@
     Title="MainWindow"
     Width="800"
     Height="450"
+    MinWidth="300"
+    MinHeight="200"
     mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>

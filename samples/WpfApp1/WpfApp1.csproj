@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -11,8 +11,8 @@
   <ItemGroup>
     <PackageReference Include="FridaysForks.RtfPipe" Version="3.7.0" />
     <PackageReference Include="HtmlToOpenXml.dll" Version="3.2.5" />
-    <PackageReference Include="PreMailer.Net" Version="2.6.0" />
-    <PackageReference Include="XlsxToHtmlConverter" Version="1.2.20" />
+    <PackageReference Include="PreMailer.Net" Version="2.7.2" />
+    <PackageReference Include="XlsxToHtmlConverter" Version="1.2.21" />
   </ItemGroup>
 
   <ItemGroup>      
