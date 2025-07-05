@@ -2,17 +2,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using DocSharp.Collections;
 using DocSharp.Helpers;
+using DocSharp.Writers;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
     /// <summary>
     /// Gets or set the default font and paragraph properties used in (rare) cases where 
@@ -35,9 +37,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
     public DocxToRtfConverter()
     {
         DefaultSettings = new DocumentDefaultSettings();
-    }
+    }    
 
-    internal override void ProcessDocument(Document document, StringBuilder sb)
+    internal override void ProcessDocument(Document document, RtfStringWriter sb)
     {
         sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
 
@@ -129,8 +131,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             }
         }
 
-        // Process body content in another StringBuilder to determine used fonts and colors
-        var contentSb = new StringBuilder();
+        // Process body content in another writer to determine used fonts and colors
+        var contentSb = new RtfStringWriter();
 
         // Add list table
         if (document.MainDocumentPart?.NumberingDefinitionsPart?.Numbering != null)
@@ -162,12 +164,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         if (document.MainDocumentPart?.FootnotesPart != null)
         {
             ProcessFootnotesPart(document.MainDocumentPart.FootnotesPart, contentSb);
-            contentSb.AppendLineCrLf();
+            contentSb.AppendLine();
         }
         if (document.MainDocumentPart?.EndnotesPart != null)
         {
             ProcessEndnotesPart(document.MainDocumentPart.EndnotesPart, contentSb);
-            contentSb.AppendLineCrLf();
+            contentSb.AppendLine();
         }
 
         // Add document body and background
@@ -178,7 +180,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         {
             sb.Append(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
         }
-        sb.AppendLineCrLf("}");
+        sb.AppendLine("}");
 
         sb.Append(@"{\colortbl ;");
         foreach (var color in colors)
@@ -186,16 +188,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             // Use black as last resort
             sb.Append(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red0\green0\blue0;");
         }
-        sb.AppendLineCrLf("}");
+        sb.AppendLine("}");
 
         // Add content
         sb.Append(contentSb);
 
         // Close RTF document
-        sb.AppendLineCrLf("}");
+        sb.AppendLine("}");
     }
 
-    internal override void ProcessDocumentBackground(DocumentBackground documentBackground, StringBuilder sb)
+    internal override void ProcessDocumentBackground(DocumentBackground documentBackground, RtfStringWriter sb)
     {
         //if (documentBackground.Background != null) // TODO
         //{
@@ -217,8 +219,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                 sb.Append(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0\shplid1025{\sp{\sn shapeType}{\sv 1}}{\sp{\sn fFlipH}{\sv 0}}{\sp{\sn fFlipV}{\sv 0}}{\sp{\sn fillColor}{\sv ");
                 sb.Append(bgr);
                 sb.Append(@"}}{\sp{\sn fFilled}{\sv 1}}{\sp{\sn lineWidth}{\sv 0}}{\sp{\sn fLine}{\sv 0}}{\sp{\sn bWMode}{\sv 9}}{\sp{\sn fBackground}{\sv 1}}{\sp{\sn fLayoutInCell}{\sv 1}}}}}");
-                sb.AppendLineCrLf();
-                sb.AppendLineCrLf(@"\viewbksp1");
+                sb.AppendLine();
+                sb.AppendLine(@"\viewbksp1");
             }
         }
     }

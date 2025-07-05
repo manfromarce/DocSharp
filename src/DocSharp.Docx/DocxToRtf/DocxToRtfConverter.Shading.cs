@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal void ProcessShading(Shading shading, StringBuilder sb, ShadingType shadingType)
+    internal void ProcessShading(Shading shading, RtfStringWriter sb, ShadingType shadingType)
     {
         if (shading.Val != null && shading.Val != ShadingPatternValues.Nil)
         {

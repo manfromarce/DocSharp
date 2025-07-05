@@ -28,10 +28,10 @@ public class AutolinkInlineRenderer : RtfObjectRenderer<AutolinkInline>
 
         if (uri == null) return;
 
-        renderer.RtfBuilder.Append(@"{\field{\*\fldinst{HYPERLINK ");
-        renderer.RtfBuilder.Append(@"""" + uri + @"""}}");
-        renderer.RtfBuilder.Append(@"{\fldrslt{\cf16\ul ");
-        renderer.RtfBuilder.AppendRtfEscaped(title);
-        renderer.RtfBuilder.Append(@"}}}");
+        renderer.RtfWriter.Append(@"{\field{\*\fldinst{HYPERLINK ");
+        renderer.RtfWriter.Append(@"""" + uri + @"""}}");
+        renderer.RtfWriter.Append(@"{\fldrslt{\cf16\ul ");
+        renderer.RtfWriter.AppendRtfEscaped(title);
+        renderer.RtfWriter.Append(@"}}}");
     }
 }

@@ -24,23 +24,23 @@ public class HeadingRenderer : LeafBlockParagraphRendererBase<HeadingBlock>
 
         if (bookmarkName != null)
         {
-            renderer.RtfBuilder.Append(@"{\*\bkmkstart " + bookmarkName + "}");
-            renderer.RtfBuilder.Append(@"{\*\bkmkend " + bookmarkName + "}");
+            renderer.RtfWriter.Append(@"{\*\bkmkstart " + bookmarkName + "}");
+            renderer.RtfWriter.Append(@"{\*\bkmkend " + bookmarkName + "}");
             renderer.Bookmarks.Add(bookmarkName);
         }
 
-        renderer.RtfBuilder.Append($@"\pard\plain\sa{renderer.Settings.ParagraphSpaceAfterInTwips}\sl{renderer.Settings.LineSpacingValue}\slmult1\f{headingLevel}\fs{fontSize}\cf{headingLevel + 1}");
+        renderer.RtfWriter.Append($@"\pard\plain\sa{renderer.Settings.ParagraphSpaceAfterInTwips}\sl{renderer.Settings.LineSpacingValue}\slmult1\f{headingLevel}\fs{fontSize}\cf{headingLevel + 1}");
 
         if (bold)
-            renderer.RtfBuilder.Append(@"\b");
+            renderer.RtfWriter.Append(@"\b");
 
-        renderer.RtfBuilder.Append(' ');
+        renderer.RtfWriter.Append(' ');
 
         RenderContents(renderer, obj);
 
         if (bold)
-            renderer.RtfBuilder.Append(@"\b0");
+            renderer.RtfWriter.Append(@"\b0");
 
-        renderer.RtfBuilder.AppendLineCrLf(@"\par");
+        renderer.RtfWriter.AppendLine(@"\par");
     }
 }

@@ -6,12 +6,13 @@ using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using V = DocumentFormat.OpenXml.Vml;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override void ProcessVml(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessVml(OpenXmlElement element, RtfStringWriter sb)
     {
         if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)

@@ -4,16 +4,17 @@ using System.Linq;
 using System.Text;
 using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
     private bool isInTable = false;
 
-    internal override void ProcessTable(Table table, StringBuilder sb)
+    internal override void ProcessTable(Table table, RtfStringWriter sb)
     {
-        StringBuilder tableProperties = new StringBuilder();
+        var tableProperties = new RtfStringWriter();
 
         // Positioned Wrapped Tables (the following properties must be the same for all rows in the table)
         var pos = table.GetEffectiveProperty<TablePositionProperties>();
@@ -142,10 +143,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             ProcessTableRow(row, sb, rowNumber, rowCount, tableProperties.ToString());
             ++rowNumber;
         }
-        sb.AppendLineCrLf();
+        sb.AppendLine();
     }
 
-    internal void ProcessTableRow(TableRow row, StringBuilder sb, int rowNumber, int rowCount, string tableProperties = "")
+    internal void ProcessTableRow(TableRow row, RtfStringWriter sb, int rowNumber, int rowCount, string tableProperties = "")
     {
         sb.Append(@"\trowd");
 
@@ -539,20 +540,20 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         foreach (var cell in cells)
         {
             ProcessTableCellProperties(cell, sb, ref totalWidth, avg, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
-            sb.AppendLineCrLf();
+            sb.AppendLine();
             ++columnNumber;
         }
 
         foreach (var cell in row.Elements<TableCell>())
         {
             ProcessTableCell(cell, sb);
-            sb.AppendLineCrLf();
+            sb.AppendLine();
         }
 
         sb.Append(@"\row");
     }
 
-    internal void ProcessTableCellProperties(TableCell cell, StringBuilder sb, ref long totalWidth, long cellSpacing, 
+    internal void ProcessTableCellProperties(TableCell cell, RtfStringWriter sb, ref long totalWidth, long cellSpacing, 
                                              int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft)
     {
         var direction = cell.TableCellProperties?.TextDirection;
@@ -786,7 +787,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append(@"\cellx" + totalWidth);
     }
 
-    internal void ProcessTableCell(TableCell cell, StringBuilder sb)
+    internal void ProcessTableCell(TableCell cell, RtfStringWriter sb)
     {
         this.isInTable = true;
         foreach (var element in cell.Elements())

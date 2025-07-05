@@ -7,6 +7,7 @@ using Markdig;
 using Markdig.Syntax;
 using Markdig.Renderers.Docx;
 using Markdig.Renderers.Rtf;
+using DocSharp.Writers;
 
 namespace DocSharp.Markdown;
 
@@ -238,7 +239,7 @@ public class MarkdownConverter
     public string ToRtfString(MarkdownSource markdown, MarkdownToRtfSettings? settings = null)
     {
         settings ??= new MarkdownToRtfSettings();
-        var rtfBuilder = new StringBuilder();
+        var rtfBuilder = new RtfStringWriter();
         var renderer = new RtfRenderer(rtfBuilder, settings)
         {
             ImagesBaseUri = this.ImagesBaseUri,

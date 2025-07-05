@@ -6,16 +6,17 @@ using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
     private bool firstSection = true;
     private SectionProperties? currentSectionProperties = null;
     private bool noSections = false;
 
-    internal override void ProcessBodyElement(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessBodyElement(OpenXmlElement element, RtfStringWriter sb)
     {
         if (currentSectionProperties == null && !noSections)
         {
@@ -57,7 +58,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         base.ProcessBodyElement(element, sb);
     }
 
-    internal void ProcessSectionProperties(SectionProperties sectionProperties, StringBuilder sb)
+    internal void ProcessSectionProperties(SectionProperties sectionProperties, RtfStringWriter sb)
     {
         // Create new section
         sb.Append(firstSection ? @"\sectd" : @"\sect\sectd");
@@ -542,10 +543,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             sb.Append(@"\sectunlocked");
         }
 
-        sb.AppendLineCrLf();
+        sb.AppendLine();
     }
 
-    internal void ProcessFirstSectionProperties(SectionProperties? sectionProperties, StringBuilder sb)
+    internal void ProcessFirstSectionProperties(SectionProperties? sectionProperties, RtfStringWriter sb)
     {
         if (sectionProperties == null)
         {

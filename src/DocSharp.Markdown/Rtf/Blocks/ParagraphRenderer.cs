@@ -12,19 +12,19 @@ public class ParagraphRenderer : LeafBlockParagraphRendererBase<ParagraphBlock>
     {
         bool isInQuoteBlock = obj.Parent is QuoteBlock;
 
-        renderer.RtfBuilder.Append(@"\pard\plain");
+        renderer.RtfWriter.Append(@"\pard\plain");
 
         if (renderer.isInTable)
         {
-            renderer.RtfBuilder.Append(@"\intbl");
+            renderer.RtfWriter.Append(@"\intbl");
         }
         if (renderer.isInTableHeader)
         {
-            renderer.RtfBuilder.Append(@"\b");
+            renderer.RtfWriter.Append(@"\b");
         }
 
         // Write properties common to all paragraphs.
-        renderer.RtfBuilder.Append(@$"\sa{renderer.Settings.ParagraphSpaceAfterInTwips}\sl{renderer.Settings.LineSpacingValue}\slmult1");
+        renderer.RtfWriter.Append(@$"\sa{renderer.Settings.ParagraphSpaceAfterInTwips}\sl{renderer.Settings.LineSpacingValue}\slmult1");
 
         long spacing = 100;
         if (obj.Parent is ListItemBlock listItemBlock)
@@ -33,7 +33,7 @@ public class ParagraphRenderer : LeafBlockParagraphRendererBase<ParagraphBlock>
             int firstLineIndent = 460;
             long indent = firstLineIndent * listItemBlock.FindListItemLevel();
             spacing += (indent - firstLineIndent);
-            renderer.RtfBuilder.Append($@"\fi-{firstLineIndent}\li{indent}");
+            renderer.RtfWriter.Append($@"\fi-{firstLineIndent}\li{indent}");
             isInQuoteBlock |= obj.FindAncestor<QuoteBlock>() != null;
         }
         
@@ -45,28 +45,28 @@ public class ParagraphRenderer : LeafBlockParagraphRendererBase<ParagraphBlock>
         else
         {
             // Standard formatting
-            renderer.RtfBuilder.Append(@$"\f0\fs{renderer.Settings.DefaultFontSizeInHalfPoints}\cf1 "); 
+            renderer.RtfWriter.Append(@$"\f0\fs{renderer.Settings.DefaultFontSizeInHalfPoints}\cf1 "); 
         }
 
         if (obj.Parent is ListItemBlock lib)
         {
             if (lib.Parent is ListBlock lb && lb.IsOrdered)
-                renderer.RtfBuilder.Append($@"\contextualspace{{\pntext\f0 {lib.Order}.\tab}}{{\*\pn\pnlvlbody\pnf0\pnindent0\pnstart1\pndec{{\pntxta.}}}}");
+                renderer.RtfWriter.Append($@"\contextualspace{{\pntext\f0 {lib.Order}.\tab}}{{\*\pn\pnlvlbody\pnf0\pnindent0\pnstart1\pndec{{\pntxta.}}}}");
             else
-                renderer.RtfBuilder.Append($@"\contextualspace{{\pntext\f0 \bullet\tab}}{{\*\pn\pnlvlblt\pnf1\pnindent0\pnstart1\pndec{{\pntxtb\bullet}}}}");
+                renderer.RtfWriter.Append($@"\contextualspace{{\pntext\f0 \bullet\tab}}{{\*\pn\pnlvlblt\pnf1\pnindent0\pnstart1\pndec{{\pntxtb\bullet}}}}");
         }
 
         RenderContents(renderer, obj);
 
         if (renderer.isInTableHeader)
         {
-            renderer.RtfBuilder.Append(@"\b0");
+            renderer.RtfWriter.Append(@"\b0");
         }
 
         // Close paragraph
         if (!(obj.IsLastChild() && (renderer.isInTable || renderer.isInEndnote)))
         {
-            renderer.RtfBuilder.AppendLineCrLf(@"\par");
+            renderer.RtfWriter.AppendLine(@"\par");
         }
     }
 }

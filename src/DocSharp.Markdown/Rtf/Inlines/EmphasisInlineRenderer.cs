@@ -44,37 +44,37 @@ public class EmphasisInlineRenderer : RtfObjectRenderer<EmphasisInline>
 
         // Start tags
         if (isBold)
-            renderer.RtfBuilder.Append(@"\b ");
+            renderer.RtfWriter.Append(@"\b ");
         if (isItalic)
-            renderer.RtfBuilder.Append(@"\i ");
+            renderer.RtfWriter.Append(@"\i ");
         if (isStrike)
-            renderer.RtfBuilder.Append(@"\strike ");
+            renderer.RtfWriter.Append(@"\strike ");
 
         if (isSuperscript)
-            renderer.RtfBuilder.Append(@"\super ");
+            renderer.RtfWriter.Append(@"\super ");
         else if (isSubscript)
-            renderer.RtfBuilder.Append(@"\sub ");
+            renderer.RtfWriter.Append(@"\sub ");
 
         if (isMarked)
-            renderer.RtfBuilder.Append(@"\highlight14 ");
+            renderer.RtfWriter.Append(@"\highlight14 ");
         else if (isInserted)
-            renderer.RtfBuilder.Append(@"\highlight15 ");
+            renderer.RtfWriter.Append(@"\highlight15 ");
 
         // Recursively process the content inside the emphasis
         renderer.WriteChildren(obj);
 
         // End tags (reverse order)
         if (isMarked || isInserted)
-            renderer.RtfBuilder.Append(@"\highlight0 ");
+            renderer.RtfWriter.Append(@"\highlight0 ");
 
         if (isSuperscript || isSubscript)
-            renderer.RtfBuilder.Append(@"\nosupersub ");
+            renderer.RtfWriter.Append(@"\nosupersub ");
 
         if (isStrike)
-            renderer.RtfBuilder.Append(@"\strike0 ");
+            renderer.RtfWriter.Append(@"\strike0 ");
         if (isItalic)
-            renderer.RtfBuilder.Append(@"\i0 ");
+            renderer.RtfWriter.Append(@"\i0 ");
         if (isBold)
-            renderer.RtfBuilder.Append(@"\b0 ");
+            renderer.RtfWriter.Append(@"\b0 ");
     }
 }

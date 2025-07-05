@@ -9,12 +9,13 @@ using M = DocumentFormat.OpenXml.Math;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 using StyleValues = DocumentFormat.OpenXml.Math.StyleValues;
 using DocSharp.Helpers;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessMathElement(OpenXmlElement element, RtfStringWriter sb)
     {
         switch (element)
         {
@@ -88,7 +89,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessNonMathElement(OpenXmlElement? element, StringBuilder sb)
+    private void ProcessNonMathElement(OpenXmlElement? element, RtfStringWriter sb)
     {
         if (element == null)
             return;
@@ -100,7 +101,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessMathChildren(OpenXmlElement? element, StringBuilder sb)
+    private void ProcessMathChildren(OpenXmlElement? element, RtfStringWriter sb)
     {
         if (element == null)
             return;
@@ -122,7 +123,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessMathElementContent(OpenXmlElement? element, StringBuilder sb)
+    private void ProcessMathElementContent(OpenXmlElement? element, RtfStringWriter sb)
     {
         if (element == null)
             return;
@@ -522,7 +523,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessMatrixColumns(MatrixColumns? matrixColumns, StringBuilder sb)
+    private void ProcessMatrixColumns(MatrixColumns? matrixColumns, RtfStringWriter sb)
     {
         if (matrixColumns == null)
         {
@@ -539,7 +540,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessMathColumnProperties(MatrixColumn column, StringBuilder sb)
+    private void ProcessMathColumnProperties(MatrixColumn column, RtfStringWriter sb)
     {
         if (column.MatrixColumnProperties != null)
         {
@@ -569,7 +570,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessMathColumnSpacing(ColumnSpacing? columnSpacing, StringBuilder sb)
+    private void ProcessMathColumnSpacing(ColumnSpacing? columnSpacing, RtfStringWriter sb)
     {
         if (columnSpacing?.Val != null && columnSpacing.Val.HasValue)
         {
@@ -577,7 +578,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessMathColumnGap(ColumnGapRule? columnGapRule, ColumnGap? columnGap, StringBuilder sb)
+    private void ProcessMathColumnGap(ColumnGapRule? columnGapRule, ColumnGap? columnGap, RtfStringWriter sb)
     {
         if (columnGapRule?.Val != null && columnGapRule.Val.HasValue)
         {
@@ -589,7 +590,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathRowSpacing(RowSpacingRule? rowSpacingRule, RowSpacing? rowSpacing, StringBuilder sb)
+    internal void ProcessMathRowSpacing(RowSpacingRule? rowSpacingRule, RowSpacing? rowSpacing, RtfStringWriter sb)
     {
         if (rowSpacingRule?.Val != null && rowSpacingRule.Val.HasValue)
         {
@@ -601,7 +602,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathGrow(GrowOperators? growOperators, StringBuilder sb)
+    internal void ProcessMathGrow(GrowOperators? growOperators, RtfStringWriter sb)
     {
         if (growOperators != null)
         {
@@ -616,7 +617,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessPhantomProperties(PhantomProperties phantomProperties, StringBuilder sb)
+    internal void ProcessPhantomProperties(PhantomProperties phantomProperties, RtfStringWriter sb)
     {
         if (phantomProperties.ShowPhantom != null)
         {
@@ -675,7 +676,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathBorderProperties(BorderBoxProperties borderBoxProperties, StringBuilder sb)
+    internal void ProcessMathBorderProperties(BorderBoxProperties borderBoxProperties, RtfStringWriter sb)
     {
         if (borderBoxProperties.HideBottom != null)
         {
@@ -767,7 +768,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathBoxProperties(BoxProperties boxProperties, StringBuilder sb)
+    internal void ProcessMathBoxProperties(BoxProperties boxProperties, RtfStringWriter sb)
     {
         if (boxProperties.Alignment != null)
         {
@@ -820,7 +821,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathBaseJustification(BaseJustification? baseJustification, StringBuilder sb)
+    internal void ProcessMathBaseJustification(BaseJustification? baseJustification, RtfStringWriter sb)
     {
         if (baseJustification?.Val != null)
         {
@@ -835,7 +836,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathLimitLocation(LimitLocation? limitLocation, StringBuilder sb)
+    internal void ProcessMathLimitLocation(LimitLocation? limitLocation, RtfStringWriter sb)
     {
         if (limitLocation?.Val != null)
         {
@@ -850,7 +851,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathVerticalJustification(VerticalJustification? verticalJustification, StringBuilder sb)
+    internal void ProcessMathVerticalJustification(VerticalJustification? verticalJustification, RtfStringWriter sb)
     {
         if (verticalJustification?.Val != null)
         {
@@ -865,7 +866,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathPosition(M.Position? position, StringBuilder sb)
+    internal void ProcessMathPosition(M.Position? position, RtfStringWriter sb)
     {
         if (position?.Val != null)
         {
@@ -880,7 +881,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessMathElementFormatting(ControlProperties? ctrlProperties, StringBuilder sb)
+    internal void ProcessMathElementFormatting(ControlProperties? ctrlProperties, RtfStringWriter sb)
     {
         sb.Append(@"{\mctrlPr");
         if (ctrlProperties != null)
@@ -890,7 +891,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessMathAccentChar(AccentChar? accentChar, StringBuilder sb)
+    private void ProcessMathAccentChar(AccentChar? accentChar, RtfStringWriter sb)
     {
         if (accentChar?.Val != null && accentChar.Val.HasValue)
         {
@@ -900,7 +901,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessMathRunProperties(M.RunProperties? mathRunProperties, StringBuilder sb)
+    private void ProcessMathRunProperties(M.RunProperties? mathRunProperties, RtfStringWriter sb)
     {
         if (mathRunProperties == null)
         {
@@ -998,7 +999,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         //sb.Append('}');
     }
 
-    internal void ProcessMathBreak(M.Break br, StringBuilder sb)
+    internal void ProcessMathBreak(M.Break br, RtfStringWriter sb)
     {
         sb.Append(@"\mbrk");
         if (br.AlignAt != null)
@@ -1015,7 +1016,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessMathBase(M.Base? @base, StringBuilder sb)
+    private void ProcessMathBase(M.Base? @base, RtfStringWriter sb)
     {
         if (@base == null)
         {
@@ -1027,7 +1028,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessLimit(M.Limit? limit, StringBuilder sb)
+    private void ProcessLimit(M.Limit? limit, RtfStringWriter sb)
     {
         if (limit == null)
         {
@@ -1039,7 +1040,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessSubArgument(M.SubArgument? subArgument, StringBuilder sb)
+    private void ProcessSubArgument(M.SubArgument? subArgument, RtfStringWriter sb)
     {
         if (subArgument == null)
         {
@@ -1051,7 +1052,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessSuperArgument(M.SuperArgument? superArgument, StringBuilder sb)
+    private void ProcessSuperArgument(M.SuperArgument? superArgument, RtfStringWriter sb)
     {
         if (superArgument == null)
         {
@@ -1063,7 +1064,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessArgumentProperties(M.ArgumentProperties? argumentProperties, StringBuilder sb)
+    private void ProcessArgumentProperties(M.ArgumentProperties? argumentProperties, RtfStringWriter sb)
     {
         if (argumentProperties?.ArgumentSize?.Val != null)
         {

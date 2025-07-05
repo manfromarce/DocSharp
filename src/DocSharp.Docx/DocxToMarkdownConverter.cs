@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using DocSharp.Helpers;
 using DocSharp.IO;
+using DocSharp.Writers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Office2019.Drawing.SVG;
 using DocumentFormat.OpenXml.Packaging;
@@ -18,7 +19,7 @@ using Path = System.IO.Path;
 
 namespace DocSharp.Docx;
 
-public class DocxToMarkdownConverter : DocxToTextConverterBase
+public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWriter>
 {
     /// <summary>
     /// If this property is set to a directory, images will be exported to that folder
@@ -57,9 +58,9 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
     public IImageConverter? ImageConverter { get; set; } = null;
 
     private bool isInEmphasis = false;
-    private bool isAllCaps = false;
+    private bool isAllCaps = false;   
 
-    internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
+    internal override void ProcessParagraph(Paragraph paragraph, MarkdownStringWriter sb)
     {
         if (paragraph.ChildElements.Count == 0 ||
            (paragraph.ChildElements.Count == 1 && paragraph.ParagraphProperties != null))
@@ -121,7 +122,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessListItem(NumberingProperties numPr, StringBuilder sb)
+    internal void ProcessListItem(NumberingProperties numPr, MarkdownStringWriter sb)
     {
         var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
         if (numberingPart != null && numPr.NumberingId?.Val != null)
@@ -164,7 +165,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessRun(Run run, StringBuilder sb)
+    internal override void ProcessRun(Run run, MarkdownStringWriter sb)
     {
         var text = run.GetFirstChild<Text>();
         bool hasText = text != null && !string.IsNullOrEmpty(text.InnerText);
@@ -273,7 +274,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessBreak(Break br, StringBuilder sb)
+    internal override void ProcessBreak(Break br, MarkdownStringWriter sb)
     {
         if (br.Type != null && br.Type == BreakValues.Page)
         {
@@ -286,7 +287,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessText(Text text, StringBuilder sb)
+    internal override void ProcessText(Text text, MarkdownStringWriter sb)
     {
         string font = string.Empty;
         if (text.Parent is Run run)
@@ -301,11 +302,11 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
         foreach (char c in t)
         {
-            MarkdownHelpers.AppendChar(isAllCaps ? char.ToUpper(c) : c, font, sb);
+            sb.AppendChar(isAllCaps ? char.ToUpper(c) : c, font);
         }
     }
 
-    internal override void ProcessTable(Table table, StringBuilder sb)
+    internal override void ProcessTable(Table table, MarkdownStringWriter sb)
     {
         // Calculate maximum number of cells per row.
         int cellsCount = table.Elements<TableRow>().Max(x => x.Elements<TableCell>().Count());
@@ -340,7 +341,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         sb.AppendLine();
     }
 
-    private void AddTableHeaderSeparator(int columnCount, StringBuilder sb)
+    private void AddTableHeaderSeparator(int columnCount, MarkdownStringWriter sb)
     {
         for (int i = 0; i < columnCount; ++i)
         {
@@ -349,7 +350,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         sb.AppendLine("|");
     }
 
-    internal void ProcessRow(TableRow tableRow, StringBuilder sb, int maxCellsCount)
+    internal void ProcessRow(TableRow tableRow, MarkdownStringWriter sb, int maxCellsCount)
     {
         sb.Append("| ");
         int currentCellCount = 0;
@@ -383,22 +384,24 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         sb.AppendLine();
     }
 
-    internal void ProcessCell(TableCell cell, StringBuilder sb)
+    internal void ProcessCell(TableCell cell, MarkdownStringWriter sb)
     {
-        var cellBuilder = new StringBuilder();
+        var cellBuilder = new MarkdownStringWriter()
+        {
+            NewLine = "<br/>"
+        };
         foreach (var paragraph in cell.Elements<Paragraph>())
         {
             // Markdown doesn't support multiple lines per cell directly,
             // so we use the <br> tag.
             ProcessParagraph(paragraph, cellBuilder);
         }
-        sb.Append(cellBuilder.ReplaceLineEndings("<br/>"));
         sb.Append(" | ");      
     }
 
-    internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
+    internal override void ProcessHyperlink(Hyperlink hyperlink, MarkdownStringWriter sb)
     {
-        var displayTextBuilder = new StringBuilder();
+        var displayTextBuilder = new MarkdownStringWriter();
         foreach (var run in hyperlink.Elements<Run>())
         {
             if (run != null && run.GetFirstChild<Text>() is Text runText)
@@ -419,7 +422,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
+    internal override void ProcessDrawing(Drawing drawing, MarkdownStringWriter sb)
     {
         if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)))
         {
@@ -440,7 +443,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessVml(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessVml(OpenXmlElement element, MarkdownStringWriter sb)
     {
         if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
         {
@@ -453,7 +456,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, StringBuilder sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, MarkdownStringWriter sb)
     {
         try
         {
@@ -536,12 +539,12 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessBookmarkStart(BookmarkStart bookmark, StringBuilder sb)
+    internal override void ProcessBookmarkStart(BookmarkStart bookmark, MarkdownStringWriter sb)
     {
         sb.Append($"<a id=\"{bookmark.Name}\"></a>");
     }
 
-    internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, MarkdownStringWriter sb)
     {
         if (!string.IsNullOrEmpty(symbolChar?.Char?.Value))
         {
@@ -568,7 +571,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }        
     }
 
-    internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessMathElement(OpenXmlElement element, MarkdownStringWriter sb)
     {
         switch (element)
         {
@@ -658,17 +661,17 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
-    internal override void ProcessFieldChar(FieldChar simpleField, StringBuilder sb) { }
-    internal override void ProcessFieldCode(FieldCode simpleField, StringBuilder sb) { }
-    internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb) { }
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb) { }
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb) { }
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb) { }
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb) { }
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb) { }
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb) { }
-    internal override void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb) { }
-    internal override void ProcessPageNumber(PageNumber background, StringBuilder sb) { }
+    internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, MarkdownStringWriter sb) { }
+    internal override void ProcessFieldChar(FieldChar simpleField, MarkdownStringWriter sb) { }
+    internal override void ProcessFieldCode(FieldCode simpleField, MarkdownStringWriter sb) { }
+    internal override void ProcessPositionalTab(PositionalTab posTab, MarkdownStringWriter sb) { }
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, MarkdownStringWriter sb) { }
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, MarkdownStringWriter sb) { }
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb) { }
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb) { }
+    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, MarkdownStringWriter sb) { }
+    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, MarkdownStringWriter sb) { }
+    internal override void ProcessDocumentBackground(DocumentBackground background, MarkdownStringWriter sb) { }
+    internal override void ProcessPageNumber(PageNumber background, MarkdownStringWriter sb) { }
 
 }

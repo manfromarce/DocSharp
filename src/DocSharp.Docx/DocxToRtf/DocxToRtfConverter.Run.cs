@@ -8,12 +8,13 @@ using Outline14 = DocumentFormat.OpenXml.Office2010.Word.TextOutlineEffect;
 using DocSharp.Helpers;
 using DocSharp.Docx.Rtf;
 using DocumentFormat.OpenXml;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override void ProcessRun(Run run, StringBuilder sb)
+    internal override void ProcessRun(Run run, RtfStringWriter sb)
     {
         if (!run.HasContent())
             return;
@@ -31,7 +32,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    internal void ProcessRunFormatting(OpenXmlElement? run, StringBuilder sb)
+    internal void ProcessRunFormatting(OpenXmlElement? run, RtfStringWriter sb)
     {
         if (run == null)
         {

@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
+    internal override void ProcessParagraph(Paragraph paragraph, RtfStringWriter sb)
     {
 
         sb.Append("\\pard\\plain");
@@ -51,10 +52,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             sb.Append("\\v0 ");
         }
 
-        sb.AppendLineCrLf();
+        sb.AppendLine();
     }
 
-    internal void ProcessParagraphFormatting(Paragraph paragraph, StringBuilder sb)
+    internal void ProcessParagraphFormatting(Paragraph paragraph, RtfStringWriter sb)
     {
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)

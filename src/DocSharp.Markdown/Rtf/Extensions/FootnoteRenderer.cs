@@ -25,9 +25,9 @@ public class FootnoteLinkRenderer : RtfObjectRenderer<FootnoteLink>
         if (!renderer.isInEndnote)
         {
             renderer.isInEndnote = true;
-            renderer.RtfBuilder.Append(@"{\super\chftn {\footnote\ftnalt \super\chftn\nosupersub  ");
+            renderer.RtfWriter.Append(@"{\super\chftn {\footnote\ftnalt \super\chftn\nosupersub  ");
             renderer.WriteChildren(obj.Footnote);
-            renderer.RtfBuilder.AppendLineCrLf("}}");
+            renderer.RtfWriter.AppendLine("}}");
             renderer.isInEndnote = false;
         }
     }

@@ -9,11 +9,12 @@ using Extent = DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent;
 using ShapeProperties = DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties;
 using BlipFill = DocumentFormat.OpenXml.Drawing.Pictures.BlipFill;
 using Pictures = DocumentFormat.OpenXml.Drawing.Pictures;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
+    internal override void ProcessDrawing(Drawing drawing, RtfStringWriter sb)
     {
         var properties = new PictureProperties();
         var extent = drawing.Descendants<Extent>().FirstOrDefault();

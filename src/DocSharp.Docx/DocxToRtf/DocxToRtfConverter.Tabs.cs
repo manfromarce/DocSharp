@@ -5,12 +5,13 @@ using System.Text;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocSharp.Helpers;
 using DocSharp.Docx.Rtf;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    private void ProcessTabs(Tabs tabs, StringBuilder sb)
+    private void ProcessTabs(Tabs tabs, RtfStringWriter sb)
     {
         foreach (var tab in tabs.Elements<TabStop>())
         {
@@ -70,7 +71,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessPositionalTab(PositionalTab positionalTab, StringBuilder sb)
+    internal override void ProcessPositionalTab(PositionalTab positionalTab, RtfStringWriter sb)
     {
         if (positionalTab.Alignment != null && positionalTab.RelativeTo != null)
         {

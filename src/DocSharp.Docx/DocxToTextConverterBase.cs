@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocSharp.Writers;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocSharp.Docx;
 
-public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
+public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWriter> where TWriter : BaseStringWriter, new()
 {
     /// <summary>
     /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
@@ -17,13 +18,15 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <returns>A string in the output format</returns>
     public string ConvertToString(WordprocessingDocument inputDocument)
     {
-        var sb = new StringBuilder();
-        var document = inputDocument.MainDocumentPart?.Document;
-        if (document != null)
+        using (var writer = new TWriter())
         {
-            ProcessDocument(document, sb);
+            var document = inputDocument.MainDocumentPart?.Document;
+            if (document != null)
+            {
+                ProcessDocument(document, writer);
+            }
+            return writer.ToString();
         }
-        return sb.ToString();
     }
 
     /// <summary>
@@ -75,7 +78,18 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <param name="outputFilePath">The output file path.</param>
     public void Convert(WordprocessingDocument inputDocument, string outputFilePath)
     {
-        File.WriteAllText(outputFilePath, ConvertToString(inputDocument));
+        using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+        {
+            using (var writer = new TWriter())
+            {
+                writer.ExternalWriter = sw;
+                var document = inputDocument.MainDocumentPart?.Document;
+                if (document != null)
+                {
+                    ProcessDocument(document, writer);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -87,7 +101,15 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     {
         using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
         {
-            sw.Write(ConvertToString(inputDocument));
+            using (var writer = new TWriter())
+            {
+                writer.ExternalWriter = sw;
+                var document = inputDocument.MainDocumentPart?.Document;
+                if (document != null)
+                {
+                    ProcessDocument(document, writer);
+                }
+            }
         }
     }
 
@@ -98,7 +120,10 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <param name="outputFilePath">The output file path.</param>
     public void Convert(string inputFilePath, string outputFilePath)
     {
-        File.WriteAllText(outputFilePath, ConvertToString(inputFilePath));
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
+        {
+            Convert(wordDocument, outputFilePath);
+        }
     }
 
     /// <summary>
@@ -108,9 +133,9 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <param name="outputStream">The output stream.</param>
     public void Convert(string inputFilePath, Stream outputStream)
     {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
         {
-            sw.Write(ConvertToString(inputFilePath));
+            Convert(wordDocument, outputStream);
         }
     }
 
@@ -121,7 +146,10 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <param name="outputFilePath">The output file path.</param>
     public void Convert(Stream inputStream, string outputFilePath)
     {
-        File.WriteAllText(outputFilePath, ConvertToString(inputStream));
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
+        {
+            Convert(wordDocument, outputFilePath);
+        }
     }
 
     /// <summary>
@@ -131,9 +159,9 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <param name="outputStream">The output stream.</param>
     public void Convert(Stream inputStream, Stream outputStream)
     {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
         {
-            sw.Write(ConvertToString(inputStream));
+            Convert(wordDocument, outputStream);
         }
     }
 
@@ -144,7 +172,13 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <param name="outputFilePath">The output file path.</param>
     public void Convert(byte[] inputBytes, string outputFilePath)
     {
-        File.WriteAllText(outputFilePath, ConvertToString(inputBytes));
+        using (var memoryStream = new MemoryStream(inputBytes))
+        {
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                Convert(wordDocument, outputFilePath);
+            }
+        }
     }
 
     /// <summary>
@@ -154,9 +188,12 @@ public abstract class DocxToTextConverterBase : DocxConverterBase<StringBuilder>
     /// <param name="outputStream">The output stream.</param>
     public void Convert(byte[] inputBytes, Stream outputStream)
     {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
+        using (var memoryStream = new MemoryStream(inputBytes))
         {
-            sw.Write(ConvertToString(inputBytes));
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                Convert(wordDocument, outputStream);
+            }
         }
     }
 }

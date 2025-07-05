@@ -7,7 +7,7 @@ public class ThematicBreakRenderer : LeafBlockParagraphRendererBase<ThematicBrea
 {
     protected override void WriteObject(RtfRenderer renderer, ThematicBreakBlock obj)
     {
-        renderer.RtfBuilder.Append(@$"\pard\plain \ql \li0\ri0\sa{renderer.Settings.ParagraphSpaceAfterInTwips}");
-        renderer.RtfBuilder.Append(@$"\brdrb\brdrs\brdrw15\brsp20\par");
+        renderer.RtfWriter.Append(@$"\pard\plain \ql \li0\ri0\sa{renderer.Settings.ParagraphSpaceAfterInTwips}");
+        renderer.RtfWriter.Append(@$"\brdrb\brdrs\brdrw15\brsp20\par");
     }
 }

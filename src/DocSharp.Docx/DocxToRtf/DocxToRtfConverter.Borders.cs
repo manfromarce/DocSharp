@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocSharp.Writers;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
     // This function is used for page, paragraph and table borders.
-    internal void ProcessBorder(BorderType border, StringBuilder sb)
+    internal void ProcessBorder(BorderType border, RtfStringWriter sb)
     {
         if (border.Val != null)
         {

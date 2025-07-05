@@ -1,18 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DocSharp.Helpers;
+using DocSharp.Writers;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public class DocxToTxtConverter : DocxToTextConverterBase
+public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 {
-    internal override void ProcessRun(Run run, StringBuilder sb)
+    internal override void ProcessRun(Run run, TxtStringWriter sb)
     {
         foreach (var element in run.Elements())
         {
@@ -20,7 +23,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessSymbolChar(SymbolChar symbolChar, StringBuilder sb)
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, TxtStringWriter sb)
     {
         if (!string.IsNullOrEmpty(symbolChar?.Char?.Value))
         {
@@ -39,7 +42,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessTable(Table table, StringBuilder sb)
+    internal override void ProcessTable(Table table, TxtStringWriter sb)
     {
         if (!table.Descendants<TableCell>().Any())
         {
@@ -161,7 +164,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
         else
         {
-            var cellTextBuilder = new StringBuilder();
+            var cellTextBuilder = new TxtStringWriter();
             foreach(var paragraph in cell.Elements<Paragraph>())
             {
                 ProcessParagraph(paragraph, cellTextBuilder);
@@ -171,17 +174,17 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
     }
 
-    internal void AddHorizontalBorder(int columnWidth, StringBuilder sb)
+    internal void AddHorizontalBorder(int columnWidth, TxtStringWriter sb)
     {
         sb.Append(new string('-', columnWidth + 2));
     }
 
-    internal void AddHorizontalSpace(int columnWidth, StringBuilder sb)
+    internal void AddHorizontalSpace(int columnWidth, TxtStringWriter sb)
     {
         sb.Append(new string(' ', columnWidth + 2));
     }
 
-    internal void AddHorizontalBorder(List<int> columnWidths, StringBuilder sb)
+    internal void AddHorizontalBorder(List<int> columnWidths, TxtStringWriter sb)
     {
         sb.Append('+');
         foreach (var width in columnWidths)
@@ -192,7 +195,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         sb.AppendLine();
     }
 
-    internal override void ProcessText(Text text, StringBuilder sb)
+    internal override void ProcessText(Text text, TxtStringWriter sb)
     {
         string font = string.Empty;
         if (text.Parent is Run run)
@@ -203,7 +206,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         AppendText(text.InnerText, font, sb); // TODO: consider xml:space="preserve"
     }
 
-    internal void AppendText(string text, string fontName, StringBuilder sb)
+    internal void AppendText(string text, string fontName, TxtStringWriter sb)
     {
         foreach (char c in text)
         {
@@ -211,7 +214,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessParagraph(Paragraph paragraph, StringBuilder sb)
+    internal override void ProcessParagraph(Paragraph paragraph, TxtStringWriter sb)
     {        
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)
@@ -233,7 +236,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
 
     private readonly Dictionary<(int NumberingId, int LevelIndex), int> _listLevelCounters = new();
 
-    internal void ProcessListItem(NumberingProperties numPr, StringBuilder sb)
+    internal void ProcessListItem(NumberingProperties numPr, TxtStringWriter sb)
     {
         var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
         if (numberingPart != null && numPr.NumberingId?.Val != null)
@@ -376,7 +379,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         return _listLevelCounters[(numberingId, levelIndex)].ToString();
     }
 
-    internal override void ProcessBreak(Break br, StringBuilder sb)
+    internal override void ProcessBreak(Break br, TxtStringWriter sb)
     {
         sb.AppendLine();
         if (br.Type != null && (br.Type.Value == BreakValues.Column || br.Type.Value == BreakValues.Page))
@@ -386,7 +389,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
+    internal override void ProcessHyperlink(Hyperlink hyperlink, TxtStringWriter sb)
     {
         foreach (var element in hyperlink.Elements())
         {
@@ -394,12 +397,12 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessMathElement(OpenXmlElement element, StringBuilder sb)
+    internal override void ProcessMathElement(OpenXmlElement element, TxtStringWriter sb)
     {
         // TODO
     }
 
-    internal override void ProcessDrawing(Drawing drawing, StringBuilder sb)
+    internal override void ProcessDrawing(Drawing drawing, TxtStringWriter sb)
     {
         var txbxContent = drawing.Descendants<TextBoxContent>().FirstOrDefault();
         if (txbxContent != null)
@@ -411,19 +414,19 @@ public class DocxToTxtConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessBookmarkStart(BookmarkStart bookmark, StringBuilder sb) { }
-    internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, StringBuilder sb) { }
-    internal override void ProcessFieldChar(FieldChar simpleField, StringBuilder sb) { }
-    internal override void ProcessFieldCode(FieldCode simpleField, StringBuilder sb) { }
-    internal override void ProcessPositionalTab(PositionalTab posTab, StringBuilder sb) { }
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb) { }
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb) { }
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb) { }
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb) { }
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb) { }
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, StringBuilder sb) { }
-    internal override void ProcessDocumentBackground(DocumentBackground background, StringBuilder sb) { }
-    internal override void ProcessPageNumber(PageNumber pageNumber, StringBuilder sb) { }
-    internal override void ProcessVml(OpenXmlElement picture, StringBuilder sb) { }
+    internal override void ProcessBookmarkStart(BookmarkStart bookmark, TxtStringWriter sb) { }
+    internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, TxtStringWriter sb) { }
+    internal override void ProcessFieldChar(FieldChar simpleField, TxtStringWriter sb) { }
+    internal override void ProcessFieldCode(FieldCode simpleField, TxtStringWriter sb) { }
+    internal override void ProcessPositionalTab(PositionalTab posTab, TxtStringWriter sb) { }
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb) { }
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, TxtStringWriter sb) { }
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) { }
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) { }
+    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, TxtStringWriter sb) { }
+    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, TxtStringWriter sb) { }
+    internal override void ProcessDocumentBackground(DocumentBackground background, TxtStringWriter sb) { }
+    internal override void ProcessPageNumber(PageNumber pageNumber, TxtStringWriter sb) { }
+    internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb) { }
 
 }

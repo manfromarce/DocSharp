@@ -5,14 +5,15 @@ using System.Text;
 using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
     internal FootnotesEndnotesType FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
 
-    internal void ProcessFootnoteProperties(FootnoteDocumentWideProperties? footnoteProperties, StringBuilder sb)
+    internal void ProcessFootnoteProperties(FootnoteDocumentWideProperties? footnoteProperties, RtfStringWriter sb)
     {
         // Don't add FootnoteProperties is there are no footnotes 
         if (FootnotesEndnotes != FootnotesEndnotesType.EndnotesOnly)
@@ -69,7 +70,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessEndnoteProperties(EndnoteDocumentWideProperties? endnoteProperties, StringBuilder sb)
+    internal void ProcessEndnoteProperties(EndnoteDocumentWideProperties? endnoteProperties, RtfStringWriter sb)
     {
         // Don't add EndnoteProperties is there are no endnotes 
         if (FootnotesEndnotes != FootnotesEndnotesType.FootnotesOnlyOrNothing)
@@ -132,7 +133,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessFootnoteProperties(FootnoteProperties? footnoteProperties, StringBuilder sb)
+    internal void ProcessFootnoteProperties(FootnoteProperties? footnoteProperties, RtfStringWriter sb)
     {
         if (footnoteProperties == null)
         {
@@ -188,7 +189,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessEndnoteProperties(EndnoteProperties? endnoteProperties, StringBuilder sb)
+    internal void ProcessEndnoteProperties(EndnoteProperties? endnoteProperties, RtfStringWriter sb)
     {
         if (endnoteProperties == null)
         {
@@ -228,7 +229,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessFootnoteNumberFormat(NumberFormatValues numberFormat, StringBuilder sb)
+    internal void ProcessFootnoteNumberFormat(NumberFormatValues numberFormat, RtfStringWriter sb)
     {
         if (numberFormat == NumberFormatValues.LowerLetter)
         {
@@ -327,7 +328,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessFootnotesPart(FootnotesPart footnotesPart, StringBuilder sb)
+    internal void ProcessFootnotesPart(FootnotesPart footnotesPart, RtfStringWriter sb)
     {
         // This method handles separator and continuationSeparator types only,
         // the actual footnotes are processed when a reference to them is found in the document.
@@ -360,7 +361,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal void ProcessEndnotesPart(EndnotesPart endnotesPart, StringBuilder sb)
+    internal void ProcessEndnotesPart(EndnotesPart endnotesPart, RtfStringWriter sb)
     {
         // This method handles separator and continuationSeparator types only,
         // the actual endnotes are processed when a reference to them is found in the document.
@@ -393,7 +394,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, StringBuilder sb) 
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, RtfStringWriter sb) 
     {
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(footnoteReference);
         if (footnoteReference.Id != null &&
@@ -401,7 +402,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             .Where(fn => fn.Id != null && fn.Id == footnoteReference.Id)
             .FirstOrDefault() is Footnote footnote)
         {
-            sb.AppendLineCrLf("\\chftn");
+            sb.AppendLine("\\chftn");
             sb.Append("{\\footnote ");
             foreach (var element in footnote.Elements())
             {
@@ -411,7 +412,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, StringBuilder sb) 
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, RtfStringWriter sb) 
     {
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(endnoteReference);
         if (endnoteReference.Id != null && 
@@ -419,7 +420,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             .Where(en => en.Id != null && en.Id == endnoteReference.Id)
             .FirstOrDefault() is Endnote endnote)
         {
-            sb.AppendLineCrLf("\\chftn");
+            sb.AppendLine("\\chftn");
             sb.Append("{\\footnote\\ftnalt ");
             foreach (var element in endnote.Elements())
             {
@@ -429,22 +430,22 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, StringBuilder sb) 
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, RtfStringWriter sb) 
     {
         sb.Append("\\chftn");
     }
 
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, StringBuilder sb) 
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, RtfStringWriter sb) 
     {
         sb.Append("\\chftn");
     }
 
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, StringBuilder sb) 
+    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, RtfStringWriter sb) 
     {
         sb.Append("\\chftnsep");
     }
 
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark separatorMark, StringBuilder sb) 
+    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark separatorMark, RtfStringWriter sb) 
     {
         sb.Append("\\chftnsepc");
     }

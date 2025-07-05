@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal void ProcessFrameProperties(FrameProperties fp, StringBuilder sb)
+    internal void ProcessFrameProperties(FrameProperties fp, RtfStringWriter sb)
     {
         if (fp.Width?.Value != null && int.TryParse(fp.Width.Value, out int w))
         {

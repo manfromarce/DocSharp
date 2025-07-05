@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override void ProcessHyperlink(Hyperlink hyperlink, StringBuilder sb)
+    internal override void ProcessHyperlink(Hyperlink hyperlink, RtfStringWriter sb)
     {
         sb.Append(@"{\field{\*\fldinst{HYPERLINK ");
         if (hyperlink.Id?.Value is string rId)

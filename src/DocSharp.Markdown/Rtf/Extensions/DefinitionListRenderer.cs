@@ -11,17 +11,17 @@ public class DefinitionListRenderer : RtfObjectRenderer<DefinitionList>
         {
             if (item is DefinitionTerm term)
             {
-                renderer.RtfBuilder.Append(@"\b ");
+                renderer.RtfWriter.Append(@"\b ");
                 renderer.Write(term);
-                renderer.RtfBuilder.Append(@"\b0\par ");
+                renderer.RtfWriter.Append(@"\b0\par ");
             }
             else if (item is DefinitionItem definition)
             {
                 foreach (var child in definition)
                 {
-                    renderer.RtfBuilder.Append(@"\li720 "); // Indent 720 twips (0.5 inches)
+                    renderer.RtfWriter.Append(@"\li720 "); // Indent 720 twips (0.5 inches)
                     renderer.Write(child);
-                    renderer.RtfBuilder.Append(@"\par ");
+                    renderer.RtfWriter.Append(@"\par ");
                 }
             }
         }

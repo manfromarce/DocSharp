@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal void ProcessNumberingPart(Numbering numbering, StringBuilder sb)
+    internal void ProcessNumberingPart(Numbering numbering, RtfStringWriter sb)
     {
         sb.Append(@"{\*\listtable");
         ProcessListTable(numbering, sb);
@@ -21,7 +22,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    private void ProcessListTable(Numbering numbering, StringBuilder sb)
+    private void ProcessListTable(Numbering numbering, RtfStringWriter sb)
     {
         foreach (var abstractNum in numbering.Elements<AbstractNum>())
         {
@@ -63,7 +64,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             if (abstractNum.NumberingStyleLink != null)
             {
             }
-            sb.AppendLineCrLf('}');
+            sb.AppendLine('}');
         }
 
         if (numbering.Elements<NumberingPictureBullet>().Any()) 
@@ -103,11 +104,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                     }
                 }
             }
-            sb.AppendLineCrLf('}');
+            sb.AppendLine('}');
         }
     }
 
-    private void ProcessLevel(Level level, StringBuilder sb)
+    private void ProcessLevel(Level level, RtfStringWriter sb)
     {
         sb.Append(@"{\listlevel");
         
@@ -218,15 +219,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
 
         }
 
-        sb.AppendLineCrLf('}');
+        sb.AppendLine('}');
     }
 
-    private void ProcessNumberingSymbolRunProperties(NumberingSymbolRunProperties symbolRunProperties, StringBuilder sb)
+    private void ProcessNumberingSymbolRunProperties(NumberingSymbolRunProperties symbolRunProperties, RtfStringWriter sb)
     {
         ProcessRunFormatting(symbolRunProperties, sb);
     }
 
-    private void ProcessPreviousParagraphProperties(PreviousParagraphProperties prevParagraphProperties, StringBuilder sb)
+    private void ProcessPreviousParagraphProperties(PreviousParagraphProperties prevParagraphProperties, RtfStringWriter sb)
     {
         if (prevParagraphProperties.Indentation is Indentation ind)
         {
@@ -251,7 +252,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessNumberingFormat(NumberingFormat numberingFormat, StringBuilder sb)
+    private void ProcessNumberingFormat(NumberingFormat numberingFormat, RtfStringWriter sb)
     {
         if (numberingFormat.Val == null)
         {
@@ -468,7 +469,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         }
     }
 
-    private void ProcessLevelText(LevelText levelText, string levelTemplateId, StringBuilder sb)
+    private void ProcessLevelText(LevelText levelText, string levelTemplateId, RtfStringWriter sb)
     {
         sb.Append(@"{\leveltext");
         sb.Append(levelTemplateId);
@@ -509,7 +510,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         WriteLevelNumbers(src, sb);
     }
 
-    private void WriteLevelNumbers(string src, StringBuilder sb)
+    private void WriteLevelNumbers(string src, RtfStringWriter sb)
     {
         // Write \levelnumbers control word followed by the level numbers offset.
         // For example:
@@ -548,7 +549,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append(";}");
     }
 
-    private void ProcessListOverrideTable(Numbering numbering, StringBuilder sb)
+    private void ProcessListOverrideTable(Numbering numbering, RtfStringWriter sb)
     {
         foreach (var num in numbering.Elements<NumberingInstance>())
         {
@@ -609,11 +610,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                     sb.Append('}');
                 }
             }
-            sb.AppendLineCrLf('}');
+            sb.AppendLine('}');
         }
     }
 
-    internal void ProcessListItem(NumberingProperties numPr, StringBuilder sb)
+    internal void ProcessListItem(NumberingProperties numPr, RtfStringWriter sb)
     {
         if (numPr.NumberingLevelReference?.Val != null && numPr.NumberingId?.Val != null)
         {

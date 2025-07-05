@@ -4,19 +4,20 @@ using System.Linq;
 using System.Text;
 using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override void ProcessFieldChar(FieldChar fieldChar, StringBuilder sb)
+    internal override void ProcessFieldChar(FieldChar fieldChar, RtfStringWriter sb)
     {
         // Note: the content between the begin, separate and end parts is not processed here.
         if (fieldChar.FieldCharType != null)
         {
             if (fieldChar.FieldCharType == FieldCharValues.Begin)
             {
-                sb.AppendLineCrLf(@"{\field");
+                sb.AppendLine(@"{\field");
                 if (fieldChar.FieldLock != null && ((!fieldChar.FieldLock.HasValue) || fieldChar.FieldLock.Value))
                 {
                     sb.Append("\\fldlock");
@@ -246,12 +247,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
             }
             else if (fieldChar.FieldCharType == FieldCharValues.End)
             {
-                sb.AppendLineCrLf("}}}"); // Close field result and field destination.
+                sb.AppendLine("}}}"); // Close field result and field destination.
             }
         }
     }
 
-    internal override void ProcessFieldCode(FieldCode fieldCode, StringBuilder sb)
+    internal override void ProcessFieldCode(FieldCode fieldCode, RtfStringWriter sb)
     {
         // Complex fields such as table of contents may contain special characters such as '\' that need to be escaped.
         sb.AppendRtfEscaped(fieldCode.InnerText);

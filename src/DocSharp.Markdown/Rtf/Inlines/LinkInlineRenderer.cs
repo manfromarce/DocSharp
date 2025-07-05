@@ -84,20 +84,20 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
             return;
         }
 
-        renderer.RtfBuilder.Append(@"{\field{\*\fldinst{HYPERLINK ");
+        renderer.RtfWriter.Append(@"{\field{\*\fldinst{HYPERLINK ");
 
         if (isExternal)
         {
-            renderer.RtfBuilder.Append(@"""" + uri + @"""}}");
+            renderer.RtfWriter.Append(@"""" + uri + @"""}}");
         }
         else
         {
             // Link to bookmark
-            renderer.RtfBuilder.Append(@"\\l """ + anchorName + @"""}}");
+            renderer.RtfWriter.Append(@"\\l """ + anchorName + @"""}}");
         }
-        renderer.RtfBuilder.Append(@"{\fldrslt{\cf16\ul ");
+        renderer.RtfWriter.Append(@"{\fldrslt{\cf16\ul ");
         renderer.WriteChildren(obj);
-        renderer.RtfBuilder.Append(@"}}}");
+        renderer.RtfWriter.Append(@"}}}");
     }
 
     private void ProcessImage(RtfRenderer renderer, string url, string? label, string? title)
@@ -203,14 +203,14 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
             ScaleImageSize(ref width, ref height, maxWidth, maxHeight);
 
             // Write RTF syntax for image
-            renderer.RtfBuilder.Append(@"{\pict");
-            renderer.RtfBuilder.Append(fileType == ImageFormat.Jpeg ? @"\jpegblip" : @"\pngblip");
-            renderer.RtfBuilder.Append($@"\picw{width}\pich{height}\picwgoal{width}\pichgoal{height} ");
+            renderer.RtfWriter.Append(@"{\pict");
+            renderer.RtfWriter.Append(fileType == ImageFormat.Jpeg ? @"\jpegblip" : @"\pngblip");
+            renderer.RtfWriter.Append($@"\picw{width}\pich{height}\picwgoal{width}\pichgoal{height} ");
             foreach (var b in imageBytes)
             {
-                renderer.RtfBuilder.Append(b.ToString("x2"));
+                renderer.RtfWriter.Append(b.ToString("x2"));
             }
-            renderer.RtfBuilder.AppendLineCrLf(@"}");
+            renderer.RtfWriter.AppendLine(@"}");
         }
     }
 

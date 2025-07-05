@@ -74,49 +74,63 @@ public static class StringHelpers
         return s.Replace("\r\n", "\n").Replace("\r", "\n");
     }
 
-    public static string ToStringInvariant(int i)
+    public static int ToIntInvariant(this string? s, int defaultValue, NumberStyles numberStyles = NumberStyles.Number)
+    {
+        if (int.TryParse(s, numberStyles, CultureInfo.InvariantCulture, out int res))
+        {
+            return res;
+        }
+        return defaultValue;
+    }
+
+    public static string ToStringInvariant(this int i)
     {
         return i.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(double d)
+    public static string ToStringInvariant(this double d)
     {
         return d.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(decimal d)
+    public static string ToStringInvariant(this decimal d)
     {
         return d.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(float f)
+    public static string ToStringInvariant(this float f)
     {
         return f.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(long l)
+    public static string ToStringInvariant(this long l)
     {
         return l.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(short s)
+    public static string ToStringInvariant(this short s)
     {
         return s.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(ushort us)
+    public static string ToStringInvariant(this ushort us)
     {
         return us.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(uint ui)
+    public static string ToStringInvariant(this uint ui)
     {
         return ui.ToString(CultureInfo.InvariantCulture);
     }
 
-    public static string ToStringInvariant(ulong ul)
+    public static string ToStringInvariant(this ulong ul)
     {
         return ul.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(this byte b)
+    {
+        return b.ToString(CultureInfo.InvariantCulture);
     }
 
     public static string GetLeadingSpaces(string s)

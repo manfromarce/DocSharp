@@ -9,12 +9,13 @@ using DocSharp.IO;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, StringBuilder sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, RtfStringWriter sb)
     {
         if (rootPart?.GetPartById(relId) is ImagePart imagePart)
         {
@@ -102,7 +103,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                 if (string.IsNullOrEmpty(format))
                     return;
 
-                sb.AppendLineCrLf(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
+                sb.AppendLine(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
                 sb.Append(format);
                 sb.Append("\\picw");
                 sb.Append(properties.Width);
@@ -120,7 +121,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                 sb.Append(properties.CropTop);
                 sb.Append("\\piccropb");
                 sb.Append(properties.CropBottom);
-                sb.AppendLineCrLf();
+                sb.AppendLine();
                 if (format.StartsWith("\\wmetafile"))
                 {
                     sb.Append("01000900"); // Add wmf header that was previously skipped.
@@ -140,7 +141,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
                         sb.AppendFormat("{0:X2}", byteValue);
                     }
                 }
-                sb.AppendLineCrLf('}');
+                sb.AppendLine('}');
             }
         }
     }

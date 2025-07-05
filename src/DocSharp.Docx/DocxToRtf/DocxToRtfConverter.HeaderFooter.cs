@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase
+public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal void ProcessHeader(Header header, StringBuilder sb, HeaderReference reference)
+    internal void ProcessHeader(Header header, RtfStringWriter sb, HeaderReference reference)
     {
         if (reference.Type != null && reference.Type == HeaderFooterValues.Even)
         {
@@ -31,7 +32,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase
         sb.Append('}');
     }
 
-    internal void ProcessFooter(Footer footer, StringBuilder sb, FooterReference reference)
+    internal void ProcessFooter(Footer footer, RtfStringWriter sb, FooterReference reference)
     {
         if (reference.Type != null && reference.Type == HeaderFooterValues.Even)
         {
