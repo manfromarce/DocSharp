@@ -21,12 +21,12 @@
 | Symbols | ✅ | ✅[5] | ✅[5] | ✅[5] | ⏳ |
 | Page numbers | ✅ | ❌ | ❌ | ❌ | ⏳ |
 | Ruby | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Shapes and text boxes (DrawingML) | ❌ | ❌ | ❌ | Text is extracted | ❌ |
-| Shapes and text boxes (VML) | ❌ | ❌ | ❌ | Text is extracted | ❌ |
+| Modern text effects / WordArt | ❌ | 🟡[10] | ❌ | Text is extracted | ❌ |
+| Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[10] | ❌ | - | ❌ |
+| Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | ❌ | Text is extracted | ❌ |
+| Legacy shapes, text boxes, effects and WordArt (VML) | ❌ | ❌ | ❌ | Text is extracted | ❌ |
 | Charts | ❌ | ❌ | ❌ | - | ❌ |
 | Diagrams | ❌ | ❌ | ❌ | - | ❌ |
-| Advanced text effects and WordArt | ❌ | 🟡[10] | ❌ | - | ❌ |
-| Image effects | ❌ | ❌ | ❌ | - | ❌ |
 | Math | ✅ | 🟡 | ✅ | ❌ | ⏳ |
 | OLE objects [6] | 🟡 | 🟡 | 🟡 | - | ⏳ |
 | Fields and standard parts [7] | ✅ | 🟡 | 🟡 | 🟡 | ⏳ |
@@ -35,6 +35,7 @@
 | Comments | ❌ | ❌ | - | - | ⏳ |
 | Revisions | ❌ | ❌ | - | - | ⏳ |
 | Mail merge | ❌ | - | - | - | ❌ |
+| Macros | ❌ | - | - | - | ❌ |
 | Document information (title, author, ...) | ✅ | ❌ | - | - | ⏳ |
 
 [1]: Only inline images are supported. Floating and wrap-positioned images depend on DrawingML/VML shapes which are not implemented yet.  
@@ -62,7 +63,7 @@ ActiveX controls are preserved as images (like OLE objects).
 
 [9]: Partially supported in fixed layout mode.
 
-[10]: Shadow, emboss/imprint, outline and fill effects are partially supported. 
+[10]: Shadow, emboss/imprint, outline and fill effects are partially supported; floating text boxes are not supported.
 
 ## RTF converters
 

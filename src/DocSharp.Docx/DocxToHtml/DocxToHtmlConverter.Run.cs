@@ -43,7 +43,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
         // currently only fill, shadow and outline are partially supported.
         var fill14 = OpenXmlHelpers.GetEffectiveProperty<W14.FillTextEffect>(run);
         var outline14 = OpenXmlHelpers.GetEffectiveProperty<W14.TextOutlineEffect>(run);
-        //var shadow14 = OpenXmlHelpers.GetEffectiveProperty<W14.Shadow>(run);
+        var shadow14 = OpenXmlHelpers.GetEffectiveProperty<W14.Shadow>(run);
         //var properties3D = OpenXmlHelpers.GetEffectiveProperty<W14.Properties3D>(run);
         //var scene3D = OpenXmlHelpers.GetEffectiveProperty<W14.Scene3D>(run);
         //var reflection = OpenXmlHelpers.GetEffectiveProperty<W14.Reflection>(run);
@@ -254,28 +254,27 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
             ProcessBorder(border, ref styles, false);
         }
 
-        //if (shadow14 != null)
-        //{
-        //    // Calculate h-shadow and v-shadow
-        //    // Limitations:
-        //    // - HorizontalScalingFactor and VerticalScalingFactor are not supported
-        //    // - HorizontalSkewAngle and VerticalSkewAngle are not supported (needed for 3d shadows)
-        //    // - Alignment is not supported (seems only needed for 3d shadows)
+        if (shadow14 != null)
+        {
+            // Calculate h-shadow and v-shadow
+            // Limitations:
+            // - HorizontalScalingFactor and VerticalScalingFactor are not supported
+            // - HorizontalSkewAngle and VerticalSkewAngle are not supported (needed for 3d shadows)
+            // - Alignment is not supported (seems only needed for 3d shadows)
 
-        //    double directionAngle = shadow14.DirectionAngle?.Value / 60000.0 ?? 0;
-        //    double distance = shadow14.DistanceFromText?.Value / 12700.0 ?? 0; // Convert EMUs to points
-        //    double radians = directionAngle * (Math.PI / 180.0); // Convert to radiants
+            double directionAngle = shadow14.DirectionAngle?.Value / 60000.0 ?? 0;
+            double distance = shadow14.DistanceFromText?.Value / 12700.0 ?? 0; // Convert EMUs to points
+            double radians = directionAngle * (Math.PI / 180.0); // Convert to radiants
 
-        //    double hShadow = distance * Math.Cos(radians); // Horizontal offset
-        //    double vShadow = distance * Math.Sin(radians); // Vertical offset
+            double hShadow = distance * Math.Cos(radians); // Horizontal offset
+            double vShadow = distance * Math.Sin(radians); // Vertical offset
 
-        //    string shadowColor = OpenXmlHelpers.GetColor(shadow14, "#000000");
-        //    double blurRadius = shadow14.BlurRadius?.Value / 12700.0 ?? 0; // Convert EMUs to points
+            string shadowColor = OpenXmlHelpers.GetColor(shadow14, "#000000");
+            double blurRadius = shadow14.BlurRadius?.Value / 12700.0 ?? 0; // Convert EMUs to points
 
-        //    styles.Add($"text-shadow: {hShadow.ToStringInvariant()}pt {vShadow.ToStringInvariant()}pt {blurRadius.ToStringInvariant()}pt {shadowColor};");
-        //}
-        //else
-        if (shadow != null && (shadow.Val == null || shadow.Val != false))
+            styles.Add($"text-shadow: {hShadow.ToStringInvariant()}pt {vShadow.ToStringInvariant()}pt {blurRadius.ToStringInvariant()}pt {shadowColor};");
+        }
+        else if (shadow != null && (shadow.Val == null || shadow.Val != false))
         {
             // Generic shadow effect
             styles.Add("text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);");

@@ -5,20 +5,24 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
-- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Rtf: convert RTF to DOCX, HTML, Markdown and plain text (.txt).
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
+- DocSharp.Renderer: convert DOCX to PDF using a PdfSharpCore fork (experimental).
 
 Packages can be installed via NuGet:  
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Doc?style=flat-square&label=DocSharp.Binary.Doc)](https://www.nuget.org/packages/DocSharp.Binary.Doc/) 
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Xls?style=flat-square&label=DocSharp.Binary.Xls)](https://www.nuget.org/packages/DocSharp.Binary.Xls/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Ppt?style=flat-square&label=DocSharp.Binary.Ppt)](https://www.nuget.org/packages/DocSharp.Binary.Ppt/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Docx?style=flat-square&label=DocSharp.Docx)](https://www.nuget.org/packages/DocSharp.Docx/)
+[![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Rtf?style=flat-square&label=DocSharp.Rtf)](https://www.nuget.org/packages/DocSharp.Rtf/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Markdown?style=flat-square&label=DocSharp.Markdown)](https://www.nuget.org/packages/DocSharp.Markdown/)
+[![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Renderer?style=flat-square&label=DocSharp.Renderer)](https://www.nuget.org/packages/DocSharp.Renderer/)
 
 The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/) and [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> MD).
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use.  
-A new simplified DOM and RTF import are being worked on in a separate branch, but I can't guarantee when/if it will be ready.  
+A new simplified DOM on top of the Open XML SDK will be worked on in a separate branch, but I can't guarantee when/if it will be ready.  
 For now, you can consider the following libraries for documents creation and manipulation: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler), [QuestPDF](https://github.com/QuestPDF/QuestPDF), [MigraDoc](https://github.com/empira/PDFsharp).  
 
 ### Supported features
@@ -28,7 +32,8 @@ For now, you can consider the following libraries for documents creation and man
 
 ### Requirements
 
-.NET 6, 8, 9 and .NET Framework 4.6.2 and higher are supported, but tests are mostly performed on .NET 8 and above.
+.NET 6, 8, 9 and .NET Framework 4.6.2 and higher are supported, but tests are mostly performed on .NET 8 and above.  
+The DocSharp.Renderer and DocSharp.ImageSharp packages require .NET 8/9 or higher (ImageSharp is not compatible with .NET Framework).
 
 ### Usage
 
@@ -51,11 +56,14 @@ Dependencies:
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
 - [markdig.docx](https://github.com/morincer/markdig.docx)
+- [RtfPipe](https://github.com/erdomke/RtfPipe)
+- [sidea-sk/DocxToPdf](https://github.com/sidea-sk/DocxToPdf)
 
 Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
-- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) conversion
-- [OpenXmlToHtml](https://github.com/Codeuctivity/OpenXmlToHtml), [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
+- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion
+- [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion
+- [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
 
 ### License
 
