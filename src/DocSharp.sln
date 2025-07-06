@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.SystemDrawing", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Rtf", "DocSharp.Rtf\DocSharp.Rtf.csproj", "{BB385E7D-9F8A-6350-6446-96E0D598262F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Renderer", "DocSharp.Renderer\DocSharp.Renderer.csproj", "{4952131A-F498-C516-A49E-6BA68966D560}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +93,10 @@ Global
 		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4952131A-F498-C516-A49E-6BA68966D560}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4952131A-F498-C516-A49E-6BA68966D560}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4952131A-F498-C516-A49E-6BA68966D560}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4952131A-F498-C516-A49E-6BA68966D560}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

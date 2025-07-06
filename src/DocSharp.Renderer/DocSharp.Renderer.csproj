@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- NuGet package -->
+  <PropertyGroup>
+    <AssemblyName>DocSharp.Renderer</AssemblyName>
+    <AssemblyTitle>DocSharp.Renderer</AssemblyTitle>
+    <PackageId>DocSharp.Renderer</PackageId>
+    <Title>DocSharp.Renderer</Title>
+    <Description>.NET library for converting documents. The DocSharp.Renderer package provides DOCX to PDF conversion.</Description>
+    <PackageTags>docx pdf converter convert openxml renderer word</PackageTags>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="PeachPDF.PdfSharpCore" Version="0.7.23" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocSharp.Common\DocSharp.Common.csproj" />
+    <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
+  </ItemGroup>
+
+</Project>
