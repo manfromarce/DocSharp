@@ -30,10 +30,13 @@ public abstract class BaseStringWriter : IDisposable
         return sb.EndsWithNewLine();
     }
 
-    public virtual void Append(string text)
+    public virtual void Append(string? text)
     {
-        ExternalWriter?.Write(text);
-        sb.Append(text);
+        if (text != null)
+        {
+            ExternalWriter?.Write(text);
+            sb.Append(text);
+        }
     }
 
     public virtual void Append(char c)
