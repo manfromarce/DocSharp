@@ -295,11 +295,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
             }
         }
-        if (sectionProperties.GetFirstChild<TitlePage>() is TitlePage titlePage && 
-            (titlePage.Val is null || titlePage.Val))
-        {
-            sb.Write(@"\titlepg");
-        }
+
+        ProcessTitlePage(sectionProperties.GetFirstChild<TitlePage>(), sb);
 
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(sectionProperties);
         if (mainPart != null)
@@ -307,35 +304,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             var headers = sectionProperties.Elements<HeaderReference>();
             var footers = sectionProperties.Elements<FooterReference>();
 
-            if (headers.Any(h => h.Type != null && h.Type == HeaderFooterValues.Even) ||
-                footers.Any(f => f.Type != null && f.Type == HeaderFooterValues.Even))
-            {
-                // If header/footer of type Even is not present, the default header/footer is used for both even and odd pages.
-                sb.Write(@"\facingp");
-            }
-
-            if (headers != null)
-            {
-                foreach (var headerReference in headers)
-                {
-                    if (headerReference?.Id?.Value is string headerId &&
-                        mainPart.GetPartById(headerId) is HeaderPart headerPart)
-                    {
-                        ProcessHeader(headerPart.Header, sb, headerReference);
-                    }
-                }
-            }
-            if (footers != null)
-            {
-                foreach(var footerReference in footers)
-                {
-                    if (footerReference?.Id?.Value is string footerId &&
-                        mainPart.GetPartById(footerId) is FooterPart footerPart)
-                    {
-                        ProcessFooter(footerPart.Footer, sb, footerReference);
-                    }
-                }
-            }
+            ProcessHeadersFooters(headers, footers, mainPart, sb);
         }
 
         if (sectionProperties.GetFirstChild<PageNumberType>() is PageNumberType pageNumberType)
