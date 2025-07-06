@@ -10,9 +10,9 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal override void ProcessParagraph(Paragraph paragraph, HtmlStringWriter sb)
+    internal override void ProcessParagraph(Paragraph paragraph, HtmlTextWriter sb)
     {
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)
@@ -196,20 +196,19 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         var noAutoHyphen = OpenXmlHelpers.GetEffectiveProperty<SuppressAutoHyphens>(paragraph);
         if (noAutoHyphen != null && (noAutoHyphen.Val == null || noAutoHyphen.Val))
         {
-            sb.Append(@"hyphens: none;");
+            styles.Add(@"hyphens: none;");
         }
 
         // Add HTML paragraph with styles
-        sb.Append($"<p");
+        sb.WriteStartElement("p");
         if (styles.Count > 0)
         {
-            sb.Append($" style=\"{string.Join(" ", styles)}\"");
+            sb.WriteAttributeString("style", string.Join(" ", styles));
         }
-        sb.Append('>');
 
         // Process paragraph content
         base.ProcessParagraph(paragraph, sb);
 
-        sb.AppendLine("</p>");
+        sb.WriteEndElement("p");
     }
 }

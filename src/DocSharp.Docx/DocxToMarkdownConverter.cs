@@ -84,28 +84,28 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                     case "heading 1":
                     case "heading1":
                     case "title":
-                        sb.Append("# ");
+                        sb.Write("# ");
                         break;
                     case "heading 2":
                     case "heading2":
                     case "subtitle":
-                        sb.Append("## ");
+                        sb.Write("## ");
                         break;
                     case "heading 3":
                     case "heading3":
-                        sb.Append("### ");
+                        sb.Write("### ");
                         break;
                     case "heading 4":
                     case "heading4":
-                        sb.Append("#### ");
+                        sb.Write("#### ");
                         break;
                     case "heading 5":
                     case "heading5":
-                        sb.Append("##### ");
+                        sb.Write("##### ");
                         break;
                     case "heading 6":
                     case "heading6":
-                        sb.Append("###### ");
+                        sb.Write("###### ");
                         break;
                 }
             }
@@ -113,11 +113,11 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         base.ProcessParagraph(paragraph, sb);
         if (!paragraph.IsLast())
         {
-            sb.AppendLine();
+            sb.WriteLine();
             if (!paragraph.IsEmpty())
             {
                 // Write additional blank line unless the paragraph is empty.
-                sb.AppendLine();
+                sb.WriteLine();
             }
         }
     }
@@ -147,18 +147,18 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 {
                     for (int i = 1; i <= levelIndex; i++)
                     {
-                        sb.Append("    "); // indentation
+                        sb.Write("    "); // indentation
                     }
                     if (listType == NumberFormatValues.Bullet)
                     {
-                        sb.Append("- ");
+                        sb.Write("- ");
                     }
                     else
                     {
                         int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ?? 
                                           levelOverrideLevel?.StartNumberingValue?.Val ??
                                           level.StartNumberingValue?.Val ?? 1;
-                        sb.Append($"{startNumber}. "); // Markdown renderers will automatically increase the number.
+                        sb.Write($"{startNumber}. "); // Markdown renderers will automatically increase the number.
                     }
                 }
             }
@@ -171,7 +171,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         bool hasText = text != null && !string.IsNullOrEmpty(text.InnerText);
         if (hasText && text!.InnerText.All(char.IsWhiteSpace))
         {
-            sb.Append(text.InnerText);
+            sb.Write(text.InnerText);
             return;
         }
 
@@ -185,7 +185,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         {
             // Emphasis inlines starting with spaces are not interpreted properly, so we extract them.
             leadingSpaces = StringHelpers.GetLeadingSpaces(text!.InnerText);
-            sb.Append(leadingSpaces);
+            sb.Write(leadingSpaces);
 
             // TODO: consider last child for trailing spaces
             trailingSpaces = StringHelpers.GetTrailingSpaces(text.InnerText);
@@ -216,27 +216,27 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             // Consecutive emphasis inlines such as *italic***bold** are sometimes not interpreted properly.
             if (sb.EndsWithEmphasis() && string.IsNullOrEmpty(leadingSpaces) &&
                 (isBold | isItalic | isStrikethrough))
-                sb.Append(' ');
+                sb.Write(' ');
 
             if (isItalic)
-                sb.Append('*');
+                sb.Write('*');
 
             if (isBold)
-                sb.Append("**");
+                sb.Write("**");
 
             if (isStrikethrough)
-                sb.Append("~~");
+                sb.Write("~~");
 
             if (isUnderline)
-                sb.Append("<u>");
+                sb.Write("<u>");
 
             if (isHighlight)
-                sb.Append("<mark>");
+                sb.Write("<mark>");
 
             if (isSubscript)
-                sb.Append("<sub>");
+                sb.Write("<sub>");
             else if (isSuperscript)
-                sb.Append("<sup>");
+                sb.Write("<sup>");
         }
 
         isAllCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run) is Caps caps && (caps.Val is null || caps.Val);
@@ -251,26 +251,26 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         if (hasText)
         {
             if (isSubscript)
-                sb.Append("</sub>");
+                sb.Write("</sub>");
             else if (isSuperscript)
-                sb.Append("</sup>");
+                sb.Write("</sup>");
 
             if (isHighlight)
-                sb.Append("</mark>");
+                sb.Write("</mark>");
 
             if (isUnderline)
-                sb.Append("</u>");
+                sb.Write("</u>");
 
             if (isStrikethrough)
-                sb.Append("~~");
+                sb.Write("~~");
 
             if (isBold)
-                sb.Append("**");
+                sb.Write("**");
 
             if (isItalic)
-                sb.Append('*');
+                sb.Write('*');
 
-            sb.Append(trailingSpaces);
+            sb.Write(trailingSpaces);
         }
     }
 
@@ -278,12 +278,12 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     {
         if (br.Type != null && br.Type == BreakValues.Page)
         {
-            sb.AppendLine();
-            sb.AppendLine("-----"); // rendered as horizontal rule
+            sb.WriteLine();
+            sb.WriteLine("-----"); // rendered as horizontal rule
         }
         else
         {
-            sb.AppendLine("  "); // soft break
+            sb.WriteLine("  "); // soft break
         }
     }
 
@@ -302,7 +302,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         }
         foreach (char c in t)
         {
-            sb.AppendChar(isAllCaps ? char.ToUpper(c) : c, font);
+            sb.WriteChar(isAllCaps ? char.ToUpper(c) : c, font);
         }
     }
 
@@ -318,8 +318,8 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         if (!sb.EndsWithNewLine())
         {
             // Add a whole blank line before the table
-        	sb.AppendLine(); 
-            sb.AppendLine();
+        	sb.WriteLine(); 
+            sb.WriteLine();
         }
 
         int rowIndex = 0;
@@ -338,21 +338,21 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             }
         }
         // Add a blank line after the table
-        sb.AppendLine();
+        sb.WriteLine();
     }
 
     private void AddTableHeaderSeparator(int columnCount, MarkdownStringWriter sb)
     {
         for (int i = 0; i < columnCount; ++i)
         {
-            sb.Append("| --- ");
+            sb.Write("| --- ");
         }
-        sb.AppendLine("|");
+        sb.WriteLine("|");
     }
 
     internal void ProcessRow(TableRow tableRow, MarkdownStringWriter sb, int maxCellsCount)
     {
-        sb.Append("| ");
+        sb.Write("| ");
         int currentCellCount = 0;
         foreach (var element in tableRow.Elements())
         {
@@ -367,7 +367,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                         // Markdown does not support merged cells, add another empty cell for consistency.
                         for (int i = 1; i < cell.TableCellProperties.GridSpan.Val.Value; i++)
                         {
-                            sb.Append(" | ");
+                            sb.Write(" | ");
                             ++currentCellCount;
                         }
                     }
@@ -378,10 +378,10 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
 
         for (int i = currentCellCount; i < maxCellsCount; i++)
         {
-            sb.Append(" | "); // Markdown does not support rows with less cells.
+            sb.Write(" | "); // Markdown does not support rows with less cells.
         }
 
-        sb.AppendLine();
+        sb.WriteLine();
     }
 
     internal void ProcessCell(TableCell cell, MarkdownStringWriter sb)
@@ -396,7 +396,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             // so we use the <br> tag.
             ProcessParagraph(paragraph, cellBuilder);
         }
-        sb.Append(" | ");      
+        sb.Write(" | ");      
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, MarkdownStringWriter sb)
@@ -413,12 +413,12 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 string url = relationship.Uri.ToString();             
-                sb.Append($"[{displayTextBuilder.ToString()}]({url})");
+                sb.Write($"[{displayTextBuilder.ToString()}]({url})");
             }
         }
         else if (hyperlink.Anchor?.Value is string anchor)
         {
-            sb.Append($"[{displayTextBuilder.ToString()}](#{anchor})");
+            sb.Write($"[{displayTextBuilder.ToString()}](#{anchor})");
         }
     }
 
@@ -525,7 +525,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                     string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
                     uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
                 }
-                sb.Append($" ![{relId}]({uri}) ");
+                sb.Write($" ![{relId}]({uri}) ");
             }
         }
         catch (Exception ex)
@@ -541,7 +541,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, MarkdownStringWriter sb)
     {
-        sb.Append($"<a id=\"{bookmark.Name}\"></a>");
+        sb.Write($"<a id=\"{bookmark.Name}\"></a>");
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, MarkdownStringWriter sb)
@@ -567,7 +567,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             {
                 htmlEntity = $"&#{decimalValue};";
             }
-            sb.Append(htmlEntity);
+            sb.Write(htmlEntity);
         }        
     }
 
@@ -620,7 +620,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 }
                 if (!string.IsNullOrWhiteSpace(latex))
                 { 
-                    sb.Append($" $` {latex} `$ ");
+                    sb.Write($" $` {latex} `$ ");
                 }
                 if (element.LastChild != null && !element.LastChild.IsMathElement())
                 {

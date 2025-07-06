@@ -9,20 +9,20 @@ public class CodeBlockRenderer : LeafBlockParagraphRendererBase<CodeBlock>
 {
     protected override void WriteObject(RtfRenderer renderer, CodeBlock obj)
     {
-        renderer.RtfWriter.Append(@$"\pard\plain\sa{renderer.Settings.ParagraphSpaceAfterInTwips}\sl{renderer.Settings.LineSpacingValue}\slmult1\f7\fs{renderer.Settings.CodeFontSizeInHalfPoints}\cf8");
+        renderer.RtfWriter.Write(@$"\pard\plain\sa{renderer.Settings.ParagraphSpaceAfterInTwips}\sl{renderer.Settings.LineSpacingValue}\slmult1\f7\fs{renderer.Settings.CodeFontSizeInHalfPoints}\cf8");
 
         if (renderer.Settings.CodeBackgroundColor != Color.Transparent)
         {
-            renderer.RtfWriter.Append(@"\shading10000\cfpat10");
+            renderer.RtfWriter.Write(@"\shading10000\cfpat10");
         }
         if (renderer.Settings.CodeBorderColor != Color.Transparent && renderer.Settings.CodeBorderWidth > 0)
         {
-            renderer.RtfWriter.Append(@$"\brdrt\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
-            renderer.RtfWriter.Append(@$"\brdrl\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
-            renderer.RtfWriter.Append(@$"\brdrr\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
-            renderer.RtfWriter.Append(@$"\brdrb\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
+            renderer.RtfWriter.Write(@$"\brdrt\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
+            renderer.RtfWriter.Write(@$"\brdrl\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
+            renderer.RtfWriter.Write(@$"\brdrr\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
+            renderer.RtfWriter.Write(@$"\brdrb\brdrw{renderer.Settings.CodeBorderWidthInTwips}\brdrs\brdrcf9");
         }
-        renderer.RtfWriter.Append(' ');
+        renderer.RtfWriter.Write(' ');
         RenderContents(renderer, obj);
     }
 
@@ -34,10 +34,10 @@ public class CodeBlockRenderer : LeafBlockParagraphRendererBase<CodeBlock>
             var line = lines.Lines[i];
             var text = line.ToString() ?? "";
 
-            renderer.RtfWriter.AppendRtfEscaped(text);
+            renderer.RtfWriter.WriteRtfEscaped(text);
             if (i < lines.Count - 1 && !text.EndsWith('\n')) // in this case it was already converted to \line
-                renderer.RtfWriter.AppendLine("\\line");            
+                renderer.RtfWriter.WriteLine("\\line");            
         }
-        renderer.RtfWriter.Append("\\par");
+        renderer.RtfWriter.Write("\\par");
     }
 }

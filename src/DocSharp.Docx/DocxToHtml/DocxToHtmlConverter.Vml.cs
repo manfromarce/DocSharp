@@ -20,9 +20,9 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal override void ProcessVml(OpenXmlElement element, HtmlStringWriter sb)
+    internal override void ProcessVml(OpenXmlElement element, HtmlTextWriter sb)
     {
         if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)

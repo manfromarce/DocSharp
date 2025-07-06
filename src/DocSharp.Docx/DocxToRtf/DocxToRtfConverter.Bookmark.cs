@@ -12,11 +12,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 {
     internal override void ProcessBookmarkStart(BookmarkStart bookmarkStart, RtfStringWriter sb)
     {
-        sb.Append(@"{\*\bkmkstart " + bookmarkStart.Name + "}");
+        sb.Write(@"{\*\bkmkstart " + bookmarkStart.Name + "}");
     }
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, RtfStringWriter sb)
     {
-        sb.Append(@"{\*\bkmkend " + bookmarkEnd.GetBookmarkName() + "}");
+        sb.Write(@"{\*\bkmkend " + bookmarkEnd.GetBookmarkName() + "}");
     }
 }

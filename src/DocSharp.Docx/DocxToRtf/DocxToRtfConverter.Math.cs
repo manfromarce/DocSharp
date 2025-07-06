@@ -20,30 +20,30 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         switch (element)
         {
             case M.Paragraph oMathPara:
-                sb.Append(@"{\mmath{\*\moMathPara");
+                sb.Write(@"{\mmath{\*\moMathPara");
                 if (oMathPara.ParagraphProperties != null)
                 {
-                    sb.Append(@"{\moMathParaPr");
+                    sb.Write(@"{\moMathParaPr");
                     if (oMathPara.ParagraphProperties.Justification?.Val != null)
                     {
                         if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Left)
                         {
-                            sb.Append(@"\mJc3");
+                            sb.Write(@"\mJc3");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Right)
                         {
-                            sb.Append(@"\mJc4");
+                            sb.Write(@"\mJc4");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Center)
                         {
-                            sb.Append(@"\mJc2");
+                            sb.Write(@"\mJc2");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.CenterGroup)
                         {
-                            sb.Append(@"\mJc1");
+                            sb.Write(@"\mJc1");
                         }
                     }
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 foreach (var subElement in oMathPara.Elements())
                 {
@@ -51,17 +51,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     if (subElement is M.OfficeMath || subElement is M.Run)
                     // Wrap sparse run in an inline math block; don't add math zone (\mmath) again
                     {
-                        sb.Append(@"{\*\moMath");
+                        sb.Write(@"{\*\moMath");
                         ProcessMathElementContent(subElement, sb);
-                        sb.Append('}');
+                        sb.Write('}');
                     }
                 }
-                sb.Append("}}");
+                sb.Write("}}");
                 break;
             case M.OfficeMath oMath:
-                sb.Append(@"{\mmath{\*\moMath");
+                sb.Write(@"{\mmath{\*\moMath");
                 ProcessMathElementContent(oMath, sb);
-                sb.Append("}}");
+                sb.Write("}}");
                 break;
             case M.Run:
             case M.Accent:
@@ -93,12 +93,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (element == null)
             return;
-        sb.Append('{');
+        sb.Write('{');
         if (!ProcessRunElement(element, sb))
         {
             ProcessParagraphElement(element, sb);
         }
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessMathChildren(OpenXmlElement? element, RtfStringWriter sb)
@@ -134,248 +134,248 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 ProcessMathChildren(element, sb);
                 break;
             case M.Run run:
-                sb.Append(@"{\mr");
+                sb.Write(@"{\mr");
                 ProcessMathRunProperties(run.MathRunProperties, sb);
                 ProcessRunFormatting(run.RunProperties, sb);
                 ProcessMathChildren(run, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Text text:
                 ProcessText(text, sb);
                 break;
             case M.Accent accent:
-                sb.Append(@"{\macc");
+                sb.Write(@"{\macc");
                 if (accent.AccentProperties != null)
                 {
-                    sb.Append(@"{\maccPr");
+                    sb.Write(@"{\maccPr");
                     ProcessMathElementFormatting(accent.AccentProperties.ControlProperties, sb);
                     ProcessMathAccentChar(accent.AccentProperties.AccentChar, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(accent.Base, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Bar bar:
-                sb.Append(@"{\mbar");
+                sb.Write(@"{\mbar");
                 if (bar.BarProperties != null)
                 {
-                    sb.Append(@"{\mbarPr");
+                    sb.Write(@"{\mbarPr");
                     ProcessMathElementFormatting(bar.BarProperties.ControlProperties, sb);
                     ProcessMathPosition(bar.BarProperties.Position, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(bar.Base, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.BorderBox borderBox:
-                sb.Append(@"{\mborderBox");
+                sb.Write(@"{\mborderBox");
                 if (borderBox.BorderBoxProperties != null)
                 {
-                    sb.Append(@"{\mborderBoxPr");
+                    sb.Write(@"{\mborderBoxPr");
                     ProcessMathElementFormatting(borderBox.BorderBoxProperties.ControlProperties, sb);
                     ProcessMathBorderProperties(borderBox.BorderBoxProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(borderBox.Base, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Box box:
-                sb.Append(@"{\mbox");
+                sb.Write(@"{\mbox");
                 if (box.BoxProperties != null)
                 {
-                    sb.Append(@"{\mboxPr");
+                    sb.Write(@"{\mboxPr");
                     ProcessMathElementFormatting(box.BoxProperties.ControlProperties, sb);
                     ProcessMathBoxProperties(box.BoxProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(box.Base, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Delimiter delimiter:
-                sb.Append(@"{\md");
+                sb.Write(@"{\md");
                 if (delimiter.DelimiterProperties != null)
                 {
-                    sb.Append(@"{\mdPr");
+                    sb.Write(@"{\mdPr");
                     ProcessMathElementFormatting(delimiter.DelimiterProperties.ControlProperties, sb);
                     if (delimiter.DelimiterProperties.BeginChar?.Val != null)
                     {
-                        sb.Append("{\\mbegChr ");
-                        sb.AppendRtfEscaped(delimiter.DelimiterProperties.BeginChar.Val.Value);
-                        sb.Append('}');
+                        sb.Write("{\\mbegChr ");
+                        sb.WriteRtfEscaped(delimiter.DelimiterProperties.BeginChar.Val.Value);
+                        sb.Write('}');
                     }
                     if (delimiter.DelimiterProperties.EndChar?.Val != null)
                     {
-                        sb.Append("{\\mendChr ");
-                        sb.AppendRtfEscaped(delimiter.DelimiterProperties.EndChar.Val.Value);
-                        sb.Append('}');
+                        sb.Write("{\\mendChr ");
+                        sb.WriteRtfEscaped(delimiter.DelimiterProperties.EndChar.Val.Value);
+                        sb.Write('}');
                     }
                     if (delimiter.DelimiterProperties.SeparatorChar?.Val != null)
                     {
-                        sb.Append("{\\msepChr ");
-                        sb.AppendRtfEscaped(delimiter.DelimiterProperties.SeparatorChar.Val.Value);
-                        sb.Append('}');
+                        sb.Write("{\\msepChr ");
+                        sb.WriteRtfEscaped(delimiter.DelimiterProperties.SeparatorChar.Val.Value);
+                        sb.Write('}');
                     }
                     ProcessMathGrow(delimiter.DelimiterProperties.GrowOperators, sb);
                     if (delimiter.DelimiterProperties.Shape?.Val != null)
                     {
                         if (delimiter.DelimiterProperties.Shape.Val == ShapeDelimiterValues.Centered)
                         {
-                            sb.Append(@"{\mshp centered}");
+                            sb.Write(@"{\mshp centered}");
                         }
                         else if (delimiter.DelimiterProperties.Shape.Val == ShapeDelimiterValues.Match)
                         {
-                            sb.Append(@"{\mshp match}");
+                            sb.Write(@"{\mshp match}");
                         }
                     }
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 foreach (var delimiterBase in delimiter.Elements<M.Base>())
                 {
                     ProcessMathBase(delimiterBase, sb);
                 }
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.EquationArray eqArray:
-                sb.Append(@"{\meqArr");
+                sb.Write(@"{\meqArr");
                 if (eqArray.EquationArrayProperties != null)
                 {
-                    sb.Append(@"{\meqArrPr");
+                    sb.Write(@"{\meqArrPr");
                     ProcessMathElementFormatting(eqArray.EquationArrayProperties.ControlProperties, sb);
                     ProcessMathBaseJustification(eqArray.EquationArrayProperties.BaseJustification, sb);
                     if (eqArray.EquationArrayProperties.MaxDistribution != null)
                     {
                         if (eqArray.EquationArrayProperties.MaxDistribution.Val == null || eqArray.EquationArrayProperties.MaxDistribution.Val.ToBool())
                         {
-                            sb.Append(@"{\mmaxDist on}");
+                            sb.Write(@"{\mmaxDist on}");
                         }
                         else 
                         { 
-                            sb.Append(@"{\mmaxDist off}");
+                            sb.Write(@"{\mmaxDist off}");
                         }
                     }
                     if (eqArray.EquationArrayProperties.ObjectDistribution != null)
                     {
                         if (eqArray.EquationArrayProperties.ObjectDistribution.Val == null || eqArray.EquationArrayProperties.ObjectDistribution.Val.ToBool())
                         {
-                            sb.Append(@"{\mobjDist on}");
+                            sb.Write(@"{\mobjDist on}");
                         }
                         else
                         {
-                            sb.Append(@"{\mobjDist off}");
+                            sb.Write(@"{\mobjDist off}");
                         }
                     }
                     ProcessMathRowSpacing(eqArray.EquationArrayProperties.RowSpacingRule, eqArray.EquationArrayProperties.RowSpacing, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 foreach (var eq in eqArray.Elements<M.Base>())
                 {
                     ProcessMathBase(eq, sb);
                 }
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Fraction fraction:
-                sb.Append(@"{\mf");
+                sb.Write(@"{\mf");
                 if (fraction.FractionProperties != null)
                 {
-                    sb.Append(@"{\mfPr");
+                    sb.Write(@"{\mfPr");
                     ProcessMathElementFormatting(fraction.FractionProperties.ControlProperties, sb);
                     if (fraction.FractionProperties.FractionType?.Val != null)
                     {
-                        sb.Append(@"{\mtype ");
+                        sb.Write(@"{\mtype ");
                         if (fraction.FractionProperties.FractionType.Val == M.FractionTypeValues.Skewed)
                         {
-                            sb.Append(@"skw");
+                            sb.Write(@"skw");
                         }
                         else if (fraction.FractionProperties.FractionType.Val == M.FractionTypeValues.Bar)
                         {
-                            sb.Append(@"bar");
+                            sb.Write(@"bar");
                         }
                         else if (fraction.FractionProperties.FractionType.Val == M.FractionTypeValues.Linear)
                         {
-                            sb.Append(@"lin");
+                            sb.Write(@"lin");
                         }
                         else if (fraction.FractionProperties.FractionType.Val == M.FractionTypeValues.NoBar)
                         {
-                            sb.Append(@"nobar");
+                            sb.Write(@"nobar");
                         }
-                        sb.Append('}');
+                        sb.Write('}');
                     }
-                    sb.Append('}');
+                    sb.Write('}');
                 }
-                sb.Append(@"{\mnum ");
+                sb.Write(@"{\mnum ");
                 if (fraction.Numerator != null)
                 {
                     ProcessMathChildren(fraction.Numerator, sb);
                 }
-                sb.Append('}');
-                sb.Append(@"{\mden ");
+                sb.Write('}');
+                sb.Write(@"{\mden ");
                 if (fraction.Denominator != null)
                 {
                     ProcessMathChildren(fraction.Denominator, sb);
                 }
-                sb.Append("}}");
+                sb.Write("}}");
                 break;
             case M.MathFunction mathFunction:
-                sb.Append(@"{\mfunc");
+                sb.Write(@"{\mfunc");
                 if (mathFunction.FunctionProperties != null)
                 {
-                    sb.Append(@"{\mfuncPr");
+                    sb.Write(@"{\mfuncPr");
                     ProcessMathElementFormatting(mathFunction.FunctionProperties.ControlProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(mathFunction.Base, sb);
                 if (mathFunction.FunctionName != null)
                 {
-                    sb.Append(@"{\mfName ");
+                    sb.Write(@"{\mfName ");
                     ProcessArgumentProperties(mathFunction.FunctionName.ArgumentProperties, sb);
                     ProcessMathChildren(mathFunction.FunctionName, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.GroupChar groupChar:
-                sb.Append(@"{\mgroupChr");
+                sb.Write(@"{\mgroupChr");
                 if (groupChar.GroupCharProperties != null)
                 {
-                    sb.Append(@"{\mgroupChrPr");
+                    sb.Write(@"{\mgroupChrPr");
                     ProcessMathElementFormatting(groupChar.GroupCharProperties.ControlProperties, sb);
                     ProcessMathAccentChar(groupChar.GroupCharProperties.AccentChar, sb);
                     ProcessMathPosition(groupChar.GroupCharProperties.Position, sb);
                     ProcessMathVerticalJustification(groupChar.GroupCharProperties.VerticalJustification, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(groupChar.Base, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.LimitLower limitLower:
-                sb.Append(@"{\mlimLow");
+                sb.Write(@"{\mlimLow");
                 if (limitLower.LimitLowerProperties != null)
                 {
-                    sb.Append(@"{\mlimLowPr");
+                    sb.Write(@"{\mlimLowPr");
                     ProcessMathElementFormatting(limitLower.LimitLowerProperties.ControlProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(limitLower.Base, sb);
                 ProcessLimit(limitLower.Limit, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.LimitUpper limitUpper:
-                sb.Append(@"{\mlimUpp");
+                sb.Write(@"{\mlimUpp");
                 if (limitUpper.LimitUpperProperties != null)
                 {
-                    sb.Append(@"{\mlimUppPr");
+                    sb.Write(@"{\mlimUppPr");
                     ProcessMathElementFormatting(limitUpper.LimitUpperProperties.ControlProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(limitUpper.Base, sb);
                 ProcessLimit(limitUpper.Limit, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Matrix matrix:
-                sb.Append(@"{\mm");
+                sb.Write(@"{\mm");
                 if (matrix.MatrixProperties != null)
                 {
-                    sb.Append(@"{\mmPr");
+                    sb.Write(@"{\mmPr");
                     ProcessMathElementFormatting(matrix.MatrixProperties.ControlProperties, sb);
                     ProcessMathBaseJustification(matrix.MatrixProperties.BaseJustification, sb);
                     ProcessMathColumnGap(matrix.MatrixProperties.ColumnGapRule, matrix.MatrixProperties.ColumnGap, sb);
@@ -385,140 +385,140 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     if (matrix.MatrixProperties.HidePlaceholder != null &&
                         (matrix.MatrixProperties.HidePlaceholder.Val == null || matrix.MatrixProperties.HidePlaceholder.Val.ToBool()))
                     {
-                        sb.Append(@"{\mplcHide on}");
+                        sb.Write(@"{\mplcHide on}");
                     }
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 foreach (var row in matrix.Elements<M.MatrixRow>())
                 {
-                    sb.Append(@"{\mmr");
+                    sb.Write(@"{\mmr");
                     foreach (var matrixBase in row.Elements<M.Base>())
                     {
                         ProcessMathBase(matrixBase, sb);
                     }
-                    sb.Append('}');
+                    sb.Write('}');
                 }
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Nary nary:
-                sb.Append(@"{\mnary");
+                sb.Write(@"{\mnary");
                 if (nary.NaryProperties != null)
                 {
-                    sb.Append(@"{\mnaryPr");
+                    sb.Write(@"{\mnaryPr");
                     ProcessMathElementFormatting(nary.NaryProperties.ControlProperties, sb);
                     if (nary.NaryProperties.HideSubArgument != null && (nary.NaryProperties.HideSubArgument.Val == null || nary.NaryProperties.HideSubArgument.Val.ToBool()))
                     {
-                        sb.Append(@"{\msubHide on}");
+                        sb.Write(@"{\msubHide on}");
                     }
                     if (nary.NaryProperties.HideSuperArgument != null && (nary.NaryProperties.HideSuperArgument.Val == null || nary.NaryProperties.HideSuperArgument.Val.ToBool()))
                     {
-                        sb.Append(@"{\msupHide on}");
+                        sb.Write(@"{\msupHide on}");
                     }
                     ProcessMathAccentChar(nary.NaryProperties.AccentChar, sb);
                     ProcessMathLimitLocation(nary.NaryProperties.LimitLocation, sb);
                     ProcessMathGrow(nary.NaryProperties.GrowOperators, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(nary.Base, sb);
                 ProcessSubArgument(nary.SubArgument, sb);
                 ProcessSuperArgument(nary.SuperArgument, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Phantom phantom:
-                sb.Append(@"{\mphant");
+                sb.Write(@"{\mphant");
                 if (phantom.PhantomProperties != null)
                 {
-                    sb.Append(@"{\mphantPr");
+                    sb.Write(@"{\mphantPr");
                     ProcessMathElementFormatting(phantom.PhantomProperties.ControlProperties, sb);
                     ProcessPhantomProperties(phantom.PhantomProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(phantom.Base, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Radical radical:
-                sb.Append(@"{\mrad");
+                sb.Write(@"{\mrad");
                 if (radical.RadicalProperties != null)
                 {
-                    sb.Append(@"{\mradPr");
+                    sb.Write(@"{\mradPr");
                     ProcessMathElementFormatting(radical.RadicalProperties.ControlProperties, sb);
                     if (radical.RadicalProperties.HideDegree != null &&
                         (radical.RadicalProperties.HideDegree.Val == null || radical.RadicalProperties.HideDegree.Val.ToBool()))
                     {
-                        sb.Append(@"{\mdegHide on}");
+                        sb.Write(@"{\mdegHide on}");
                     }
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(radical.Base, sb);
                 if (radical.Degree != null && radical.Degree.HasChildren)
                 {
-                    sb.Append(@"{\mdeg ");
+                    sb.Write(@"{\mdeg ");
                     ProcessArgumentProperties(radical.Degree.ArgumentProperties, sb);
                     ProcessMathChildren(radical.Degree, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.PreSubSuper preSubSuper:
-                sb.Append(@"{\msPre");
+                sb.Write(@"{\msPre");
                 if (preSubSuper.PreSubSuperProperties != null)
                 {
-                    sb.Append(@"{\msPrePr");
+                    sb.Write(@"{\msPrePr");
                     ProcessMathElementFormatting(preSubSuper.PreSubSuperProperties.ControlProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(preSubSuper.Base, sb);
                 ProcessSubArgument(preSubSuper.SubArgument, sb);
                 ProcessSuperArgument(preSubSuper.SuperArgument, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Subscript subscript:
-                sb.Append(@"{\msSub");
+                sb.Write(@"{\msSub");
                 if (subscript.SubscriptProperties != null)
                 {
-                    sb.Append(@"{\msSubPr");
+                    sb.Write(@"{\msSubPr");
                     ProcessMathElementFormatting(subscript.SubscriptProperties.ControlProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(subscript.Base, sb);
                 ProcessSubArgument(subscript.SubArgument, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.Superscript superscript:
-                sb.Append(@"{\msSup");
+                sb.Write(@"{\msSup");
                 if (superscript.SuperscriptProperties != null)
                 {
-                    sb.Append(@"{\msSupPr");
+                    sb.Write(@"{\msSupPr");
                     ProcessMathElementFormatting(superscript.SuperscriptProperties.ControlProperties, sb);
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(superscript.Base, sb);
                 ProcessSuperArgument(superscript.SuperArgument, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
             case M.SubSuperscript subSuperscript:
-                sb.Append(@"{\msSubSup");
+                sb.Write(@"{\msSubSup");
                 if (subSuperscript.SubSuperscriptProperties != null)
                 {
-                    sb.Append(@"{\msSubSupPr");
+                    sb.Write(@"{\msSubSupPr");
                     ProcessMathElementFormatting(subSuperscript.SubSuperscriptProperties.ControlProperties, sb);
                     if (subSuperscript.SubSuperscriptProperties.AlignScripts != null)
                     {
                         if (subSuperscript.SubSuperscriptProperties.AlignScripts.Val == null || subSuperscript.SubSuperscriptProperties.AlignScripts.Val.ToBool())
                         {
-                            sb.Append(@"{\malnScr on}");
+                            sb.Write(@"{\malnScr on}");
                         }
                         else
                         {
-                            sb.Append(@"{\malnScr off}");
+                            sb.Write(@"{\malnScr off}");
                         }
                     }
-                    sb.Append('}');
+                    sb.Write('}');
                 }
                 ProcessMathBase(subSuperscript.Base, sb);
                 ProcessSubArgument(subSuperscript.SubArgument, sb);
                 ProcessSuperArgument(subSuperscript.SuperArgument, sb);
-                sb.Append('}');
+                sb.Write('}');
                 break;
         }
     }
@@ -530,43 +530,43 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             return;
         }
 
-        sb.Append(@"{\mmcs ");
+        sb.Write(@"{\mmcs ");
         foreach (var column in matrixColumns.Elements<MatrixColumn>())
         {
-            sb.Append(@"{\mmc ");
+            sb.Write(@"{\mmc ");
             ProcessMathColumnProperties(column, sb);
-            sb.Append('}');
+            sb.Write('}');
         }
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessMathColumnProperties(MatrixColumn column, RtfStringWriter sb)
     {
         if (column.MatrixColumnProperties != null)
         {
-            sb.Append(@"{\mmcPr");
+            sb.Write(@"{\mmcPr");
             if (column.MatrixColumnProperties.MatrixColumnCount?.Val != null &&
                 column.MatrixColumnProperties.MatrixColumnCount.Val.HasValue)
             {
-                sb.Append($@"{{\mcount {column.MatrixColumnProperties.MatrixColumnCount.Val.Value}}}");
+                sb.Write($@"{{\mcount {column.MatrixColumnProperties.MatrixColumnCount.Val.Value}}}");
             }
             if (column.MatrixColumnProperties.MatrixColumnJustification?.Val != null &&
                 column.MatrixColumnProperties.MatrixColumnJustification.Val.HasValue)
             {
                 if (column.MatrixColumnProperties.MatrixColumnJustification.Val.Value == M.HorizontalAlignmentValues.Left)
                 {
-                    sb.Append(@"{\mmjc left}");
+                    sb.Write(@"{\mmjc left}");
                 }
                 else if (column.MatrixColumnProperties.MatrixColumnJustification.Val.Value == M.HorizontalAlignmentValues.Center)
                 {
-                    sb.Append(@"{\mmjc center}");
+                    sb.Write(@"{\mmjc center}");
                 }
                 else if (column.MatrixColumnProperties.MatrixColumnJustification.Val.Value == M.HorizontalAlignmentValues.Right)
                 {
-                    sb.Append(@"{\mmjc right}");
+                    sb.Write(@"{\mmjc right}");
                 }
             }
-            sb.Append('}');
+            sb.Write('}');
         }
     }
 
@@ -574,7 +574,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (columnSpacing?.Val != null && columnSpacing.Val.HasValue)
         {
-            sb.Append(@$"{{\mcSp{columnSpacing.Val.Value}}}");
+            sb.Write(@$"{{\mcSp{columnSpacing.Val.Value}}}");
         }
     }
 
@@ -582,11 +582,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (columnGapRule?.Val != null && columnGapRule.Val.HasValue)
         {
-            sb.Append(@$"{{\mcGpRule{columnGapRule.Val.Value}}}");
+            sb.Write(@$"{{\mcGpRule{columnGapRule.Val.Value}}}");
         }
         if (columnGap?.Val != null && columnGap.Val.HasValue)
         {
-            sb.Append(@$"{{\mcGp{columnGap.Val.Value}}}");
+            sb.Write(@$"{{\mcGp{columnGap.Val.Value}}}");
         }
     }
 
@@ -594,11 +594,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (rowSpacingRule?.Val != null && rowSpacingRule.Val.HasValue)
         {
-            sb.Append(@$"{{\mrSpRule{rowSpacingRule.Val.Value}}}");
+            sb.Write(@$"{{\mrSpRule{rowSpacingRule.Val.Value}}}");
         }
         if (rowSpacing?.Val != null && rowSpacing.Val.HasValue)
         {
-            sb.Append(@$"{{\mrSp{rowSpacing.Val.Value}}}");
+            sb.Write(@$"{{\mrSp{rowSpacing.Val.Value}}}");
         }
     }
 
@@ -608,11 +608,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (growOperators.Val == null || growOperators.Val.ToBool())
             {
-                sb.Append(@"{\mgrow on}");
+                sb.Write(@"{\mgrow on}");
             }
             else
             {
-                sb.Append(@"{\mgrow off}");
+                sb.Write(@"{\mgrow off}");
             }
         }
     }
@@ -623,55 +623,55 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (phantomProperties.ShowPhantom.Val == null || phantomProperties.ShowPhantom.Val.ToBool())
             {
-                sb.Append(@"{\mshow on}");
+                sb.Write(@"{\mshow on}");
             }
             else
             {
-                sb.Append(@"{\mshow off}");
+                sb.Write(@"{\mshow off}");
             }
         }
         if (phantomProperties.Transparent != null)
         {
             if (phantomProperties.Transparent.Val == null || phantomProperties.Transparent.Val.ToBool())
             {
-                sb.Append(@"{\mtransp on}");
+                sb.Write(@"{\mtransp on}");
             }
             else
             {
-                sb.Append(@"{\mtransp off}");
+                sb.Write(@"{\mtransp off}");
             }
         }
         if (phantomProperties.ZeroAscent != null)
         {
             if (phantomProperties.ZeroAscent.Val == null || phantomProperties.ZeroAscent.Val.ToBool())
             {
-                sb.Append(@"{\mzeroAsc on}");
+                sb.Write(@"{\mzeroAsc on}");
             }
             else
             {
-                sb.Append(@"{\mzeroAsc off}");
+                sb.Write(@"{\mzeroAsc off}");
             }
         }
         if (phantomProperties.ZeroDescent != null)
         {
             if (phantomProperties.ZeroDescent.Val == null || phantomProperties.ZeroDescent.Val.ToBool())
             {
-                sb.Append(@"{\mzeroDesc on}");
+                sb.Write(@"{\mzeroDesc on}");
             }
             else
             {
-                sb.Append(@"{\mzeroDesc off}");
+                sb.Write(@"{\mzeroDesc off}");
             }
         }
         if (phantomProperties.ZeroWidth != null)
         {
             if (phantomProperties.ZeroWidth.Val == null || phantomProperties.ZeroWidth.Val.ToBool())
             {
-                sb.Append(@"{\mzeroWid on}");
+                sb.Write(@"{\mzeroWid on}");
             }
             else
             {
-                sb.Append(@"{\mzeroWid off}");
+                sb.Write(@"{\mzeroWid off}");
             }
         }
     }
@@ -682,88 +682,88 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (borderBoxProperties.HideBottom.Val == null || borderBoxProperties.HideBottom.Val.ToBool())
             {
-                sb.Append(@"{\mhideBot on}");
+                sb.Write(@"{\mhideBot on}");
             }
             else
             {
-                sb.Append(@"{\mhideBot off}");
+                sb.Write(@"{\mhideBot off}");
             }
         }
         if (borderBoxProperties.HideLeft != null)
         {
             if (borderBoxProperties.HideLeft.Val == null || borderBoxProperties.HideLeft.Val.ToBool())
             {
-                sb.Append(@"{\mhideLeft on}");
+                sb.Write(@"{\mhideLeft on}");
             }
             else
             {
-                sb.Append(@"{\mhideLeft off}");
+                sb.Write(@"{\mhideLeft off}");
             }
         }
         if (borderBoxProperties.HideTop != null)
         {
             if (borderBoxProperties.HideTop.Val == null || borderBoxProperties.HideTop.Val.ToBool())
             {
-                sb.Append(@"{\mhideTop on}");
+                sb.Write(@"{\mhideTop on}");
             }
             else
             {
-                sb.Append(@"{\mhideTop off}");
+                sb.Write(@"{\mhideTop off}");
             }
         }
         if (borderBoxProperties.HideRight != null)
         {
             if (borderBoxProperties.HideRight.Val == null || borderBoxProperties.HideRight.Val.ToBool())
             {
-                sb.Append(@"{\mhideRight on}");
+                sb.Write(@"{\mhideRight on}");
             }
             else
             {
-                sb.Append(@"{\mhideRight off}");
+                sb.Write(@"{\mhideRight off}");
             }
         }
         if (borderBoxProperties.StrikeBottomLeftToTopRight != null)
         {
             if (borderBoxProperties.StrikeBottomLeftToTopRight.Val == null || borderBoxProperties.StrikeBottomLeftToTopRight.Val.ToBool())
             {
-                sb.Append(@"{\mstrikeBLTR on}");
+                sb.Write(@"{\mstrikeBLTR on}");
             }
             else
             {
-                sb.Append(@"{\mstrikeBLTR off}");
+                sb.Write(@"{\mstrikeBLTR off}");
             }
         }
         if (borderBoxProperties.StrikeTopLeftToBottomRight != null)
         {
             if (borderBoxProperties.StrikeTopLeftToBottomRight.Val == null || borderBoxProperties.StrikeTopLeftToBottomRight.Val.ToBool())
             {
-                sb.Append(@"{\mstrikeTLBR on}");
+                sb.Write(@"{\mstrikeTLBR on}");
             }
             else
             {
-                sb.Append(@"{\mstrikeTLBR off}");
+                sb.Write(@"{\mstrikeTLBR off}");
             }
         }
         if (borderBoxProperties.StrikeHorizontal != null)
         {
             if (borderBoxProperties.StrikeHorizontal.Val == null || borderBoxProperties.StrikeHorizontal.Val.ToBool())
             {
-                sb.Append(@"{\mstrikeH on}");
+                sb.Write(@"{\mstrikeH on}");
             }
             else
             {
-                sb.Append(@"{\mstrikeH off}");
+                sb.Write(@"{\mstrikeH off}");
             }
         }
         if (borderBoxProperties.StrikeVertical != null)
         {
             if (borderBoxProperties.StrikeVertical.Val == null || borderBoxProperties.StrikeVertical.Val.ToBool())
             {
-                sb.Append(@"{\mstrikeV on}");
+                sb.Write(@"{\mstrikeV on}");
             }
             else
             {
-                sb.Append(@"{\mstrikeV off}");
+                sb.Write(@"{\mstrikeV off}");
             }
         }
     }
@@ -774,44 +774,44 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (boxProperties.Alignment.Val == null || boxProperties.Alignment.Val.ToBool())
             {
-                sb.Append(@"{\maln on}");
+                sb.Write(@"{\maln on}");
             }
             else
             {
-                sb.Append(@"{\maln off}");
+                sb.Write(@"{\maln off}");
             }
         }
         if (boxProperties.Differential != null)
         {
             if (boxProperties.Differential.Val == null || boxProperties.Differential.Val.ToBool())
             {
-                sb.Append(@"{\mdiff on}");
+                sb.Write(@"{\mdiff on}");
             }
             else
             {
-                sb.Append(@"{\mdiff off}");
+                sb.Write(@"{\mdiff off}");
             }
         }
         if (boxProperties.NoBreak != null)
         {
             if (boxProperties.NoBreak.Val == null || boxProperties.NoBreak.Val.ToBool())
             {
-                sb.Append(@"{\mnoBreak on}");
+                sb.Write(@"{\mnoBreak on}");
             }
             else
             {
-                sb.Append(@"{\mnoBreak off}");
+                sb.Write(@"{\mnoBreak off}");
             }
         }
         if (boxProperties.OperatorEmulator != null)
         {
             if (boxProperties.OperatorEmulator.Val == null || boxProperties.OperatorEmulator.Val.ToBool())
             {
-                sb.Append(@"{\mopEmu on}");
+                sb.Write(@"{\mopEmu on}");
             }
             else
             {
-                sb.Append(@"{\mopEmu off}");
+                sb.Write(@"{\mopEmu off}");
             }
         }
 
@@ -827,11 +827,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (baseJustification.Val.Value == M.VerticalAlignmentValues.Top)
             {
-                sb.Append("{\\mbaseJc top}");
+                sb.Write("{\\mbaseJc top}");
             }
             else if(baseJustification.Val.Value == M.VerticalAlignmentValues.Bottom)
             {
-                sb.Append("{\\mbaseJc bot}");
+                sb.Write("{\\mbaseJc bot}");
             }
         }
     }
@@ -842,11 +842,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (limitLocation.Val.Value == M.LimitLocationValues.SubscriptSuperscript)
             {
-                sb.Append("{\\mlimLoc subsup}");
+                sb.Write("{\\mlimLoc subsup}");
             }
             else if (limitLocation.Val.Value == M.LimitLocationValues.UnderOver)
             {
-                sb.Append("{\\mlimLoc undovr}");
+                sb.Write("{\\mlimLoc undovr}");
             }
         }
     }
@@ -857,11 +857,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (verticalJustification.Val.Value == M.VerticalJustificationValues.Top)
             {
-                sb.Append("{\\mvertJc top}");
+                sb.Write("{\\mvertJc top}");
             }
             else if (verticalJustification.Val.Value == M.VerticalJustificationValues.Bottom)
             {
-                sb.Append("{\\mvertJc bot}");
+                sb.Write("{\\mvertJc bot}");
             }
         }
     }
@@ -872,32 +872,32 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (position.Val.Value == M.VerticalJustificationValues.Top)
             {
-                sb.Append("{\\mpos top}");
+                sb.Write("{\\mpos top}");
             }
             else if (position.Val.Value == M.VerticalJustificationValues.Bottom)
             {
-                sb.Append("{\\mpos bot}");
+                sb.Write("{\\mpos bot}");
             }
         }
     }
 
     internal void ProcessMathElementFormatting(ControlProperties? ctrlProperties, RtfStringWriter sb)
     {
-        sb.Append(@"{\mctrlPr");
+        sb.Write(@"{\mctrlPr");
         if (ctrlProperties != null)
         {
             ProcessRunFormatting(ctrlProperties.GetFirstChild<W.RunProperties>(), sb);
         }
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessMathAccentChar(AccentChar? accentChar, RtfStringWriter sb)
     {
         if (accentChar?.Val != null && accentChar.Val.HasValue)
         {
-            sb.Append("{\\mchr ");
-            sb.AppendRtfEscaped(accentChar.Val.Value);
-            sb.Append('}');
+            sb.Write("{\\mchr ");
+            sb.WriteRtfEscaped(accentChar.Val.Value);
+            sb.Write('}');
         }
     }
 
@@ -912,11 +912,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (mathRunProperties.Literal.Val == null || mathRunProperties.Literal.Val.ToBool())
             {
-                sb.Append(@"\mlit1");
+                sb.Write(@"\mlit1");
             }
             else
             {
-                sb.Append(@"\mlit0");
+                sb.Write(@"\mlit0");
             }
         }
         foreach (var subElement in mathRunProperties)
@@ -926,7 +926,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 case M.NormalText normalText:
                     if (normalText.Val == null || normalText.Val.ToBool())
                     {
-                        sb.Append(@"\mnor"); // Should be \mnor1 ?
+                        sb.Write(@"\mnor"); // Should be \mnor1 ?
                     }
                     break;
                 case M.Break br:
@@ -937,11 +937,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     // Not mentioned in RTF documentation, assuming it's the same as in BorderBoxProperties
                     if (alignment.Val == null || alignment.Val.ToBool())
                     {
-                        sb.Append(@"\maln1");
+                        sb.Write(@"\maln1");
                     }
                     else
                     {
-                        sb.Append(@"\maln0");
+                        sb.Write(@"\maln0");
                     }
                     break;
                 case M.Script script:
@@ -949,27 +949,27 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     {
                         if (script.Val == ScriptValues.Roman)
                         {
-                            sb.Append(@"\mscr0");
+                            sb.Write(@"\mscr0");
                         }
                         else if (script.Val == ScriptValues.Script)
                         {
-                            sb.Append(@"\mscr1");
+                            sb.Write(@"\mscr1");
                         }
                         else if (script.Val == ScriptValues.Fraktur)
                         {
-                            sb.Append(@"\mscr2");
+                            sb.Write(@"\mscr2");
                         }
                         else if (script.Val == ScriptValues.DoubleStruck)
                         {
-                            sb.Append(@"\mscr3");
+                            sb.Write(@"\mscr3");
                         }
                         else if (script.Val == ScriptValues.Monospace)
                         {
-                            sb.Append(@"\mscr4");
+                            sb.Write(@"\mscr4");
                         }
                         else if (script.Val == ScriptValues.SansSerif)
                         {
-                            sb.Append(@"\mscr5");
+                            sb.Write(@"\mscr5");
                         }
                     }
                     break;
@@ -978,19 +978,19 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     {
                         if (style.Val == StyleValues.Bold)
                         {
-                            sb.Append(@"\msty1");
+                            sb.Write(@"\msty1");
                         }
                         else if (style.Val == StyleValues.Italic)
                         {
-                            sb.Append(@"\msty2");
+                            sb.Write(@"\msty2");
                         }
                         else if (style.Val == StyleValues.BoldItalic)
                         {
-                            sb.Append(@"\msty3");
+                            sb.Write(@"\msty3");
                         }
                         else if (style.Val == StyleValues.Plain)
                         {
-                            sb.Append(@"\msty0");
+                            sb.Write(@"\msty0");
                         }
                     }
                     break;
@@ -1001,18 +1001,18 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessMathBreak(M.Break br, RtfStringWriter sb)
     {
-        sb.Append(@"\mbrk");
+        sb.Write(@"\mbrk");
         if (br.AlignAt != null)
         {
-            sb.Append(br.AlignAt.Value);
+            sb.Write(br.AlignAt.Value);
         }
         else if (br.Val != null)
         {
-            sb.Append(br.Val.Value);
+            sb.Write(br.Val.Value);
         }
         else
         {
-            sb.Append('0');
+            sb.Write('0');
         }
     }
 
@@ -1022,10 +1022,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             return;
         }
-        sb.Append(@"{\me ");
+        sb.Write(@"{\me ");
         ProcessArgumentProperties(@base.ArgumentProperties, sb);
         ProcessMathChildren(@base, sb);
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessLimit(M.Limit? limit, RtfStringWriter sb)
@@ -1034,10 +1034,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             return;
         }
-        sb.Append(@"{\mlim ");
+        sb.Write(@"{\mlim ");
         ProcessArgumentProperties(limit.ArgumentProperties, sb);
         ProcessMathChildren(limit, sb);
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessSubArgument(M.SubArgument? subArgument, RtfStringWriter sb)
@@ -1046,10 +1046,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             return;
         }
-        sb.Append(@"{\msub ");
+        sb.Write(@"{\msub ");
         ProcessArgumentProperties(subArgument.ArgumentProperties, sb);
         ProcessMathChildren(subArgument, sb);
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessSuperArgument(M.SuperArgument? superArgument, RtfStringWriter sb)
@@ -1058,17 +1058,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             return;
         }
-        sb.Append(@"{\msup ");
+        sb.Write(@"{\msup ");
         ProcessArgumentProperties(superArgument.ArgumentProperties, sb);
         ProcessMathChildren(superArgument, sb);
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessArgumentProperties(M.ArgumentProperties? argumentProperties, RtfStringWriter sb)
     {
         if (argumentProperties?.ArgumentSize?.Val != null)
         {
-            sb.Append("{\\margPr \\margSz" + argumentProperties.ArgumentSize.Val.Value + "}");
+            sb.Write("{\\margPr \\margSz" + argumentProperties.ArgumentSize.Val.Value + "}");
         }
     }
 }

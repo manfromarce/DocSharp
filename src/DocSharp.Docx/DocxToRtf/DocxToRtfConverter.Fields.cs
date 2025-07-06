@@ -17,14 +17,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (fieldChar.FieldCharType == FieldCharValues.Begin)
             {
-                sb.AppendLine(@"{\field");
+                sb.WriteLine(@"{\field");
                 if (fieldChar.FieldLock != null && ((!fieldChar.FieldLock.HasValue) || fieldChar.FieldLock.Value))
                 {
-                    sb.Append("\\fldlock");
+                    sb.Write("\\fldlock");
                 }
                 if (fieldChar.Dirty != null && ((!fieldChar.Dirty.HasValue) || fieldChar.Dirty.Value))
                 {
-                    sb.Append("\\flddirty");
+                    sb.Write("\\flddirty");
                 }
 
                 //if (fieldChar.FieldData != null)
@@ -38,150 +38,150 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (fieldChar.FormFieldData != null)
                 {
                     // The field is a form field
-                    sb.Append(@"{{\*\formfield ");
+                    sb.Write(@"{{\*\formfield ");
 
                     if (fieldChar.FormFieldData.GetFirstChild<Enabled>() is Enabled enabled && 
                         enabled.Val != null && !enabled.Val)
                     {
                         // Disabled
-                        sb.Append(@"\ffprot1");
+                        sb.Write(@"\ffprot1");
                     }
                     else
                     {
                         // Enabled (default)
-                        sb.Append(@"\ffprot0");
+                        sb.Write(@"\ffprot0");
                     }
 
                     if (fieldChar.FormFieldData.GetFirstChild<CalculateOnExit>() is CalculateOnExit calcOnExit &&
                        calcOnExit != null && (calcOnExit.Val == null || calcOnExit.Val))
                     {
                         // Recalculate on exit if the CalculateOnExit element is present and not set to false
-                        sb.Append(@"\ffrecalc1");
+                        sb.Write(@"\ffrecalc1");
                     }
                     else
                     {
                         // Disable recalculate on exit
-                        sb.Append(@"\ffrecalc0");
+                        sb.Write(@"\ffrecalc0");
                     }
 
                     if (fieldChar.FormFieldData.GetFirstChild<TextInput>() is TextInput textInput)
                     {
-                        sb.Append(@"\fftype0");
+                        sb.Write(@"\fftype0");
 
                         if (textInput.GetFirstChild<MaxLength>() is MaxLength maxLength &&
                            maxLength.Val != null)
                         {
-                            sb.Append($@"\ffmaxlen{maxLength.Val}");
+                            sb.Write($@"\ffmaxlen{maxLength.Val}");
                         }
                         if (textInput.GetFirstChild<DefaultTextBoxFormFieldString>() is DefaultTextBoxFormFieldString defaultText &&
                            defaultText.Val != null)
                         {
-                            sb.Append($@"{{\*\ffdeftext {defaultText.Val}}}");
+                            sb.Write($@"{{\*\ffdeftext {defaultText.Val}}}");
                         }
                         if (textInput.GetFirstChild<TextBoxFormFieldType>() is TextBoxFormFieldType textBoxType &&
                            textBoxType.Val != null)
                         {
                             if (textBoxType.Val.Value == TextBoxFormFieldValues.Regular)
                             {
-                                sb.Append(@"\fftypetxt0");
+                                sb.Write(@"\fftypetxt0");
                             }
                             else if (textBoxType.Val.Value == TextBoxFormFieldValues.Number)
                             {
-                                sb.Append(@"\fftypetxt1");
+                                sb.Write(@"\fftypetxt1");
                             }
                             else if (textBoxType.Val.Value == TextBoxFormFieldValues.Date)
                             {
-                                sb.Append(@"\fftypetxt2");
+                                sb.Write(@"\fftypetxt2");
                             }
                             else if (textBoxType.Val.Value == TextBoxFormFieldValues.CurrentDate)
                             {
-                                sb.Append(@"\fftypetxt3");
+                                sb.Write(@"\fftypetxt3");
                             }
                             else if (textBoxType.Val.Value == TextBoxFormFieldValues.CurrentTime)
                             {
-                                sb.Append(@"\fftypetxt4");
+                                sb.Write(@"\fftypetxt4");
                             }
                             else if (textBoxType.Val.Value == TextBoxFormFieldValues.Calculated)
                             {
-                                sb.Append(@"\fftypetxt5");
+                                sb.Write(@"\fftypetxt5");
                             }
                         }
                         if (textInput.GetFirstChild<Format>() is Format format &&
                            format.Val != null)
                         {
-                            sb.Append($@"{{\*\ffformat {format.Val}}}");
+                            sb.Write($@"{{\*\ffformat {format.Val}}}");
                         }
                     }
                     else if (fieldChar.FormFieldData.GetFirstChild<CheckBox>() is CheckBox checkBox)
                     {
-                        sb.Append(@"\fftype1");
+                        sb.Write(@"\fftype1");
 
                         if (checkBox.GetFirstChild<FormFieldSize>() is FormFieldSize checkBoxSize &&
                             checkBoxSize.Val != null)
                         {
-                            sb.Append($@"\ffhps{checkBoxSize.Val}"); // Check box size in half points
+                            sb.Write($@"\ffhps{checkBoxSize.Val}"); // Check box size in half points
                         }
 
                         if (checkBox.GetFirstChild<AutomaticallySizeFormField>() is AutomaticallySizeFormField autoSize &&
                             autoSize != null && (autoSize.Val == null || autoSize.Val))
                         {
-                            sb.Append(@"\ffsize0"); // Auto size
+                            sb.Write(@"\ffsize0"); // Auto size
                         }
                         else
                         {
-                            sb.Append(@"\ffsize1"); // Exact size
+                            sb.Write(@"\ffsize1"); // Exact size
                         }
 
                         if (checkBox.GetFirstChild<DefaultCheckBoxFormFieldState>() is DefaultCheckBoxFormFieldState defaultCheckBoxState &&
                             defaultCheckBoxState?.Val != null && defaultCheckBoxState.Val)
                         {
-                            sb.Append(@"\ffdefres1"); // Checked by default
+                            sb.Write(@"\ffdefres1"); // Checked by default
                         }
                         else
                         {
-                            sb.Append(@"\ffdefres0"); // Unchecked by default
+                            sb.Write(@"\ffdefres0"); // Unchecked by default
                         }
 
                         if (checkBox.GetFirstChild<Checked>() is Checked @checked &&
                             @checked != null && (@checked.Val == null || @checked.Val))
                         {
-                            sb.Append(@"\ffres1"); // Checked if the Checked element is present and not false
+                            sb.Write(@"\ffres1"); // Checked if the Checked element is present and not false
                         }
                         else
                         {
-                            sb.Append(@"\ffres0"); // Unchecked by default
+                            sb.Write(@"\ffres0"); // Unchecked by default
                         }
                     }
                     else if (fieldChar.FormFieldData.GetFirstChild<DropDownListFormField>() is DropDownListFormField dropDownList)
                     {
-                        sb.Append(@"\fftype2");
+                        sb.Write(@"\fftype2");
 
                         if (dropDownList.GetFirstChild<DefaultDropDownListItemIndex>() is DefaultDropDownListItemIndex defaultSelection &&
                             defaultSelection?.Val != null)
                         {
-                            sb.Append(@$"\ffdefres{defaultSelection?.Val}"); // Default selected index
+                            sb.Write(@$"\ffdefres{defaultSelection?.Val}"); // Default selected index
                         }
 
                         if (dropDownList.GetFirstChild<DropDownListSelection>() is DropDownListSelection selection &&
                            selection?.Val != null)
                         {
-                            sb.Append(@$"\ffres{selection?.Val}"); // Current selected index
+                            sb.Write(@$"\ffres{selection?.Val}"); // Current selected index
                         }
 
                         if (dropDownList.GetFirstChild<ListEntryFormField>() != null)
                         {
-                            sb.Append(@"\ffhaslistbox1 ");
+                            sb.Write(@"\ffhaslistbox1 ");
                             foreach (var listEntry in dropDownList.Elements<ListEntryFormField>())
                             {
                                 if (listEntry.Val != null)
                                 {
-                                    sb.Append($@"{{\*\ffl {listEntry.Val}}}");
+                                    sb.Write($@"{{\*\ffl {listEntry.Val}}}");
                                 }
                             }
                         }
                         else
                         {
-                            sb.Append(@"\ffhaslistbox0");
+                            sb.Write(@"\ffhaslistbox0");
                         }
 
                     }
@@ -190,11 +190,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     {
                         if (statusText.Val != null)
                         {
-                            sb.Append($@"\ffownstat1 {{\*\ffstattext {statusText.Val}}}");
+                            sb.Write($@"\ffownstat1 {{\*\ffstattext {statusText.Val}}}");
                         }
                         else
                         {
-                            sb.Append(@"\ffownstat0");
+                            sb.Write(@"\ffownstat0");
                         }
                     }
 
@@ -202,11 +202,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     {
                         if (helpText.Val != null)
                         {
-                            sb.Append($@"\ffownhelp1 {{\*\ffhelptext {helpText.Val}}}");
+                            sb.Write($@"\ffownhelp1 {{\*\ffhelptext {helpText.Val}}}");
                         }
                         else
                         {
-                            sb.Append(@"\ffownhelp0");
+                            sb.Write(@"\ffownhelp0");
                         }
                     }
 
@@ -214,7 +214,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     {
                         if (name.Val != null)
                         {
-                            sb.Append($@"{{\*\ffname {name.Val}}}");
+                            sb.Write($@"{{\*\ffname {name.Val}}}");
                         }
                     }
 
@@ -222,7 +222,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     {
                         if (entryMacro.Val != null)
                         {
-                            sb.Append($@"{{\*\ffentrymcr {entryMacro.Val}}}");
+                            sb.Write($@"{{\*\ffentrymcr {entryMacro.Val}}}");
                         }
                     }
 
@@ -230,24 +230,24 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     {
                         if (exitMacro.Val != null)
                         {
-                            sb.Append($@"{{\*\ffexitmcr {exitMacro.Val}}}");
+                            sb.Write($@"{{\*\ffexitmcr {exitMacro.Val}}}");
                         }
                     }
 
-                    sb.Append(@"}}");
+                    sb.Write(@"}}");
                 }
 
-                sb.Append(@"{\*\fldinst {"); // Open field instruction group.
+                sb.Write(@"{\*\fldinst {"); // Open field instruction group.
                 //The last bracket is closed by the parent Run
             }
             else if (fieldChar.FieldCharType == FieldCharValues.Separate)
             {
-                sb.Append(@"}}{\fldrslt {"); // Close field instruction and open field result group.
+                sb.Write(@"}}{\fldrslt {"); // Close field instruction and open field result group.
                 //The last bracket is closed by the parent Run.
             }
             else if (fieldChar.FieldCharType == FieldCharValues.End)
             {
-                sb.AppendLine("}}}"); // Close field result and field destination.
+                sb.WriteLine("}}}"); // Close field result and field destination.
             }
         }
     }
@@ -255,6 +255,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     internal override void ProcessFieldCode(FieldCode fieldCode, RtfStringWriter sb)
     {
         // Complex fields such as table of contents may contain special characters such as '\' that need to be escaped.
-        sb.AppendRtfEscaped(fieldCode.InnerText);
+        sb.WriteRtfEscaped(fieldCode.InnerText);
     }
 }

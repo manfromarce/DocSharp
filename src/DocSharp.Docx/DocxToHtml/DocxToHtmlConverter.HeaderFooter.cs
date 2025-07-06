@@ -10,7 +10,7 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
     internal void ProcessHeader(Header header, StringBuilder sb, HeaderReference reference)
     {

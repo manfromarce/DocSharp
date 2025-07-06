@@ -12,9 +12,9 @@ using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal override void ProcessRun(Run run, HtmlStringWriter sb)
+    internal override void ProcessRun(Run run, HtmlTextWriter sb)
     {
         string? font = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run)?.Ascii?.Value;
         var bold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run);
@@ -349,10 +349,10 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         }
 
         // Add HTML span with styles
-        sb.Append($"<span");
+        sb.WriteStartElement("span");
         if (styles.Count > 0)
         {
-            sb.Append($" style=\"{string.Join(" ", styles)}\"");
+            sb.WriteAttributeString("style", string.Join(" ", styles));
         }
 
         var languages = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
@@ -367,22 +367,21 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             // Set language for this span
             if (!string.IsNullOrEmpty(languages.Val?.Value))
             {
-                sb.Append($" lang=\"{languages.Val!.Value}\"");
+                sb.WriteAttributeString($"lang", languages.Val!.Value);
             }
             //if (!string.IsNullOrEmpty(languages?.Bidi?.Value))
             //{
             //    // ?
             //}
         }
-        sb.Append('>'); // Close span tag
 
         if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
         {
-            sb.Append("<sup>");
+            sb.WriteStartElement("sup");
         }
         else if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Subscript)
         {
-            sb.Append("<sub>");
+            sb.WriteStartElement("sub");
         }
 
         // Process run content
@@ -393,12 +392,12 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
 
         if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
         {
-            sb.Append("</sup>");
+            sb.WriteEndElement("sup");
         }
         else if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Subscript)
         {
-            sb.Append("</sub>");
+            sb.WriteEndElement("sub");
         }
-        sb.Append("</span>");
+        sb.WriteEndElement("span");
     }
 }

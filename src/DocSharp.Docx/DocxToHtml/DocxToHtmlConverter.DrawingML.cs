@@ -18,9 +18,9 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal override void ProcessDrawing(Drawing drawing, HtmlStringWriter sb)
+    internal override void ProcessDrawing(Drawing drawing, HtmlTextWriter sb)
     {
         // DrawingML object or picture
 
@@ -45,7 +45,7 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         }
     }
 
-    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlStringWriter sb)
+    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb)
     {
         var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
         if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&

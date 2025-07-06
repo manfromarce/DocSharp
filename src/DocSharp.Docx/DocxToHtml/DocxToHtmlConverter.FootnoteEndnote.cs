@@ -10,29 +10,29 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, HtmlStringWriter sb)
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, HtmlStringWriter sb)
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, HtmlStringWriter sb)
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, HtmlStringWriter sb)
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, HtmlStringWriter sb)
+    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, HtmlStringWriter sb)
+    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, HtmlTextWriter sb)
     {
     }
 }

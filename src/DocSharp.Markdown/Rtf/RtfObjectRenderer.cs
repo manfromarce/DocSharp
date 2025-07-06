@@ -33,7 +33,7 @@ public abstract class RtfObjectRenderer<T> : MarkdownObjectRenderer<RtfRenderer,
 
     public void WriteText(RtfRenderer renderer, string text)
     {
-        renderer.RtfWriter.AppendRtfEscaped(text);
+        renderer.RtfWriter.WriteRtfEscaped(text);
     }
 
     protected abstract void WriteObject(RtfRenderer renderer, T obj);

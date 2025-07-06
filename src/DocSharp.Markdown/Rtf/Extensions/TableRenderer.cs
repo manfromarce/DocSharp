@@ -12,10 +12,10 @@ public class TableRenderer : RtfObjectRenderer<Table>
         int rowIndex = 0;
         foreach (var row in table.OfType<TableRow>())
         {
-            renderer.RtfWriter.Append(@"\trowd\trgaph108\trleft0\trftsWidth1");
+            renderer.RtfWriter.Write(@"\trowd\trgaph108\trleft0\trftsWidth1");
             if (rowIndex == 0)
             {
-                renderer.RtfWriter.Append(@"\trhdr");
+                renderer.RtfWriter.Write(@"\trhdr");
                 // Not recognized by some RTF readers, use cell shading instead
                 //renderer.RtfBuilder.Append(@"\trcbpat16");
                 //renderer.RtfBuilder.Append(@"\trshdng1");
@@ -23,24 +23,24 @@ public class TableRenderer : RtfObjectRenderer<Table>
             for (int cell = 1; cell <= row.OfType<TableCell>().Count(); cell++)
             {
                 // Cell borders
-                renderer.RtfWriter.Append(@"\clbrdrt\brdrs\brdrw10");
-                renderer.RtfWriter.Append(@"\clbrdrl\brdrs\brdrw10");
-                renderer.RtfWriter.Append(@"\clbrdrb\brdrs\brdrw10");
-                renderer.RtfWriter.Append(@"\clbrdrr\brdrs\brdrw10");
+                renderer.RtfWriter.Write(@"\clbrdrt\brdrs\brdrw10");
+                renderer.RtfWriter.Write(@"\clbrdrl\brdrs\brdrw10");
+                renderer.RtfWriter.Write(@"\clbrdrb\brdrs\brdrw10");
+                renderer.RtfWriter.Write(@"\clbrdrr\brdrs\brdrw10");
 
                 // Cell background (for header row)
                 if (rowIndex == 0)
                 {
-                    renderer.RtfWriter.Append(@"\clcbpat16");
-                    renderer.RtfWriter.Append(@"\clshdng1");
+                    renderer.RtfWriter.Write(@"\clcbpat16");
+                    renderer.RtfWriter.Write(@"\clshdng1");
                     renderer.isInTableHeader = true;
                 }
 
                 // Cell width
-                renderer.RtfWriter.Append(@"\clftsWidth1");
-                renderer.RtfWriter.Append(@"\cellx" + (2000 * cell).ToString()); // for compatibility
+                renderer.RtfWriter.Write(@"\clftsWidth1");
+                renderer.RtfWriter.Write(@"\cellx" + (2000 * cell).ToString()); // for compatibility
 
-                renderer.RtfWriter.AppendLine();
+                renderer.RtfWriter.WriteLine();
             }
 
             foreach (var cell in row.OfType<TableCell>())
@@ -49,11 +49,11 @@ public class TableRenderer : RtfObjectRenderer<Table>
                 renderer.WriteChildren(cell);
 
                 // End of cell
-                renderer.RtfWriter.AppendLine(@"\cell");
+                renderer.RtfWriter.WriteLine(@"\cell");
             }
 
             // End of row
-            renderer.RtfWriter.AppendLine(@"\row");
+            renderer.RtfWriter.WriteLine(@"\row");
             renderer.isInTableHeader = false;
             ++rowIndex;
         }

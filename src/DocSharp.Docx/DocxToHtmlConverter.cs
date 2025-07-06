@@ -9,10 +9,12 @@ using System.IO;
 using DocumentFormat.OpenXml.Packaging;
 using System.Globalization;
 using DocSharp.Helpers;
+using System.Xml;
+using System.Diagnostics;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
     /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
@@ -50,10 +52,235 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
     /// </summary>
     public string? ImagesBaseUriOverride { get; set; } = null;
 
-    internal override void ProcessDocument(Document document, HtmlStringWriter sb)
+    /// <summary>
+    /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
+    /// </summary>
+    /// <param name="inputDocument">The DOCX document to use.</param>
+    /// <returns>A string in the output format</returns>
+    public string ConvertToString(WordprocessingDocument inputDocument)
     {
-        sb.AppendHtmlHeader(); // TODO: title
-        sb.AppendStartTag("body");
+        using (var sw = new StringWriter())
+        {
+            Convert(inputDocument, sw);
+            return sw.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX <see cref="Stream"/> to a string in the output format.
+    /// </summary>
+    /// <param name="inputStream">The DOCX Stream to use.</param>
+    /// <returns>A string in the output format</returns>
+    public string ConvertToString(Stream inputStream)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
+        {
+            return ConvertToString(wordDocument);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to a string in the output format.
+    /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <returns>A string in the output format</returns>
+    public string ConvertToString(string inputFilePath)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
+        {
+            return ConvertToString(wordDocument);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to a string in the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <returns>A string in the output format</returns>
+    public string ConvertToString(byte[] inputBytes)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+        {
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                return ConvertToString(wordDocument);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public void Convert(WordprocessingDocument inputDocument, string outputFilePath)
+    {
+        using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+        {
+            Convert(inputDocument, sw);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public void Convert(WordprocessingDocument inputDocument, Stream outputStream)
+    {
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
+        {
+            Convert(inputDocument, sw);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(WordprocessingDocument inputDocument, TextWriter writer)
+    {
+        using (var htmlWriter = new HtmlTextWriter(writer))
+        {
+            var document = inputDocument.MainDocumentPart?.Document;
+            if (document != null)
+            {
+                ProcessDocument(document, htmlWriter);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public void Convert(string inputFilePath, string outputFilePath)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
+        {
+            Convert(wordDocument, outputFilePath);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public void Convert(string inputFilePath, Stream outputStream)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
+        {
+            Convert(wordDocument, outputStream);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(string inputFilePath, TextWriter writer)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
+        {
+            Convert(wordDocument, writer);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputStream">The input DOCX stream to use.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public void Convert(Stream inputStream, string outputFilePath)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
+        {
+            Convert(wordDocument, outputFilePath);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputStream">The input DOCX stream to use.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public void Convert(Stream inputStream, Stream outputStream)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
+        {
+            Convert(wordDocument, outputStream);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputStream">The input DOCX stream to use.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(Stream inputStream, TextWriter writer)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
+        {
+            Convert(wordDocument, writer);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public void Convert(byte[] inputBytes, string outputFilePath)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+        {
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                Convert(wordDocument, outputFilePath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public void Convert(byte[] inputBytes, Stream outputStream)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+        {
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                Convert(wordDocument, outputStream);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(byte[] inputBytes, TextWriter writer)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+        {
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                Convert(wordDocument, writer);
+            }
+        }
+    }
+
+    internal override void ProcessDocument(Document document, HtmlTextWriter sb)
+    {
+        sb.WriteHtmlHeader(); // TODO: title
+        sb.WriteStartElement("body");
         if (document.DocumentBackground is DocumentBackground bg)
         {
             ProcessDocumentBackground(bg, sb);
@@ -65,16 +292,16 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             base.ProcessBody(body, sb);
         }
 
-        sb.AppendEndTag("body");
-        sb.AppendEndTag("html");
+        sb.WriteEndElement("body");
+        sb.WriteEndElement("html");
     }
 
-    internal override void ProcessDocumentBackground(DocumentBackground background, HtmlStringWriter sb)
+    internal override void ProcessDocumentBackground(DocumentBackground background, HtmlTextWriter sb)
     {
         if (background.Color != null)
         {
             string color = $"#{background.Color.Value}";
-            sb.AppendTag("style", $"body {{ background-color: {color}; }}");
+            sb.WriteElementString("style", $"body {{ background-color: {color}; }}");
         }
         //else if (background.Background != null)
         //{
@@ -118,7 +345,7 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         }
     }
 
-    internal override void ProcessContentPart(ContentPart contentPart, HtmlStringWriter sb)
+    internal override void ProcessContentPart(ContentPart contentPart, HtmlTextWriter writer)
     {
         // MathML, SVG and SMIL are supported by most browsers
         var id = contentPart.Id;
@@ -139,13 +366,19 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
                        part.ContentType == "application/smil+xml")
                     {
                         // Read the content and append it to the HTML
-                        using (var reader = new StreamReader(stream))
+                        try
                         {
-                            string content = reader.ReadToEnd();
-                            if (content != null)
+                            using (var reader = XmlReader.Create(stream))
                             {
-                                sb.AppendLine(content);
+                                // Scrivi il nodo XML esterno nel writer
+                                writer.WriteNode(reader, true);
                             }
+                        }
+                        catch (Exception ex)
+                        {
+#if DEBUG
+                            Debug.WriteLine("Error in ProcessContentPart: " + ex.Message);
+#endif
                         }
                     }
                 }
@@ -153,7 +386,7 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         }
     }
 
-    internal override void ProcessText(Text text, HtmlStringWriter sb)
+    internal override void ProcessText(Text text, HtmlTextWriter sb)
     {
         string font = string.Empty;
         if (text.Parent is Run run)
@@ -166,11 +399,11 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         for (int i = 0; i < stringInfo.LengthInTextElements; i++)
         {
             string textElement = stringInfo.SubstringByTextElements(i, 1);
-            sb.Append(textElement, font);
+            sb.Write(textElement, font);
         }
     }
 
-    internal override void ProcessSymbolChar(SymbolChar symbolChar, HtmlStringWriter sb)
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, HtmlTextWriter sb)
     {
         if (!string.IsNullOrEmpty(symbolChar?.Char?.Value))
         {
@@ -192,37 +425,45 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             {
                 htmlEntity = $"&#{decimalValue.ToStringInvariant()};";
             }
-            sb.Append(htmlEntity);
+            sb.WriteRaw(htmlEntity);
         }
     }
 
-    internal override void ProcessBookmarkStart(BookmarkStart bookmark, HtmlStringWriter sb)
+    internal override void ProcessBookmarkStart(BookmarkStart bookmark, HtmlTextWriter writer)
     {
         if (bookmark.Name != null)
-            sb.AppendTag("a", null, ("id", bookmark.Name.Value));
+        {
+            writer.WriteStartElement("a");
+            writer.WriteAttributeString("id", bookmark.Name.Value);
+            writer.WriteEndElement();
+        }
     }
 
-    internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, HtmlStringWriter sb)
+    internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessBreak(Break @break, HtmlStringWriter sb)
+    internal override void ProcessBreak(Break @break, HtmlTextWriter writer)
     {
         if (@break.Type != null && @break.Type == BreakValues.Page)
         {
-            sb.AppendTag("div", null, ("style", "break-after: page;"));
+            writer.WriteStartElement("div");
+            writer.WriteAttributeString("style", "break-after: page;");
+            writer.WriteEndElement();
         }
         else if (@break.Type != null && @break.Type == BreakValues.Column)
         {
-            sb.AppendTag("div", null, ("style", "break-after: column;"));
+            writer.WriteStartElement("div");
+            writer.WriteAttributeString("style", "break-after: column;");
+            writer.WriteEndElement();
         }
         else
         {
-            sb.AppendBreak();
+            writer.WriteBreak();
         }
     }
 
-    internal override void ProcessHyperlink(Hyperlink hyperlink, HtmlStringWriter sb)
+    internal override void ProcessHyperlink(Hyperlink hyperlink, HtmlTextWriter sb)
     {
         bool hasUrl = false;
         if (hyperlink.Id?.Value is string rId)
@@ -232,21 +473,25 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             {
                 string url = relationship.Uri.ToString();
                 hasUrl = true;
-                sb.Append($"<a href=\"{url}\">");
+                sb.WriteStartElement("a");
+                sb.WriteAttributeString("href", url);
             }
         }
         else if (hyperlink.Anchor?.Value is string anchor)
         {
             hasUrl = true;
-            sb.Append($"<a href=\"#{anchor}\">");
+            sb.WriteStartElement("a");
+            sb.WriteAttributeString("href", $"#{anchor}");
         }
+
         foreach (var element in hyperlink.Elements())
         {
             base.ProcessParagraphElement(element, sb);
         }
+
         if (hasUrl)
         {
-            sb.Append("</a>");
+            sb.WriteEndElement("a");
         }
     }
 
@@ -260,19 +505,19 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         }
     }
 
-    internal override void ProcessPageNumber(PageNumber pageNumber, HtmlStringWriter sb)
+    internal override void ProcessPageNumber(PageNumber pageNumber, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessPositionalTab(PositionalTab posTab, HtmlStringWriter sb)
+    internal override void ProcessPositionalTab(PositionalTab posTab, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessFieldChar(FieldChar field, HtmlStringWriter sb)
+    internal override void ProcessFieldChar(FieldChar field, HtmlTextWriter sb)
     {
     }
 
-    internal override void ProcessFieldCode(FieldCode field, HtmlStringWriter sb)
+    internal override void ProcessFieldCode(FieldCode field, HtmlTextWriter sb)
     {
     }
 }

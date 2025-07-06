@@ -4,7 +4,7 @@ using DocSharp.Helpers;
 
 namespace DocSharp.Writers;
 
-public class TxtStringWriter : BaseStringWriter
+public sealed class TxtStringWriter : BaseStringWriter
 {
     
 }

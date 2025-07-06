@@ -15,17 +15,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 {
     internal override void ProcessText(Text text, RtfStringWriter sb)
     {
-        sb.AppendRtfEscaped(text.InnerText);
+        sb.WriteRtfEscaped(text.InnerText);
     }
 
     internal void ProcessText(M.Text text, RtfStringWriter sb)
     {
-        sb.AppendRtfEscaped(text.InnerText);
+        sb.WriteRtfEscaped(text.InnerText);
     }
 
     internal override void ProcessPageNumber(PageNumber pageNumber, RtfStringWriter sb)
     {
-        sb.Append("\\chpgn ");
+        sb.Write("\\chpgn ");
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, RtfStringWriter sb)
@@ -34,10 +34,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             !string.IsNullOrEmpty(symbolChar?.Font?.Value))
         {
             fonts.TryAddAndGetIndex(symbolChar.Font.Value, out int fontIndex);
-            sb.Append('{');
-            sb.Append($"\\f{fontIndex} ");
-            sb.AppendRtfUnicodeChar(symbolChar.Char.Value);
-            sb.Append('}');
+            sb.Write('{');
+            sb.Write($"\\f{fontIndex} ");
+            sb.WriteRtfUnicodeChar(symbolChar.Char.Value);
+            sb.Write('}');
         }
     }   
 }

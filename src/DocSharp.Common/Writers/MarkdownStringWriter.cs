@@ -7,7 +7,7 @@ using DocSharp.Helpers;
 
 namespace DocSharp.Writers;
 
-public class MarkdownStringWriter : BaseStringWriter
+public sealed class MarkdownStringWriter : BaseStringWriter
 {
     private static char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
                                             '#', '+', '-', '!', '|', '~' };
@@ -18,7 +18,7 @@ public class MarkdownStringWriter : BaseStringWriter
         // Use LF for Markdown by default, can be replaced for special cases (e.g. when forcing soft breaks or hard breaks for text)
     }
 
-    public void AppendChar(char c, string font, bool forceHtmlBreak = false)
+    public void WriteChar(char c, string font, bool forceHtmlBreak = false)
     {
         if (c == '\r')
         {
@@ -28,11 +28,11 @@ public class MarkdownStringWriter : BaseStringWriter
         {
             if (forceHtmlBreak)
             {
-                Append("<br>");
+                Write("<br>");
             }
             else
             {
-                AppendLine("  "); // Markdown soft break (2 trailing spaces).
+                WriteLine("  "); // Markdown soft break (2 trailing spaces).
             }
         }
         else
@@ -40,11 +40,11 @@ public class MarkdownStringWriter : BaseStringWriter
             string s = FontConverter.ToUnicode(font, c);
             if (s.Length == 1 && _specialChars.Contains(s[0]))
             {
-                Append(new string(['\\', s[0]]));
+                Write(new string(['\\', s[0]]));
             }
             else
             {
-                Append(s);
+                Write(s);
             }
         }
     }

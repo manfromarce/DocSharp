@@ -22,9 +22,9 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlStringWriter sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb)
     {
         try
         {
@@ -36,7 +36,8 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
                     string base64Image = ConvertImageToBase64(imagePart, out string mimeType);
                     if (!string.IsNullOrEmpty(base64Image))
                     {
-                        sb.Append($"<img src=\"data:{mimeType};base64,{base64Image}\"");
+                        sb.WriteStartElement("img");
+                        sb.WriteAttributeString("src", $"data:{mimeType};base64,{base64Image}");
                     }
                 }
                 else
@@ -62,10 +63,14 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
                     string imageUri = WriteImageToDisk(imagePart, relId);
                     if (!string.IsNullOrEmpty(imageUri))
                     {
-                        sb.Append($"<img src=\"{imageUri}\" alt=\"{relId}\"");
+                        sb.WriteStartElement("img");
+                        sb.WriteAttributeString("src", imageUri);
                     }
                 }
-                sb.Append($"alt=\"{relId}\" width=\"{width.ToStringInvariant()}\" height=\"{height.ToStringInvariant()}\" />");
+                sb.WriteAttributeString("alt", relId);
+                sb.WriteAttributeString("width", width.ToStringInvariant());
+                sb.WriteAttributeString("height", height.ToStringInvariant());
+                sb.WriteEndElement();
             }
         }
         catch (Exception ex)

@@ -13,9 +13,9 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal override void ProcessMathElement(OpenXmlElement element, HtmlStringWriter sb)
+    internal override void ProcessMathElement(OpenXmlElement element, HtmlTextWriter writer)
     {
         using (var stream = LoadXslTransform())
         {
@@ -40,20 +40,7 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
                         var xslt = new System.Xml.Xsl.XslCompiledTransform();
                         xslt.Load(reader);
 
-                        // Create writer which omits XML declaration.
-                        using (var writer = new StringWriter(sb.StringBuilder))
-                        {
-                            using (var xmlWriter = XmlWriter.Create(writer, new XmlWriterSettings
-                            {
-                                OmitXmlDeclaration = true,
-                                Indent = true,
-                                NewLineHandling = NewLineHandling.None
-                            }))
-                            {
-                                // Transform the document to MathML.
-                                xslt.Transform(doc, null, xmlWriter);
-                            }
-                        }
+                        xslt.Transform(doc, null, writer);
                     }
                 }
             }

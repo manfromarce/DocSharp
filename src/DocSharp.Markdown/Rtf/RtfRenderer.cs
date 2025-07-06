@@ -70,52 +70,52 @@ public class RtfRenderer : RendererBase
 
     public override object Render(MarkdownObject markdownObject)
     {
-        RtfWriter.Append(@"{\rtf1\ansi\deff0");
+        RtfWriter.WriteRtfHeader();
 
         // A4 paper size in twips (1/1440 inch)
-        RtfWriter.AppendLine(@"\paperw11906\paperh16780");
+        RtfWriter.WriteLine(@"\paperw11906\paperh16780");
 
         // Enable endnotes
-        RtfWriter.AppendLine(@"\enddoc\aenddoc");
+        RtfWriter.WriteLine(@"\enddoc\aenddoc");
 
         // Font table
-        RtfWriter.Append($"{{\\fonttbl{{\\f0 {Settings.DefaultFont};}}");
-        RtfWriter.Append($"{{\\f1 {Settings.HeadingFonts[1]};}}");
-        RtfWriter.Append($"{{\\f2 {Settings.HeadingFonts[2]};}}");
-        RtfWriter.Append($"{{\\f3 {Settings.HeadingFonts[3]};}}");
-        RtfWriter.Append($"{{\\f4 {Settings.HeadingFonts[4]};}}");
-        RtfWriter.Append($"{{\\f5 {Settings.HeadingFonts[5]};}}");
-        RtfWriter.Append($"{{\\f6 {Settings.HeadingFonts[6]};}}");
-        RtfWriter.Append($"{{\\f7 {Settings.CodeFont};}}");
-        RtfWriter.AppendLine($"{{\\f8 {Settings.QuoteFont};}}}}");
+        RtfWriter.Write($"{{\\fonttbl{{\\f0 {Settings.DefaultFont};}}");
+        RtfWriter.Write($"{{\\f1 {Settings.HeadingFonts[1]};}}");
+        RtfWriter.Write($"{{\\f2 {Settings.HeadingFonts[2]};}}");
+        RtfWriter.Write($"{{\\f3 {Settings.HeadingFonts[3]};}}");
+        RtfWriter.Write($"{{\\f4 {Settings.HeadingFonts[4]};}}");
+        RtfWriter.Write($"{{\\f5 {Settings.HeadingFonts[5]};}}");
+        RtfWriter.Write($"{{\\f6 {Settings.HeadingFonts[6]};}}");
+        RtfWriter.Write($"{{\\f7 {Settings.CodeFont};}}");
+        RtfWriter.WriteLine($"{{\\f8 {Settings.QuoteFont};}}}}");
 
         // Color table
-        RtfWriter.Append($"{{\\colortbl ;{Settings.DefaultTextColor.ToRtfColor()}");
-        RtfWriter.Append($"{Settings.HeadingColors[1].ToRtfColor()}");
-        RtfWriter.Append($"{Settings.HeadingColors[2].ToRtfColor()}");
-        RtfWriter.Append($"{Settings.HeadingColors[3].ToRtfColor()}");
-        RtfWriter.Append($"{Settings.HeadingColors[4].ToRtfColor()}");
-        RtfWriter.Append($"{Settings.HeadingColors[5].ToRtfColor()}");
-        RtfWriter.Append($"{Settings.HeadingColors[6].ToRtfColor()}");
-        RtfWriter.Append($"{Settings.CodeFontColor.ToRtfColor()}");
-        RtfWriter.Append($"{Settings.CodeBorderColor.ToRtfColor()}");
-        RtfWriter.Append($"{Settings.CodeBackgroundColor.ToRtfColor()}");
-        RtfWriter.Append($"{Settings.QuoteFontColor.ToRtfColor()}");
-        RtfWriter.Append($"{Settings.QuoteBorderColor.ToRtfColor()}");
-        RtfWriter.Append($"{Settings.QuoteBackgroundColor.ToRtfColor()}");
-        RtfWriter.Append(@"\red255\green255\blue0;"); // for highlighted/marked text
-        RtfWriter.Append(@"\red0\green255\blue0;"); // for inserted text
-        RtfWriter.Append(@"\red217\green217\blue217;"); // for table header background
-        RtfWriter.AppendLine($"{Settings.LinkColor.ToRtfColor()}}}");
+        RtfWriter.Write($"{{\\colortbl ;{Settings.DefaultTextColor}");
+        RtfWriter.Write($"{Settings.HeadingColors[1]}");
+        RtfWriter.Write($"{Settings.HeadingColors[2]}");
+        RtfWriter.Write($"{Settings.HeadingColors[3]}");
+        RtfWriter.Write($"{Settings.HeadingColors[4]}");
+        RtfWriter.Write($"{Settings.HeadingColors[5]}");
+        RtfWriter.Write($"{Settings.HeadingColors[6]}");
+        RtfWriter.Write($"{Settings.CodeFontColor}");
+        RtfWriter.Write($"{Settings.CodeBorderColor}");
+        RtfWriter.Write($"{Settings.CodeBackgroundColor}");
+        RtfWriter.Write($"{Settings.QuoteFontColor}");
+        RtfWriter.Write($"{Settings.QuoteBorderColor}");
+        RtfWriter.Write($"{Settings.QuoteBackgroundColor}");
+        RtfWriter.Write(System.Drawing.Color.Yellow); // for highlighted/marked text
+        RtfWriter.Write(System.Drawing.Color.LightGreen); // for inserted text
+        RtfWriter.Write(System.Drawing.Color.FromArgb(217, 217, 217)); // for table header background
+        RtfWriter.WriteLine($"{Settings.LinkColor}}}");
 
         // Enable endnotes
-        RtfWriter.AppendLine(@"\sectd\endnhere");
+        RtfWriter.WriteLine(@"\sectd\endnhere");
 
         // Add content
         Write(markdownObject);
 
         // End of RTF document
-        RtfWriter.AppendLine(@"}");
+        RtfWriter.WriteLine(@"}");
         return this;
     }
 }

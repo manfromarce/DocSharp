@@ -38,7 +38,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             {
                 symbol = FontConverter.ToUnicode(symbolChar?.Font?.Value ?? "", (char)decimalValue);
             }
-            sb.Append(symbol);
+            sb.Write(symbol);
         }
     }
 
@@ -51,7 +51,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
         if (!sb.EndsWithNewLine())
         {
-            sb.AppendLine(); // Add a blank line before the table
+            sb.WriteLine(); // Add a blank line before the table
         }
 
         var rows = table.Elements<TableRow>();
@@ -69,7 +69,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             int currentColumnIndex = 0;
 
             // Add border above cell (if not in a vertically merged cell)
-            sb.Append('+');
+            sb.Write('+');
             foreach (var cell in cells)
             {
                 int gridSpan = GetGridSpan(cell);                    
@@ -82,15 +82,15 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                 {
                     AddHorizontalSpace(width, sb);
                 }
-                sb.Append('+');
+                sb.Write('+');
                 currentColumnIndex += gridSpan;
             }
-            sb.AppendLine();
+            sb.WriteLine();
 
             // Add cell content
             for (int lineIndex = 0; lineIndex < rowHeight; lineIndex++)
             {
-                sb.Append('|');
+                sb.Write('|');
                 currentColumnIndex = 0;
                 foreach(var cell in cells)
                 {
@@ -99,14 +99,14 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                     string[] cellLines = text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
                     string line = lineIndex < cellLines.Length ? cellLines[lineIndex] : string.Empty;
                     int cellWidth = columnWidths.Skip(currentColumnIndex).Take(gridSpan).Sum() + (gridSpan - 1) * 3;
-                    sb.Append($" {line.PadRight(cellWidth)} |");
+                    sb.Write($" {line.PadRight(cellWidth)} |");
                     currentColumnIndex += gridSpan;
                 }
-                sb.AppendLine();
+                sb.WriteLine();
             }
         }
         AddHorizontalBorder(columnWidths, sb); // Border after last row
-        sb.AppendLine();
+        sb.WriteLine();
         cellsText.Clear();
     }
 
@@ -176,23 +176,23 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     internal void AddHorizontalBorder(int columnWidth, TxtStringWriter sb)
     {
-        sb.Append(new string('-', columnWidth + 2));
+        sb.Write(new string('-', columnWidth + 2));
     }
 
     internal void AddHorizontalSpace(int columnWidth, TxtStringWriter sb)
     {
-        sb.Append(new string(' ', columnWidth + 2));
+        sb.Write(new string(' ', columnWidth + 2));
     }
 
     internal void AddHorizontalBorder(List<int> columnWidths, TxtStringWriter sb)
     {
-        sb.Append('+');
+        sb.Write('+');
         foreach (var width in columnWidths)
         {
             AddHorizontalBorder(width, sb);
-            sb.Append('+');
+            sb.Write('+');
         }
-        sb.AppendLine();
+        sb.WriteLine();
     }
 
     internal override void ProcessText(Text text, TxtStringWriter sb)
@@ -210,7 +210,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
     {
         foreach (char c in text)
         {
-            sb.Append(FontConverter.ToUnicode(fontName, c));
+            sb.Write(FontConverter.ToUnicode(fontName, c));
         }
     }
 
@@ -225,11 +225,11 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
 		if (!paragraph.IsLast())
         {
-            sb.AppendLine();
+            sb.WriteLine();
             if (!paragraph.IsEmpty())
             {
                 // Write additional blank line unless the paragraph is empty.
-                sb.AppendLine();
+                sb.WriteLine();
             }
         }
     }
@@ -304,7 +304,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                     // Indentation
                     for (int i = 1; i <= levelIndex; i++)
                     {
-                        sb.Append("    ");
+                        sb.Write("    ");
                     }
 
                     if (listType == NumberFormatValues.Bullet)
@@ -316,25 +316,25 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                         }
                         else
                         {
-                            sb.Append('•');
+                            sb.Write('•');
                         }
                     }
                     else 
                     {
                         // Numbered list
                         string numberString = GetNumberString(levelText, listType, numberingId, levelIndex);
-                        sb.Append(numberString);
+                        sb.Write(numberString);
                     }
 
 
                     var levelSuffix = effectiveLevel.LevelSuffix?.Val;
                     if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
                     {
-                        sb.Append("  ");
+                        sb.Write("  ");
                     }
                     else if (levelSuffix.Value == LevelSuffixValues.Space)
                     {
-                        sb.Append(' ');
+                        sb.Write(' ');
                     }
                 }
             }
@@ -381,11 +381,11 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     internal override void ProcessBreak(Break br, TxtStringWriter sb)
     {
-        sb.AppendLine();
+        sb.WriteLine();
         if (br.Type != null && (br.Type.Value == BreakValues.Column || br.Type.Value == BreakValues.Page))
         {
             // Hard break
-            sb.AppendLine();
+            sb.WriteLine();
         }
     }
 

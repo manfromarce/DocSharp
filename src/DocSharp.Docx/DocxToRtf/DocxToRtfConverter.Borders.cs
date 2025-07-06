@@ -15,39 +15,39 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (border.Val != null)
         {
-            sb.Append(RtfBorderMapper.GetBorderType(border.Val.Value));
+            sb.Write(RtfBorderMapper.GetBorderType(border.Val.Value));
         }
         if (border.Size != null)
         {
             // Open XML uses 1/8 points for border width, while RTF uses twips
             double twipsSize = Math.Round(border.Size.Value * 2.5);
-            sb.Append($"\\brdrw{twipsSize}");
+            sb.Write($"\\brdrw{twipsSize}");
         }
         if (border.Space != null)
         {
             // Open XML uses points for border spacing, while RTF uses twips
             uint twipsSize = border.Space.Value * 20;
-            sb.Append($"\\brsp{twipsSize}");
+            sb.Write($"\\brsp{twipsSize}");
         }
         if (border.Color != null && !string.IsNullOrEmpty(border.Color?.Value))
         {
             if (border.Color.Value.Equals("auto", StringComparison.OrdinalIgnoreCase))
             {
-                sb.Append(@"\brdrcf0");
+                sb.Write(@"\brdrcf0");
             }
             else
             {
                 colors.TryAddAndGetIndex(border.Color.Value, out int colorIndex);
-                sb.Append($"\\brdrcf{colorIndex}");
+                sb.Write($"\\brdrcf{colorIndex}");
             }
         }
         if (border.Shadow != null && ((!border.Shadow.HasValue) || border.Shadow.Value))
         {
-            sb.Append(@"\brdrsh");
+            sb.Write(@"\brdrsh");
         }
         if (border.Frame != null && ((!border.Frame.HasValue) || border.Frame.Value))
         {
-            sb.Append(@"\brdrframe");
+            sb.Write(@"\brdrframe");
         }
     }
 }

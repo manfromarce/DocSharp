@@ -12,12 +12,12 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
     private SectionProperties? currentSectionProperties = null;
     private bool noSections = false;
     
-    internal override void ProcessBodyElement(OpenXmlElement element, HtmlStringWriter sb)
+    internal override void ProcessBodyElement(OpenXmlElement element, HtmlTextWriter sb)
     {
         if (currentSectionProperties == null && !noSections)
         {
@@ -27,20 +27,19 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             if (currentSectionProperties != null)
             {
                 var styles = new List<string>();
-                sb.Append("<div");
+                sb.WriteStartElement("div");
                 ProcessSectionProperties(currentSectionProperties, ref styles, sb);
                 if (styles.Count > 0)
                 {
-                    sb.Append($" style=\"{string.Join(" ", styles)}\"");
+                    sb.WriteAttributeString("style", string.Join(" ", styles));
                 }
-                sb.AppendLine(">");
             }
             else
             {
                 // If no SectionProperties is found
                 // (very unlikely, at least default section properties are usually at the end of document),
                 // insert a default section and stop looking for them.
-                sb.AppendLine("<div>");
+                sb.WriteStartElement("div");
                 noSections = true;
             }
         }
@@ -56,7 +55,7 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
                 currentSectionProperties = null;
                 
                 base.ProcessBodyElement(element, sb);
-                sb.Append("</div>");
+                sb.WriteEndElement("div");
                 return;
             }
             else
@@ -67,23 +66,22 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
                 // This may happen when there are e.g. two consecutive paragraphs with different
                 // section properties (the first section consists of only one paragraph).
 
-                sb.Append("</div>");
+                sb.WriteEndElement("div");
                 currentSectionProperties = newSectionProperties;
                 var styles = new List<string>();
-                sb.Append("<div");
+                sb.WriteStartElement("div");
                 ProcessSectionProperties(currentSectionProperties, ref styles, sb);
                 if (styles.Count > 0)
                 {
-                    sb.Append($" style=\"{string.Join(" ", styles)}\"");
+                    sb.WriteAttributeString("style", string.Join(" ", styles));
                 }
-                sb.AppendLine(">");
             }
         }
 
         base.ProcessBodyElement(element, sb);
     }
 
-    internal void ProcessSectionProperties(SectionProperties sectionProperties, ref List<string> styles, HtmlStringWriter sb)
+    internal void ProcessSectionProperties(SectionProperties sectionProperties, ref List<string> styles, HtmlTextWriter sb)
     {        
         var columns = sectionProperties.GetFirstChild<Columns>();
         if (columns != null)

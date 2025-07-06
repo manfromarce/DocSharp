@@ -11,24 +11,25 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWriter>
+public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    internal override void ProcessTable(Table table, HtmlStringWriter sb)
+    internal override void ProcessTable(Table table, HtmlTextWriter sb)
     {
         var rows = table.Elements<TableRow>();
         int rowNumber = 1;
         int rowCount = rows.Count();
-        sb.Append("<table style=\"border-collapse: collapse; border-spacing: 0;\">");
+        sb.WriteStartElement("table");
+        sb.WriteAttributeString("style", "border-collapse: collapse; border-spacing: 0;");
         //sb.Append("<table>");
         foreach (var row in rows)
         {
             ProcessTableRow(row, sb, rowNumber, rowCount);
             ++rowNumber;
         }
-        sb.AppendLine("</table>");
+        sb.WriteEndElement("table");
     }
 
-    internal void ProcessTableRow(TableRow row, HtmlStringWriter sb, int rowNumber, int rowCount)
+    internal void ProcessTableRow(TableRow row, HtmlTextWriter sb, int rowNumber, int rowCount)
     {
         var rowStyles = new List<string>();
         var defaultCellStyles = new List<string>();
@@ -89,12 +90,11 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             ProcessTableWidthType(marginDefault?.EndMargin, ref defaultCellStyles, "padding-inline-end");
         }
 
-        sb.Append($"<tr");
+        sb.WriteStartElement("tr");
         if (rowStyles.Count > 0)
         {
-            sb.Append($" style=\"{string.Join(" ", rowStyles)}\"");
+            sb.WriteAttributeString("style", string.Join(" ", rowStyles));
         }
-        sb.Append('>');
 
         var cells = row.Elements<TableCell>();
         int columnNumber = 1;
@@ -112,11 +112,10 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             }
             ProcessTableCell(cell, sb, cellStyles, rowSpan, columnSpan);
 
-            sb.AppendLine();
             ++columnNumber;
         }
 
-        sb.Append("</tr>");
+        sb.WriteEndElement("tr");
     }
 
     internal bool ProcessTableCellProperties(TableCell cell, ref List<string> cellStyles, int rowNumber, int columnNumber, int rowCount, int columnCount, out int rowSpan, out int columnSpan)
@@ -306,29 +305,27 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
         }
     }
 
-    internal void ProcessTableCell(TableCell cell, HtmlStringWriter sb, List<string> styles, int rowSpan, int colSpan)
+    internal void ProcessTableCell(TableCell cell, HtmlTextWriter sb, List<string> styles, int rowSpan, int colSpan)
     {
-        sb.Append("<td");
+        sb.WriteStartElement("td");
 
         // Add rowspan if necessary
         if (rowSpan > 1)
         {
-            sb.Append($" rowspan=\"{rowSpan.ToStringInvariant()}\"");
+            sb.WriteAttributeString("rowspan", rowSpan.ToStringInvariant());
         }
 
         // Add colspan if necessary
         if (colSpan > 1)
         {
-            sb.Append($" colspan=\"{colSpan.ToStringInvariant()}\"");
+            sb.WriteAttributeString("colspan", colSpan.ToStringInvariant());
         }
 
         // Add styles
         if (styles.Count > 0)
         {
-            sb.Append($" style=\"{string.Join(" ", styles)}\"");
+            sb.WriteAttributeString("style", string.Join(" ", styles));
         }
-
-        sb.Append('>');
 
         // Process cell content
         foreach (var element in cell.Elements())
@@ -336,7 +333,7 @@ public partial class DocxToHtmlConverter : DocxToTextConverterBase<HtmlStringWri
             base.ProcessCompositeElement(element, sb);
         }
 
-        sb.Append("</td>");
+        sb.WriteEndElement("td");
     }
 
     internal void ProcessTableWidthType(TableWidthDxaNilType? width, ref List<string> styles, string cssAttribute)

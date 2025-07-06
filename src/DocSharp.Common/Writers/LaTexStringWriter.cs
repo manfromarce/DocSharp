@@ -3,7 +3,7 @@ using DocSharp.Helpers;
 
 namespace DocSharp.Writers;
 
-public class LaTexStringWriter : BaseStringWriter
+public sealed class LaTexStringWriter : BaseStringWriter
 {
     public LaTexStringWriter()
     {
