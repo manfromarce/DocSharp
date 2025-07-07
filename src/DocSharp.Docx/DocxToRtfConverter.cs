@@ -119,9 +119,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         sb.Write(";}");
 
         // Determine footnotes / endnotes type
+        FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
         if (document.MainDocumentPart?.EndnotesPart != null)
         {
-            if (document.MainDocumentPart.FooterParts == null)
+            if (document.MainDocumentPart.FootnotesPart == null)
             {
                 FootnotesEndnotes = FootnotesEndnotesType.EndnotesOnly;
             }
