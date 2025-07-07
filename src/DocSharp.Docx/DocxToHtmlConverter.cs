@@ -279,7 +279,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
-        sb.WriteHtmlHeader(); // TODO: title
+        sb.WriteHtmlHeader(document.MainDocumentPart?.OpenXmlPackage.PackageProperties.Title);
         sb.WriteStartElement("body");
         if (document.DocumentBackground is DocumentBackground bg)
         {
@@ -413,19 +413,18 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
             {
                 hexValue = hexValue.Substring(2);
             }
-            string htmlEntity = string.Empty;
             if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int decimalValue))
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
-                    htmlEntity = FontConverter.ToUnicode(symbolChar!.Font!.Value!, (char)decimalValue);
+                    string unicode = FontConverter.ToUnicode(symbolChar!.Font!.Value!, (char)decimalValue);
+                    sb.WriteString(unicode);
+                }
+                else // use the original char code
+                {
+                    sb.WriteString((char)decimalValue);
                 }
             }
-            if (string.IsNullOrEmpty(htmlEntity)) // If htmlEntity is empty, use the original char code
-            {
-                htmlEntity = $"&#{decimalValue.ToStringInvariant()};";
-            }
-            sb.WriteRaw(htmlEntity);
         }
     }
 

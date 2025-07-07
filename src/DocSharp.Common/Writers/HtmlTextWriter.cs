@@ -21,6 +21,11 @@ public sealed class HtmlTextWriter : XmlWriter
         "area", "base", "basefont", "bgsound", "br", "col", "embed", "frame", "hr", "img", "input", "keygen", "link", "meta", "param", "source", "track", "wbr"
     }, StringComparer.OrdinalIgnoreCase);
 
+    internal static HashSet<string> InlineElements = new HashSet<string>(new string[]
+   {
+        "span", "br", "b", "strong", "i", "em", "sub", "sup", "ins", "del", "u", "strike", "mark"
+   }, StringComparer.OrdinalIgnoreCase);
+
     private readonly StringBuilder _attrValue = new StringBuilder();
     private string? _lastTagName;
     private int _line = 1;
@@ -195,7 +200,9 @@ public sealed class HtmlTextWriter : XmlWriter
     public void WriteComment(string text, bool downlevelRevealedConditional)
     {
         CloseCurrElement(false);
+
         RenderIndent();
+        
         if (downlevelRevealedConditional)
             _writer.Write("<!");
         else
@@ -317,7 +324,8 @@ public sealed class HtmlTextWriter : XmlWriter
         if (_scopes.Count > 0)
             _scopes.RemoveAt(_scopes.Count - 1);
 
-        if (tag.Line != _line) RenderIndent();
+        if (tag.Line != _line)
+            RenderIndent();
         _writer.Write("</");
         _writer.Write(name);
         _writer.Write('>');
@@ -502,7 +510,10 @@ public sealed class HtmlTextWriter : XmlWriter
     {
         _lastTagName = null;
         CloseCurrElement(false);
-        RenderIndent();
+        
+        // Fixes issue with unnecessary renderer space between span elements
+        if (localName != null && !InlineElements.Contains(localName))
+            RenderIndent();
 
         _writer.Write('<');
         var name = localName;
@@ -571,9 +582,13 @@ public sealed class HtmlTextWriter : XmlWriter
         else
         {
             string s = FontConverter.ToUnicode(font, val);
-            // Append escaped (the string may contain special chars such as <, >, &, ", ')
-            WriteRaw(WebUtility.HtmlEncode(s));
+            WriteString(s);
         }
+    }
+
+    public void WriteString(char c)
+    {
+        WriteString(c.ToString());
     }
 
     public override void WriteString(string? text)
@@ -871,9 +886,9 @@ public class HtmlWriterSettings
     /// </summary>
     public HtmlWriterSettings()
     {
-        this.Indent = false;
-        this.IndentChars = "  ";
-        this.NewLineChars = Environment.NewLine;
+        this.Indent = true;
+        this.IndentChars = "";
+        this.NewLineChars = "\n";
         this.NewLineOnAttributes = false;
         this.QuoteChar = '"';
     }

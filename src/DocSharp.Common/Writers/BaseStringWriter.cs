@@ -112,7 +112,7 @@ public abstract class BaseStringWriter : IDisposable
         Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(byte value)
+    public virtual void Write(byte value)
     {
         Write(value.ToStringInvariant());
     }
@@ -122,12 +122,12 @@ public abstract class BaseStringWriter : IDisposable
         Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(ulong value)
+    public virtual void Write(ulong value)
     {
         Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(ushort value)
+    public virtual void Write(ushort value)
     {
         Write(value.ToStringInvariant());
     }

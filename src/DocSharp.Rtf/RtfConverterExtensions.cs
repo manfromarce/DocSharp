@@ -262,7 +262,7 @@ namespace DocSharp.Rtf
         {
             using (var htmlWriter = new HtmlTextWriter(writer))
             {
-                ToHtml(source, writer, settings);
+                ToHtml(source, htmlWriter, settings);
             }
         }
 

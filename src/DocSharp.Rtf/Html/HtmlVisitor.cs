@@ -129,7 +129,6 @@ internal class HtmlVisitor : INodeVisitor
 
                     _writer.WriteEndElement();
                 }
-                Settings?.CustomHeadStyle?.Invoke(_writer);
 
                 _writer.WriteEndElement();
             }

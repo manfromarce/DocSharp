@@ -38,8 +38,6 @@ public class RtfToHtmlSettings : HtmlWriterSettings
     /// </summary>
     public Func<Picture, string> ImageUriGetter { get; set; }
 
-    public Action<XmlWriter>? CustomHeadStyle { get; set; }
-
     /// <summary>
     /// Create a new <see cref="RtfToHtmlSettings"/> object
     /// </summary>
