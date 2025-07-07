@@ -370,7 +370,6 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
                         {
                             using (var reader = XmlReader.Create(stream))
                             {
-                                // Scrivi il nodo XML esterno nel writer
                                 writer.WriteNode(reader, true);
                             }
                         }
