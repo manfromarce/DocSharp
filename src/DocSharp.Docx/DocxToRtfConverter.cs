@@ -119,9 +119,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         sb.Append(";}");
 
         // Determine footnotes / endnotes type
+        FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
         if (document.MainDocumentPart?.EndnotesPart != null)
         {
-            if (document.MainDocumentPart.FooterParts == null)
+            if (document.MainDocumentPart.FootnotesPart == null)
             {
                 FootnotesEndnotes = FootnotesEndnotesType.EndnotesOnly;
             }
@@ -146,6 +147,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             ProcessFootnoteProperties(documentSettings.GetFirstChild<FootnoteDocumentWideProperties>(), contentSb);
             ProcessEndnoteProperties(documentSettings.GetFirstChild<EndnoteDocumentWideProperties>(), contentSb);
+            ProcessFacingPages(documentSettings.GetFirstChild<EvenAndOddHeaders>(), contentSb);
         }
         switch (FootnotesEndnotes)
         {

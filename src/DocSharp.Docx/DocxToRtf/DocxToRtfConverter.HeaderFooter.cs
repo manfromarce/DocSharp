@@ -10,6 +10,69 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
+    /*
+    * From documentation (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.headerreference?view=openxml-3.0.1):
+    *
+    * - If no headerReference for the first page header is specified and the titlePg element is specified, 
+    * then the first page header shall be inherited from the previous section or, 
+    * if this is the first section in the document, a new blank header shall be created. 
+    * If the titlePg element is not specified, then no first page header shall be shown, 
+    * and the odd page header shall be used in its place.
+    * 
+    * - If no headerReference for the even page header is specified and the evenAndOddHeaders element is specified, 
+    * then the even page header shall be inherited from the previous section or, 
+    * if this is the first section in the document, a new blank header shall be created. 
+    * If the evenAndOddHeaders element is not specified, then no even page header shall be shown, 
+    * and the odd page header shall be used in its place.
+    * 
+    * - If no headerReference for the odd page header is specified then 
+    * the even page header shall be inherited from the previous section or, 
+    * if this is the first section in the document, a new blank header shall be created.
+    */
+
+    internal void ProcessHeadersFooters(IEnumerable<HeaderReference> headers, IEnumerable<FooterReference> footers, MainDocumentPart mainPart, RtfStringWriter writer)
+    {
+        // Update: \facingp is now added based on document settings (see below)
+        //if (headers.Any(h => h.Type != null && h.Type == HeaderFooterValues.Even) ||
+        //    footers.Any(f => f.Type != null && f.Type == HeaderFooterValues.Even))
+        //{
+        //    // If header/footer of type Even is not present, the default header/footer is used for both even and odd pages.
+        //    writer.Write(@"\facingp");
+        //}
+        foreach (var headerReference in headers)
+        {
+            if (headerReference?.Id?.Value is string headerId &&
+                mainPart.GetPartById(headerId) is HeaderPart headerPart)
+            {
+                ProcessHeader(headerPart.Header, writer, headerReference);
+            }
+        }
+        foreach (var footerReference in footers)
+        {
+            if (footerReference?.Id?.Value is string footerId &&
+                mainPart.GetPartById(footerId) is FooterPart footerPart)
+            {
+                ProcessFooter(footerPart.Footer, writer, footerReference);
+            }
+        }
+    }
+
+    internal void ProcessFacingPages(EvenAndOddHeaders? evenAndOddHeaders, RtfStringWriter writer)
+    {
+        if (evenAndOddHeaders != null && (evenAndOddHeaders.Val == null || evenAndOddHeaders.Val == true))
+        {
+            writer.Append(@"\facingp");
+        }
+    }
+
+    internal void ProcessTitlePage(TitlePage? titlePage, RtfStringWriter writer)
+    {
+        if (titlePage != null && (titlePage.Val is null || titlePage.Val == true))
+        {
+            writer.Append(@"\titlepg");
+        }
+    }
+
     internal void ProcessHeader(Header header, RtfStringWriter sb, HeaderReference reference)
     {
         if (reference.Type != null && reference.Type == HeaderFooterValues.Even)
@@ -24,7 +87,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             sb.Append("{\\headerr "); // Default
         }
-        foreach(var element in header.Elements())
+        foreach (var element in header.Elements())
         {
             base.ProcessBodyElement(element, sb);
         }
@@ -51,7 +114,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             base.ProcessBodyElement(element, sb);
         }
         sb.Append("\\par"); // \par is normally not added for the last paragraph to avoid an unnecessary line
-                            // (e.g. in table cells), but in header and footer the missing \par seems to cause formatting issues
+                           // (e.g. in table cells), but in header and footer the missing \par seems to cause formatting issues
         sb.Append('}');
     }
 }
