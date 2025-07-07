@@ -11,7 +11,7 @@ namespace DocSharp.Docx;
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
     /*
-    * From the documentation (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.headerreference?view=openxml-3.0.1):
+    * From documentation (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.headerreference?view=openxml-3.0.1):
     *
     * - If no headerReference for the first page header is specified and the titlePg element is specified, 
     * then the first page header shall be inherited from the previous section or, 

@@ -171,6 +171,41 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToHtmlConverter()
                     {
+                        FixedLayout = false,
+                        ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
+                                                                      // (ImageSharp does not support WMF / EMF yet)
+                    };
+                    converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void DocxToHtmlFixed_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToHtmlConverter()
+                    {
+                        FixedLayout = true,
                         ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
                                                                       // (ImageSharp does not support WMF / EMF yet)
                     };

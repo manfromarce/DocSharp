@@ -297,7 +297,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
 
         ProcessTitlePage(sectionProperties.GetFirstChild<TitlePage>(), sb);
-
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(sectionProperties);
         if (mainPart != null)
         {

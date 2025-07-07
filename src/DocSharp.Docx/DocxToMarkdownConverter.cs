@@ -57,6 +57,11 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
 
+    /// <summary>
+    /// Since Markdown is not paginated, this property specifies how footnotes and endnotes should be exported.
+    /// </summary>
+    public FootnotesEndnotesMode FootnotesEndnotesModeMode { get; set; } = FootnotesEndnotesMode.Default;
+
     private bool isInEmphasis = false;
     private bool isAllCaps = false;   
 

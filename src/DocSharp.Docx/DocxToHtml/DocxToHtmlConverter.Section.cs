@@ -77,12 +77,68 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
                 }
             }
         }
+        else if (currentSectionProperties != null && FixedLayout && element.Descendants<LastRenderedPageBreak>() is LastRenderedPageBreak pageBreak)
+        {
+            sb.WriteEndElement("div");
+            var styles = new List<string>();
+            sb.WriteStartElement("div");
+            ProcessSectionProperties(currentSectionProperties, ref styles, sb);
+            if (styles.Count > 0)
+            {
+                sb.WriteAttributeString("style", string.Join(" ", styles));
+            }
+        }
 
         base.ProcessBodyElement(element, sb);
     }
 
     internal void ProcessSectionProperties(SectionProperties sectionProperties, ref List<string> styles, HtmlTextWriter sb)
-    {        
+    {
+        if (FixedLayout)
+        {
+            var pageSize = sectionProperties.GetFirstChild<PageSize>();
+            if (pageSize != null)
+            {
+                if (pageSize.Width != null)
+                {
+                    styles.Add($"width: {(pageSize.Width.Value / 20.0).ToStringInvariant()}pt;");
+                }
+                if (pageSize.Height != null)
+                {
+                    styles.Add($"height: auto;"); // If LastRenderedPageBreak is not used, prevents vertical overflow
+                    //styles.Add($"height: {(pageSize.Height.Value / 20.0).ToStringInvariant()}pt;");
+                    styles.Add($"min-height: {(pageSize.Height.Value / 20.0).ToStringInvariant()}pt;");
+                }
+            }
+
+            var margins = sectionProperties.GetFirstChild<PageMargin>();
+            if (margins != null)
+            {
+                if (margins.Left != null)
+                {
+                    styles.Add($"padding-left: {(margins.Left.Value / 20.0).ToStringInvariant()}pt;");
+                }
+                if (margins.Right != null)
+                {
+                    styles.Add($"padding-right: {(margins.Right.Value / 20.0).ToStringInvariant()}pt;");
+                }
+                if (margins.Top != null)
+                {
+                    styles.Add($"padding-top: {(margins.Top.Value / 20.0).ToStringInvariant()}pt;");
+                }
+                if (margins.Bottom != null)
+                {
+                    styles.Add($"padding-bottom: {(margins.Bottom.Value / 20.0).ToStringInvariant()}pt;");
+                }
+            }
+
+            styles.Add("margin: 0 auto 20px auto;");
+            styles.Add("position: relative;");
+            styles.Add("overflow: hidden;");
+            styles.Add("box-shadow: 0 0 10px #ccc;");
+            styles.Add("background: white;");
+        }
+
         var columns = sectionProperties.GetFirstChild<Columns>();
         if (columns != null)
         {

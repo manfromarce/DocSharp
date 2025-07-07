@@ -16,6 +16,9 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
+    // Experimental - produce HTML with a fixed layout to preserve page setup (size, margins, ...) and page breaks.
+    public bool FixedLayout { get; set; } = false;
+
     /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
@@ -51,6 +54,15 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
     /// the HTML document is not saved to file, or in environments with limited file system access.
     /// </summary>
     public string? ImagesBaseUriOverride { get; set; } = null;
+
+    /// <summary>
+    /// Since HTML is not paginated, this property specifies how headers and footers should be exported.
+    /// </summary>
+    public HeadersFootersMode HeadersFootersMode { get; set; } = HeadersFootersMode.FirstSectionHeaderLastSectionFooter;
+    /// <summary>
+    /// Since HTML is not paginated, this property specifies how footnotes and endnotes should be exported.
+    /// </summary>
+    public FootnotesEndnotesMode FootnotesEndnotesModeMode { get; set; } = FootnotesEndnotesMode.Default;
 
     /// <summary>
     /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.

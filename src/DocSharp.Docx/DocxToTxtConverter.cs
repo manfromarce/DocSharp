@@ -15,6 +15,11 @@ namespace DocSharp.Docx;
 
 public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 {
+    /// <summary>
+    /// Since plain text is not paginated, this property specifies how footnotes and endnotes should be exported.
+    /// </summary>
+    public FootnotesEndnotesMode FootnotesEndnotesModeMode { get; set; } = FootnotesEndnotesMode.Default;
+
     internal override void ProcessRun(Run run, TxtStringWriter sb)
     {
         foreach (var element in run.Elements())
