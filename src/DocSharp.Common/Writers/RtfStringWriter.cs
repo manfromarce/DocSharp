@@ -53,5 +53,12 @@ public class RtfStringWriter : BaseStringWriter
     public void AppendRtfUnicodeChar(int charCode)
     {
         Append(RtfHelpers.ConvertUnicodeChar(charCode));
-    }   
+    }
+
+    public void WriteRtfHeader()
+    {
+
+    }
+
+
 }
