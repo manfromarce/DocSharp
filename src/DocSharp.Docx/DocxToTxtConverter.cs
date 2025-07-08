@@ -15,11 +15,6 @@ namespace DocSharp.Docx;
 
 public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 {
-    /// <summary>
-    /// Since plain text is not paginated, this property specifies how footnotes and endnotes should be exported.
-    /// </summary>
-    public FootnotesEndnotesMode FootnotesEndnotesModeMode { get; set; } = FootnotesEndnotesMode.Default;
-
     internal override void ProcessRun(Run run, TxtStringWriter sb)
     {
         foreach (var element in run.Elements())
@@ -386,7 +381,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     internal override void ProcessBreak(Break br, TxtStringWriter sb)
     {
-        sb.WriteLine();
+        sb.WriteLine(); // Break type = TextWrapping or not specified
         if (br.Type != null && (br.Type.Value == BreakValues.Column || br.Type.Value == BreakValues.Page))
         {
             // Hard break
@@ -419,17 +414,35 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
         }
     }
 
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb) 
+    { 
+    }
+
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, TxtStringWriter sb) 
+    { 
+    }
+
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) 
+    { 
+    }
+
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) 
+    { 
+    }
+
+    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, TxtStringWriter sb) 
+    { 
+    }
+
+    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, TxtStringWriter sb) 
+    { 
+    }
+
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, TxtStringWriter sb) { }
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, TxtStringWriter sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, TxtStringWriter sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, TxtStringWriter sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, TxtStringWriter sb) { }
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb) { }
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, TxtStringWriter sb) { }
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) { }
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) { }
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, TxtStringWriter sb) { }
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, TxtStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, TxtStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber pageNumber, TxtStringWriter sb) { }
     internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb) { }

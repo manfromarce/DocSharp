@@ -7,137 +7,86 @@ using System.Threading.Tasks;
 using DocSharp.Helpers;
 using DocSharp.Writers;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.ExtendedProperties;
 using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    private SectionProperties? currentSectionProperties = null;
-    private bool noSections = false;
-    
-    internal override void ProcessBodyElement(OpenXmlElement element, HtmlTextWriter sb)
+    internal void ProcessSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart mainPart, HtmlTextWriter sb)
     {
-        if (currentSectionProperties == null && !noSections)
+        var styles = new List<string>();
+        sb.WriteStartElement("div");
+        ProcessSectionProperties(section.properties, ref styles, sb);
+        if (styles.Count > 0)
         {
-            // Search the next SectionProperties element, which may also be a child of the current element
-            // (e.g. in ParagraphProperties).
-            currentSectionProperties = element.NextElement<SectionProperties>();
-            if (currentSectionProperties != null)
+            sb.WriteAttributeString("style", string.Join(" ", styles));
+        }
+
+        if (HeaderFooter && CurrentSectionIndex == 0)
+        {
+            ProcessFirstHeader(section.properties, sb);            
+        }
+
+        foreach (var element in section.content)
+        {
+            ProcessBodyElement(element, sb);
+        }
+
+        if (HeaderFooter && CurrentSectionIndex == Sections.Count - 1)
+        {
+            // Note: this code tries to detect which footer is actually displayed in the last page,
+            // but it's not 100% reliable.
+            // - EvenAndOddHeaders determines if the document uses different headers/footers for odd and even pages
+            // - TitlePage (at section level) determines if a different header/footer is used for the first page of the section
+            // - If there are no breaks, we can (in theory) assume that the section has one page
+            // - The pages count metadata can be used to determine if the last page is even or odd.
+            // This information is used by the ProcessLastFooter method to retrieve the default/even/first footer for the section.
+            // Limitations:
+            // - if there are sections of "even" or "odd" break type, a page number might have been skipped
+            // - LastRenderedPageBreak and the page count metadata may not be present or updated
+            // if the document was not created by Microsoft Word.
+
+            if (mainPart.DocumentSettingsPart?.Settings is Settings documentSettings)
             {
-                var styles = new List<string>();
-                sb.WriteStartElement("div");
-                ProcessSectionProperties(currentSectionProperties, ref styles, sb);
-                if (styles.Count > 0)
+                if (documentSettings.GetFirstChild<EvenAndOddHeaders>() is EvenAndOddHeaders evenAndOdd &&
+                    (evenAndOdd.Val == null || evenAndOdd.Val == true))
                 {
-                    sb.WriteAttributeString("style", string.Join(" ", styles));
+                    _oddEvenPages = true;
                 }
             }
-            else
+
+            _titlePage = section.properties.GetFirstChild<TitlePage>() is TitlePage tp &&
+                         (tp.Val is null || tp.Val == true);
+
+            //bool isLastSectionSinglePage = !section.content.SelectMany(element =>
+            //    element.Descendants().Where(d => d is LastRenderedPageBreak ||
+            //                                d is Break b && b.Type != null && b.Type == BreakValues.Page))
+            //    .Any();
+            bool isLastSectionSinglePage = false; 
+            // For now, don't use the first-page footer for the last section as it can be confusing and
+            // LastRenderedPageBreak may also refer to a break just before the section.
+
+            bool evenPage = false;
+            if ((mainPart.OpenXmlPackage as WordprocessingDocument)?.ExtendedFilePropertiesPart?.Properties?.Pages
+                is Pages pages && int.TryParse(pages.Text, out int p))
             {
-                // If no SectionProperties is found
-                // (very unlikely, at least default section properties are usually at the end of document),
-                // insert a default section and stop looking for them.
-                sb.WriteStartElement("div");
-                noSections = true;
+                evenPage = p % 2 == 0 ? true : false;
             }
+            ProcessLastFooter(section.properties, sb, isLastSectionSinglePage, evenPage);
         }
-
-        if (currentSectionProperties != null &&
-            element.Descendants<SectionProperties>().FirstOrDefault() is SectionProperties newSectionProperties)
-        {
-            if (newSectionProperties == currentSectionProperties)
-            {
-                // We reached the last paragraph of the section.
-                // If only one section is present in the document, the current element is the last one (and usually the default SectionProperties),
-                // otherwise a new section will be created for the next element.
-                currentSectionProperties = null;
-                
-                base.ProcessBodyElement(element, sb);
-                sb.WriteEndElement("div");
-                return;
-            }
-            else
-            {
-                // If a new SectionProperties is found, close the current section and open a new one.
-                // If only one section is present, this code is never executed.
-
-                // This may happen when there are e.g. two consecutive paragraphs with different
-                // section properties (the first section consists of only one paragraph).
-
-                sb.WriteEndElement("div");
-                currentSectionProperties = newSectionProperties;
-                var styles = new List<string>();
-                sb.WriteStartElement("div");
-                ProcessSectionProperties(currentSectionProperties, ref styles, sb);
-                if (styles.Count > 0)
-                {
-                    sb.WriteAttributeString("style", string.Join(" ", styles));
-                }
-            }
-        }
-        else if (currentSectionProperties != null && FixedLayout && element.Descendants<LastRenderedPageBreak>() is LastRenderedPageBreak pageBreak)
-        {
-            sb.WriteEndElement("div");
-            var styles = new List<string>();
-            sb.WriteStartElement("div");
-            ProcessSectionProperties(currentSectionProperties, ref styles, sb);
-            if (styles.Count > 0)
-            {
-                sb.WriteAttributeString("style", string.Join(" ", styles));
-            }
-        }
-
-        base.ProcessBodyElement(element, sb);
+        sb.WriteEndElement();
     }
 
-    internal void ProcessSectionProperties(SectionProperties sectionProperties, ref List<string> styles, HtmlTextWriter sb)
+    internal void ProcessSectionProperties(SectionProperties? sectionProperties, ref List<string> styles, HtmlTextWriter sb)
     {
-        if (FixedLayout)
+        if (sectionProperties == null)
         {
-            var pageSize = sectionProperties.GetFirstChild<PageSize>();
-            if (pageSize != null)
-            {
-                if (pageSize.Width != null)
-                {
-                    styles.Add($"width: {(pageSize.Width.Value / 20.0).ToStringInvariant()}pt;");
-                }
-                if (pageSize.Height != null)
-                {
-                    styles.Add($"height: auto;"); // If LastRenderedPageBreak is not used, prevents vertical overflow
-                    //styles.Add($"height: {(pageSize.Height.Value / 20.0).ToStringInvariant()}pt;");
-                    styles.Add($"min-height: {(pageSize.Height.Value / 20.0).ToStringInvariant()}pt;");
-                }
-            }
-
-            var margins = sectionProperties.GetFirstChild<PageMargin>();
-            if (margins != null)
-            {
-                if (margins.Left != null)
-                {
-                    styles.Add($"padding-left: {(margins.Left.Value / 20.0).ToStringInvariant()}pt;");
-                }
-                if (margins.Right != null)
-                {
-                    styles.Add($"padding-right: {(margins.Right.Value / 20.0).ToStringInvariant()}pt;");
-                }
-                if (margins.Top != null)
-                {
-                    styles.Add($"padding-top: {(margins.Top.Value / 20.0).ToStringInvariant()}pt;");
-                }
-                if (margins.Bottom != null)
-                {
-                    styles.Add($"padding-bottom: {(margins.Bottom.Value / 20.0).ToStringInvariant()}pt;");
-                }
-            }
-
-            styles.Add("margin: 0 auto 20px auto;");
-            styles.Add("position: relative;");
-            styles.Add("overflow: hidden;");
-            styles.Add("box-shadow: 0 0 10px #ccc;");
-            styles.Add("background: white;");
-        }
+            return;
+        }              
 
         var columns = sectionProperties.GetFirstChild<Columns>();
         if (columns != null)
@@ -156,6 +105,6 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
             {
                 // CSS does not support different column widths directly
             }
-        }       
+        }        
     }
 }

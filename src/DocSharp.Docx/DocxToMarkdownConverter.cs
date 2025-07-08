@@ -57,11 +57,6 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
 
-    /// <summary>
-    /// Since Markdown is not paginated, this property specifies how footnotes and endnotes should be exported.
-    /// </summary>
-    public FootnotesEndnotesMode FootnotesEndnotesModeMode { get; set; } = FootnotesEndnotesMode.Default;
-
     private bool isInEmphasis = false;
     private bool isAllCaps = false;   
 
@@ -666,16 +661,34 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         }
     }
 
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, MarkdownStringWriter sb)
+    {
+    }
+
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, MarkdownStringWriter sb)
+    {
+    }
+
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb)
+    {
+    }
+
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb)
+    {
+    }
+
+    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, MarkdownStringWriter sb)
+    {
+    }
+
+    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, MarkdownStringWriter sb)
+    {
+    }
+
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, MarkdownStringWriter sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, MarkdownStringWriter sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, MarkdownStringWriter sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, MarkdownStringWriter sb) { }
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, MarkdownStringWriter sb) { }
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, MarkdownStringWriter sb) { }
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb) { }
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb) { }
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, MarkdownStringWriter sb) { }
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, MarkdownStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, MarkdownStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber background, MarkdownStringWriter sb) { }
 

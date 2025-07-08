@@ -386,7 +386,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
         // Process run content
         foreach (var element in run.Elements())
         {
-            base.ProcessRunElement(element, sb);
+            base.ProcessRunElement(element, sb);            
         }
 
         if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)

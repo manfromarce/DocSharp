@@ -43,9 +43,6 @@
                     Click="DocxToHtml_Click"
                     Content="Docx to Html" />
                 <Button
-                    Click="DocxToHtmlFixed_Click"
-                    Content="Docx to Html (fixed layout)" />
-                <Button
                    Click="DocxToPdf_Click"
                    Content="Docx to Pdf" />
                 <Button

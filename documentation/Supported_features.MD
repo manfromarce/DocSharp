@@ -6,25 +6,25 @@
 | ------------- | :----: | :-----: | :--------: | :----: | :----: |
 | Character formatting | ✅ | ✅ | ✅ | - | ⏳ |
 | Paragraph formatting | ✅ | ✅ | - | - | ⏳ |
-| Section formatting   | ✅ | 🟡[9] | - | - | ⏳ |
+| Section formatting   | ✅ | 🟡 | - | - | ⏳ |
 | Page setup   | ✅ | 🟡[9] | - | - | ⏳ |
-| Columns | ✅ | ✅ | ❌ | ⏳ |
+| Columns | ✅ | ✅ | ❌ | ❌ |⏳ |
 | Pictures [1] | ✅ | ✅ | ✅ | - | ⏳ |
 | Lists | ✅ | ❌ | ✅[2] | ✅[2] | ⏳ |
 | Tables [3]  | ✅ | ✅ | 🟡 | 🟡 | ⏳ |
 | Styles [4] | 🟡 | 🟡 | 🟡 | - | ⏳ |
 | Header and footer | ✅ | ✅ | ❌ | ❌ | ⏳ |
-| Endnotes and footnotes | ✅ | ✅ | ✅ | ✅ | ⏳ |
+| Endnotes and footnotes | ✅ | ❌ | ❌ | ❌ | ⏳ |
 | Hyperlinks | ✅ | ✅ | ✅ | - | ⏳ |
 | Bookmarks | ✅ | ✅ | ✅ | - | ⏳ |
 | Drop cap and frame properties | ✅ | ❌ | ❌ | ❌ | ⏳ |
 | Symbols | ✅ | ✅[5] | ✅[5] | ✅[5] | ⏳ |
 | Page numbers | ✅ | ❌ | ❌ | ❌ | ⏳ |
 | Ruby | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Modern text effects / WordArt | ❌ | 🟡[10] | ❌ | Text is extracted | ❌ |
-| Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[10] | ❌ | - | ❌ |
-| Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | ❌ | Text is extracted | ❌ |
-| Legacy shapes, text boxes, effects and WordArt (VML) | ❌ | ❌ | ❌ | Text is extracted | ❌ |
+| Modern text effects / WordArt | ❌ | 🟡[9] | ❌ | 🟡 [10] | ❌ |
+| Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[9] | ❌ | - | ❌ |
+| Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | ❌ | 🟡 [10] | ❌ |
+| Legacy shapes, text boxes, effects and WordArt (VML) | ❌ | ❌ | ❌ | 🟡 [10] | ❌ |
 | Charts | ❌ | ❌ | ❌ | - | ❌ |
 | Diagrams | ❌ | ❌ | ❌ | - | ❌ |
 | Math | ✅ | 🟡 | ✅ | ❌ | ⏳ |
@@ -61,9 +61,10 @@ Standard parts are converted to regular (static) content (same behavior as Micro
 legacy form fields using field code/char are supported;  
 ActiveX controls are preserved as images (like OLE objects).
 
-[9]: Partially supported in fixed layout mode.
+[9]: Shadow, emboss/imprint, outline and fill effects are partially supported; floating text boxes are not supported.
 
-[10]: Shadow, emboss/imprint, outline and fill effects are partially supported; floating text boxes are not supported.
+[10]: Text is extracted from shapes, text boxes and WordArt when converting to TXT but only for inline objects,  
+floating objects are ignored to prevent layout issues.
 
 ## RTF converters
 

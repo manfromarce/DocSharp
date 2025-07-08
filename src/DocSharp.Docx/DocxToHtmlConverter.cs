@@ -11,13 +11,16 @@ using System.Globalization;
 using DocSharp.Helpers;
 using System.Xml;
 using System.Diagnostics;
+using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
 {
-    // Experimental - produce HTML with a fixed layout to preserve page setup (size, margins, ...) and page breaks.
-    public bool FixedLayout { get; set; } = false;
+    internal List<(List<OpenXmlElement> content, SectionProperties properties)> Sections;
+    internal int CurrentSectionIndex = 0;
+    private bool _titlePage = false;
+    private bool _oddEvenPages = false;
 
     /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
@@ -56,13 +59,10 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
     public string? ImagesBaseUriOverride { get; set; } = null;
 
     /// <summary>
-    /// Since HTML is not paginated, this property specifies how headers and footers should be exported.
+    /// Since HTML is not paginated, this property specifies if 
+    /// header of the first section and footer of the last section should be exported.
     /// </summary>
-    public HeadersFootersMode HeadersFootersMode { get; set; } = HeadersFootersMode.FirstSectionHeaderLastSectionFooter;
-    /// <summary>
-    /// Since HTML is not paginated, this property specifies how footnotes and endnotes should be exported.
-    /// </summary>
-    public FootnotesEndnotesMode FootnotesEndnotesModeMode { get; set; } = FootnotesEndnotesMode.Default;
+    public bool HeaderFooter { get; set; } = true;
 
     /// <summary>
     /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
@@ -301,7 +301,12 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
         // Process body content
         if (document.Body is Body body)
         {
-            base.ProcessBody(body, sb);
+            Sections = body.GetSections();
+            for (int i = 0; i < Sections.Count; i++)
+            {
+                CurrentSectionIndex = i;
+                ProcessSection(Sections[i], document.MainDocumentPart!, sb);
+            }
         }
 
         sb.WriteEndElement("body");
@@ -467,7 +472,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
             writer.WriteAttributeString("style", "break-after: column;");
             writer.WriteEndElement();
         }
-        else
+        else // Type == TextWrapping or not specified
         {
             writer.WriteBreak();
         }
