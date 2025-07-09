@@ -716,8 +716,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     {
         if (this.ExportFootnotesEndnotes)
         {
-            long id = footnoteReference.Id != null ? footnoteReference.Id.Value : 1;
-            sb.Write($"[{id.ToStringInvariant()}]"); // Avoid escaping in this case
+            sb.Write($"[{footnoteReference.GetFootnoteIdString()}]"); // Avoid escaping in this case
         }
     }
 
@@ -725,21 +724,20 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     {
         if (this.ExportFootnotesEndnotes)
         {
-            long id = endnoteReference.Id != null ? endnoteReference.Id.Value : 1;
-            sb.Write($"[{id.ToStringInvariant()}]"); // Avoid escaping in this case
+            sb.Write($"[{endnoteReference.GetEndnoteIdString()}]"); // Avoid escaping in this case
         }
     }
 
     internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark footnoteReferenceMark, MarkdownStringWriter sb)
     {
         // We don't need to check ExportFootnotesEndnotes because it's already called inside the Foonotes part.
-        sb.Write($"[{footnoteReferenceMark.GetFootnoteId().ToStringInvariant()}]: "); // Avoid escaping in this case
+        sb.Write($"[{footnoteReferenceMark.GetFootnoteIdString()}]: "); // Avoid escaping in this case
     }
 
     internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb)
     {
         // We don't need to check ExportFootnotesEndnotes because it's already called inside the Endnotes part.
-        sb.Write($"[{endnoteReferenceMark.GetEndnoteId().ToStringInvariant()}]: "); // Avoid escaping in this case
+        sb.Write($"[{endnoteReferenceMark.GetEndnoteIdString()}]: "); // Avoid escaping in this case
     }
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, MarkdownStringWriter sb) { }

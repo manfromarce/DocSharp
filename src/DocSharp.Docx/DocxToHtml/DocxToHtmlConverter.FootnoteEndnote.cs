@@ -22,8 +22,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     {
         if (this.ExportFootnotesEndnotes)
         {
-            long id = footnoteReference.Id != null ? footnoteReference.Id.Value : 1;
-            ProcessText(new Text($"{id.ToStringInvariant()}"), sb);
+            ProcessText(new Text($"{footnoteReference.GetFootnoteIdString()}"), sb);
         }
     }
 
@@ -31,8 +30,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     {
         if (this.ExportFootnotesEndnotes)
         {
-            long id = endnoteReference.Id != null ? endnoteReference.Id.Value : 1;
-            ProcessText(new Text($"{id.ToStringInvariant()}"), sb);
+            ProcessText(new Text($"{endnoteReference.GetEndnoteIdString()}"), sb);
         }
     }
 
@@ -59,12 +57,12 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark footnoteReferenceMark, HtmlTextWriter sb)
     {
         // We don't need to check ExportFootnotesEndnotes because it's already called inside the Foonotes part.
-        ProcessText(new Text($"{footnoteReferenceMark.GetFootnoteId().ToStringInvariant()}"), sb);
+        ProcessText(new Text($"{footnoteReferenceMark.GetFootnoteIdString()}"), sb);
     }
 
     internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, HtmlTextWriter sb)
     {
         // We don't need to check ExportFootnotesEndnotes because it's already called inside the Endnotes part.
-        ProcessText(new Text($"{endnoteReferenceMark.GetEndnoteId().ToStringInvariant()}"), sb);
+        ProcessText(new Text($"{endnoteReferenceMark.GetEndnoteIdString()}"), sb);
     }
 }

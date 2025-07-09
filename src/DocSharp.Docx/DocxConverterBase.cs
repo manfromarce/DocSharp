@@ -255,14 +255,12 @@ public abstract class DocxConverterBase<TOutput>
 
     internal virtual void ProcessFootnoteReference(FootnoteReference footnoteReference, TOutput sb)
     {
-        long id = footnoteReference.Id != null ? footnoteReference.Id.Value : 1;
-        ProcessText(new Text($"[{id}]"), sb);    
+        ProcessText(new Text($"[{footnoteReference.GetFootnoteIdString()}]"), sb);    
     }
 
     internal virtual void ProcessEndnoteReference(EndnoteReference endnoteReference, TOutput sb)
     {
-        long id = endnoteReference.Id != null ? endnoteReference.Id.Value : 1;
-        ProcessText(new Text($"[{id}]"), sb);
+        ProcessText(new Text($"[{endnoteReference.GetEndnoteIdString()}]"), sb);
     }
 
     internal virtual void ProcessFootnotes(FootnotesPart? footnotesPart, TOutput sb)
@@ -299,12 +297,12 @@ public abstract class DocxConverterBase<TOutput>
 
     internal virtual void ProcessFootnoteReferenceMark(FootnoteReferenceMark footnoteReferenceMark, TOutput sb)
     {
-        ProcessText(new Text($"[{footnoteReferenceMark.GetFootnoteId()}]: "), sb);
+        ProcessText(new Text($"[{footnoteReferenceMark.GetFootnoteIdString()}]: "), sb);
     }
 
     internal virtual void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TOutput sb)
     {
-        ProcessText(new Text($"[{endnoteReferenceMark.GetEndnoteId()}]: "), sb);
+        ProcessText(new Text($"[{endnoteReferenceMark.GetEndnoteIdString()}]: "), sb);
     }
     
     internal virtual void ProcessSeparatorMark(SeparatorMark separatorMark, TOutput sb)
