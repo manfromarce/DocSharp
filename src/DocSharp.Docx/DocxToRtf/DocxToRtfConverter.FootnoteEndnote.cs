@@ -6,6 +6,7 @@ using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocSharp.Writers;
+using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
@@ -328,68 +329,74 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
     }
 
-    internal void ProcessFootnotesPart(FootnotesPart footnotesPart, RtfStringWriter sb)
+    internal override void ProcessFootnotes(FootnotesPart? footnotesPart, RtfStringWriter sb)
     {
         // This method handles separator and continuationSeparator types only,
         // the actual footnotes are processed when a reference to them is found in the document.
-        foreach (var footnote in footnotesPart.Footnotes.OfType<Footnote>())
+        if (footnotesPart != null)
         {
-            if (footnote.Type != null)
+            foreach (var footnote in footnotesPart.Footnotes.OfType<Footnote>())
             {
-                if (footnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                if (footnote.Type != null)
                 {
-                    sb.Write("{\\*\\ftncn ");
+                    if (footnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                    {
+                        sb.Write("{\\*\\ftncn ");
+                    }
+                    else if (footnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
+                    {
+                        sb.Write("{\\*\\ftnsepc ");
+                    }
+                    else if (footnote.Type == FootnoteEndnoteValues.Separator)
+                    {
+                        sb.Write("{\\*\\ftnsep ");
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    foreach (var element in footnote.Elements())
+                    {
+                        base.ProcessBodyElement(element, sb);
+                    }
+                    sb.Write('}');
                 }
-                else if (footnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
-                {
-                    sb.Write("{\\*\\ftnsepc ");
-                }
-                else if (footnote.Type == FootnoteEndnoteValues.Separator)
-                {
-                    sb.Write("{\\*\\ftnsep ");
-                }
-                else
-                {
-                    continue;
-                }
-                foreach (var element in footnote.Elements())
-                {
-                    base.ProcessBodyElement(element, sb);
-                }
-                sb.Write('}');
             }
         }
     }
 
-    internal void ProcessEndnotesPart(EndnotesPart endnotesPart, RtfStringWriter sb)
+    internal override void ProcessEndnotes(EndnotesPart? endnotesPart, RtfStringWriter sb)
     {
         // This method handles separator and continuationSeparator types only,
         // the actual endnotes are processed when a reference to them is found in the document.
-        foreach (var endnote in endnotesPart.Endnotes.OfType<Endnote>())
+        if (endnotesPart != null)
         {
-            if (endnote.Type != null)
+            foreach (var endnote in endnotesPart.Endnotes.OfType<Endnote>())
             {
-                if (endnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                if (endnote.Type != null)
                 {
-                    sb.Write("{\\*\\aftncn ");
+                    if (endnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                    {
+                        sb.Write("{\\*\\aftncn ");
+                    }
+                    else if (endnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
+                    {
+                        sb.Write("{\\*\\aftnsepc ");
+                    }
+                    else if (endnote.Type == FootnoteEndnoteValues.Separator)
+                    {
+                        sb.Write("{\\*\\aftnsep ");
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    foreach (var element in endnote.Elements())
+                    {
+                        base.ProcessBodyElement(element, sb);
+                    }
+                    sb.Write('}');
                 }
-                else if (endnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
-                {
-                    sb.Write("{\\*\\aftnsepc ");
-                }
-                else if (endnote.Type == FootnoteEndnoteValues.Separator)
-                {
-                    sb.Write("{\\*\\aftnsep ");
-                }
-                else
-                {
-                    continue;
-                }
-                foreach (var element in endnote.Elements())
-                {
-                    base.ProcessBodyElement(element, sb);
-                }
-                sb.Write('}');
             }
         }
     }

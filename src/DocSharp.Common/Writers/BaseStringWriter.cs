@@ -26,9 +26,29 @@ public abstract class BaseStringWriter : IDisposable
         return sb.ToString();
     }
 
+    public virtual void EnsureEmptyLine()
+    {
+        if (sb.Length == 0)
+            return; // Don't add space if we are just at the start of the document
+
+        if (!EndsWithParagraph()) // If the string ends with 1 or 0 new line chars
+        {
+            WriteLine(); 
+        }
+        if (!EndsWithParagraph()) // If the string ends with only 1 new line char
+        {
+            WriteLine();
+        }
+    }
+
     public virtual bool EndsWithNewLine()
     {
         return sb.EndsWithNewLine();
+    }
+
+    public virtual bool EndsWithParagraph()
+    {
+        return sb.EndsWithEmptyLine();
     }
 
     public virtual void Write(string? text)

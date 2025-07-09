@@ -15,12 +15,42 @@ namespace DocSharp.Docx;
 
 public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 {
+    /// <summary>
+    /// Since plain text is not paginated, only the header of the first section and
+    /// footer of the last section are exported.
+    /// Set this property to false to ignore headers and footers.
+    /// </summary>
+    public bool ExportHeaderFooter { get; set; } = true;
+
+    /// <summary>
+    /// Since plain text is not paginated, both footnotes and endnotes are exported at the end of the document.
+    /// Set this property to false to ignore footnotes and endnotes.
+    /// </summary>
+    public bool ExportFootnotesEndnotes { get; set; } = true;
+
+    internal override void ProcessHeader(Header header, TxtStringWriter writer)
+    {
+        if (this.ExportHeaderFooter)
+            base.ProcessHeader(header, writer);
+    }
+
+    internal override void ProcessFooter(Footer footer, TxtStringWriter writer)
+    {
+        if (this.ExportHeaderFooter)
+            base.ProcessFooter(footer, writer);
+    }
+
     internal override void ProcessRun(Run run, TxtStringWriter sb)
     {
         foreach (var element in run.Elements())
         {
             base.ProcessRunElement(element, sb);
         }
+    }
+
+    internal override void EnsureSpace(TxtStringWriter sb)
+    {
+        sb.EnsureEmptyLine();
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, TxtStringWriter sb)
@@ -49,10 +79,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             return;
         }
 
-        if (!sb.EndsWithNewLine())
-        {
-            sb.WriteLine(); // Add a blank line before the table
-        }
+        EnsureSpace(sb); // Add a blank line before the table
 
         var rows = table.Elements<TableRow>();
         int maxCellsPerRow = rows.Max(c => c.Elements<TableCell>().Count());
@@ -203,35 +230,19 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
-        AppendText(text.InnerText, font, sb); // TODO: consider xml:space="preserve"
-    }
-
-    internal void AppendText(string text, string fontName, TxtStringWriter sb)
-    {
-        foreach (char c in text)
-        {
-            sb.Write(FontConverter.ToUnicode(fontName, c));
-        }
+        sb.WriteText(text.InnerText, font, sb);
     }
 
     internal override void ProcessParagraph(Paragraph paragraph, TxtStringWriter sb)
-    {        
+    {
+        EnsureSpace(sb); // Add a blank line before the paragraph
+
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)
         {
             ProcessListItem(numberingProperties, sb);
         }
         base.ProcessParagraph(paragraph, sb);
-
-		if (!paragraph.IsLast())
-        {
-            sb.WriteLine();
-            if (!paragraph.IsEmpty())
-            {
-                // Write additional blank line unless the paragraph is empty.
-                sb.WriteLine();
-            }
-        }
     }
 
     private readonly Dictionary<(int NumberingId, int LevelIndex), int> _listLevelCounters = new();
@@ -311,8 +322,8 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                     {
                         if (levelText?.Value != null)
                         {
-                            string font = runPr?.RunFonts?.Ascii?.Value ?? string.Empty; // To be improved
-                            AppendText(levelText.Value, font, sb);
+                            string font = runPr?.RunFonts?.Ascii?.Value ?? string.Empty;
+                            sb.WriteText(levelText.Value, font, sb);
                         }
                         else
                         {
@@ -409,33 +420,41 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
         {
             foreach (var element in txbxContent.Elements())
             {
-                ProcessCompositeElement(element, sb);
+                ProcessBodyElement(element, sb);
             }
         }
     }
 
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb) 
     { 
+        if (this.ExportFootnotesEndnotes)
+        {
+            base.ProcessFootnoteReference(footnoteReference, sb);
+        }
     }
 
     internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, TxtStringWriter sb) 
-    { 
+    {
+        if (this.ExportFootnotesEndnotes)
+        {
+            base.ProcessEndnoteReference(endnoteReference, sb);
+        }
     }
 
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) 
-    { 
+    internal override void ProcessFootnotes(FootnotesPart? footnotes, TxtStringWriter sb)
+    {
+        if (this.ExportFootnotesEndnotes)
+        {
+            base.ProcessFootnotes(footnotes, sb);
+        }
     }
 
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TxtStringWriter sb) 
-    { 
-    }
-
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, TxtStringWriter sb) 
-    { 
-    }
-
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, TxtStringWriter sb) 
-    { 
+    internal override void ProcessEndnotes(EndnotesPart? endnotes, TxtStringWriter sb)
+    {
+        if (this.ExportFootnotesEndnotes)
+        {
+            base.ProcessEndnotes(endnotes, sb);
+        }
     }
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, TxtStringWriter sb) { }

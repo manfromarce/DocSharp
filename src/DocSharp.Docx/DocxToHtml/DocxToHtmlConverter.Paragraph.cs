@@ -10,7 +10,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
     internal override void ProcessParagraph(Paragraph paragraph, HtmlTextWriter sb)
     {

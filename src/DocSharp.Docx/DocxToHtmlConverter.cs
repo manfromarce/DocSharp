@@ -15,13 +15,8 @@ using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
-    internal List<(List<OpenXmlElement> content, SectionProperties properties)> Sections;
-    internal int CurrentSectionIndex = 0;
-    private bool _titlePage = false;
-    private bool _oddEvenPages = false;
-
     /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
@@ -59,99 +54,24 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
     public string? ImagesBaseUriOverride { get; set; } = null;
 
     /// <summary>
-    /// Since HTML is not paginated, this property specifies if 
-    /// header of the first section and footer of the last section should be exported.
+    /// Since HTML is not paginated, only the header of the first section and
+    /// footer of the last section are exported.
+    /// Set this property to false to ignore headers and footers.
     /// </summary>
-    public bool HeaderFooter { get; set; } = true;
+    public bool ExportHeaderFooter { get; set; } = true;
 
     /// <summary>
-    /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
+    /// Since HTML is not paginated, both footnotes and endnotes are exported at the end of the document.
+    /// Set this property to false to ignore footnotes and endnotes.
     /// </summary>
-    /// <param name="inputDocument">The DOCX document to use.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(WordprocessingDocument inputDocument)
-    {
-        using (var sw = new StringWriter())
-        {
-            Convert(inputDocument, sw);
-            return sw.ToString();
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX <see cref="Stream"/> to a string in the output format.
-    /// </summary>
-    /// <param name="inputStream">The DOCX Stream to use.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(Stream inputStream)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
-            return ConvertToString(wordDocument);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to a string in the output format.
-    /// </summary>
-    /// <param name="inputFilePath">The DOCX file path.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(string inputFilePath)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
-            return ConvertToString(wordDocument);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to a string in the output format.
-    /// </summary>
-    /// <param name="inputBytes">The DOCX file bytes.</param>
-    /// <returns>A string in the output format</returns>
-    public string ConvertToString(byte[] inputBytes)
-    {
-        using (var memoryStream = new MemoryStream(inputBytes))
-        {
-            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
-            {
-                return ConvertToString(wordDocument);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(WordprocessingDocument inputDocument, string outputFilePath)
-    {
-        using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
-        {
-            Convert(inputDocument, sw);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(WordprocessingDocument inputDocument, Stream outputStream)
-    {
-        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
-        {
-            Convert(inputDocument, sw);
-        }
-    }
+    public bool ExportFootnotesEndnotes { get; set; } = true;
 
     /// <summary>
     /// Convert a DOCX file to the output format.
     /// </summary>
     /// <param name="inputDocument">The WordprocessingDocument to use.</param>
     /// <param name="writer">The output writer.</param>
-    public void Convert(WordprocessingDocument inputDocument, TextWriter writer)
+    public override void Convert(WordprocessingDocument inputDocument, TextWriter writer)
     {
         using (var htmlWriter = new HtmlTextWriter(writer))
         {
@@ -162,133 +82,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
             }
         }
     }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputFilePath">The DOCX file path.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(string inputFilePath, string outputFilePath)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
-            Convert(wordDocument, outputFilePath);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputFilePath">The DOCX file path.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(string inputFilePath, Stream outputStream)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
-            Convert(wordDocument, outputStream);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputFilePath">The DOCX file path.</param>
-    /// <param name="writer">The output writer.</param>
-    public void Convert(string inputFilePath, TextWriter writer)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
-            Convert(wordDocument, writer);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputStream">The input DOCX stream to use.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(Stream inputStream, string outputFilePath)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
-            Convert(wordDocument, outputFilePath);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputStream">The input DOCX stream to use.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(Stream inputStream, Stream outputStream)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
-            Convert(wordDocument, outputStream);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputStream">The input DOCX stream to use.</param>
-    /// <param name="writer">The output writer.</param>
-    public void Convert(Stream inputStream, TextWriter writer)
-    {
-        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
-            Convert(wordDocument, writer);
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputBytes">The DOCX file bytes.</param>
-    /// <param name="outputFilePath">The output file path.</param>
-    public void Convert(byte[] inputBytes, string outputFilePath)
-    {
-        using (var memoryStream = new MemoryStream(inputBytes))
-        {
-            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
-            {
-                Convert(wordDocument, outputFilePath);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputBytes">The DOCX file bytes.</param>
-    /// <param name="outputStream">The output stream.</param>
-    public void Convert(byte[] inputBytes, Stream outputStream)
-    {
-        using (var memoryStream = new MemoryStream(inputBytes))
-        {
-            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
-            {
-                Convert(wordDocument, outputStream);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputBytes">The DOCX file bytes.</param>
-    /// <param name="writer">The output writer.</param>
-    public void Convert(byte[] inputBytes, TextWriter writer)
-    {
-        using (var memoryStream = new MemoryStream(inputBytes))
-        {
-            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
-            {
-                Convert(wordDocument, writer);
-            }
-        }
-    }
-
+   
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
         sb.WriteHtmlHeader(document.MainDocumentPart?.OpenXmlPackage.PackageProperties.Title);
@@ -301,12 +95,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
         // Process body content
         if (document.Body is Body body)
         {
-            Sections = body.GetSections();
-            for (int i = 0; i < Sections.Count; i++)
-            {
-                CurrentSectionIndex = i;
-                ProcessSection(Sections[i], document.MainDocumentPart!, sb);
-            }
+            base.ProcessBody(body, sb);
         }
 
         sb.WriteEndElement("body");
@@ -324,6 +113,13 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
         //{
         // TODO (requires VML support)
         //}
+    }
+
+    internal override void EnsureSpace(HtmlTextWriter sb)
+    {
+        sb.WriteStartElement("p");
+        sb.WriteAttributeString("style", "margin-top: 10px;");
+        sb.WriteEndElement("p");
     }
 
     private void ProcessTextDirection(TextDirectionValues value, ref List<string> styles)

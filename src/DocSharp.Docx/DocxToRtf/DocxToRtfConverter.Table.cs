@@ -795,7 +795,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // Nested tables are not currently supported.
             if (element is not Table)
             {
-                ProcessCompositeElement(element, sb);
+                ProcessBodyElement(element, sb);
             }
         }
         this.isInTable = false;

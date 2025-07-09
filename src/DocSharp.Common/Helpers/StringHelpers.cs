@@ -31,6 +31,27 @@ public static class StringHelpers
         return stringBuilder[stringBuilder.Length - 1] == '\n' || stringBuilder[stringBuilder.Length - 1] == '\r';
     }
 
+    public static bool EndsWithEmptyLine(this StringBuilder sb)
+    {
+        var k = sb.ToString();
+        if (sb.Length >= 2)
+        {
+            char last = sb[sb.Length - 1];
+            char secondLast = sb[sb.Length - 2];
+
+            // Check if the StringBuilder ends with \n\n, \r\r or \r\n\r\n
+            if ((secondLast == '\n' && last == '\n') ||
+                (secondLast == '\r' && last == '\r') ||
+                (sb.Length >= 4 &&
+                 sb[sb.Length - 4] == '\r' && sb[sb.Length - 3] == '\n' &&
+                 sb[sb.Length - 2] == '\r' && sb[sb.Length - 1] == '\n'))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void AppendLineCrLf(this StringBuilder sb)
     {
         sb.Append("\r\n");

@@ -7,21 +7,21 @@
 | Character formatting | ✅ | ✅ | ✅ | - | ⏳ |
 | Paragraph formatting | ✅ | ✅ | - | - | ⏳ |
 | Section formatting   | ✅ | 🟡 | - | - | ⏳ |
-| Page setup   | ✅ | 🟡[9] | - | - | ⏳ |
+| Page setup   | ✅ | - | - | - | ⏳ |
 | Columns | ✅ | ✅ | ❌ | ❌ |⏳ |
 | Pictures [1] | ✅ | ✅ | ✅ | - | ⏳ |
 | Lists | ✅ | ❌ | ✅[2] | ✅[2] | ⏳ |
 | Tables [3]  | ✅ | ✅ | 🟡 | 🟡 | ⏳ |
 | Styles [4] | 🟡 | 🟡 | 🟡 | - | ⏳ |
-| Header and footer | ✅ | ✅ | ❌ | ❌ | ⏳ |
-| Endnotes and footnotes | ✅ | ❌ | ❌ | ❌ | ⏳ |
+| Header and footer | ✅ | ✅ | ✅ | ✅ | ⏳ |
+| Footnotes and endnotes | ✅ | ✅ | ✅ | ✅ | ⏳ |
 | Hyperlinks | ✅ | ✅ | ✅ | - | ⏳ |
 | Bookmarks | ✅ | ✅ | ✅ | - | ⏳ |
 | Drop cap and frame properties | ✅ | ❌ | ❌ | ❌ | ⏳ |
 | Symbols | ✅ | ✅[5] | ✅[5] | ✅[5] | ⏳ |
 | Page numbers | ✅ | ❌ | ❌ | ❌ | ⏳ |
 | Ruby | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Modern text effects / WordArt | ❌ | 🟡[9] | ❌ | 🟡 [10] | ❌ |
+| Modern text effects / WordArt | -[11] | 🟡[9] | ❌ | 🟡 [10] | ❌ |
 | Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[9] | ❌ | - | ❌ |
 | Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | ❌ | 🟡 [10] | ❌ |
 | Legacy shapes, text boxes, effects and WordArt (VML) | ❌ | ❌ | ❌ | 🟡 [10] | ❌ |
@@ -66,6 +66,8 @@ ActiveX controls are preserved as images (like OLE objects).
 [10]: Text is extracted from shapes, text boxes and WordArt when converting to TXT but only for inline objects,  
 floating objects are ignored to prevent layout issues.
 
+[11]: Modern text effects are not supported in RTF and removed by Microsoft Word too.
+
 ## RTF converters
 
 | Feature       | ➡️ HTML | ➡️ Markdown | ➡️ TXT | ➡️ DOCX |
@@ -78,7 +80,7 @@ floating objects are ignored to prevent layout issues.
 | External pictures | ✅ | ✅ | - | ⏳ |
 | Lists | 🟡 | 🟡 | 🟡 | ⏳ |
 | Tables | ✅ | 🟡 | 🟡 | ⏳ |
-| Styles | 🟡[11] | 🟡[11] | - | ⏳ |
+| Styles | 🟡[12] | 🟡[12] | - | ⏳ |
 | Hyperlinks | ✅ | ✅ | - | ⏳ |
 | Bookmarks | ✅ | ✅ | - | ⏳ |
 | Header and footer | 🟡 | 🟡 | 🟡 | ⏳ |
@@ -93,7 +95,7 @@ floating objects are ignored to prevent layout issues.
 | Comments | - | - | - | ⏳ |
 | Document information | 🟡 | - | - | ⏳ |
 
-[11] preserved as inline formatting if possible.  
+[12] preserved as inline formatting if possible.  
 
 ## Markdown renderers
 
@@ -103,14 +105,14 @@ floating objects are ignored to prevent layout issues.
 | Paragraphs | ✅ | ✅ |
 | Headings | ✅ | ✅ |
 | Emojis | ✅ | ✅ |
-| Inline code blocks [12] | ✅ | ✅ |
-| Fenced code blocks [12] | ✅ | ✅ |
+| Inline code blocks [13] | ✅ | ✅ |
+| Fenced code blocks [13] | ✅ | ✅ |
 | Syntax highlight for code blocks | ❌ | ❌ |
-| Quote blocks [12] | ✅ | ✅ |
-| Lists [12] | ✅ | ✅ |
+| Quote blocks [13] | ✅ | ✅ |
+| Lists [13] | ✅ | ✅ |
 | Task lists | ✅ | ✅ |
 | Breaks | ✅ | ✅ |
-| Pictures [13] | ✅ | ✅ |
+| Pictures [14] | ✅ | ✅ |
 | Links | ✅ | ✅ |
 | Bookmarks on headings | ✅ | ✅ |
 | HTML inline tags | 🟡 | ❌ |
@@ -122,9 +124,9 @@ floating objects are ignored to prevent layout issues.
 | Definition lists | ❌ | ❌ |
 | Figures | ❌ | ❌ |
 
-[12]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
+[13]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
 
-[13]: WebP, AVIF and JXL images are not supported in DOCX and RTF, and GIF is also not supported in RTF.  
+[14]: WebP, AVIF and JXL images are not supported in DOCX and RTF, and GIF is also not supported in RTF.  
 JPEG and PNG have the broadest support. To convert other images, you can use the DocSharp.ImageSharp or DocSharp.SystemDrawing package or set the ImageConverter property on a custom converter which returns PNG bytes.  
 The ImagesBaseUri property has to be set in order to support relative URLs, otherwise only images referenced with absolute URLs are processed (see the wiki or sample app for examples).  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.

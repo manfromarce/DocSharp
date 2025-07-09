@@ -323,7 +323,7 @@ internal class MarkdownVisitor : INodeVisitor
             string font = run.Styles.OfType<Font>()?.FirstOrDefault()?.Name ?? string.Empty;
             string text = run.Value;
             foreach (char c in text)
-                _writer.WriteChar(c, font, isInTableCell);
+                _writer.WriteCharEscaped(c, font, isInTableCell);
             
             if (isMarked)
                 _writer.Write("</mark>");

@@ -11,7 +11,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
     internal override void ProcessTable(Table table, HtmlTextWriter sb)
     {
@@ -330,7 +330,7 @@ public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
         // Process cell content
         foreach (var element in cell.Elements())
         {
-            base.ProcessCompositeElement(element, sb);
+            base.ProcessBodyElement(element, sb);
         }
 
         sb.WriteEndElement("td");

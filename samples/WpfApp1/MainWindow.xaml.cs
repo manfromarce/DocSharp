@@ -171,7 +171,8 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToHtmlConverter()
                     {
-                        HeaderFooter = true,
+                        ExportHeaderFooter = true,
+                        ExportFootnotesEndnotes = true,
                         ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
                                                                       // (ImageSharp does not support WMF / EMF yet)
                     };
@@ -234,6 +235,8 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToMarkdownConverter()
                     {
+                        ExportHeaderFooter = true,
+                        ExportFootnotesEndnotes = true,
                         ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
                         ImagesBaseUriOverride = "",
                         //ImagesBaseUriOverride = "..",
@@ -269,7 +272,11 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var converter = new DocxToTxtConverter();
+                    var converter = new DocxToTxtConverter()
+                    {
+                        ExportHeaderFooter = true,
+                        ExportFootnotesEndnotes = true
+                    };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)

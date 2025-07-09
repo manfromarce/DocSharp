@@ -165,12 +165,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         // Add footnotes and endnotes content             
         if (document.MainDocumentPart?.FootnotesPart != null)
         {
-            ProcessFootnotesPart(document.MainDocumentPart.FootnotesPart, contentSb);
+            ProcessFootnotes(document.MainDocumentPart.FootnotesPart, contentSb);
             contentSb.WriteLine();
         }
         if (document.MainDocumentPart?.EndnotesPart != null)
         {
-            ProcessEndnotesPart(document.MainDocumentPart.EndnotesPart, contentSb);
+            ProcessEndnotes(document.MainDocumentPart.EndnotesPart, contentSb);
             contentSb.WriteLine();
         }
 
@@ -197,6 +197,20 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         // Close RTF document
         sb.WriteLine("}");
+    }
+
+    internal override void ProcessBody(Body body, RtfStringWriter sb)
+    {
+        foreach (var element in body.Elements())
+        {
+            ProcessBodyElement(element, sb);
+        }
+    }
+
+    internal override void EnsureSpace(RtfStringWriter sb)
+    {
+        // Not needed in this converter
+        //sb.WriteLine(@"\par");
     }
 
     internal override void ProcessDocumentBackground(DocumentBackground documentBackground, RtfStringWriter sb)

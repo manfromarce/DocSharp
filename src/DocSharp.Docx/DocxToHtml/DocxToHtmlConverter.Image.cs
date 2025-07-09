@@ -22,7 +22,7 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxConverterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
     internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb)
     {

@@ -18,7 +18,14 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         // Use LF for Markdown by default, can be replaced for special cases (e.g. when forcing soft breaks or hard breaks for text)
     }
 
-    public void WriteChar(char c, string font, bool forceHtmlBreak = false)
+    public void WriteHorizontalLine()
+    {
+        EnsureEmptyLine();
+        WriteLine("-----");
+        WriteLine();
+    }
+
+    public void WriteCharEscaped(char c, string font, bool forceHtmlBreak = false)
     {
         if (c == '\r')
         {
