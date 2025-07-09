@@ -13,8 +13,8 @@
 | Lists | ✅ | ✅[2] | ✅[2] |
 | Tables [3]  | ✅ | 🟡 | 🟡 |
 | Styles [4] | 🟡 | 🟡 | - |
-| Header and footer | ✅ | ❌ | ❌ |
-| Endnotes and footnotes | ✅ | ❌ | ❌ |
+| Header and footer | ✅ | ✅ | ✅ |
+| Footnotes and endnotes | ✅ | ✅ | ✅ |
 | Hyperlinks | ✅ | ✅ | - |
 | Bookmarks | ✅ | ✅ | - |
 | Drop cap and frame properties | ✅ | ❌ | ❌ |

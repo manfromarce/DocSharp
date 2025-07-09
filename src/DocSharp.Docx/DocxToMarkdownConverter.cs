@@ -57,17 +57,59 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
 
+    /// <summary>
+    /// Since Markdown is not paginated, only the header of the first section and
+    /// footer of the last section are exported.
+    /// Set this property to false to ignore headers and footers.
+    /// </summary>
+    public bool ExportHeaderFooter { get; set; } = true;
+
+    /// <summary>
+    /// Since Markdown is not paginated, both footnotes and endnotes are exported at the end of the document.
+    /// Set this property to false to ignore footnotes and endnotes.
+    /// </summary>
+    public bool ExportFootnotesEndnotes { get; set; } = true;
+
     private bool isInEmphasis = false;
-    private bool isAllCaps = false;   
+    private bool isAllCaps = false;
+
+    internal override void ProcessHeader(Header header, MarkdownStringWriter writer)
+    {
+        if (this.ExportHeaderFooter)
+            base.ProcessHeader(header, writer);
+    }
+
+    internal override void ProcessFooter(Footer footer, MarkdownStringWriter writer)
+    {
+        if (this.ExportHeaderFooter)
+        {
+            writer.WriteHorizontalLine();
+            base.ProcessFooter(footer, writer);
+        }
+    }
+
+    internal override void ProcessSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, MarkdownStringWriter writer)
+    {
+        EnsureSpace(writer);
+        base.ProcessSection(section, mainPart, writer);
+
+        // Add horizontal rule between sections
+        if (section != Sections[Sections.Count - 1]) 
+        {
+            writer.WriteHorizontalLine();        
+        }
+    }
 
     internal override void ProcessParagraph(Paragraph paragraph, MarkdownStringWriter sb)
     {
-        if (paragraph.ChildElements.Count == 0 ||
-           (paragraph.ChildElements.Count == 1 && paragraph.ParagraphProperties != null))
+        if (paragraph.IsEmpty())
         {
             // Skip empty paragraphs as they are not rendered anyway in Markdown.
             return;
         }
+
+        EnsureSpace(sb); // Add a blank line before the paragraph
+
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)
         {
@@ -84,42 +126,34 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                     case "heading 1":
                     case "heading1":
                     case "title":
-                        sb.Append("# ");
+                        sb.Write("# ");
                         break;
                     case "heading 2":
                     case "heading2":
                     case "subtitle":
-                        sb.Append("## ");
+                        sb.Write("## ");
                         break;
                     case "heading 3":
                     case "heading3":
-                        sb.Append("### ");
+                        sb.Write("### ");
                         break;
                     case "heading 4":
                     case "heading4":
-                        sb.Append("#### ");
+                        sb.Write("#### ");
                         break;
                     case "heading 5":
                     case "heading5":
-                        sb.Append("##### ");
+                        sb.Write("##### ");
                         break;
                     case "heading 6":
                     case "heading6":
-                        sb.Append("###### ");
+                        sb.Write("###### ");
                         break;
                 }
             }
         }
-        base.ProcessParagraph(paragraph, sb);
-        if (!paragraph.IsLast())
-        {
-            sb.AppendLine();
-            if (!paragraph.IsEmpty())
-            {
-                // Write additional blank line unless the paragraph is empty.
-                sb.AppendLine();
-            }
-        }
+        
+        base.ProcessParagraph(paragraph, sb);        
     }
 
     internal void ProcessListItem(NumberingProperties numPr, MarkdownStringWriter sb)
@@ -147,18 +181,18 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 {
                     for (int i = 1; i <= levelIndex; i++)
                     {
-                        sb.Append("    "); // indentation
+                        sb.Write("    "); // indentation
                     }
                     if (listType == NumberFormatValues.Bullet)
                     {
-                        sb.Append("- ");
+                        sb.Write("- ");
                     }
                     else
                     {
                         int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ?? 
                                           levelOverrideLevel?.StartNumberingValue?.Val ??
                                           level.StartNumberingValue?.Val ?? 1;
-                        sb.Append($"{startNumber}. "); // Markdown renderers will automatically increase the number.
+                        sb.Write($"{startNumber}. "); // Markdown renderers will automatically increase the number.
                     }
                 }
             }
@@ -171,7 +205,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         bool hasText = text != null && !string.IsNullOrEmpty(text.InnerText);
         if (hasText && text!.InnerText.All(char.IsWhiteSpace))
         {
-            sb.Append(text.InnerText);
+            sb.Write(text.InnerText);
             return;
         }
 
@@ -185,7 +219,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         {
             // Emphasis inlines starting with spaces are not interpreted properly, so we extract them.
             leadingSpaces = StringHelpers.GetLeadingSpaces(text!.InnerText);
-            sb.Append(leadingSpaces);
+            sb.Write(leadingSpaces);
 
             // TODO: consider last child for trailing spaces
             trailingSpaces = StringHelpers.GetTrailingSpaces(text.InnerText);
@@ -216,27 +250,27 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             // Consecutive emphasis inlines such as *italic***bold** are sometimes not interpreted properly.
             if (sb.EndsWithEmphasis() && string.IsNullOrEmpty(leadingSpaces) &&
                 (isBold | isItalic | isStrikethrough))
-                sb.Append(' ');
+                sb.Write(' ');
 
             if (isItalic)
-                sb.Append('*');
+                sb.Write('*');
 
             if (isBold)
-                sb.Append("**");
+                sb.Write("**");
 
             if (isStrikethrough)
-                sb.Append("~~");
+                sb.Write("~~");
 
             if (isUnderline)
-                sb.Append("<u>");
+                sb.Write("<u>");
 
             if (isHighlight)
-                sb.Append("<mark>");
+                sb.Write("<mark>");
 
             if (isSubscript)
-                sb.Append("<sub>");
+                sb.Write("<sub>");
             else if (isSuperscript)
-                sb.Append("<sup>");
+                sb.Write("<sup>");
         }
 
         isAllCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run) is Caps caps && (caps.Val is null || caps.Val);
@@ -251,39 +285,43 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         if (hasText)
         {
             if (isSubscript)
-                sb.Append("</sub>");
+                sb.Write("</sub>");
             else if (isSuperscript)
-                sb.Append("</sup>");
+                sb.Write("</sup>");
 
             if (isHighlight)
-                sb.Append("</mark>");
+                sb.Write("</mark>");
 
             if (isUnderline)
-                sb.Append("</u>");
+                sb.Write("</u>");
 
             if (isStrikethrough)
-                sb.Append("~~");
+                sb.Write("~~");
 
             if (isBold)
-                sb.Append("**");
+                sb.Write("**");
 
             if (isItalic)
-                sb.Append('*');
+                sb.Write('*');
 
-            sb.Append(trailingSpaces);
+            sb.Write(trailingSpaces);
         }
+    }
+
+    internal override void EnsureSpace(MarkdownStringWriter sb)
+    {
+        sb.EnsureEmptyLine();
     }
 
     internal override void ProcessBreak(Break br, MarkdownStringWriter sb)
     {
         if (br.Type != null && br.Type == BreakValues.Page)
         {
-            sb.AppendLine();
-            sb.AppendLine("-----"); // rendered as horizontal rule
+            sb.WriteHorizontalLine(); // rendered as horizontal rule
         }
         else
         {
-            sb.AppendLine("  "); // soft break
+            sb.WriteLine("  "); // soft break
         }
     }
 
@@ -302,7 +340,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         }
         foreach (char c in t)
         {
-            sb.AppendChar(isAllCaps ? char.ToUpper(c) : c, font);
+            sb.WriteCharEscaped(isAllCaps ? char.ToUpper(c) : c, font);
         }
     }
 
@@ -315,12 +353,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             return;
         }
 
-        if (!sb.EndsWithNewLine())
-        {
-            // Add a whole blank line before the table
-        	sb.AppendLine(); 
-            sb.AppendLine();
-        }
+        sb.EnsureEmptyLine();
 
         int rowIndex = 0;
         foreach(var element in table.Elements())
@@ -338,21 +371,21 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             }
         }
         // Add a blank line after the table
-        sb.AppendLine();
+        sb.WriteLine();
     }
 
     private void AddTableHeaderSeparator(int columnCount, MarkdownStringWriter sb)
     {
         for (int i = 0; i < columnCount; ++i)
         {
-            sb.Append("| --- ");
+            sb.Write("| --- ");
         }
-        sb.AppendLine("|");
+        sb.WriteLine("|");
     }
 
     internal void ProcessRow(TableRow tableRow, MarkdownStringWriter sb, int maxCellsCount)
     {
-        sb.Append("| ");
+        sb.Write("| ");
         int currentCellCount = 0;
         foreach (var element in tableRow.Elements())
         {
@@ -367,7 +400,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                         // Markdown does not support merged cells, add another empty cell for consistency.
                         for (int i = 1; i < cell.TableCellProperties.GridSpan.Val.Value; i++)
                         {
-                            sb.Append(" | ");
+                            sb.Write(" | ");
                             ++currentCellCount;
                         }
                     }
@@ -378,25 +411,26 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
 
         for (int i = currentCellCount; i < maxCellsCount; i++)
         {
-            sb.Append(" | "); // Markdown does not support rows with less cells.
+            sb.Write(" | "); // Markdown does not support rows with less cells.
         }
 
-        sb.AppendLine();
+        sb.WriteLine();
     }
 
     internal void ProcessCell(TableCell cell, MarkdownStringWriter sb)
     {
-        var cellBuilder = new MarkdownStringWriter()
+        var builder = new MarkdownStringWriter()
         {
-            NewLine = "<br/>"
+            NewLine = "<br />"
         };
         foreach (var paragraph in cell.Elements<Paragraph>())
         {
             // Markdown doesn't support multiple lines per cell directly,
             // so we use the <br> tag.
-            ProcessParagraph(paragraph, cellBuilder);
+            ProcessParagraph(paragraph, builder);
         }
-        sb.Append(" | ");      
+        sb.Write(builder.ToString().TrimEnd());
+        sb.Write(" | ");      
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, MarkdownStringWriter sb)
@@ -413,12 +447,12 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 string url = relationship.Uri.ToString();             
-                sb.Append($"[{displayTextBuilder.ToString()}]({url})");
+                sb.Write($"[{displayTextBuilder.ToString()}]({url})");
             }
         }
         else if (hyperlink.Anchor?.Value is string anchor)
         {
-            sb.Append($"[{displayTextBuilder.ToString()}](#{anchor})");
+            sb.Write($"[{displayTextBuilder.ToString()}](#{anchor})");
         }
     }
 
@@ -525,7 +559,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                     string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
                     uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
                 }
-                sb.Append($" ![{relId}]({uri}) ");
+                sb.Write($" ![{relId}]({uri}) ");
             }
         }
         catch (Exception ex)
@@ -541,7 +575,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, MarkdownStringWriter sb)
     {
-        sb.Append($"<a id=\"{bookmark.Name}\"></a>");
+        sb.Write($"<a id=\"{bookmark.Name}\"></a>");
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, MarkdownStringWriter sb)
@@ -567,7 +601,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             {
                 htmlEntity = $"&#{decimalValue};";
             }
-            sb.Append(htmlEntity);
+            sb.Write(htmlEntity);
         }        
     }
 
@@ -576,6 +610,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         switch (element)
         {
             case M.Paragraph oMathPara:
+                // TODO: Ensure blank line before ?
                 foreach (var subElement in oMathPara.Elements())
                 {
                     if (subElement is M.OfficeMath || 
@@ -620,7 +655,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 }
                 if (!string.IsNullOrWhiteSpace(latex))
                 { 
-                    sb.Append($" $` {latex} `$ ");
+                    sb.Write($" $` {latex} `$ ");
                 }
                 if (element.LastChild != null && !element.LastChild.IsMathElement())
                 {
@@ -661,16 +696,54 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         }
     }
 
+    internal override void ProcessFootnotes(FootnotesPart? footnotes, MarkdownStringWriter sb)
+    {
+        if (this.ExportFootnotesEndnotes)
+        {
+            base.ProcessFootnotes(footnotes, sb);
+        }
+    }
+
+    internal override void ProcessEndnotes(EndnotesPart? endnotes, MarkdownStringWriter sb)
+    {
+        if (this.ExportFootnotesEndnotes)
+        {
+            base.ProcessEndnotes(endnotes, sb);
+        }
+    }
+
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, MarkdownStringWriter sb)
+    {
+        if (this.ExportFootnotesEndnotes)
+        {
+            sb.Write($"[{footnoteReference.GetFootnoteIdString()}]"); // Avoid escaping in this case
+        }
+    }
+
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, MarkdownStringWriter sb)
+    {
+        if (this.ExportFootnotesEndnotes)
+        {
+            sb.Write($"[{endnoteReference.GetEndnoteIdString()}]"); // Avoid escaping in this case
+        }
+    }
+
+    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark footnoteReferenceMark, MarkdownStringWriter sb)
+    {
+        // We don't need to check ExportFootnotesEndnotes because it's already called inside the Foonotes part.
+        sb.Write($"[{footnoteReferenceMark.GetFootnoteIdString()}]: "); // Avoid escaping in this case
+    }
+
+    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb)
+    {
+        // We don't need to check ExportFootnotesEndnotes because it's already called inside the Endnotes part.
+        sb.Write($"[{endnoteReferenceMark.GetEndnoteIdString()}]: "); // Avoid escaping in this case
+    }
+
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, MarkdownStringWriter sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, MarkdownStringWriter sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, MarkdownStringWriter sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, MarkdownStringWriter sb) { }
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, MarkdownStringWriter sb) { }
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, MarkdownStringWriter sb) { }
-    internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb) { }
-    internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, MarkdownStringWriter sb) { }
-    internal override void ProcessSeparatorMark(SeparatorMark separatorMark, MarkdownStringWriter sb) { }
-    internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, MarkdownStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, MarkdownStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber background, MarkdownStringWriter sb) { }
 

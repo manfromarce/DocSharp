@@ -8,35 +8,35 @@ using DocSharp.Helpers;
 
 namespace DocSharp.Writers;
 
-public class RtfStringWriter : BaseStringWriter
+public sealed class RtfStringWriter : BaseStringWriter
 {
     public RtfStringWriter()
     {
         NewLine = "\r\n"; // Use CrLf by default for RTF.
     }
 
-    public void Append(RtfStringWriter writer)
+    public void Write(RtfStringWriter writer)
     {
-        Append(writer.ToString());
+        Write(writer.ToString());
     }
 
-    public void AppendRtfEscaped(string? value)
+    public void WriteRtfEscaped(string? value)
     {
         if (value == null)
             return;
 
         foreach (char c in value)
         {
-            AppendRtfEscaped(c);
+            WriteRtfEscaped(c);
         }
     }
 
-    public void AppendRtfEscaped(char c)
+    public void WriteRtfEscaped(char c)
     {
-        Append(RtfHelpers.EscapeChar(c));
+        Write(RtfHelpers.EscapeChar(c));
     }
 
-    public void AppendRtfUnicodeChar(string hexValue)
+    public void WriteRtfUnicodeChar(string hexValue)
     {
         if (hexValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
             hexValue.StartsWith("&h", StringComparison.OrdinalIgnoreCase))
@@ -46,19 +46,22 @@ public class RtfStringWriter : BaseStringWriter
         if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
                          out int result))
         {
-            AppendRtfUnicodeChar(result);
+            WriteRtfUnicodeChar(result);
         }
     }
 
-    public void AppendRtfUnicodeChar(int charCode)
+    public void WriteRtfUnicodeChar(int charCode)
     {
-        Append(RtfHelpers.ConvertUnicodeChar(charCode));
-    }
+        Write(RtfHelpers.ConvertUnicodeChar(charCode));
+    }   
 
     public void WriteRtfHeader()
     {
-
+        Write(@"{\rtf1\ansi\deff0\nouicompat");
     }
 
-
+    public void Write(System.Drawing.Color color)
+    {
+        Write(color.ToRtfColor());
+    }
 }

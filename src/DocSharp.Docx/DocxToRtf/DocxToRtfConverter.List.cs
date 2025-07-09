@@ -14,40 +14,40 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 {
     internal void ProcessNumberingPart(Numbering numbering, RtfStringWriter sb)
     {
-        sb.Append(@"{\*\listtable");
+        sb.Write(@"{\*\listtable");
         ProcessListTable(numbering, sb);
-        sb.Append('}');
-        sb.Append(@"{\*\listoverridetable");
+        sb.Write('}');
+        sb.Write(@"{\*\listoverridetable");
         ProcessListOverrideTable(numbering, sb);
-        sb.Append('}');
+        sb.Write('}');
     }
 
     private void ProcessListTable(Numbering numbering, RtfStringWriter sb)
     {
         foreach (var abstractNum in numbering.Elements<AbstractNum>())
         {
-            sb.Append(@"{\list");
+            sb.Write(@"{\list");
             if (abstractNum.Nsid?.Val != null)
             {
-                sb.Append(@$"\listid{abstractNum.Nsid.Val.ToLong()}");
+                sb.Write(@$"\listid{abstractNum.Nsid.Val.ToLong()}");
             }
             if (abstractNum.TemplateCode?.Val != null)
             {
-                sb.Append(@$"\listemplateid{abstractNum.TemplateCode.Val.ToLong()}");
+                sb.Write(@$"\listemplateid{abstractNum.TemplateCode.Val.ToLong()}");
             }
             if (abstractNum.MultiLevelType?.Val != null)
             {
                 if (abstractNum.MultiLevelType.Val == MultiLevelValues.SingleLevel)
                 {
-                    sb.Append(@"\listsimple1");
+                    sb.Write(@"\listsimple1");
                 }
                 else if (abstractNum.MultiLevelType.Val == MultiLevelValues.Multilevel)
                 {
-                    sb.Append(@"\listsimple0"); // default value if MultilevelType is not specified
+                    sb.Write(@"\listsimple0"); // default value if MultilevelType is not specified
                 }
                 else if (abstractNum.MultiLevelType.Val == MultiLevelValues.HybridMultilevel)
                 {
-                    sb.Append(@"\listhybrid");
+                    sb.Write(@"\listhybrid");
                 }
             }
             foreach (var level in abstractNum.Elements<Level>())
@@ -56,7 +56,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             if (abstractNum.AbstractNumDefinitionName?.Val != null)
             {
-                sb.Append(@$"{{\listname {abstractNum.AbstractNumDefinitionName.Val};}}");
+                sb.Write(@$"{{\listname {abstractNum.AbstractNumDefinitionName.Val};}}");
             }
             if (abstractNum.StyleLink != null)
             {
@@ -64,12 +64,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (abstractNum.NumberingStyleLink != null)
             {
             }
-            sb.AppendLine('}');
+            sb.WriteLine('}');
         }
 
         if (numbering.Elements<NumberingPictureBullet>().Any()) 
         { 
-            sb.Append(@"{\*\listpicture");
+            sb.Write(@"{\*\listpicture");
             foreach (var pictureBullet in numbering.Elements<NumberingPictureBullet>())
             {
                 //if (pictureBullet.NumberingPictureBulletId != null)
@@ -104,17 +104,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     }
                 }
             }
-            sb.AppendLine('}');
+            sb.WriteLine('}');
         }
     }
 
     private void ProcessLevel(Level level, RtfStringWriter sb)
     {
-        sb.Append(@"{\listlevel");
+        sb.Write(@"{\listlevel");
         
         if (level.Tentative != null && level.Tentative.HasValue && level.Tentative.Value)
         {
-            sb.Append(@"\lvltentative");
+            sb.Write(@"\lvltentative");
         }
         //if (level.LevelIndex != null)
         //{
@@ -126,21 +126,21 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         if (level.LevelPictureBulletId is LevelPictureBulletId pictureBulletId)
         {
-            sb.Append($@"\levelpicture{pictureBulletId.Val}");
+            sb.Write($@"\levelpicture{pictureBulletId.Val}");
         }
         if (level.LevelJustification?.Val != null)
         {
             if (level.LevelJustification.Val == LevelJustificationValues.Left)
             {
-                sb.Append(@"\leveljcn0");
+                sb.Write(@"\leveljcn0");
             }
             else if (level.LevelJustification.Val == LevelJustificationValues.Center)
             {
-                sb.Append(@"\leveljcn1");
+                sb.Write(@"\leveljcn1");
             }
             else if (level.LevelJustification.Val == LevelJustificationValues.Right)
             {
-                sb.Append(@"\leveljcn2");
+                sb.Write(@"\leveljcn2");
             }
         }
 
@@ -148,15 +148,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (level.LevelSuffix.Val == LevelSuffixValues.Tab)
             {
-                sb.Append("\\levelfollow0"); // Default
+                sb.Write("\\levelfollow0"); // Default
             }
             else if (level.LevelSuffix.Val == LevelSuffixValues.Space)
             {
-                sb.Append("\\levelfollow1"); 
+                sb.Write("\\levelfollow1"); 
             }
             else if (level.LevelSuffix.Val == LevelSuffixValues.Nothing)
             {
-                sb.Append("\\levelfollow2"); 
+                sb.Write("\\levelfollow2"); 
             }
         }
 
@@ -173,23 +173,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (level.LegacyNumbering is LegacyNumbering legacy &&
             (legacy.Legacy == null || legacy.Legacy.Value))
         {
-            sb.Append(@"\levelold1");
+            sb.Write(@"\levelold1");
             if (legacy.LegacyIndent != null && int.TryParse(legacy.LegacyIndent, out int legacyIndent))
             {
-                sb.Append($@"\levelindent{legacyIndent}");
+                sb.Write($@"\levelindent{legacyIndent}");
             }
             if (legacy.LegacySpace != null && int.TryParse(legacy.LegacySpace, out int legacySpace))
             {
-                sb.Append($@"\levelspace{legacySpace}");
+                sb.Write($@"\levelspace{legacySpace}");
             }
         }
         else
         {
-            sb.Append(@"\levelindent0\levelspace0");
+            sb.Write(@"\levelindent0\levelspace0");
         }
         if (level.StartNumberingValue?.Val != null)
         {
-            sb.Append($@"\levelstartat{level.StartNumberingValue.Val}");
+            sb.Write($@"\levelstartat{level.StartNumberingValue.Val}");
         }
 
         if (level.NumberingFormat is NumberingFormat numberingFormat)
@@ -204,7 +204,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         if (level.IsLegalNumberingStyle != null && (level.IsLegalNumberingStyle.Val == null || level.IsLegalNumberingStyle.Val))
         {
-            sb.Append($@"\levellegal1");
+            sb.Write($@"\levellegal1");
         }
         if (level.PreviousParagraphProperties is PreviousParagraphProperties prevParagraphProperties)
         {
@@ -219,7 +219,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         }
 
-        sb.AppendLine('}');
+        sb.WriteLine('}');
     }
 
     private void ProcessNumberingSymbolRunProperties(NumberingSymbolRunProperties symbolRunProperties, RtfStringWriter sb)
@@ -233,20 +233,20 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (ind?.Left != null)
             {
-                sb.Append($"\\li{ind.Left}");
+                sb.Write($"\\li{ind.Left}");
             }
             else if (ind?.Start != null)
             {
-                sb.Append($"\\lin{ind.Start}");                 
+                sb.Write($"\\lin{ind.Start}");                 
             }
 
             if (ind?.FirstLine != null)
             {
-                sb.Append($"\\fi{ind.FirstLine}");
+                sb.Write($"\\fi{ind.FirstLine}");
             }
             else if (ind?.Hanging != null)
             {
-                sb.Append($"\\fi-{ind.Hanging}");
+                sb.Write($"\\fi-{ind.Hanging}");
             }
             // Others are not supported in this context in RTF.
         }
@@ -257,184 +257,184 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (numberingFormat.Val == null)
         {
             // Default
-            sb.Append(@"\levelnfc0");
+            sb.Write(@"\levelnfc0");
             return;
         }
 
         if (numberingFormat.Val == NumberFormatValues.Decimal)
         {
-            sb.Append(@"\levelnfc0"); // 1, 2, 3
+            sb.Write(@"\levelnfc0"); // 1, 2, 3
         }
         else if (numberingFormat.Val == NumberFormatValues.UpperRoman)
         {
-            sb.Append(@"\levelnfc1"); // I, II, III
+            sb.Write(@"\levelnfc1"); // I, II, III
         }
         else if (numberingFormat.Val == NumberFormatValues.LowerRoman)
         {
-            sb.Append(@"\levelnfc2"); // i, ii, iii
+            sb.Write(@"\levelnfc2"); // i, ii, iii
         }
         else if (numberingFormat.Val == NumberFormatValues.UpperLetter)
         {
-            sb.Append(@"\levelnfc3"); // A, B, C
+            sb.Write(@"\levelnfc3"); // A, B, C
         }
         else if (numberingFormat.Val == NumberFormatValues.LowerLetter)
         {
-            sb.Append(@"\levelnfc4"); // a, b, c
+            sb.Write(@"\levelnfc4"); // a, b, c
         }
         else if (numberingFormat.Val == NumberFormatValues.Ordinal)
         {
-            sb.Append(@"\levelnfc5"); // 1st, 2nd, 3rd
+            sb.Write(@"\levelnfc5"); // 1st, 2nd, 3rd
         }
         else if (numberingFormat.Val == NumberFormatValues.CardinalText)
         {
-            sb.Append(@"\levelnfc6"); // One, Two Three
+            sb.Write(@"\levelnfc6"); // One, Two Three
         }
         else if (numberingFormat.Val == NumberFormatValues.OrdinalText)
         {
-            sb.Append(@"\levelnfc7"); // First, Second, Third
+            sb.Write(@"\levelnfc7"); // First, Second, Third
         }
         else if (numberingFormat.Val == NumberFormatValues.ChineseCounting ||
                  numberingFormat.Val == NumberFormatValues.IdeographDigital ||
                  numberingFormat.Val == NumberFormatValues.KoreanDigital ||
                  numberingFormat.Val == NumberFormatValues.TaiwaneseCounting)
         {
-            sb.Append(@"\levelnfc10"); // Kanji numbering without the digit character (DBNUM1)
+            sb.Write(@"\levelnfc10"); // Kanji numbering without the digit character (DBNUM1)
         }
         else if (numberingFormat.Val == NumberFormatValues.ChineseLegalSimplified ||
                  numberingFormat.Val == NumberFormatValues.IdeographLegalTraditional ||
                  numberingFormat.Val == NumberFormatValues.JapaneseCounting ||
                  numberingFormat.Val == NumberFormatValues.KoreanCounting)
         {
-            sb.Append(@"\levelnfc11"); // Kanji numbering with the digit character (DBNUM2)
+            sb.Write(@"\levelnfc11"); // Kanji numbering with the digit character (DBNUM2)
         }
         else if (numberingFormat.Val == NumberFormatValues.Aiueo)
         {
-            sb.Append(@"\levelnfc12"); // 46 phonetic katakana characters in "aiueo" order (AIUEO) (newer form – “あいうえお。。。” based on phonem matrix) 
+            sb.Write(@"\levelnfc12"); // 46 phonetic katakana characters in "aiueo" order (AIUEO) (newer form – “あいうえお。。。” based on phonem matrix) 
         }
         else if (numberingFormat.Val == NumberFormatValues.Iroha)
         {
-            sb.Append(@"\levelnfc13"); // 46 phonetic katakana characters in "iroha" order (IROHA) (old form – “いろはにほへとちりぬるお。。。” based on haiku from long ago) 
+            sb.Write(@"\levelnfc13"); // 46 phonetic katakana characters in "iroha" order (IROHA) (old form – “いろはにほへとちりぬるお。。。” based on haiku from long ago) 
         }
         else if (numberingFormat.Val == NumberFormatValues.ChineseCountingThousand ||
                 numberingFormat.Val == NumberFormatValues.JapaneseLegal ||
                 numberingFormat.Val == NumberFormatValues.KoreanLegal ||
                 numberingFormat.Val == NumberFormatValues.TaiwaneseCountingThousand)
         {
-            sb.Append(@"\levelnfc14"); // Kanji numbering 3 (DBNUM3)
+            sb.Write(@"\levelnfc14"); // Kanji numbering 3 (DBNUM3)
         }
         else if (numberingFormat.Val == NumberFormatValues.KoreanDigital2 ||
                 numberingFormat.Val == NumberFormatValues.TaiwaneseDigital)
         {
-            sb.Append(@"\levelnfc15"); // Kanji numbering 4 (DBNUM4)
+            sb.Write(@"\levelnfc15"); // Kanji numbering 4 (DBNUM4)
         }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedCircle)
         {
-            sb.Append(@"\levelnfc18"); // Circle numbering (CIRCLENUM) 
+            sb.Write(@"\levelnfc18"); // Circle numbering (CIRCLENUM) 
         }
         else if (numberingFormat.Val == NumberFormatValues.DecimalFullWidth || 
                  numberingFormat.Val == NumberFormatValues.DecimalFullWidth2)
         {
-            sb.Append(@"\levelnfc19"); // Double-byte Arabic numbering 
+            sb.Write(@"\levelnfc19"); // Double-byte Arabic numbering 
         }
         else if (numberingFormat.Val == NumberFormatValues.Bullet)
         {
-            sb.Append(@"\levelnfc23"); // Bullet (no number)
+            sb.Write(@"\levelnfc23"); // Bullet (no number)
         }
         else if (numberingFormat.Val == NumberFormatValues.Ganada)
         {
-            sb.Append(@"\levelnfc24"); // Korean numbering 2 (GANADA) 
+            sb.Write(@"\levelnfc24"); // Korean numbering 2 (GANADA) 
         }
         else if (numberingFormat.Val == NumberFormatValues.Chosung)
         {
-            sb.Append(@"\levelnfc25"); // Korean numbering 1 (Chosung) 
+            sb.Write(@"\levelnfc25"); // Korean numbering 1 (Chosung) 
         }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedFullstop)
         {
-            sb.Append(@"\levelnfc26"); // Chinese numbering 1 (GB1)
+            sb.Write(@"\levelnfc26"); // Chinese numbering 1 (GB1)
         }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedParen)
         {
-            sb.Append(@"\levelnfc27"); // Chinese numbering 2 (GB2)
+            sb.Write(@"\levelnfc27"); // Chinese numbering 2 (GB2)
         }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedCircleChinese)
         {
-            sb.Append(@"\levelnfc28"); // Chinese numbering 3 (GB3)
+            sb.Write(@"\levelnfc28"); // Chinese numbering 3 (GB3)
         }
         else if (numberingFormat.Val == NumberFormatValues.IdeographEnclosedCircle)
         {
-            sb.Append(@"\levelnfc29"); // Chinese numbering 4 (GB4)
+            sb.Write(@"\levelnfc29"); // Chinese numbering 4 (GB4)
         }
         else if (numberingFormat.Val == NumberFormatValues.IdeographTraditional)
         {
-            sb.Append(@"\levelnfc30"); // Chinese Zodiac numbering 1 (ZODIAC1) 
+            sb.Write(@"\levelnfc30"); // Chinese Zodiac numbering 1 (ZODIAC1) 
         }
         else if (numberingFormat.Val == NumberFormatValues.IdeographZodiac)
         {
-            sb.Append(@"\levelnfc31"); // Chinese Zodiac numbering 2 (ZODIAC2) 
+            sb.Write(@"\levelnfc31"); // Chinese Zodiac numbering 2 (ZODIAC2) 
         }
         else if (numberingFormat.Val == NumberFormatValues.IdeographZodiacTraditional)
         {
-            sb.Append(@"\levelnfc32"); // Chinese Zodiac numbering 3 (ZODIAC3) 
+            sb.Write(@"\levelnfc32"); // Chinese Zodiac numbering 3 (ZODIAC3) 
         }
         else if (numberingFormat.Val == NumberFormatValues.Hebrew1)
         {
-            sb.Append(@"\levelnfc45"); // Hebrew non-standard decimal 
+            sb.Write(@"\levelnfc45"); // Hebrew non-standard decimal 
         }
         else if (numberingFormat.Val == NumberFormatValues.ArabicAlpha)
         {
-            sb.Append(@"\levelnfc46"); // Arabic Alif Ba Tah
+            sb.Write(@"\levelnfc46"); // Arabic Alif Ba Tah
         }
         else if (numberingFormat.Val == NumberFormatValues.Hebrew2)
         {
-            sb.Append(@"\levelnfc47"); // Hebrew Biblical standard
+            sb.Write(@"\levelnfc47"); // Hebrew Biblical standard
         }
         else if (numberingFormat.Val == NumberFormatValues.ArabicAbjad)
         {
-            sb.Append(@"\levelnfc48"); // Arabic Abjad style 
+            sb.Write(@"\levelnfc48"); // Arabic Abjad style 
         }
         else if (numberingFormat.Val == NumberFormatValues.HindiVowels)
         {
-            sb.Append(@"\levelnfc49");
+            sb.Write(@"\levelnfc49");
         }
         else if (numberingFormat.Val == NumberFormatValues.HindiConsonants)
         {
-            sb.Append(@"\levelnfc50"); 
+            sb.Write(@"\levelnfc50"); 
         }
         else if (numberingFormat.Val == NumberFormatValues.HindiNumbers)
         {
-            sb.Append(@"\levelnfc51");
+            sb.Write(@"\levelnfc51");
         }
         else if (numberingFormat.Val == NumberFormatValues.HindiCounting)
         {
-            sb.Append(@"\levelnfc52"); // Hindi descriptive (cardinals) 
+            sb.Write(@"\levelnfc52"); // Hindi descriptive (cardinals) 
         }
         else if (numberingFormat.Val == NumberFormatValues.ThaiLetters)
         {
-            sb.Append(@"\levelnfc53");
+            sb.Write(@"\levelnfc53");
         }
         else if (numberingFormat.Val == NumberFormatValues.ThaiNumbers)
         {
-            sb.Append(@"\levelnfc54");
+            sb.Write(@"\levelnfc54");
         }
         else if (numberingFormat.Val == NumberFormatValues.ThaiCounting)
         {
-            sb.Append(@"\levelnfc55"); // Thai descriptive (cardinals) 
+            sb.Write(@"\levelnfc55"); // Thai descriptive (cardinals) 
         }
         else if (numberingFormat.Val == NumberFormatValues.VietnameseCounting)
         {
-            sb.Append(@"\levelnfc56"); // Vietnamese descriptive (cardinals) 
+            sb.Write(@"\levelnfc56"); // Vietnamese descriptive (cardinals) 
         }
         else if (numberingFormat.Val == NumberFormatValues.NumberInDash)
         {
-            sb.Append(@"\levelnfc57"); // Page number format - # -
+            sb.Write(@"\levelnfc57"); // Page number format - # -
         }
         else if (numberingFormat.Val == NumberFormatValues.RussianLower)
         {
-            sb.Append(@"\levelnfc58"); 
+            sb.Write(@"\levelnfc58"); 
         }
         else if (numberingFormat.Val == NumberFormatValues.RussianUpper)
         {
-            sb.Append(@"\levelnfc59"); 
+            sb.Write(@"\levelnfc59"); 
         }
         else if (numberingFormat.Val == NumberFormatValues.Custom)
         {
@@ -444,35 +444,35 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     // These are few standard formats created by Microsoft Word
                     case "01, 02, 03, ...":
-                        sb.Append(@"\levelnfc22");
+                        sb.Write(@"\levelnfc22");
                         break;
                     case "001, 002, 003, ...":
-                        sb.Append(@"\levelnfc62");
+                        sb.Write(@"\levelnfc62");
                         break;
                     case "0001, 0002, 0003, ...":
-                        sb.Append(@"\levelnfc63");
+                        sb.Write(@"\levelnfc63");
                         break;
                     case "00001, 00002, 00003, ...":
-                        sb.Append(@"\levelnfc64"); 
+                        sb.Write(@"\levelnfc64"); 
                         break;
                 }
             }
         }
         else if (numberingFormat.Val == NumberFormatValues.None)
         {
-            sb.Append(@"\levelnfc255");
+            sb.Write(@"\levelnfc255");
         }
         else
         {
             // Default (decimal numbers)
-            sb.Append(@"\levelnfc0");
+            sb.Write(@"\levelnfc0");
         }
     }
 
     private void ProcessLevelText(LevelText levelText, string levelTemplateId, RtfStringWriter sb)
     {
-        sb.Append(@"{\leveltext");
-        sb.Append(levelTemplateId);
+        sb.Write(@"{\leveltext");
+        sb.Write(levelTemplateId);
         string src = string.Empty;
         if (levelText?.Val?.Value != null)
         {
@@ -501,11 +501,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
             }
             // Length is the number of elements in rtfParts (level numbers count as one character)
-            sb.Append($@"\'{rtfParts.Count:X2}");
+            sb.Write($@"\'{rtfParts.Count:X2}");
             foreach (var part in rtfParts)
-                sb.Append(part);
+                sb.Write(part);
         }
-        sb.Append(";}");
+        sb.Write(";}");
         
         WriteLevelNumbers(src, sb);
     }
@@ -541,19 +541,19 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        sb.Append("{\\levelnumbers");
+        sb.Write("{\\levelnumbers");
         foreach (var pos in offsets)
         {
-            sb.Append($"\\'{pos:X2}");
+            sb.Write($"\\'{pos:X2}");
         }
-        sb.Append(";}");
+        sb.Write(";}");
     }
 
     private void ProcessListOverrideTable(Numbering numbering, RtfStringWriter sb)
     {
         foreach (var num in numbering.Elements<NumberingInstance>())
         {
-            sb.Append(@"{\listoverride"); 
+            sb.Write(@"{\listoverride"); 
 
             // Get list id from the AbstractNum element
             if (num.AbstractNumId?.Val != null &&
@@ -562,43 +562,43 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                                                   is AbstractNum abstractNum && 
                 abstractNum.Nsid?.Val != null)
             {
-                sb.Append(@$"\listid{abstractNum.Nsid.Val.ToLong()}");
+                sb.Write(@$"\listid{abstractNum.Nsid.Val.ToLong()}");
             }
 
             if (num.NumberID != null && num.NumberID.HasValue)
             {
-                sb.Append(@$"\ls{num.NumberID.Value}");
+                sb.Write(@$"\ls{num.NumberID.Value}");
             }
 
             var levelOverrides = num.Elements<LevelOverride>();
             if (levelOverrides == null || !levelOverrides.Any())
             {
-                sb.Append(@"\listoverridecount0");
+                sb.Write(@"\listoverridecount0");
             }
             else
             {
                 if (levelOverrides.Count() == 1)
                 {
-                    sb.Append(@"\listoverridecount1");
+                    sb.Write(@"\listoverridecount1");
                 }
                 else
                 {
-                    sb.Append(@"\listoverridecount9");
+                    sb.Write(@"\listoverridecount9");
                 }
 
                 foreach (var levelOverride in levelOverrides)
                 {
-                    sb.Append(@"{\lfolevel");
+                    sb.Write(@"{\lfolevel");
                     if (levelOverride.StartOverrideNumberingValue?.Val != null)
                     {
-                        sb.Append(@$"\listoverridestartat{levelOverride.StartOverrideNumberingValue.Val} ");
+                        sb.Write(@$"\listoverridestartat{levelOverride.StartOverrideNumberingValue.Val} ");
                     }
                     /* TODO: if both the start-at and the format are overridden, 
                      * put the \levelstartatN inside the \listlevel contained in the \lfolevel
                      */
                     if (levelOverride.Level is Level level)
                     {
-                        sb.Append(@"\listoverrideformat");
+                        sb.Write(@"\listoverrideformat");
                         // TODO: 1, 9 or 0 (not added by Word ?)
 
                         ProcessLevel(level, sb);
@@ -607,10 +607,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     //{
                     // Not supported in RTF, add levels in order instead
                     //}
-                    sb.Append('}');
+                    sb.Write('}');
                 }
             }
-            sb.AppendLine('}');
+            sb.WriteLine('}');
         }
     }
 
@@ -621,9 +621,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // TODO: Calculate list text for RTF readers that don't support automatic numbering
             // or Word 97-2007 (or newer) lists. For now, just use a generic bullet.
             fonts.TryAddAndGetIndex("Arial", out int fontIndex);
-            sb.Append($@"{{\listtext \f{fontIndex}\bullet\tab}}");
+            sb.Write($@"{{\listtext \f{fontIndex}\bullet\tab}}");
 
-            sb.Append($@"\ls{numPr.NumberingId.Val}\ilvl{numPr.NumberingLevelReference.Val}");
+            sb.Write($@"\ls{numPr.NumberingId.Val}\ilvl{numPr.NumberingLevelReference.Val}");
         }
     }
 }

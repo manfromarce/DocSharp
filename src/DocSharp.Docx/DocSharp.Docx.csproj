@@ -14,7 +14,7 @@
     <PackageId>DocSharp.Docx</PackageId>
     <Title>DocSharp.Docx</Title>
     <Description>.NET library for converting documents. The DocSharp.Docx package provides DOCX to RTF, Markdown and plain text conversions.</Description>
-    <PackageTags>docx doc rtf markdown convert openxml</PackageTags>
+    <PackageTags>docx doc rtf markdown txt convert converter openxml</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

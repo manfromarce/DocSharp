@@ -10,11 +10,11 @@ public class LineBreakInlineRenderer : RtfObjectRenderer<LineBreakInline>
     {
         if (obj.IsHard)
         {
-            renderer.RtfWriter.Append(@"\line ");
+            renderer.RtfWriter.Write(@"\line ");
         }
         else
         {
-            renderer.RtfWriter.Append(@"\~");
+            renderer.RtfWriter.Write(@"\~");
         }
     }
 }

@@ -61,7 +61,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (evenAndOddHeaders != null && (evenAndOddHeaders.Val == null || evenAndOddHeaders.Val == true))
         {
-            writer.Append(@"\facingp");
+            writer.Write(@"\facingp");
         }
     }
 
@@ -69,7 +69,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (titlePage != null && (titlePage.Val is null || titlePage.Val == true))
         {
-            writer.Append(@"\titlepg");
+            writer.Write(@"\titlepg");
         }
     }
 
@@ -77,44 +77,44 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (reference.Type != null && reference.Type == HeaderFooterValues.Even)
         {
-            sb.Append("{\\headerl ");
+            sb.Write("{\\headerl ");
         }
         else if (reference.Type != null && reference.Type == HeaderFooterValues.First)
         {
-            sb.Append("{\\headerf ");
+            sb.Write("{\\headerf ");
         }
         else
         {
-            sb.Append("{\\headerr "); // Default
+            sb.Write("{\\headerr "); // Default
         }
-        foreach (var element in header.Elements())
+        foreach(var element in header.Elements())
         {
             base.ProcessBodyElement(element, sb);
         }
-        sb.Append("\\par");
-        sb.Append('}');
+        sb.Write("\\par");
+        sb.Write('}');
     }
 
     internal void ProcessFooter(Footer footer, RtfStringWriter sb, FooterReference reference)
     {
         if (reference.Type != null && reference.Type == HeaderFooterValues.Even)
         {
-            sb.Append("{\\footerl ");
+            sb.Write("{\\footerl ");
         }
         else if (reference.Type != null && reference.Type == HeaderFooterValues.First)
         {
-            sb.Append("{\\footerf ");
+            sb.Write("{\\footerf ");
         }
         else
         {
-            sb.Append("{\\footerr ");
+            sb.Write("{\\footerr ");
         }
         foreach (var element in footer.Elements())
         {
             base.ProcessBodyElement(element, sb);
         }
-        sb.Append("\\par"); // \par is normally not added for the last paragraph to avoid an unnecessary line
-                           // (e.g. in table cells), but in header and footer the missing \par seems to cause formatting issues
-        sb.Append('}');
+        sb.Write("\\par"); // \par is normally not added for the last paragraph to avoid an unnecessary line
+                            // (e.g. in table cells), but in header and footer the missing \par seems to cause formatting issues
+        sb.Write('}');
     }
 }

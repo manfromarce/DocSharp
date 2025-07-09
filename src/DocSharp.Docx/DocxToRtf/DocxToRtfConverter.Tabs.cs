@@ -22,50 +22,50 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     if (tab.Leader.Value == TabStopLeaderCharValues.Dot)
                     {
-                        sb.Append("\\tldot");
+                        sb.Write("\\tldot");
                     }
                     else if (tab.Leader.Value == TabStopLeaderCharValues.Heavy)
                     {
-                        sb.Append("\\tlth");
+                        sb.Write("\\tlth");
                     }
                     else if (tab.Leader.Value == TabStopLeaderCharValues.Hyphen)
                     {
-                        sb.Append("\\tlhyph");
+                        sb.Write("\\tlhyph");
                     }
                     else if (tab.Leader.Value == TabStopLeaderCharValues.MiddleDot)
                     {
-                        sb.Append("\\tlmdot");
+                        sb.Write("\\tlmdot");
                     }
                     else if (tab.Leader.Value == TabStopLeaderCharValues.Underscore)
                     {
-                        sb.Append("\\tlul");
+                        sb.Write("\\tlul");
                     }
                 }
                 if (tab.Val == TabStopValues.Bar)
                 {
-                    sb.Append($"\\tb{tab.Position.Value}");
+                    sb.Write($"\\tb{tab.Position.Value}");
                 }
                 else if (tab.Val == TabStopValues.Center)
                 {
-                    sb.Append($"\\tqc\\tx{tab.Position.Value}");
+                    sb.Write($"\\tqc\\tx{tab.Position.Value}");
                 }
                 else if (tab.Val == TabStopValues.Decimal)
                 {
-                    sb.Append($"\\tqdec\\tx{tab.Position.Value}");
+                    sb.Write($"\\tqdec\\tx{tab.Position.Value}");
                 }
                 else if (tab.Val == TabStopValues.Left ||
                          tab.Val == TabStopValues.Start)
                 {
-                    sb.Append($"\\tx{tab.Position.Value}");
+                    sb.Write($"\\tx{tab.Position.Value}");
                 }
                 else if (tab.Val == TabStopValues.Number)
                 {
-                    sb.Append($"\\tx{tab.Position.Value}");
+                    sb.Write($"\\tx{tab.Position.Value}");
                 }
                 else if (tab.Val == TabStopValues.Right ||
                          tab.Val == TabStopValues.End)
                 {
-                    sb.Append($"\\tqr\\tx{tab.Position.Value}");
+                    sb.Write($"\\tqr\\tx{tab.Position.Value}");
                 }
             }
         }
@@ -79,41 +79,41 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (positionalTab.Leader.Value == AbsolutePositionTabLeaderCharValues.Dot)
                 {
-                    sb.Append("{\\ptabldot");
+                    sb.Write("{\\ptabldot");
                 }
                 else if (positionalTab.Leader.Value == AbsolutePositionTabLeaderCharValues.Hyphen)
                 {
-                    sb.Append("{\\ptablminus");
+                    sb.Write("{\\ptablminus");
                 }
                 else if (positionalTab.Leader.Value == AbsolutePositionTabLeaderCharValues.MiddleDot)
                 {
-                    sb.Append("{\\ptablmdot");
+                    sb.Write("{\\ptablmdot");
                 }
                 else if (positionalTab.Leader.Value == AbsolutePositionTabLeaderCharValues.Underscore)
                 {
-                    sb.Append("{\\ptabluscore");
+                    sb.Write("{\\ptabluscore");
                 }
             }
             else
             {
-                sb.Append("{\\ptablnone");
+                sb.Write("{\\ptablnone");
             }
-            sb.Append(' ');
+            sb.Write(' ');
             bool relativeToMargin = positionalTab.RelativeTo.Value == AbsolutePositionTabPositioningBaseValues.Margin;
             if (positionalTab.Alignment.Value == AbsolutePositionTabAlignmentValues.Left)
             {
-                sb.Append(relativeToMargin ? "\\pmartabql" : "\\pindtabql");
+                sb.Write(relativeToMargin ? "\\pmartabql" : "\\pindtabql");
             }
             else if (positionalTab.Alignment.Value == AbsolutePositionTabAlignmentValues.Center)
             {
-                sb.Append(relativeToMargin ? "\\pmartabqc" : "\\pindtabqc");
+                sb.Write(relativeToMargin ? "\\pmartabqc" : "\\pindtabqc");
             }
             else
             {
-                sb.Append(relativeToMargin ? "\\pmartabqr" : "\\pindtabqr");
+                sb.Write(relativeToMargin ? "\\pmartabqr" : "\\pindtabqr");
             }
-            sb.Append('}');
+            sb.Write('}');
         }
-        sb.Append("{\\ptabldot \\pindtabqr}");
+        sb.Write("{\\ptabldot \\pindtabqr}");
     }
 }

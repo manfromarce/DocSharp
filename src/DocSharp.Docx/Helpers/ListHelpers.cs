@@ -28,7 +28,7 @@ public static class ListHelpers
         return uppercase ? result.ToUpperInvariant() : result;
     }
 
-    public static string NumberToRomanLetter(int number, bool uppercase)
+    public static string NumberToRomanLetter(long number, bool uppercase)
     {
         if (number < 1)
             number = 1;

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using DocSharp.Helpers;
 
 namespace DocSharp.Writers;
@@ -17,7 +18,7 @@ public abstract class BaseStringWriter : IDisposable
     public void Dispose()
     {
         sb.Clear();
-        ExternalWriter?.Flush();
+        Flush();
     }
 
     public override string ToString()
@@ -25,100 +26,151 @@ public abstract class BaseStringWriter : IDisposable
         return sb.ToString();
     }
 
+    public virtual void EnsureEmptyLine()
+    {
+        if (sb.Length == 0)
+            return; // Don't add space if we are just at the start of the document
+
+        if (!EndsWithParagraph()) // If the string ends with 1 or 0 new line chars
+        {
+            WriteLine(); 
+        }
+        if (!EndsWithParagraph()) // If the string ends with only 1 new line char
+        {
+            WriteLine();
+        }
+    }
+
     public virtual bool EndsWithNewLine()
     {
         return sb.EndsWithNewLine();
     }
 
-    public virtual void Append(string text)
+    public virtual bool EndsWithParagraph()
     {
-        ExternalWriter?.Write(text);
-        sb.Append(text);
+        return sb.EndsWithEmptyLine();
     }
 
-    public virtual void Append(char c)
+    public virtual void Write(string? text)
+    {
+        if (text != null)
+        {
+            ExternalWriter?.Write(text);
+            sb.Append(text);
+        }
+    }
+
+    public virtual void Write(char c)
     {
         ExternalWriter?.Write(c);
         sb.Append(c);
     }
 
-    public virtual void AppendLine()
+    public virtual void Write(char[] c)
+    {
+        ExternalWriter?.Write(c);
+        sb.Append(c);
+    }
+
+    public virtual void Write(char[] buffer, int index, int count)
+    {
+        sb.Append(buffer, index, count);
+        ExternalWriter?.Write(buffer, index, count);
+    }
+
+    public virtual void WriteLine()
     {
         ExternalWriter?.Write(NewLine);
         sb.Append(NewLine);
     }
 
-    public virtual void AppendLine(string text)
+    public virtual void WriteLine(string text)
     {
-        Append(text);
-        AppendLine();
+        Write(text);
+        WriteLine();
     }
 
-    public virtual void AppendLine(char c)
+    public virtual void WriteLine(char c)
     {
-        Append(c);
-        AppendLine();
+        Write(c);
+        WriteLine();
     }
 
-    public virtual void Append(int value)
+    public virtual void WriteLine(char[] c)
     {
-        Append(value.ToStringInvariant());
+        Write(c);
+        WriteLine();
     }
 
-    public virtual void Append(double value)
+    public virtual void Write(int value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(float value)
+    public virtual void Write(double value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(decimal value)
+    public virtual void Write(float value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(long value)
+    public virtual void Write(decimal value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(short value)
+    public virtual void Write(long value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(byte value)
+    public virtual void Write(short value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(uint value)
+    public virtual void Write(byte value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(ulong value)
+    public virtual void Write(uint value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public virtual void Append(ushort value)
+    public virtual void Write(ulong value)
     {
-        Append(value.ToStringInvariant());
+        Write(value.ToStringInvariant());
     }
 
-    public void AppendFormat(string format, params object?[] args)
+    public virtual void Write(ushort value)
+    {
+        Write(value.ToStringInvariant());
+    }
+
+    public void WriteFormat(string format, params object?[] args)
     {
         sb.AppendFormat(format, args);
         ExternalWriter?.Write(string.Format(format, args));
     }
 
-    public void AppendFormat(IFormatProvider? provider, string format, params object?[] args)
+    public void WriteFormat(IFormatProvider? provider, string format, params object?[] args)
     {
         sb.AppendFormat(provider, format, args);
         ExternalWriter?.Write(string.Format(provider, format, args));
+    }
+
+    public void Flush()
+    {
+        ExternalWriter?.Flush();
+    }
+
+    public Task? FlushAsync()
+    {
+        return ExternalWriter?.FlushAsync();
     }
 }

@@ -103,45 +103,45 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (string.IsNullOrEmpty(format))
                     return;
 
-                sb.AppendLine(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
-                sb.Append(format);
-                sb.Append("\\picw");
-                sb.Append(properties.Width);
-                sb.Append("\\pich");
-                sb.Append(properties.Height);
-                sb.Append("\\picwgoal");
-                sb.Append(properties.Width);
-                sb.Append("\\pichgoal");
-                sb.Append(properties.Height);
-                sb.Append("\\piccropl");
-                sb.Append(properties.CropLeft);
-                sb.Append("\\piccropr");
-                sb.Append(properties.CropRight);
-                sb.Append("\\piccropt");
-                sb.Append(properties.CropTop);
-                sb.Append("\\piccropb");
-                sb.Append(properties.CropBottom);
-                sb.AppendLine();
+                sb.WriteLine(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
+                sb.Write(format);
+                sb.Write("\\picw");
+                sb.Write(properties.Width);
+                sb.Write("\\pich");
+                sb.Write(properties.Height);
+                sb.Write("\\picwgoal");
+                sb.Write(properties.Width);
+                sb.Write("\\pichgoal");
+                sb.Write(properties.Height);
+                sb.Write("\\piccropl");
+                sb.Write(properties.CropLeft);
+                sb.Write("\\piccropr");
+                sb.Write(properties.CropRight);
+                sb.Write("\\piccropt");
+                sb.Write(properties.CropTop);
+                sb.Write("\\piccropb");
+                sb.Write(properties.CropBottom);
+                sb.WriteLine();
                 if (format.StartsWith("\\wmetafile"))
                 {
-                    sb.Append("01000900"); // Add wmf header that was previously skipped.
+                    sb.Write("01000900"); // Add wmf header that was previously skipped.
                 }
                 int byteValue;
                 if (pngData.Length > 0)
                 {
                     foreach (var b in pngData)
                     {
-                        sb.AppendFormat("{0:X2}", b);
+                        sb.WriteFormat("{0:X2}", b);
                     }
                 }
                 else
                 {
                     while ((byteValue = stream.ReadByte()) != -1)
                     {
-                        sb.AppendFormat("{0:X2}", byteValue);
+                        sb.WriteFormat("{0:X2}", byteValue);
                     }
                 }
-                sb.AppendLine('}');
+                sb.WriteLine('}');
             }
         }
     }

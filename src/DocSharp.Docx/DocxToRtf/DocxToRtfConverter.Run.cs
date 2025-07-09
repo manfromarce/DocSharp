@@ -19,17 +19,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (!run.HasContent())
             return;
 
-        sb.Append('{');
+        sb.Write('{');
 
         ProcessRunFormatting(run, sb);
-        sb.Append(' ');
+        sb.Write(' ');
 
         foreach (var element in run.Elements())
         {
             base.ProcessRunElement(element, sb);
         }
 
-        sb.Append('}');
+        sb.Write('}');
     }
 
     internal void ProcessRunFormatting(OpenXmlElement? run, RtfStringWriter sb)
@@ -42,32 +42,32 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         var rtl = OpenXmlHelpers.GetEffectiveProperty<RightToLeftText>(run);
         if (rtl != null && (rtl.Val == null || rtl.Val))
         {
-            sb.Append(@"\rtlch");
+            sb.Write(@"\rtlch");
         }
         else
         {
-            sb.Append(@"\ltrch");
+            sb.Write(@"\ltrch");
         }
 
         var lang = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
         if (!string.IsNullOrEmpty(lang?.Val?.Value))
         {
             int code = RtfHelpers.GetLanguageCode(lang.Val.Value);
-            sb.Append(@"\lang" + code);
-            sb.Append(@"\langnp" + code);
+            sb.Write(@"\lang" + code);
+            sb.Write(@"\langnp" + code);
         }
         if (!string.IsNullOrEmpty(lang?.Bidi?.Value))
         {
             int code = RtfHelpers.GetLanguageCode(lang.Bidi.Value);
-            sb.Append(@"\langfe" + code);
-            sb.Append(@"\langfenp" + code);
+            sb.Write(@"\langfe" + code);
+            sb.Write(@"\langfenp" + code);
         }
 
         if (OpenXmlHelpers.GetEffectiveProperty<NoProof>(run) is NoProof noProof)
         {
             if (noProof.Val == null || noProof.Val.Value)
             {
-                sb.Append(@"\noproof\lang1024");
+                sb.Write(@"\noproof\lang1024");
             }
         }
 
@@ -76,12 +76,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (!string.IsNullOrEmpty(font))
         {
             fonts.TryAddAndGetIndex(font, out int fontIndex);
-            sb.Append($"\\f{fontIndex}");
+            sb.Write($"\\f{fontIndex}");
         }
         else
         {
             // Calibri is already in the font table as last resort
-            sb.Append(@"\f0");
+            sb.Write(@"\f0");
         }
 
         string? color = OpenXmlHelpers.GetEffectiveProperty<Color>(run)?.Val;
@@ -89,45 +89,45 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
              !color.Equals("auto", StringComparison.OrdinalIgnoreCase))
         {
             colors.TryAddAndGetIndex(color, out int colorIndex);
-            sb.Append($"\\cf{colorIndex}");
+            sb.Write($"\\cf{colorIndex}");
         }
         else
         {
             // If no color is specified, \cf0 is automatically handled by word processors.
             // Note: for this reason the color table uses 1-based index, while the font table should contain the f0 font.
-            sb.Append(@"\cf0");
+            sb.Write(@"\cf0");
         }
 
         string? fontSize = OpenXmlHelpers.GetEffectiveProperty<FontSize>(run)?.Val;
         // Font size is in half-points in both DOCX and RTF
         if (int.TryParse(fontSize, out int fs))
         {
-            sb.Append($"\\fs{fs}");
+            sb.Write($"\\fs{fs}");
         }
         else
         {
-            sb.Append($"\\fs{DefaultSettings.FontSize * 2}"); // Font size is in half-points
+            sb.Write($"\\fs{DefaultSettings.FontSize * 2}"); // Font size is in half-points
         }
 
         string? kerning = OpenXmlHelpers.GetEffectiveProperty<Kern>(run)?.Val;
         if (int.TryParse(kerning, out int k))
         {
             // Kerning is in half-points in both Open XML and RTF.
-            sb.Append($"\\kerning{k}");
+            sb.Write($"\\kerning{k}");
         }
 
         string? scaling = OpenXmlHelpers.GetEffectiveProperty<CharacterScale>(run)?.Val;
         if (int.TryParse(scaling, out int scale))
         {
             // Character scaling is expressed as percentage (100, 200, ...) in both Open XML and RTF.
-            sb.Append($"\\charscalex{scale}");
+            sb.Write($"\\charscalex{scale}");
         }
 
         string? fitText = OpenXmlHelpers.GetEffectiveProperty<FitText>(run)?.Val;
         if (int.TryParse(fitText, out int ft))
         {
             // FitText is in twips in both Open XML and RTF.
-            sb.Append($"\\fittext{ft}");
+            sb.Write($"\\fittext{ft}");
         }
 
         string? spacing = OpenXmlHelpers.GetEffectiveProperty<Spacing>(run)?.Val;
@@ -135,8 +135,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             // Character spacing is expressed in twips in Open XML;
             // in RTF it should also be specified in quarter-points for backward compatibility.
-            sb.Append($"\\expnd{sp * 5}");
-            sb.Append($"\\expndtw{sp}");
+            sb.Write($"\\expnd{sp * 5}");
+            sb.Write($"\\expndtw{sp}");
         }
 
         var bold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run);
@@ -145,13 +145,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         // (e.g. <w:b /> without value means bold is enabled, otherwise it would not be present at all)
         if (bold != null && (bold.Val is null || bold.Val)) 
         {
-            sb.Append(@"\b");
+            sb.Write(@"\b");
         }
 
         var italic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run);
         if (italic != null && (italic.Val is null || italic.Val))
         {
-            sb.Append(@"\i");
+            sb.Write(@"\i");
         }
 
         var underline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run);
@@ -160,21 +160,21 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             string? ul = RtfUnderlineMapper.GetUnderlineType(underline.Val);
             if (!string.IsNullOrEmpty(ul))
             {
-                sb.Append(ul);
+                sb.Write(ul);
             }
 
             if ((!string.IsNullOrEmpty(underline.Color?.Value)) && 
                 !underline.Color.Value.Equals("auto", StringComparison.OrdinalIgnoreCase))
             {
                 colors.TryAddAndGetIndex(underline.Color.Value, out int colorIndex);
-                sb.Append($"\\ulc{colorIndex}");
+                sb.Write($"\\ulc{colorIndex}");
             }
         }
 
         var doubleStrike = OpenXmlHelpers.GetEffectiveProperty<DoubleStrike>(run);
         if (doubleStrike != null && (doubleStrike.Val is null || doubleStrike.Val))
         {
-            sb.Append(@"\striked1");
+            sb.Write(@"\striked1");
         }
         else
         {
@@ -182,7 +182,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             var strike = OpenXmlHelpers.GetEffectiveProperty<Strike>(run);
             if (strike != null && (strike.Val is null || strike.Val))
             {
-                sb.Append(@"\strike");
+                sb.Write(@"\strike");
             }
         }
 
@@ -191,7 +191,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (highlight.Val == HighlightColorValues.None)
             {
-                sb.Append(@"\highlight0");
+                sb.Write(@"\highlight0");
             }
             else
             {
@@ -199,7 +199,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (!string.IsNullOrEmpty(hex))
                 {
                     colors.TryAddAndGetIndex(hex, out int highlightIndex);
-                    sb.Append($"\\highlight{highlightIndex}");
+                    sb.Write($"\\highlight{highlightIndex}");
                 }
             }
         }
@@ -209,15 +209,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (verticalTextAlignment.Val == VerticalPositionValues.Subscript)
             {
-                sb.Append(@"\sub");
+                sb.Write(@"\sub");
             }
             else if (verticalTextAlignment.Val == VerticalPositionValues.Superscript)
             {
-                sb.Append(@"\super");
+                sb.Write(@"\super");
             }
             else
             {
-                sb.Append(@"\nosupersub");
+                sb.Write(@"\nosupersub");
             }
         }
         else
@@ -227,11 +227,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (pos < 0)
                 {
-                    sb.Append($"\\dn{pos}");
+                    sb.Write($"\\dn{pos}");
                 }
                 else if (pos > 0) 
                 {
-                    sb.Append($"\\up{pos}");
+                    sb.Write($"\\up{pos}");
                 }
             }
         }
@@ -241,30 +241,30 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (em.Val == EmphasisMarkValues.None)
             {
-                sb.Append(@"\accnone");
+                sb.Write(@"\accnone");
             }
             else if (em.Val == EmphasisMarkValues.Circle)
             {
-                sb.Append(@"\acccircle");
+                sb.Write(@"\acccircle");
             }
             else if (em.Val == EmphasisMarkValues.Comma)
             {
-                sb.Append(@"\acccomma");
+                sb.Write(@"\acccomma");
             }
             else if (em.Val == EmphasisMarkValues.Dot)
             {
-                sb.Append(@"\accdot");
+                sb.Write(@"\accdot");
             }
             else if (em.Val == EmphasisMarkValues.UnderDot)
             {
-                sb.Append(@"\accunderdot");
+                sb.Write(@"\accunderdot");
             }
         }
 
         var smallCaps = OpenXmlHelpers.GetEffectiveProperty<SmallCaps>(run);
         if (smallCaps != null && (smallCaps.Val is null || smallCaps.Val))
         {
-            sb.Append(@"\scaps");
+            sb.Write(@"\scaps");
         }
         else
         {
@@ -272,20 +272,20 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             var allCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run);
             if (allCaps != null && (allCaps.Val is null || allCaps.Val))
             {
-                sb.Append(@"\caps");
+                sb.Write(@"\caps");
             }
         }
 
         var emboss = OpenXmlHelpers.GetEffectiveProperty<Emboss>(run);
         if (emboss != null && (emboss.Val is null || emboss.Val))
         {
-            sb.Append(@"\embo");
+            sb.Write(@"\embo");
         }
 
         var engrave = OpenXmlHelpers.GetEffectiveProperty<Imprint>(run);
         if (engrave != null && (engrave.Val is null || engrave.Val))
         {
-            sb.Append(@"\impr");
+            sb.Write(@"\impr");
         }
 
         // RTF does not support advanced shadow and outline effects introduced with Office 2010,
@@ -294,26 +294,26 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if ((shadow != null && (shadow.Val is null || shadow.Val)) ||
              OpenXmlHelpers.GetEffectiveProperty<Shadow14>(run) != null)
         {
-            sb.Append(@"\shad");
+            sb.Write(@"\shad");
         }
 
         var outline = OpenXmlHelpers.GetEffectiveProperty<Outline>(run);        
         if ((outline != null && (outline.Val is null || outline.Val)) ||
              OpenXmlHelpers.GetEffectiveProperty<Outline14>(run) != null)
         {
-            sb.Append(@"\outl");
+            sb.Write(@"\outl");
         }
 
         var hidden = OpenXmlHelpers.GetEffectiveProperty<Vanish>(run);
         if (hidden != null && (hidden.Val is null || hidden.Val))
         {
-            sb.Append(@"\v");
+            sb.Write(@"\v");
         }
 
         var border = OpenXmlHelpers.GetEffectiveProperty<Border>(run);
         if (border != null)
         {
-            sb.Append(@"\chbrdr");
+            sb.Write(@"\chbrdr");
             ProcessBorder(border, sb);
         }
 
@@ -326,7 +326,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         var snapToGrid = OpenXmlHelpers.GetEffectiveProperty<SnapToGrid>(run);
         if (snapToGrid?.Val != null && !snapToGrid.Val) // True by default
         {
-            sb.Append(@"\cgrid0");
+            sb.Write(@"\cgrid0");
         }
     }
 }

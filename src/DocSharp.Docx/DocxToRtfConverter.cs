@@ -41,7 +41,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal override void ProcessDocument(Document document, RtfStringWriter sb)
     {
-        sb.Append(@"{\rtf1\ansi\deff0\nouicompat");
+        sb.WriteRtfHeader();
 
         if (document.MainDocumentPart?.StyleDefinitionsPart?.Styles is Styles styles)
         {
@@ -49,18 +49,18 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (rPr.Languages?.Val?.Value != null)
                 {
-                    sb.Append(@"\deflang");
-                    sb.Append(RtfHelpers.GetLanguageCode(rPr.Languages.Val.Value));
+                    sb.Write(@"\deflang");
+                    sb.Write(RtfHelpers.GetLanguageCode(rPr.Languages.Val.Value));
                 }
                 if (rPr.Languages?.EastAsia?.Value != null)
                 {
-                    sb.Append(@"\deflangfe");
-                    sb.Append(RtfHelpers.GetLanguageCode(rPr.Languages.EastAsia.Value));
+                    sb.Write(@"\deflangfe");
+                    sb.Write(RtfHelpers.GetLanguageCode(rPr.Languages.EastAsia.Value));
                 }                
                 if (rPr.Languages?.Bidi?.Value != null)
                 {
-                    sb.Append(@"\adeflang");
-                    sb.Append(RtfHelpers.GetLanguageCode(rPr.Languages.Bidi.Value));
+                    sb.Write(@"\adeflang");
+                    sb.Write(RtfHelpers.GetLanguageCode(rPr.Languages.Bidi.Value));
                 }
             }
         }
@@ -69,54 +69,54 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (document.GetWordprocessingDocument() is WordprocessingDocument doc)
         {
             var coreProps = doc.PackageProperties;
-            sb.Append(@"{\info");
+            sb.Write(@"{\info");
             if (!string.IsNullOrEmpty(coreProps.Creator))
             {
-                sb.Append(@"{\author ");
-                sb.AppendRtfEscaped(coreProps.Creator!);
-                sb.Append('}');
+                sb.Write(@"{\author ");
+                sb.WriteRtfEscaped(coreProps.Creator!);
+                sb.Write('}');
             }
             if (!string.IsNullOrEmpty(coreProps.Title))
             {
-                sb.Append(@"{\title ");
-                sb.AppendRtfEscaped(coreProps.Title!);
-                sb.Append('}');
+                sb.Write(@"{\title ");
+                sb.WriteRtfEscaped(coreProps.Title!);
+                sb.Write('}');
             }
             if (!string.IsNullOrEmpty(coreProps.Subject))
             {
-                sb.Append(@"{\subject ");
-                sb.AppendRtfEscaped(coreProps.Subject!);
-                sb.Append('}');
+                sb.Write(@"{\subject ");
+                sb.WriteRtfEscaped(coreProps.Subject!);
+                sb.Write('}');
             }
             if (!string.IsNullOrEmpty(coreProps.Category))
             {
-                sb.Append(@"{\category ");
-                sb.AppendRtfEscaped(coreProps.Category!);
-                sb.Append('}');
+                sb.Write(@"{\category ");
+                sb.WriteRtfEscaped(coreProps.Category!);
+                sb.Write('}');
             }
             if (!string.IsNullOrEmpty(coreProps.Keywords))
             {
-                sb.Append(@"{\keywords ");
-                sb.AppendRtfEscaped(coreProps.Keywords!);
-                sb.Append('}');
+                sb.Write(@"{\keywords ");
+                sb.WriteRtfEscaped(coreProps.Keywords!);
+                sb.Write('}');
             }
             if (coreProps.Created != null)
             {
-                sb.Append(@"{\creatim");
-                sb.Append($"\\yr{coreProps.Created.Value.Year}");
-                sb.Append($"\\mo{coreProps.Created.Value.Month}");
-                sb.Append($"\\dy{coreProps.Created.Value.Day}");
-                sb.Append($"\\hr{coreProps.Created.Value.Hour}");
-                sb.Append($"\\min{coreProps.Created.Value.Minute}");
-                sb.Append('}');
+                sb.Write(@"{\creatim");
+                sb.Write($"\\yr{coreProps.Created.Value.Year}");
+                sb.Write($"\\mo{coreProps.Created.Value.Month}");
+                sb.Write($"\\dy{coreProps.Created.Value.Day}");
+                sb.Write($"\\hr{coreProps.Created.Value.Hour}");
+                sb.Write($"\\min{coreProps.Created.Value.Minute}");
+                sb.Write('}');
             }
-            sb.Append('}');
+            sb.Write('}');
         }
 
         // Prepare fonts table 
-        sb.Append(@"{\fonttbl{\f0\fnil\fcharset0 ");
-        sb.Append(DefaultSettings.FontName);
-        sb.Append(";}");
+        sb.Write(@"{\fonttbl{\f0\fnil\fcharset0 ");
+        sb.Write(DefaultSettings.FontName);
+        sb.Write(";}");
 
         // Determine footnotes / endnotes type
         FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
@@ -152,26 +152,26 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         switch (FootnotesEndnotes)
         {
             case FootnotesEndnotesType.FootnotesOnlyOrNothing:
-                contentSb.Append("\\fet0 ");
+                contentSb.Write("\\fet0 ");
                 break;
             case FootnotesEndnotesType.EndnotesOnly:
-                contentSb.Append("\\fet1 ");
+                contentSb.Write("\\fet1 ");
                 break;
             case FootnotesEndnotesType.Both:
-                contentSb.Append("\\fet2 ");
+                contentSb.Write("\\fet2 ");
                 break;
         }
 
         // Add footnotes and endnotes content             
         if (document.MainDocumentPart?.FootnotesPart != null)
         {
-            ProcessFootnotesPart(document.MainDocumentPart.FootnotesPart, contentSb);
-            contentSb.AppendLine();
+            ProcessFootnotes(document.MainDocumentPart.FootnotesPart, contentSb);
+            contentSb.WriteLine();
         }
         if (document.MainDocumentPart?.EndnotesPart != null)
         {
-            ProcessEndnotesPart(document.MainDocumentPart.EndnotesPart, contentSb);
-            contentSb.AppendLine();
+            ProcessEndnotes(document.MainDocumentPart.EndnotesPart, contentSb);
+            contentSb.WriteLine();
         }
 
         // Add document body and background
@@ -180,23 +180,37 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         // Insert fonts and colors table after the RTF header
         foreach (var font in fonts)
         {
-            sb.Append(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
+            sb.Write(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
         }
-        sb.AppendLine("}");
+        sb.WriteLine("}");
 
-        sb.Append(@"{\colortbl ;");
+        sb.Write(@"{\colortbl ;");
         foreach (var color in colors)
         {
             // Use black as last resort
-            sb.Append(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red0\green0\blue0;");
+            sb.Write(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red0\green0\blue0;");
         }
-        sb.AppendLine("}");
+        sb.WriteLine("}");
 
         // Add content
-        sb.Append(contentSb);
+        sb.Write(contentSb);
 
         // Close RTF document
-        sb.AppendLine("}");
+        sb.WriteLine("}");
+    }
+
+    internal override void ProcessBody(Body body, RtfStringWriter sb)
+    {
+        foreach (var element in body.Elements())
+        {
+            ProcessBodyElement(element, sb);
+        }
+    }
+
+    internal override void EnsureSpace(RtfStringWriter sb)
+    {
+        // Not needed in this converter
+        //sb.WriteLine(@"\par");
     }
 
     internal override void ProcessDocumentBackground(DocumentBackground documentBackground, RtfStringWriter sb)
@@ -218,11 +232,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 int b = System.Convert.ToInt32(hex.Substring(4, 2), 16);
                 int bgr = (b << 16) + (g << 8) + r;
 
-                sb.Append(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0\shplid1025{\sp{\sn shapeType}{\sv 1}}{\sp{\sn fFlipH}{\sv 0}}{\sp{\sn fFlipV}{\sv 0}}{\sp{\sn fillColor}{\sv ");
-                sb.Append(bgr);
-                sb.Append(@"}}{\sp{\sn fFilled}{\sv 1}}{\sp{\sn lineWidth}{\sv 0}}{\sp{\sn fLine}{\sv 0}}{\sp{\sn bWMode}{\sv 9}}{\sp{\sn fBackground}{\sv 1}}{\sp{\sn fLayoutInCell}{\sv 1}}}}}");
-                sb.AppendLine();
-                sb.AppendLine(@"\viewbksp1");
+                sb.Write(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0\shplid1025{\sp{\sn shapeType}{\sv 1}}{\sp{\sn fFlipH}{\sv 0}}{\sp{\sn fFlipV}{\sv 0}}{\sp{\sn fillColor}{\sv ");
+                sb.Write(bgr);
+                sb.Write(@"}}{\sp{\sn fFilled}{\sv 1}}{\sp{\sn lineWidth}{\sv 0}}{\sp{\sn fLine}{\sv 0}}{\sp{\sn bWMode}{\sv 9}}{\sp{\sn fBackground}{\sv 1}}{\sp{\sn fLayoutInCell}{\sv 1}}}}}");
+                sb.WriteLine();
+                sb.WriteLine(@"\viewbksp1");
             }
         }
     }

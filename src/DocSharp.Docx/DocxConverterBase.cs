@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.ExtendedProperties;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -15,7 +18,12 @@ public abstract class DocxConverterBase<TOutput>
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
-#endif    
+#endif
+
+    internal List<(List<OpenXmlElement> content, SectionProperties properties)> Sections;
+    internal int CurrentSectionIndex = 0;
+    internal bool TitlePage = false;
+    internal bool FacingPages = false;
 
     internal virtual void ProcessDocument(Document document, TOutput sb)
     {
@@ -31,18 +39,40 @@ public abstract class DocxConverterBase<TOutput>
 
     internal virtual void ProcessBody(Body body, TOutput sb)
     {
-        foreach (var element in body.Elements())
+        Sections = body.GetSections();
+
+        // Add header
+        ProcessFirstHeader(Sections[0].properties, sb);
+        EnsureSpace(sb); // add empty space before the body content
+
+        // Add sections
+        var mainPart = body.GetMainDocumentPart();
+        for (int i = 0; i < Sections.Count; i++)
+        {
+            CurrentSectionIndex = i;
+            ProcessSection(Sections[i], mainPart, sb);
+        }
+
+        // Add footnotes and endnotes
+        EnsureSpace(sb);
+        ProcessFootnotes(mainPart?.FootnotesPart, sb);
+        EnsureSpace(sb);
+        ProcessEndnotes(mainPart?.EndnotesPart, sb);
+
+        // Add the footer
+        EnsureSpace(sb);
+        ProcessLastFooter(Sections[Sections.Count - 1].properties, sb);
+    }
+
+    internal virtual void ProcessSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, TOutput sb)
+    {
+        foreach (var element in section.content)
         {
             ProcessBodyElement(element, sb);
         }
     }
 
     internal virtual void ProcessBodyElement(OpenXmlElement element, TOutput sb)
-    {
-        ProcessCompositeElement(element, sb);
-    }
-
-    internal virtual void ProcessCompositeElement(OpenXmlElement element, TOutput sb)
     {
         switch (element)
         {
@@ -223,6 +253,68 @@ public abstract class DocxConverterBase<TOutput>
         return false;
     }
 
+    internal virtual void ProcessFootnoteReference(FootnoteReference footnoteReference, TOutput sb)
+    {
+        ProcessText(new Text($"[{footnoteReference.GetFootnoteIdString()}]"), sb);    
+    }
+
+    internal virtual void ProcessEndnoteReference(EndnoteReference endnoteReference, TOutput sb)
+    {
+        ProcessText(new Text($"[{endnoteReference.GetEndnoteIdString()}]"), sb);
+    }
+
+    internal virtual void ProcessFootnotes(FootnotesPart? footnotesPart, TOutput sb)
+    {
+        if (footnotesPart?.Footnotes is Footnotes footnotes)
+        {
+            EnsureSpace(sb);
+            foreach (var footnote in footnotes.Elements<Footnote>().Where(e => e.Type == null || e.Type == FootnoteEndnoteValues.Normal))
+            {
+                foreach (var element in footnote.Elements())
+                {
+                    ProcessBodyElement(element, sb);
+                }
+                EnsureSpace(sb);
+            }
+        }
+    }
+
+    internal virtual void ProcessEndnotes(EndnotesPart? endnotesPart, TOutput sb)
+    {
+        if (endnotesPart?.Endnotes is Endnotes endnotes)
+        {
+            EnsureSpace(sb);
+            foreach(var endnote in endnotes.Elements<Endnote>().Where(e => e.Type == null || e.Type == FootnoteEndnoteValues.Normal))
+            {
+                foreach (var element in endnote.Elements())
+                {
+                    ProcessBodyElement(element, sb);
+                }
+                EnsureSpace(sb);
+            }
+        }
+    }
+
+    internal virtual void ProcessFootnoteReferenceMark(FootnoteReferenceMark footnoteReferenceMark, TOutput sb)
+    {
+        ProcessText(new Text($"[{footnoteReferenceMark.GetFootnoteIdString()}]: "), sb);
+    }
+
+    internal virtual void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TOutput sb)
+    {
+        ProcessText(new Text($"[{endnoteReferenceMark.GetEndnoteIdString()}]: "), sb);
+    }
+    
+    internal virtual void ProcessSeparatorMark(SeparatorMark separatorMark, TOutput sb)
+    {
+        // This would be written between the document body and foonotes/endnotes area.
+        //ProcessText(new Text($"---------"), sb);
+    }
+
+    internal virtual void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, TOutput sb) 
+    {
+    }
+
     internal virtual void ProcessSimpleField(SimpleField field, TOutput sb)
     {
         foreach (var element in field.Elements())
@@ -272,7 +364,7 @@ public abstract class DocxConverterBase<TOutput>
             }
             foreach (var element in sdtBlock.SdtContentBlock.Elements())
             {
-                ProcessCompositeElement(element, sb);
+                ProcessBodyElement(element, sb);
             }
         }
     }
@@ -350,6 +442,187 @@ public abstract class DocxConverterBase<TOutput>
         ProcessVml(picture, sb);
     }
 
+    /*
+    * From documentation (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.headerreference?view=openxml-3.0.1):
+    *
+    * - If no headerReference for the first page header is specified and the titlePg element is specified, 
+    * then the first page header shall be inherited from the previous section or, 
+    * if this is the first section in the document, a new blank header shall be created. 
+    * If the titlePg element is not specified, then no first page header shall be shown, 
+    * and the odd page header shall be used in its place.
+    * 
+    * - If no headerReference for the even page header is specified and the evenAndOddHeaders element is specified, 
+    * then the even page header shall be inherited from the previous section or, 
+    * if this is the first section in the document, a new blank header shall be created. 
+    * If the evenAndOddHeaders element is not specified, then no even page header shall be shown, 
+    * and the odd page header shall be used in its place.
+    * 
+    * - If no headerReference for the odd page header is specified then 
+    * the even page header shall be inherited from the previous section or, 
+    * if this is the first section in the document, a new blank header shall be created.
+    */
+    internal void ProcessFirstHeader(SectionProperties properties, TOutput sb)
+    {
+        HeaderReference? headerRef = null;
+        if (TitlePage)
+        {
+            headerRef = FindHeaderReference(properties, HeaderFooterValues.First);
+        }
+        headerRef ??= FindHeaderReference(properties, HeaderFooterValues.Default);
+        headerRef ??= FindHeaderReference(properties, HeaderFooterValues.Even);
+        if (headerRef != null)
+        {
+            ProcessHeaderReference(headerRef, sb);
+            // Add empty space before header and the document body
+            EnsureSpace(sb);
+        }
+    }
+
+    internal void ProcessLastFooter(SectionProperties properties, TOutput sb)
+    {
+        // Note: this code tries to detect which footer is actually displayed in the last page,
+        // but it's not 100% reliable.
+        // - EvenAndOddHeaders determines if the document uses different headers/footers for odd and even pages
+        // - TitlePage (at section level) determines if a different header/footer is used for the first page of the section
+        // - If there are no breaks, we can (in theory) assume that the section has one page
+        // - The pages count metadata can be used to determine if the last page is even or odd.
+        // This information is used by the ProcessLastFooter method to retrieve the default/even/first footer for the section.
+        // Limitations:
+        // - if there are sections of "even" or "odd" break type, a page number might have been skipped
+        // - LastRenderedPageBreak and the page count metadata may not be present or updated
+        // if the document was not created by Microsoft Word.
+
+        var mainPart = properties.GetMainDocumentPart();
+        if (mainPart == null)
+        {
+            return;
+        }
+
+        if (mainPart.DocumentSettingsPart?.Settings is Settings documentSettings)
+        {
+            if (documentSettings.GetFirstChild<EvenAndOddHeaders>() is EvenAndOddHeaders evenAndOdd &&
+                (evenAndOdd.Val == null || evenAndOdd.Val == true))
+            {
+                FacingPages = true;
+            }
+        }
+
+        TitlePage = properties.GetFirstChild<TitlePage>() is TitlePage tp &&
+                     (tp.Val is null || tp.Val == true);
+
+        //bool isLastSectionSinglePage = !section.content.SelectMany(element =>
+        //    element.Descendants().Where(d => d is LastRenderedPageBreak ||
+        //                                d is Break b && b.Type != null && b.Type == BreakValues.Page))
+        //    .Any();
+        bool isLastSectionSinglePage = false;
+        // For now, don't use the first-page footer for the last section as it can be confusing and
+        // LastRenderedPageBreak may also refer to a break just before the section.
+
+        bool evenPage = false;
+        if ((mainPart.OpenXmlPackage as WordprocessingDocument)?.ExtendedFilePropertiesPart?.Properties?.Pages
+            is Pages pages && int.TryParse(pages.Text, out int p))
+        {
+            evenPage = p % 2 == 0;
+        }
+
+        FooterReference? footerRef = null;
+        if (TitlePage && isLastSectionSinglePage)
+        {
+            footerRef = FindFooterReference(properties, HeaderFooterValues.First);
+        }
+        if (FacingPages && evenPage)
+        {
+            footerRef ??= FindFooterReference(properties, HeaderFooterValues.Even);
+        }
+        footerRef ??= FindFooterReference(properties, HeaderFooterValues.Default);
+        ProcessFooterReference(footerRef, sb);
+    }
+
+    internal SectionProperties? FindPreviousSectionProperties(SectionProperties sectionProperties)
+    {
+        if (CurrentSectionIndex < 1)
+        {
+            return null;
+        }
+        return Sections[CurrentSectionIndex - 1].properties;
+    }
+
+    internal HeaderReference? FindHeaderReference(SectionProperties? sectionProperties, HeaderFooterValues type)
+    {
+        if (sectionProperties == null)
+        {
+            return null;
+        }
+        if (sectionProperties.Elements<HeaderReference>()
+            .Where(hr => (hr.Type != null && hr.Type == type) || (hr.Type == null && type == HeaderFooterValues.Default))
+            .FirstOrDefault() is HeaderReference headerRef)
+        {
+            return headerRef;
+        }
+        return FindHeaderReference(FindPreviousSectionProperties(sectionProperties), type);
+    }
+
+    internal FooterReference? FindFooterReference(SectionProperties? sectionProperties, HeaderFooterValues type)
+    {
+        if (sectionProperties == null)
+        {
+            return null;
+        }
+        if (sectionProperties.Elements<FooterReference>()
+            .Where(hr => (hr.Type != null && hr.Type == type) || (hr.Type == null && type == HeaderFooterValues.Default))
+            .FirstOrDefault() is FooterReference footerRef)
+        {
+            return footerRef;
+        }
+        return FindFooterReference(FindPreviousSectionProperties(sectionProperties), type);
+    }
+
+    internal virtual void ProcessHeaderReference(HeaderReference? headerRef, TOutput writer)
+    {
+        if (headerRef != null)
+        {
+            var mainPart = headerRef.GetMainDocumentPart();
+            if (mainPart != null &&
+                headerRef?.Id?.Value is string headerId &&
+                mainPart.GetPartById(headerId) is HeaderPart headerPart)
+            {
+                ProcessHeader(headerPart.Header, writer);
+            }
+        }
+    }
+
+    internal virtual void ProcessFooterReference(FooterReference? footerRef, TOutput writer)
+    {
+        if (footerRef != null)
+        {
+            var mainPart = footerRef.GetMainDocumentPart();
+            if (mainPart != null &&
+                footerRef?.Id?.Value is string headerId &&
+                mainPart.GetPartById(headerId) is FooterPart footerPart)
+            {
+                ProcessFooter(footerPart.Footer, writer);
+            }
+        }
+    }
+
+    internal virtual void ProcessHeader(Header header, TOutput writer)
+    {
+        foreach (var element in header.Elements())
+        {
+            ProcessBodyElement(element, writer);
+        }
+    }
+
+    internal virtual void ProcessFooter(Footer footer, TOutput writer)
+    {
+        foreach (var element in footer.Elements())
+        {
+            ProcessBodyElement(element, writer);
+        }
+    }
+
+    internal abstract void EnsureSpace(TOutput sb);
+
     internal abstract void ProcessRun(Run run, TOutput sb);
     internal abstract void ProcessBreak(Break @break, TOutput sb);
     internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, TOutput sb);
@@ -364,12 +637,6 @@ public abstract class DocxConverterBase<TOutput>
     internal abstract void ProcessSymbolChar(SymbolChar symbolChar, TOutput sb);
     internal abstract void ProcessPositionalTab(PositionalTab posTab, TOutput sb);
     internal abstract void ProcessPageNumber(PageNumber pageNumber, TOutput sb);
-    internal abstract void ProcessFootnoteReference(FootnoteReference footnoteReference, TOutput sb);
-    internal abstract void ProcessEndnoteReference(EndnoteReference endnoteReference, TOutput sb);
-    internal abstract void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, TOutput sb);
-    internal abstract void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, TOutput sb);
-    internal abstract void ProcessSeparatorMark(SeparatorMark separatorMark, TOutput sb);
-    internal abstract void ProcessContinuationSeparatorMark(ContinuationSeparatorMark continuationSepMark, TOutput sb);
     internal abstract void ProcessDocumentBackground(DocumentBackground background, TOutput sb);
     internal abstract void ProcessMathElement(OpenXmlElement element, TOutput sb);
 }

@@ -11,6 +11,11 @@ namespace DocSharp.Docx;
 
 public static class ParagraphHelpers
 {
+    public static bool IsFirst(this Paragraph paragraph)
+    {
+        return paragraph.PreviousSibling<Paragraph>() == null;
+    }
+
     public static bool IsLast(this Paragraph paragraph)
     {
         return paragraph.Parent != null && paragraph.Parent.LastChild == paragraph;

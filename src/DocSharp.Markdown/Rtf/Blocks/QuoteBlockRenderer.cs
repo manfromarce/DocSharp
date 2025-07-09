@@ -15,7 +15,7 @@ public class QuoteBlockRenderer : ContainerBlockParagraphRendererBase<QuoteBlock
 
     internal static void WriteQuoteFormatting(RtfRenderer renderer, long borderSpacing = 100)
     {
-        renderer.RtfWriter.Append(@$"\f8\fs{renderer.Settings.QuoteFontSizeInHalfPoints}\cf11");
+        renderer.RtfWriter.Write(@$"\f8\fs{renderer.Settings.QuoteFontSizeInHalfPoints}\cf11");
         WriteQuoteBackgroundAndBorder(renderer, borderSpacing);
     }
 
@@ -23,12 +23,12 @@ public class QuoteBlockRenderer : ContainerBlockParagraphRendererBase<QuoteBlock
     {
         if (renderer.Settings.QuoteBackgroundColor != Color.Transparent)
         {
-            renderer.RtfWriter.Append(@"\shading10000\cfpat13");
+            renderer.RtfWriter.Write(@"\shading10000\cfpat13");
         }
         if (renderer.Settings.QuoteBorderColor != Color.Transparent && renderer.Settings.QuoteBorderWidth > 0)
         {
-            renderer.RtfWriter.Append(@$"\brdrl\brdrw{renderer.Settings.QuoteBorderWidthInTwips}\brsp{borderSpacing}\brdrs\brdrcf12");
+            renderer.RtfWriter.Write(@$"\brdrl\brdrw{renderer.Settings.QuoteBorderWidthInTwips}\brsp{borderSpacing}\brdrs\brdrcf12");
         }
-        renderer.RtfWriter.Append(' ');
+        renderer.RtfWriter.Write(' ');
     }
 }

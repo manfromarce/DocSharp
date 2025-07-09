@@ -14,23 +14,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (fp.Width?.Value != null && int.TryParse(fp.Width.Value, out int w))
         {
-            sb.Append($"\\absw{w}");
+            sb.Write($"\\absw{w}");
         }
         if (fp.HeightType != null)
         {
             if (fp.HeightType.Value == HeightRuleValues.Auto)
             {
-                sb.Append("\\absh0");
+                sb.Write("\\absh0");
             }
             else if (fp.Height != null && fp.Height.HasValue)
             {
                 if (fp.HeightType.Value == HeightRuleValues.AtLeast)
                 {
-                    sb.Append($"\\absh{fp.Height.Value}");
+                    sb.Write($"\\absh{fp.Height.Value}");
                 }
                 else
                 {
-                    sb.Append($"\\absh-{fp.Height.Value}");
+                    sb.Write($"\\absh-{fp.Height.Value}");
                 }
             }
         }
@@ -38,133 +38,133 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (fp.HorizontalPosition.Value == HorizontalAnchorValues.Margin)
             {
-                sb.Append(@"\phmrg");
+                sb.Write(@"\phmrg");
             }
             else if (fp.HorizontalPosition.Value == HorizontalAnchorValues.Page)
             {
-                sb.Append(@"\phpg");
+                sb.Write(@"\phpg");
             }
             else if (fp.HorizontalPosition.Value == HorizontalAnchorValues.Text)
             {
-                sb.Append(@"\phcol");
+                sb.Write(@"\phcol");
             }
         }
         if (fp.XAlign?.Value != null)
         {
             if (fp.XAlign.Value == HorizontalAlignmentValues.Center)
             {
-                sb.Append("\\posxc");
+                sb.Write("\\posxc");
             }
             else if (fp.XAlign.Value == HorizontalAlignmentValues.Inside)
             {
-                sb.Append("\\posxi");
+                sb.Write("\\posxi");
             }
             else if (fp.XAlign.Value == HorizontalAlignmentValues.Outside)
             {
-                sb.Append("\\posxo");
+                sb.Write("\\posxo");
             }
             else if (fp.XAlign.Value == HorizontalAlignmentValues.Left)
             {
-                sb.Append("\\posxl");
+                sb.Write("\\posxl");
             }
             else if (fp.XAlign.Value == HorizontalAlignmentValues.Right)
             {
-                sb.Append("\\posxr");
+                sb.Write("\\posxr");
             }           
         }
         if (fp.X?.Value != null && int.TryParse(fp.X.Value, out int x))
         {
             if (x > 0)
-                sb.Append($"\\posx{x}");
+                sb.Write($"\\posx{x}");
             else
-                sb.Append($"\\posnegx{x}");
+                sb.Write($"\\posnegx{x}");
         }
         if (fp.HorizontalSpace?.Value != null && int.TryParse(fp.HorizontalSpace?.Value, out int h))
         {
-            sb.Append($"\\dfrmtxtx{h}");
+            sb.Write($"\\dfrmtxtx{h}");
         }
         if (fp.VerticalPosition?.Value != null)
         {
             if (fp.VerticalPosition.Value == VerticalAnchorValues.Margin)
             {
-                sb.Append(@"\pvmrg");
+                sb.Write(@"\pvmrg");
             }
             else if (fp.VerticalPosition.Value == VerticalAnchorValues.Page)
             {
-                sb.Append(@"\pvpg");
+                sb.Write(@"\pvpg");
             }
             else if (fp.VerticalPosition.Value == VerticalAnchorValues.Text)
             {
-                sb.Append(@"\pvpara");
+                sb.Write(@"\pvpara");
             }
         }
         if (fp.YAlign?.Value != null)
         {
             if (fp.YAlign.Value == VerticalAlignmentValues.Bottom)
             {
-                sb.Append("\\posyb");
+                sb.Write("\\posyb");
             }
             else if (fp.YAlign.Value == VerticalAlignmentValues.Center)
             {
-                sb.Append("\\posyc");
+                sb.Write("\\posyc");
             }
             else if (fp.YAlign.Value == VerticalAlignmentValues.Inline)
             {
-                sb.Append("\\posyil");
+                sb.Write("\\posyil");
             }
             else if (fp.YAlign.Value == VerticalAlignmentValues.Inside)
             {
-                sb.Append("\\posyin");
+                sb.Write("\\posyin");
             }
             else if (fp.YAlign.Value == VerticalAlignmentValues.Outside)
             {
-                sb.Append("\\posyout");
+                sb.Write("\\posyout");
             }
             else if (fp.YAlign.Value == VerticalAlignmentValues.Top)
             {
-                sb.Append("\\posyt");
+                sb.Write("\\posyt");
             }
         }
         if (fp.Y?.Value != null && int.TryParse(fp.Y.Value, out int y))
         {
             if (y > 0)
-                sb.Append($"\\posy{y}");
+                sb.Write($"\\posy{y}");
             else
-                sb.Append($"\\posnegy{y}");
+                sb.Write($"\\posnegy{y}");
         }
         if (fp.AnchorLock != null && ((!fp.AnchorLock.HasValue) || fp.AnchorLock.Value))
         {
-            sb.Append(@"\abslock1");
+            sb.Write(@"\abslock1");
         }
         else
         {
-            sb.Append(@"\abslock0");
+            sb.Write(@"\abslock0");
         }
         if (fp.VerticalSpace?.Value != null && int.TryParse(fp.HorizontalSpace?.Value, out int v))
         {
-            sb.Append($"\\dfrmtxty{v}");
+            sb.Write($"\\dfrmtxty{v}");
         }
         if (fp.Wrap != null && fp.Wrap.HasValue)
         {
             if (fp.Wrap.Value == TextWrappingValues.Around)
             {
-                sb.Append(@"\wraparound");
+                sb.Write(@"\wraparound");
             }
             else if (fp.Wrap.Value == TextWrappingValues.Through)
             {
-                sb.Append(@"\wrapthrough");
+                sb.Write(@"\wrapthrough");
             }
             else if (fp.Wrap.Value == TextWrappingValues.Tight)
             {
-                sb.Append(@"\wraptight");
+                sb.Write(@"\wraptight");
             }
             else if (fp.Wrap.Value == TextWrappingValues.Auto)
             {
-                sb.Append(@"\wrapdefault");
+                sb.Write(@"\wrapdefault");
             }
             else if (fp.Wrap.Value == TextWrappingValues.None)
             {
-                sb.Append(@"\nowrap");
+                sb.Write(@"\nowrap");
             }
             //else if (fp.Wrap.Value == TextWrappingValues.NotBeside)
             //{
@@ -172,15 +172,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         if (fp.DropCap != null && fp.DropCap == DropCapLocationValues.Drop)
         {
-            sb.Append(@"\dropcapt1");
+            sb.Write(@"\dropcapt1");
         }
         else if (fp.DropCap != null && fp.DropCap == DropCapLocationValues.Margin)
         {
-            sb.Append(@"\dropcapt2");
+            sb.Write(@"\dropcapt2");
         }
         if (fp.Lines != null && fp.Lines.HasValue)
         {
-            sb.Append($"\\dropcapli{fp.Lines.Value}");
+            sb.Write($"\\dropcapli{fp.Lines.Value}");
         }
     }
 }

@@ -9,8 +9,36 @@ using DocumentFormat.OpenXml.Packaging;
 
 namespace DocSharp.Docx;
 
-public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWriter> where TWriter : BaseStringWriter, new()
+public abstract class DocxToTextConverterBase<TWriter> : DocxToTextWriterBase<TWriter> where TWriter : BaseStringWriter, new()
+{   
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="writer">The output writer.</param>
+    public override void Convert(WordprocessingDocument inputDocument, TextWriter writer)
+    {
+        using (var tw = new TWriter())
+        {
+            tw.ExternalWriter = writer;
+            var document = inputDocument.MainDocumentPart?.Document;
+            if (document != null)
+            {
+                ProcessDocument(document, tw);
+            }
+        }
+    }
+}
+
+public abstract class DocxToTextWriterBase<TWriter> : DocxConverterBase<TWriter>
 {
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="writer">The output writer.</param>
+    public abstract void Convert(WordprocessingDocument inputDocument, TextWriter writer);
+
     /// <summary>
     /// Convert a <see cref="WordprocessingDocument"/> to a string in the output format.
     /// </summary>
@@ -18,14 +46,10 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     /// <returns>A string in the output format</returns>
     public string ConvertToString(WordprocessingDocument inputDocument)
     {
-        using (var writer = new TWriter())
+        using (var sw = new StringWriter())
         {
-            var document = inputDocument.MainDocumentPart?.Document;
-            if (document != null)
-            {
-                ProcessDocument(document, writer);
-            }
-            return writer.ToString();
+            Convert(inputDocument, sw);
+            return sw.ToString();
         }
     }
 
@@ -80,15 +104,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     {
         using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
         {
-            using (var writer = new TWriter())
-            {
-                writer.ExternalWriter = sw;
-                var document = inputDocument.MainDocumentPart?.Document;
-                if (document != null)
-                {
-                    ProcessDocument(document, writer);
-                }
-            }
+            Convert(inputDocument, sw);
         }
     }
 
@@ -101,15 +117,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     {
         using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
         {
-            using (var writer = new TWriter())
-            {
-                writer.ExternalWriter = sw;
-                var document = inputDocument.MainDocumentPart?.Document;
-                if (document != null)
-                {
-                    ProcessDocument(document, writer);
-                }
-            }
+            Convert(inputDocument, sw);
         }
     }
 
@@ -142,6 +150,19 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     /// <summary>
     /// Convert a DOCX file to the output format.
     /// </summary>
+    /// <param name="inputFilePath">The DOCX file path.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(string inputFilePath, TextWriter writer)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
+        {
+            Convert(wordDocument, writer);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
     /// <param name="inputStream">The input DOCX stream to use.</param>
     /// <param name="outputFilePath">The output file path.</param>
     public void Convert(Stream inputStream, string outputFilePath)
@@ -162,6 +183,19 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
         using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
         {
             Convert(wordDocument, outputStream);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputStream">The input DOCX stream to use.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(Stream inputStream, TextWriter writer)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
+        {
+            Convert(wordDocument, writer);
         }
     }
 
@@ -193,6 +227,22 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
             using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
             {
                 Convert(wordDocument, outputStream);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The DOCX file bytes.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(byte[] inputBytes, TextWriter writer)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+        {
+            using (var wordDocument = WordprocessingDocument.Open(memoryStream, false))
+            {
+                Convert(wordDocument, writer);
             }
         }
     }

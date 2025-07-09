@@ -61,7 +61,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     internal void ProcessSectionProperties(SectionProperties sectionProperties, RtfStringWriter sb)
     {
         // Create new section
-        sb.Append(firstSection ? @"\sectd" : @"\sect\sectd");
+        sb.Write(firstSection ? @"\sectd" : @"\sect\sectd");
         firstSection = false;
 
         if (sectionProperties.GetFirstChild<SectionType>() is SectionType sectionType && 
@@ -69,23 +69,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (sectionType.Val == SectionMarkValues.Continuous)
             {
-                sb.Append(@"\sbknone");
+                sb.Write(@"\sbknone");
             }
             else if (sectionType.Val == SectionMarkValues.NextColumn)
             {
-                sb.Append(@"\sbkcol");
+                sb.Write(@"\sbkcol");
             }
             else if (sectionType.Val == SectionMarkValues.OddPage)
             {
-                sb.Append(@"\sbkodd");
+                sb.Write(@"\sbkodd");
             }
             else if (sectionType.Val == SectionMarkValues.EvenPage)
             {
-                sb.Append(@"\sbkeven");
+                sb.Write(@"\sbkeven");
             }
             else
             {
-                sb.Append(@"\sbkpage");
+                sb.Write(@"\sbkpage");
             }
         }
 
@@ -94,11 +94,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (bidi.Val == null || bidi.Val)
             {
                 // Left to right by default; right to left if the element is present unless explicitly set to false
-                sb.Append(@"\rtlsect");
+                sb.Write(@"\rtlsect");
             }
             else
             {
-                sb.Append(@"\ltrsect");
+                sb.Write(@"\ltrsect");
             }
         }
 
@@ -107,32 +107,32 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
                 direction.Val == TextDirectionValues.LeftToRightTopToBottom2010)
             {
-                sb.Append(@"\stextflow0");
+                sb.Write(@"\stextflow0");
             }
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
             {
-                sb.Append(@"\stextflow1");
+                sb.Write(@"\stextflow1");
             }
             if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
                 direction.Val == TextDirectionValues.BottomToTopLeftToRight2010)
             {
-                sb.Append(@"\stextflow2");
+                sb.Write(@"\stextflow2");
             }
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeft2010)
             {
-                sb.Append(@"\stextflow3");
+                sb.Write(@"\stextflow3");
             }
             if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
                 direction.Val == TextDirectionValues.LeftToRightTopToBottomRotated2010)
             {
-                sb.Append(@"\stextflow4");
+                sb.Write(@"\stextflow4");
             }
             if (direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated ||
                direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated2010)
             {
-                sb.Append(@"\stextflow5");
+                sb.Write(@"\stextflow5");
             }
         }
 
@@ -141,72 +141,72 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (vAlign.Val == VerticalJustificationValues.Both)
             {
-                sb.Append(@"\vertalj");
+                sb.Write(@"\vertalj");
             }
             else if (vAlign.Val == VerticalJustificationValues.Bottom)
             {
-                sb.Append(@"\vertal");
+                sb.Write(@"\vertal");
             }
             else if (vAlign.Val == VerticalJustificationValues.Center)
             {
-                sb.Append(@"\vertalc");
+                sb.Write(@"\vertalc");
             }
             else if (vAlign.Val == VerticalJustificationValues.Top)
             {
-                sb.Append(@"\vertalt");
+                sb.Write(@"\vertalt");
             }
         }
 
         if (sectionProperties.GetFirstChild<GutterOnRight>() is GutterOnRight gutterRight &&
            (gutterRight.Val is null || gutterRight.Val))
         {
-            sb.Append(@"\rtlgutter");
+            sb.Write(@"\rtlgutter");
         }
 
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {
             if (size.Width != null)
             {
-                sb.Append($"\\pgwsxn{size.Width.Value}");
+                sb.Write($"\\pgwsxn{size.Width.Value}");
             }
             if (size.Height != null)
             {
-                sb.Append($"\\pghsxn{size.Height.Value}");
+                sb.Write($"\\pghsxn{size.Height.Value}");
             }
             if (size.Orient != null && size.Orient.Value == PageOrientationValues.Landscape)
             {
-                sb.Append($"\\lndscpsxn");
+                sb.Write($"\\lndscpsxn");
             }
         }
         if (sectionProperties.GetFirstChild<PageMargin>() is PageMargin margins)
         {            
             if (margins.Top != null)
             {
-                sb.Append($"\\margtsxn{margins.Top.Value}");
+                sb.Write($"\\margtsxn{margins.Top.Value}");
             }
             if (margins.Bottom != null)
             {
-                sb.Append($"\\margbsxn{margins.Bottom.Value}");
+                sb.Write($"\\margbsxn{margins.Bottom.Value}");
             }
             if (margins.Left != null)
             {
-                sb.Append($"\\marglsxn{margins.Left.Value}");
+                sb.Write($"\\marglsxn{margins.Left.Value}");
             }
             if (margins.Right != null)
             {
-                sb.Append($"\\margrsxn{margins.Right.Value}");
+                sb.Write($"\\margrsxn{margins.Right.Value}");
             }
             if (margins.Gutter != null)
             {
-                sb.Append($"\\guttersxn{margins.Gutter.Value}");
+                sb.Write($"\\guttersxn{margins.Gutter.Value}");
             }
             if (margins.Header != null)
             {
-                sb.Append($"\\headery{margins.Header.Value}");
+                sb.Write($"\\headery{margins.Header.Value}");
             }
             if (margins.Footer != null)
             {
-                sb.Append($"\\footery{margins.Footer.Value}");
+                sb.Write($"\\footery{margins.Footer.Value}");
             }
         }
         if (sectionProperties.GetFirstChild<PageBorders>() is PageBorders borders)
@@ -240,25 +240,25 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 pageBorderOptions |= 0 << 5; // Offset from text
             }
-            sb.Append(@"\pgbrdropt" + pageBorderOptions);
+            sb.Write(@"\pgbrdropt" + pageBorderOptions);
             if (borders?.TopBorder != null)
             {
-                sb.Append(@"\pgbrdrt");
+                sb.Write(@"\pgbrdrt");
                 ProcessBorder(borders.TopBorder, sb);
             }
             if (borders?.LeftBorder != null)
             {
-                sb.Append(@"\pgbrdrl");
+                sb.Write(@"\pgbrdrl");
                 ProcessBorder(borders.LeftBorder, sb);
             }
             if (borders?.BottomBorder != null)
             {
-                sb.Append(@"\pgbrdrb");
+                sb.Write(@"\pgbrdrb");
                 ProcessBorder(borders.BottomBorder, sb);
             }
             if (borders?.RightBorder != null)
             {
-                sb.Append(@"\pgbrdrr");
+                sb.Write(@"\pgbrdrr");
                 ProcessBorder(borders.RightBorder, sb);
             }
         }
@@ -266,15 +266,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (cols.ColumnCount != null)
             {
-                sb.Append($"\\cols{cols.ColumnCount.Value}");
+                sb.Write($"\\cols{cols.ColumnCount.Value}");
             }
             if (cols.Space != null)
             {
-                sb.Append($"\\colsx{cols.Space.Value}");
+                sb.Write($"\\colsx{cols.Space.Value}");
             }
             if (cols.Separator != null && cols.Separator.HasValue && cols.Separator.Value)
             {
-                sb.Append(@"\linebetcol");
+                sb.Write(@"\linebetcol");
             }
             if (cols.EqualWidth != null && cols.EqualWidth.HasValue && !cols.EqualWidth.Value)
             {
@@ -282,14 +282,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 int colIndex = 1;
                 foreach (var col in cols.Elements<Column>())
                 {
-                    sb.Append($"\\colno{colIndex}");
+                    sb.Write($"\\colno{colIndex}");
                     if (col.Space != null)
                     {
-                        sb.Append($"\\colsr{col.Space.Value}");
+                        sb.Write($"\\colsr{col.Space.Value}");
                     }
                     if (col.Width != null)
                     {
-                        sb.Append($"\\colw{col.Width.Value}");
+                        sb.Write($"\\colw{col.Width.Value}");
                     }
                     ++colIndex;
                 }
@@ -311,33 +311,33 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (pageNumberType.Start != null)
             {
                 //sb.Append($"\\pgnstart{pageNumberType.Start.Value}");
-                sb.Append($"\\pgnstarts{pageNumberType.Start.Value}");
+                sb.Write($"\\pgnstarts{pageNumberType.Start.Value}");
             }
             if (pageNumberType.Format != null)
             {
                 if (pageNumberType.Format.Value == NumberFormatValues.ArabicAbjad || 
                          pageNumberType.Format.Value == NumberFormatValues.Hebrew2)
-                    sb.Append(@"\pgnbidib");
+                    sb.Write(@"\pgnbidib");
                 else if (pageNumberType.Format.Value == NumberFormatValues.ArabicAlpha || 
                          pageNumberType.Format.Value == NumberFormatValues.Hebrew1)
-                    sb.Append(@"\pgnbidia");
+                    sb.Write(@"\pgnbidia");
                 else if (pageNumberType.Format.Value == NumberFormatValues.ChineseCounting || 
                          pageNumberType.Format.Value == NumberFormatValues.IdeographDigital || 
                          pageNumberType.Format.Value == NumberFormatValues.KoreanDigital ||
                          pageNumberType.Format.Value == NumberFormatValues.TaiwaneseCounting)
-                    sb.Append(@"\pgndbnum");
+                    sb.Write(@"\pgndbnum");
                 else if (pageNumberType.Format.Value == NumberFormatValues.ChineseCountingThousand ||
                          pageNumberType.Format.Value == NumberFormatValues.JapaneseLegal ||
                          pageNumberType.Format.Value == NumberFormatValues.KoreanLegal ||
                          pageNumberType.Format.Value == NumberFormatValues.TaiwaneseCountingThousand)
-                    sb.Append(@"\pgndbnumt");
+                    sb.Write(@"\pgndbnumt");
                 else if (pageNumberType.Format.Value == NumberFormatValues.ChineseLegalSimplified || 
                          pageNumberType.Format.Value == NumberFormatValues.IdeographLegalTraditional || 
                          pageNumberType.Format.Value == NumberFormatValues.JapaneseCounting ||
                          pageNumberType.Format.Value == NumberFormatValues.KoreanCounting)
-                    sb.Append(@"\pgndbnumd");
+                    sb.Write(@"\pgndbnumd");
                 else if (pageNumberType.Format.Value == NumberFormatValues.Chosung)
-                    sb.Append(@"\pgnchosung");
+                    sb.Write(@"\pgnchosung");
                 else if (pageNumberType.Format.Value == NumberFormatValues.Decimal || 
                         pageNumberType.Format.Value == NumberFormatValues.Aiueo || 
                         pageNumberType.Format.Value == NumberFormatValues.AiueoFullWidth || 
@@ -351,58 +351,58 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                         pageNumberType.Format.Value == NumberFormatValues.JapaneseDigitalTenThousand ||
                         pageNumberType.Format.Value == NumberFormatValues.Ordinal || 
                         pageNumberType.Format.Value == NumberFormatValues.OrdinalText)
-                    sb.Append(@"\pgndec");
+                    sb.Write(@"\pgndec");
                 else if (pageNumberType.Format.Value == NumberFormatValues.DecimalEnclosedCircle)
-                    sb.Append(@"\pgncnum");
+                    sb.Write(@"\pgncnum");
                 else if (pageNumberType.Format.Value == NumberFormatValues.DecimalEnclosedCircleChinese)
-                    sb.Append(@"\pgngbnuml");
+                    sb.Write(@"\pgngbnuml");
                 else if (pageNumberType.Format.Value == NumberFormatValues.DecimalEnclosedFullstop)
-                    sb.Append(@"\pgngbnum");
+                    sb.Write(@"\pgngbnum");
                 else if (pageNumberType.Format.Value == NumberFormatValues.DecimalEnclosedParen)
-                    sb.Append(@"\pgngbnumd");
+                    sb.Write(@"\pgngbnumd");
                 else if (pageNumberType.Format.Value == NumberFormatValues.DecimalFullWidth ||
                          pageNumberType.Format.Value == NumberFormatValues.DecimalFullWidth2 || 
                          pageNumberType.Format.Value == NumberFormatValues.Bullet)
-                    sb.Append(@"\pgndecd");
+                    sb.Write(@"\pgndecd");
                 else if (pageNumberType.Format.Value == NumberFormatValues.Ganada)
-                    sb.Append(@"\pgnganada");
+                    sb.Write(@"\pgnganada");
                 else if (pageNumberType.Format.Value == NumberFormatValues.HindiConsonants)
-                    sb.Append(@"\pgnhindib");
+                    sb.Write(@"\pgnhindib");
                 else if (pageNumberType.Format.Value == NumberFormatValues.HindiCounting)
-                    sb.Append(@"\pgnhindid");
+                    sb.Write(@"\pgnhindid");
                 else if (pageNumberType.Format.Value == NumberFormatValues.HindiNumbers)
-                    sb.Append(@"\pgnhindic");
+                    sb.Write(@"\pgnhindic");
                 else if (pageNumberType.Format.Value == NumberFormatValues.HindiVowels)
-                    sb.Append(@"\pgnhindia");
+                    sb.Write(@"\pgnhindia");
                 else if (pageNumberType.Format.Value == NumberFormatValues.IdeographEnclosedCircle)
-                    sb.Append(@"\pgngbnumk");
+                    sb.Write(@"\pgngbnumk");
                 else if (pageNumberType.Format.Value == NumberFormatValues.IdeographTraditional)
-                    sb.Append(@"\pgnzodiac");
+                    sb.Write(@"\pgnzodiac");
                 else if (pageNumberType.Format.Value == NumberFormatValues.IdeographZodiac)
-                    sb.Append(@"\pgnzodiacd");
+                    sb.Write(@"\pgnzodiacd");
                 else if (pageNumberType.Format.Value == NumberFormatValues.IdeographZodiacTraditional)
-                    sb.Append(@"\pgnzodiacl");
+                    sb.Write(@"\pgnzodiacl");
                 else if (pageNumberType.Format.Value == NumberFormatValues.KoreanDigital2 || 
                          pageNumberType.Format.Value == NumberFormatValues.TaiwaneseDigital)
-                    sb.Append(@"\pgndbnumk");
+                    sb.Write(@"\pgndbnumk");
                 else if (pageNumberType.Format.Value == NumberFormatValues.LowerLetter)
-                    sb.Append(@"\pgnlcltr");
+                    sb.Write(@"\pgnlcltr");
                 else if (pageNumberType.Format.Value == NumberFormatValues.LowerRoman)
-                    sb.Append(@"\pgnlcrm");
+                    sb.Write(@"\pgnlcrm");
                 else if (pageNumberType.Format.Value == NumberFormatValues.NumberInDash)
-                    sb.Append(@"\pgnid");
+                    sb.Write(@"\pgnid");
                 else if (pageNumberType.Format.Value == NumberFormatValues.UpperLetter)
-                    sb.Append(@"\pgnucltr");
+                    sb.Write(@"\pgnucltr");
                 else if (pageNumberType.Format.Value == NumberFormatValues.UpperRoman)
-                    sb.Append(@"\pgnucrm");
+                    sb.Write(@"\pgnucrm");
                 else if (pageNumberType.Format.Value == NumberFormatValues.ThaiCounting)
-                    sb.Append(@"\pgnthaic");
+                    sb.Write(@"\pgnthaic");
                 else if (pageNumberType.Format.Value == NumberFormatValues.ThaiLetters)
-                    sb.Append(@"\pgnthaia");
+                    sb.Write(@"\pgnthaia");
                 else if (pageNumberType.Format.Value == NumberFormatValues.ThaiNumbers)
-                    sb.Append(@"\pgnthaib");
+                    sb.Write(@"\pgnthaib");
                 else if (pageNumberType.Format.Value == NumberFormatValues.VietnameseCounting)
-                    sb.Append(@"\pgnvieta");
+                    sb.Write(@"\pgnvieta");
                 //else if (pageNumberType.Format.Value == NumberFormatValues.BahtText || 
                 //         pageNumberType.Format.Value == NumberFormatValues.DollarText || 
                 //         pageNumberType.Format.Value == NumberFormatValues.None || 
@@ -412,47 +412,47 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             if (pageNumberType.ChapterStyle != null)
             {
-                sb.Append($"\\pgnhnN{pageNumberType.ChapterStyle.Value}");
+                sb.Write($"\\pgnhnN{pageNumberType.ChapterStyle.Value}");
             }
             if (pageNumberType.ChapterSeparator != null)
             {
                 if (pageNumberType.ChapterSeparator.Value == ChapterSeparatorValues.Colon)
-                    sb.Append(@"\pgnhnsc");
+                    sb.Write(@"\pgnhnsc");
                 else if (pageNumberType.ChapterSeparator.Value == ChapterSeparatorValues.EmDash)
-                    sb.Append(@"\pgnhnsm");
+                    sb.Write(@"\pgnhnsm");
                 else if (pageNumberType.ChapterSeparator.Value == ChapterSeparatorValues.EnDash)
-                    sb.Append(@"\pgnhnsn");
+                    sb.Write(@"\pgnhnsn");
                 else if (pageNumberType.ChapterSeparator.Value == ChapterSeparatorValues.Hyphen)
-                    sb.Append(@"\pgnhnsh");
+                    sb.Write(@"\pgnhnsh");
                 else if (pageNumberType.ChapterSeparator.Value == ChapterSeparatorValues.Period)
-                    sb.Append(@"\pgnhnsp");
+                    sb.Write(@"\pgnhnsp");
             }
         }
 
         if (sectionProperties.GetFirstChild<LineNumberType>() is LineNumberType lineNumber && lineNumber.CountBy != null)
         {
-            sb.Append($"\\linemod{lineNumber.CountBy.Value}");
+            sb.Write($"\\linemod{lineNumber.CountBy.Value}");
             if (lineNumber.Start != null)
             {
-                sb.Append($"\\linestarts{lineNumber.Start.Value}");
+                sb.Write($"\\linestarts{lineNumber.Start.Value}");
             }
             if (lineNumber.Distance != null)
             {
-                sb.Append($"\\linex{lineNumber.Distance.Value}");
+                sb.Write($"\\linex{lineNumber.Distance.Value}");
             }
             if (lineNumber.Restart?.Value != null)
             {
                 if (lineNumber.Restart.Value == LineNumberRestartValues.Continuous)
                 {
-                    sb.Append(@"\linecont");
+                    sb.Write(@"\linecont");
                 }
                 else if (lineNumber.Restart.Value == LineNumberRestartValues.NewPage)
                 {
-                    sb.Append(@"\lineppage");
+                    sb.Write(@"\lineppage");
                 }
                 else if (lineNumber.Restart.Value == LineNumberRestartValues.NewSection)
                 {
-                    sb.Append(@"\linerestart");
+                    sb.Write(@"\linerestart");
                 }
             }
         }
@@ -463,28 +463,28 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (docGrid.Type.Value == DocGridValues.Default)
                 {
-                    sb.Append(@"\sectdefaultcl");
+                    sb.Write(@"\sectdefaultcl");
                 }
                 else if (docGrid.Type.Value == DocGridValues.Lines)
                 {
-                    sb.Append(@"\sectspecifyl");
+                    sb.Write(@"\sectspecifyl");
                 }
                 else if (docGrid.Type.Value == DocGridValues.LinesAndChars)
                 {
-                    sb.Append(@"\sectspecifycl");
+                    sb.Write(@"\sectspecifycl");
                 }
                 else if (docGrid.Type.Value == DocGridValues.SnapToChars)
                 {
-                    sb.Append(@"\sectspecifygenN"); // Note that N is part of keyword here.
+                    sb.Write(@"\sectspecifygenN"); // Note that N is part of keyword here.
                 }
             }
             if (docGrid.LinePitch != null && docGrid.LinePitch.HasValue)
             {
-                sb.Append($"\\sectlinegrid{docGrid.LinePitch.Value}");
+                sb.Write($"\\sectlinegrid{docGrid.LinePitch.Value}");
             }
             if (docGrid.CharacterSpace != null && docGrid.CharacterSpace.HasValue)
             {
-                sb.Append($"\\sectexpand{docGrid.CharacterSpace.Value}");
+                sb.Write($"\\sectexpand{docGrid.CharacterSpace.Value}");
             }
         }
 
@@ -502,16 +502,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             // TODO: check if this section actually contains endnotes 
             // (adding \endnhere is not harmful anyway)
-            sb.Append("\\endnhere");
+            sb.Write("\\endnhere");
         }
 
         if (sectionProperties.GetFirstChild<FormProtection>() == null || 
             (sectionProperties.GetFirstChild<FormProtection>()?.Val is OnOffValue val && val == false))
         {
-            sb.Append(@"\sectunlocked");
+            sb.Write(@"\sectunlocked");
         }
 
-        sb.AppendLine();
+        sb.WriteLine();
     }
 
     internal void ProcessFirstSectionProperties(SectionProperties? sectionProperties, RtfStringWriter sb)
@@ -525,49 +525,49 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (size.Width != null)
             {
-                sb.Append($"\\paperw{size.Width.Value}");
+                sb.Write($"\\paperw{size.Width.Value}");
             }
             if (size.Height != null)
             {
-                sb.Append($"\\paperh{size.Height.Value}");
+                sb.Write($"\\paperh{size.Height.Value}");
             }
             if (size.Orient != null && size.Orient.Value == PageOrientationValues.Landscape)
             {
-                sb.Append($"\\landscape");
+                sb.Write($"\\landscape");
             }
             if (size.Code != null)
             {
-                sb.Append($"\\psz{size.Code.Value}");
+                sb.Write($"\\psz{size.Code.Value}");
             }
         }
         if (sectionProperties.GetFirstChild<PageMargin>() is PageMargin margins)
         {
             if (margins.Top != null)
             {
-                sb.Append($"\\margt{margins.Top.Value}");
+                sb.Write($"\\margt{margins.Top.Value}");
             }
             if (margins.Bottom != null)
             {
-                sb.Append($"\\margb{margins.Bottom.Value}");
+                sb.Write($"\\margb{margins.Bottom.Value}");
             }
             if (margins.Left != null)
             {
-                sb.Append($"\\margl{margins.Left.Value}");
+                sb.Write($"\\margl{margins.Left.Value}");
             }
             if (margins.Right != null)
             {
-                sb.Append($"\\margr{margins.Right.Value}");
+                sb.Write($"\\margr{margins.Right.Value}");
             }
             if (margins.Gutter != null)
             {
-                sb.Append($"\\gutter{margins.Gutter.Value}");
+                sb.Write($"\\gutter{margins.Gutter.Value}");
             }
         }
 
         if (sectionProperties.GetFirstChild<FormProtection>() is FormProtection formProtection &&
            (formProtection.Val is null || formProtection.Val))
         {
-            sb.Append(@"\formprot");
+            sb.Write(@"\formprot");
         }
     }
 }

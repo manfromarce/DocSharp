@@ -6,6 +6,7 @@ using DocSharp.Helpers;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocSharp.Writers;
+using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
@@ -20,7 +21,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (footnoteProperties == null)
             {
-                sb.Append($"\\ftnbj"); // Footnotes at page bottom by default
+                sb.Write($"\\ftnbj"); // Footnotes at page bottom by default
                 return;
             }
 
@@ -28,22 +29,22 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.BeneathText)
                 {
-                    sb.Append($"\\ftntj");
+                    sb.Write($"\\ftntj");
                 }
                 else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.PageBottom)
                 {
-                    sb.Append($"\\ftnbj");
+                    sb.Write($"\\ftnbj");
                 }
                 else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.SectionEnd)
                 {
                     // Treat footnotes as endnotes in this case
-                    sb.Append("\\endnotes");
+                    sb.Write("\\endnotes");
                 }
             }
 
             if (footnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Append($"\\sftn"); // Footnote number format
+                sb.Write($"\\sftn"); // Footnote number format
                 ProcessFootnoteNumberFormat(footnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -51,21 +52,21 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (footnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
                 {
-                    sb.Append($"\\ftnrstpg");
+                    sb.Write($"\\ftnrstpg");
                 }
                 else if (footnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
                 {
-                    sb.Append($"\\ftnrestart");
+                    sb.Write($"\\ftnrestart");
                 }
             }
             else
             {
-                sb.Append($"\\ftnrstcont"); // Continuous footnote numbering (default)
+                sb.Write($"\\ftnrstcont"); // Continuous footnote numbering (default)
             }
 
             if (footnoteProperties.NumberingStart?.Val != null)
             {
-                sb.Append($"\\ftnstart{footnoteProperties.NumberingStart.Val}");
+                sb.Write($"\\ftnstart{footnoteProperties.NumberingStart.Val}");
             }
         }
     }
@@ -77,35 +78,35 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (endnoteProperties == null)
             {
-                sb.Append("\\aenddoc"); // Endnotes at end of document (default in DOCX)
+                sb.Write("\\aenddoc"); // Endnotes at end of document (default in DOCX)
                 return;
             }
 
             if (endnoteProperties.EndnotePosition?.Val != null &&
                 endnoteProperties.EndnotePosition.Val == EndnotePositionValues.SectionEnd)
             {
-                sb.Append("\\aendnotes"); // Endnotes at end of section (default in RTF).
+                sb.Write("\\aendnotes"); // Endnotes at end of section (default in RTF).
                 if (FootnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
                 {
                     // For compatibility reasons, if \fet1 (endnotes only) is emitted 
                     // add \endnotes in addition to \aendnotes.
-                    sb.Append("\\endnotes");
+                    sb.Write("\\endnotes");
                 }
             }
             else
             {
-                sb.Append("\\aenddoc"); // Endnotes at end of document (default in DOCX)
+                sb.Write("\\aenddoc"); // Endnotes at end of document (default in DOCX)
                 if (FootnotesEndnotes == FootnotesEndnotesType.EndnotesOnly)
                 {
                     // For compatibility reasons, if \fet1 (endnotes only) is emitted 
                     // add \enddoc in addition to \aenddoc.
-                    sb.Append("\\enddoc"); // for compatibility
+                    sb.Write("\\enddoc"); // for compatibility
                 }
             }
 
             if (endnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Append($"\\aftn"); // Endnote number format
+                sb.Write($"\\aftn"); // Endnote number format
                 ProcessFootnoteNumberFormat(endnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -114,21 +115,21 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
                 {
                     // Restart at each page not available for endnotes in RTF
-                    sb.Append($"\\aftnrestart");
+                    sb.Write($"\\aftnrestart");
                 }
                 else if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
                 {
-                    sb.Append($"\\aftnrestart");
+                    sb.Write($"\\aftnrestart");
                 }
             }
             else
             {
-                sb.Append($"\\aftnrstcont");
+                sb.Write($"\\aftnrstcont");
             }
 
             if (endnoteProperties.NumberingStart != null)
             {
-                sb.Append($"\\aftnstart{endnoteProperties.NumberingStart.Val}");
+                sb.Write($"\\aftnstart{endnoteProperties.NumberingStart.Val}");
             }
         }
     }
@@ -147,11 +148,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.BeneathText)
                 {
-                    sb.Append("\\sftntj");
+                    sb.Write("\\sftntj");
                 }
                 else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.PageBottom)
                 {
-                    sb.Append("\\ftnbj");
+                    sb.Write("\\ftnbj");
                 }
                 else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.SectionEnd)
                 {
@@ -162,7 +163,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
             if (footnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Append($"\\sftn"); // Footnote number format
+                sb.Write($"\\sftn"); // Footnote number format
                 ProcessFootnoteNumberFormat(footnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -170,21 +171,21 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (footnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
                 {
-                    sb.Append("\\sftnrstpg");
+                    sb.Write("\\sftnrstpg");
                 }
                 else if (footnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
                 {
-                    sb.Append("\\sftnrestart");
+                    sb.Write("\\sftnrestart");
                 }
             }
             else
             {
-                sb.Append($"\\sftnrstcont"); // Continuous footnote numbering (default)
+                sb.Write($"\\sftnrstcont"); // Continuous footnote numbering (default)
             }
 
             if (footnoteProperties.NumberingStart?.Val != null)
             {
-                sb.Append($"\\sftnstart{footnoteProperties.NumberingStart.Val}");
+                sb.Write($"\\sftnstart{footnoteProperties.NumberingStart.Val}");
             }
         }
     }
@@ -201,7 +202,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {            
             if (endnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Append($"\\saftn"); // Endnote number format
+                sb.Write($"\\saftn"); // Endnote number format
                 ProcessFootnoteNumberFormat(endnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -210,21 +211,21 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
                 {
                     // Restart at each page is not available for endnotes in RTF
-                    sb.Append($"\\saftnrestart");
+                    sb.Write($"\\saftnrestart");
                 }
                 else if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
                 {
-                    sb.Append($"\\saftnrestart");
+                    sb.Write($"\\saftnrestart");
                 }
             }
             else
             {
-                sb.Append($"\\saftnrstcont");
+                sb.Write($"\\saftnrstcont");
             }
 
             if (endnoteProperties.NumberingStart != null)
             {
-                sb.Append($"\\saftnstart{endnoteProperties.NumberingStart.Val}");
+                sb.Write($"\\saftnstart{endnoteProperties.NumberingStart.Val}");
             }
         }
     }
@@ -233,163 +234,169 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (numberFormat == NumberFormatValues.LowerLetter)
         {
-            sb.Append(@"nalc"); // a, b, c, ...
+            sb.Write(@"nalc"); // a, b, c, ...
         }
         else if (numberFormat == NumberFormatValues.UpperLetter)
         {
-            sb.Append(@"nauc"); // A, B, C, ...
+            sb.Write(@"nauc"); // A, B, C, ...
         }
         else if (numberFormat == NumberFormatValues.LowerRoman)
         {
-            sb.Append(@"nrlc"); // i, ii, iii, ...
+            sb.Write(@"nrlc"); // i, ii, iii, ...
         }
         else if (numberFormat == NumberFormatValues.UpperRoman)
         {
-            sb.Append(@"nruc"); // I, II, III, ...
+            sb.Write(@"nruc"); // I, II, III, ...
         }
         else if (numberFormat == NumberFormatValues.Chicago)
         {
-            sb.Append(@"nchi"); // *, †, ‡, §
+            sb.Write(@"nchi"); // *, †, ‡, §
         }
         else if (numberFormat == NumberFormatValues.Chosung)
         {
-            sb.Append(@"nchosung"); // Korean numbering 1 (CHOSUNG)
+            sb.Write(@"nchosung"); // Korean numbering 1 (CHOSUNG)
         }
         else if (numberFormat == NumberFormatValues.DecimalEnclosedCircle)
         {
-            sb.Append(@"ncnum"); // Circle numbering (CIRCLENUM)
+            sb.Write(@"ncnum"); // Circle numbering (CIRCLENUM)
         }
         else if (numberFormat == NumberFormatValues.ChineseCounting ||
                  numberFormat == NumberFormatValues.IdeographDigital ||
                  numberFormat == NumberFormatValues.KoreanDigital ||
                  numberFormat == NumberFormatValues.TaiwaneseCounting)
         {
-            sb.Append(@"ndbnum"); // Kanji numbering without the digit character (DBNUM1)
+            sb.Write(@"ndbnum"); // Kanji numbering without the digit character (DBNUM1)
         }
         else if (numberFormat == NumberFormatValues.ChineseLegalSimplified ||
                  numberFormat == NumberFormatValues.IdeographLegalTraditional ||
                  numberFormat == NumberFormatValues.JapaneseCounting ||
                  numberFormat == NumberFormatValues.KoreanCounting)
         {
-            sb.Append(@"ndbnumd"); // Kanji numbering with the digit character (DBNUM2)
+            sb.Write(@"ndbnumd"); // Kanji numbering with the digit character (DBNUM2)
         }
         else if (numberFormat == NumberFormatValues.ChineseCountingThousand ||
                  numberFormat == NumberFormatValues.JapaneseLegal ||
                  numberFormat == NumberFormatValues.KoreanLegal ||
                  numberFormat == NumberFormatValues.TaiwaneseCountingThousand)
         {
-            sb.Append(@"ndbnumt"); // Kanji numbering 3 (DBNUM3)
+            sb.Write(@"ndbnumt"); // Kanji numbering 3 (DBNUM3)
         }
         else if (numberFormat == NumberFormatValues.KoreanDigital2 ||
                  numberFormat == NumberFormatValues.TaiwaneseDigital)
         {
-            sb.Append(@"ndbnumk"); // Kanji numbering 4 (DBNUM4)
+            sb.Write(@"ndbnumk"); // Kanji numbering 4 (DBNUM4)
         }
         else if (numberFormat == NumberFormatValues.DecimalFullWidth ||
                  numberFormat == NumberFormatValues.DecimalFullWidth2)
         {
-            sb.Append(@"ndbar"); // Double-byte numbering (DBCHAR)
+            sb.Write(@"ndbar"); // Double-byte numbering (DBCHAR)
         }
         else if (numberFormat == NumberFormatValues.Ganada)
         {
-            sb.Append(@"nganada"); // Korean numbering 2 (GANADA)
+            sb.Write(@"nganada"); // Korean numbering 2 (GANADA)
         }
         else if (numberFormat == NumberFormatValues.DecimalEnclosedFullstop)
         {
-            sb.Append(@"ngbnum"); // Chinese numbering 1 (GB1)
+            sb.Write(@"ngbnum"); // Chinese numbering 1 (GB1)
         }
         else if (numberFormat == NumberFormatValues.DecimalEnclosedParen)
         {
-            sb.Append(@"ngbnumd"); // Chinese numbering 2 (GB2)
+            sb.Write(@"ngbnumd"); // Chinese numbering 2 (GB2)
         }
         else if (numberFormat == NumberFormatValues.DecimalEnclosedCircleChinese)
         {
-            sb.Append(@"ngbnuml"); // Chinese numbering 3 (GB3)
+            sb.Write(@"ngbnuml"); // Chinese numbering 3 (GB3)
         }
         else if (numberFormat == NumberFormatValues.IdeographEnclosedCircle)
         {
-            sb.Append(@"ngbnumk"); // Chinese numbering 4 (GB4)
+            sb.Write(@"ngbnumk"); // Chinese numbering 4 (GB4)
         }
         else if (numberFormat == NumberFormatValues.IdeographTraditional)
         {
-            sb.Append(@"nzodiac"); // Chinese Zodiac numbering 1 (ZODIAC1)
+            sb.Write(@"nzodiac"); // Chinese Zodiac numbering 1 (ZODIAC1)
         }
         else if (numberFormat == NumberFormatValues.IdeographZodiac)
         {
-            sb.Append(@"nzodiacd"); // Chinese Zodiac numbering 2 (ZODIAC2)
+            sb.Write(@"nzodiacd"); // Chinese Zodiac numbering 2 (ZODIAC2)
         }
         else if (numberFormat == NumberFormatValues.IdeographZodiacTraditional)
         {
-            sb.Append(@"nzodiacl"); // Chinese Zodiac numbering 3 (ZODIAC3)
+            sb.Write(@"nzodiacl"); // Chinese Zodiac numbering 3 (ZODIAC3)
         }
         else
         {
-            sb.Append(@"nar"); // Arabic numbers (1, 2, 3, …) 
+            sb.Write(@"nar"); // Arabic numbers (1, 2, 3, …) 
         }
     }
 
-    internal void ProcessFootnotesPart(FootnotesPart footnotesPart, RtfStringWriter sb)
+    internal override void ProcessFootnotes(FootnotesPart? footnotesPart, RtfStringWriter sb)
     {
         // This method handles separator and continuationSeparator types only,
         // the actual footnotes are processed when a reference to them is found in the document.
-        foreach (var footnote in footnotesPart.Footnotes.OfType<Footnote>())
+        if (footnotesPart != null)
         {
-            if (footnote.Type != null)
+            foreach (var footnote in footnotesPart.Footnotes.OfType<Footnote>())
             {
-                if (footnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                if (footnote.Type != null)
                 {
-                    sb.Append("{\\*\\ftncn ");
+                    if (footnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                    {
+                        sb.Write("{\\*\\ftncn ");
+                    }
+                    else if (footnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
+                    {
+                        sb.Write("{\\*\\ftnsepc ");
+                    }
+                    else if (footnote.Type == FootnoteEndnoteValues.Separator)
+                    {
+                        sb.Write("{\\*\\ftnsep ");
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    foreach (var element in footnote.Elements())
+                    {
+                        base.ProcessBodyElement(element, sb);
+                    }
+                    sb.Write('}');
                 }
-                else if (footnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
-                {
-                    sb.Append("{\\*\\ftnsepc ");
-                }
-                else if (footnote.Type == FootnoteEndnoteValues.Separator)
-                {
-                    sb.Append("{\\*\\ftnsep ");
-                }
-                else
-                {
-                    continue;
-                }
-                foreach (var element in footnote.Elements())
-                {
-                    base.ProcessBodyElement(element, sb);
-                }
-                sb.Append('}');
             }
         }
     }
 
-    internal void ProcessEndnotesPart(EndnotesPart endnotesPart, RtfStringWriter sb)
+    internal override void ProcessEndnotes(EndnotesPart? endnotesPart, RtfStringWriter sb)
     {
         // This method handles separator and continuationSeparator types only,
         // the actual endnotes are processed when a reference to them is found in the document.
-        foreach (var endnote in endnotesPart.Endnotes.OfType<Endnote>())
+        if (endnotesPart != null)
         {
-            if (endnote.Type != null)
+            foreach (var endnote in endnotesPart.Endnotes.OfType<Endnote>())
             {
-                if (endnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                if (endnote.Type != null)
                 {
-                    sb.Append("{\\*\\aftncn ");
+                    if (endnote.Type == FootnoteEndnoteValues.ContinuationNotice)
+                    {
+                        sb.Write("{\\*\\aftncn ");
+                    }
+                    else if (endnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
+                    {
+                        sb.Write("{\\*\\aftnsepc ");
+                    }
+                    else if (endnote.Type == FootnoteEndnoteValues.Separator)
+                    {
+                        sb.Write("{\\*\\aftnsep ");
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    foreach (var element in endnote.Elements())
+                    {
+                        base.ProcessBodyElement(element, sb);
+                    }
+                    sb.Write('}');
                 }
-                else if (endnote.Type == FootnoteEndnoteValues.ContinuationSeparator)
-                {
-                    sb.Append("{\\*\\aftnsepc ");
-                }
-                else if (endnote.Type == FootnoteEndnoteValues.Separator)
-                {
-                    sb.Append("{\\*\\aftnsep ");
-                }
-                else
-                {
-                    continue;
-                }
-                foreach (var element in endnote.Elements())
-                {
-                    base.ProcessBodyElement(element, sb);
-                }
-                sb.Append('}');
             }
         }
     }
@@ -402,13 +409,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             .Where(fn => fn.Id != null && fn.Id == footnoteReference.Id)
             .FirstOrDefault() is Footnote footnote)
         {
-            sb.AppendLine("\\chftn");
-            sb.Append("{\\footnote ");
+            sb.WriteLine("\\chftn");
+            sb.Write("{\\footnote ");
             foreach (var element in footnote.Elements())
             {
                 base.ProcessBodyElement(element, sb);
             }
-            sb.Append('}');
+            sb.Write('}');
         }
     }
 
@@ -420,34 +427,34 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             .Where(en => en.Id != null && en.Id == endnoteReference.Id)
             .FirstOrDefault() is Endnote endnote)
         {
-            sb.AppendLine("\\chftn");
-            sb.Append("{\\footnote\\ftnalt ");
+            sb.WriteLine("\\chftn");
+            sb.Write("{\\footnote\\ftnalt ");
             foreach (var element in endnote.Elements())
             {
                 base.ProcessBodyElement(element, sb);
             }
-            sb.Append('}');
+            sb.Write('}');
         }
     }
 
     internal override void ProcessFootnoteReferenceMark(FootnoteReferenceMark endnoteReferenceMark, RtfStringWriter sb) 
     {
-        sb.Append("\\chftn");
+        sb.Write("\\chftn");
     }
 
     internal override void ProcessEndnoteReferenceMark(EndnoteReferenceMark endnoteReferenceMark, RtfStringWriter sb) 
     {
-        sb.Append("\\chftn");
+        sb.Write("\\chftn");
     }
 
     internal override void ProcessSeparatorMark(SeparatorMark separatorMark, RtfStringWriter sb) 
     {
-        sb.Append("\\chftnsep");
+        sb.Write("\\chftnsep");
     }
 
     internal override void ProcessContinuationSeparatorMark(ContinuationSeparatorMark separatorMark, RtfStringWriter sb) 
     {
-        sb.Append("\\chftnsepc");
+        sb.Write("\\chftnsepc");
     }
 
 }

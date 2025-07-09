@@ -7,7 +7,7 @@ using DocSharp.Helpers;
 
 namespace DocSharp.Writers;
 
-public class MarkdownStringWriter : BaseStringWriter
+public sealed class MarkdownStringWriter : BaseStringWriter
 {
     private static char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
                                             '#', '+', '-', '!', '|', '~' };
@@ -18,84 +18,14 @@ public class MarkdownStringWriter : BaseStringWriter
         // Use LF for Markdown by default, can be replaced for special cases (e.g. when forcing soft breaks or hard breaks for text)
     }
 
-    public void AppendHeading(string text, int level = 1)
+    public void WriteHorizontalLine()
     {
-        level = Math.Max(1, Math.Min(level, 6));
-        Append(new string('#', level));
-        Append(" ");
-        Append(text);
-        AppendLine();
-        AppendLine();
-    }
-    
-    public void AppendList(IEnumerable<string> items, bool numbered = false)
-    {
-        int i = 1;
-        foreach (var item in items)
-        {
-            if (numbered)
-                Append($"{i}. {item}");
-            else
-                Append($"- {item}");
-            AppendLine();
-            i++;
-        }
-        AppendLine();
+        EnsureEmptyLine();
+        WriteLine("-----");
+        WriteLine();
     }
 
-    public void AppendLineBreak(bool hardBreak)
-    {
-        if (hardBreak)
-        {
-            Append("<br>");
-        }
-        else
-        {
-            AppendLine("  "); // Soft break (2 trailing spaces)
-        }
-    }
-
-    public void AppendParagraph()
-    {
-        AppendLine();
-        AppendLine();
-    }
-
-    public void AppendTable(IEnumerable<IEnumerable<string>> rows)
-    {
-        var rowList = rows.ToList();
-        if (rowList.Count == 0) return;
-        // Header
-        Append("| ");
-        Append(string.Join(" | ", rowList[0]));
-        AppendLine(" |");
-        // Separator
-        Append("| ");
-        Append(string.Join(" | ", rowList[0].Select(_ => "---")));
-        AppendLine(" |");
-        // Data
-        foreach (var row in rowList.Skip(1))
-        {
-            Append("| ");
-            Append(string.Join(" | ", row));
-            AppendLine(" |");
-        }
-        AppendLine();
-    }
-
-    public void AppendImage(string altText, string url)
-    {
-        Append($"![{altText}]({url})");
-        AppendLine();
-    }
-
-    public void AppendLink(string displayText, string url)
-    {
-        Append($"[{displayText}]({url})");
-        AppendLine();
-    }
-
-    public void AppendChar(char c, string font, bool forceHtmlBreak = false)
+    public void WriteCharEscaped(char c, string font, bool forceHtmlBreak = false)
     {
         if (c == '\r')
         {
@@ -103,18 +33,25 @@ public class MarkdownStringWriter : BaseStringWriter
         }
         else if (c == '\n')
         {
-            AppendLineBreak(forceHtmlBreak);
+            if (forceHtmlBreak)
+            {
+                Write("<br>");
+            }
+            else
+            {
+                WriteLine("  "); // Markdown soft break (2 trailing spaces).
+            }
         }
         else
         {
             string s = FontConverter.ToUnicode(font, c);
             if (s.Length == 1 && _specialChars.Contains(s[0]))
             {
-                Append(new string(['\\', s[0]]));
+                Write(new string(['\\', s[0]]));
             }
             else
             {
-                Append(s);
+                Write(s);
             }
         }
     }
