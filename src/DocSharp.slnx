@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/DocSharp.Binary/">
+    <Project Path="DocSharp.Binary/DocSharp.Binary.Common/DocSharp.Binary.Common.csproj" />
+    <Project Path="DocSharp.Binary/DocSharp.Binary.Doc/DocSharp.Binary.Doc.csproj" />
+    <Project Path="DocSharp.Binary/DocSharp.Binary.Ppt/DocSharp.Binary.Ppt.csproj" />
+    <Project Path="DocSharp.Binary/DocSharp.Binary.Xls/DocSharp.Binary.Xls.csproj" />
+  </Folder>
+  <Folder Name="/Imaging/">
+    <Project Path="DocSharp.ImageSharp/DocSharp.ImageSharp.csproj" />
+    <Project Path="DocSharp.SystemDrawing/DocSharp.SystemDrawing.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="../samples/WpfApp1/WpfApp1.csproj" />
+  </Folder>
+  <Folder Name="/Solution items/">
+    <File Path="../.editorconfig" />
+    <File Path="../.gitignore" />
+    <File Path="../documentation/Supported_features.md" />
+    <File Path="../LICENSE" />
+    <File Path="../LICENSE-Apache" />
+    <File Path="../README.md" />
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Project Path="DocSharp.Common/DocSharp.Common.csproj" />
+  <Project Path="DocSharp.Docx/DocSharp.Docx.csproj" />
+  <Project Path="DocSharp.Markdown/DocSharp.Markdown.csproj" />
+</Solution>
