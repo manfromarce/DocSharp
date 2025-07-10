@@ -37,6 +37,7 @@
 | Mail merge | ❌ | - | - | - | ❌ |
 | Macros | ❌ | - | - | - | ❌ |
 | Document information (title, author, ...) | ✅ | ❌ | - | - | ⏳ |
+| Document settings and protection | 🟡 | - | - | - | ❌ |
 
 [1]: Only inline images are supported. Floating and wrap-positioned images depend on DrawingML/VML shapes which are not implemented yet.  
 RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  

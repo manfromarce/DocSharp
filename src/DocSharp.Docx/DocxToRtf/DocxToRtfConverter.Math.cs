@@ -1071,4 +1071,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write("{\\margPr \\margSz" + argumentProperties.ArgumentSize.Val.Value + "}");
         }
     }
+
+    internal void ProcessMathDocumentProperties(MathProperties? mathProperties, RtfStringWriter sb)
+    {
+        if (mathProperties != null)
+        {
+
+        }
+    }
 }

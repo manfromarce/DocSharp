@@ -145,9 +145,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);        
         if (document.MainDocumentPart?.DocumentSettingsPart?.Settings is Settings documentSettings)
         {
-            ProcessFootnoteProperties(documentSettings.GetFirstChild<FootnoteDocumentWideProperties>(), contentSb);
-            ProcessEndnoteProperties(documentSettings.GetFirstChild<EndnoteDocumentWideProperties>(), contentSb);
-            ProcessFacingPages(documentSettings.GetFirstChild<EvenAndOddHeaders>(), contentSb);
+            ProcessSettings(documentSettings, sb);
         }
         switch (FootnotesEndnotes)
         {
