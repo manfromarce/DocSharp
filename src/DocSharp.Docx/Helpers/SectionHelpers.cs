@@ -24,7 +24,7 @@ public static class SectionHelpers
 
         var currentSection = new List<OpenXmlElement>();
 
-        // TODO: check nested paragraphs (e.g. inside table cells) ?
+        // TODO: should we check nested paragraphs (e.g. inside table cells) ?
         foreach (var element in body.Elements())
         {
             currentSection.Add(element);
