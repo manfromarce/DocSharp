@@ -13,7 +13,7 @@ public static class ParagraphHelpers
 {
     public static bool IsFirst(this Paragraph paragraph)
     {
-        return paragraph.Parent != null && paragraph.Parent.PreviousSibling<Paragraph>() == null;
+        return paragraph.PreviousSibling<Paragraph>() == null;
     }
 
     public static bool IsLast(this Paragraph paragraph)
