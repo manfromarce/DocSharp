@@ -136,6 +136,19 @@ public static class ImageHeader
         return ImageFormat.Unknown;
     }
 
+    public static Size GetDimensions(Stream stream, string mimeType)
+    {
+        var type = ImageFormatExtensions.FromMimeType(mimeType);
+        if (type == ImageFormat.Unknown)
+        {
+            return Size.Empty;
+        }
+        else
+        {
+            return GetDimensions(stream, type);
+        }
+    }
+
     /// <summary>
     /// Gets the dimensions of a supported image in pixels (except for WMF which will be in inches).
     /// This function should be called passing a file type determined using TryDetectFileType,

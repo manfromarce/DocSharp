@@ -83,6 +83,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 // In RTF width and height should not be decreased by the crop value.
                 properties.Width = width + properties.CropLeft + properties.CropRight;
                 properties.Height = height + properties.CropTop + properties.CropBottom;
+                properties.WidthGoal = properties.Width;
+                properties.HeightGoal = properties.Height;
                 if (width > 0 && height > 0)
                 {
                     var rootPart = OpenXmlHelpers.GetRootPart(element);

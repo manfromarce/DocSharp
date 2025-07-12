@@ -15,7 +15,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, RtfStringWriter sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, RtfStringWriter sb, bool skipPicProp = false)
     {
         if (rootPart?.GetPartById(relId) is ImagePart imagePart)
         {
@@ -103,16 +103,25 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (string.IsNullOrEmpty(format))
                     return;
 
-                sb.WriteLine(@"{\pict{\*\picprop{\sp{\sn posv}{\sv 1}}}");
+                sb.Write(@"{\pict");
+                if (!skipPicProp)
+                {
+                    // Add properties for pictures that are part of a Word shape ({\*\shppict), 
+                    // skip them for simpler \pict elements (used e.g. for document background).
+                    sb.Write(@"{\*\picprop");
+                    sb.WriteShapeProperty("posv", "1");
+                    // TODO: get properties
+                    sb.Write(@"}");
+                }
                 sb.Write(format);
                 sb.Write("\\picw");
                 sb.Write(properties.Width);
                 sb.Write("\\pich");
                 sb.Write(properties.Height);
                 sb.Write("\\picwgoal");
-                sb.Write(properties.Width);
+                sb.Write(properties.WidthGoal);
                 sb.Write("\\pichgoal");
-                sb.Write(properties.Height);
+                sb.Write(properties.HeightGoal);
                 sb.Write("\\piccropl");
                 sb.Write(properties.CropLeft);
                 sb.Write("\\piccropr");
@@ -127,14 +136,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write("01000900"); // Add wmf header that was previously skipped.
                 }
                 int byteValue;
-                if (pngData.Length > 0)
+                if (pngData.Length > 0) // Image was converted to PNG
                 {
                     foreach (var b in pngData)
                     {
                         sb.WriteFormat("{0:X2}", b);
                     }
                 }
-                else
+                else // Image is in a supported format
                 {
                     while ((byteValue = stream.ReadByte()) != -1)
                     {

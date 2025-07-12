@@ -49,6 +49,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // In RTF width and height should not be decreased by the crop value.
             properties.Width = w + properties.CropLeft + properties.CropRight;
             properties.Height = h + properties.CropTop + properties.CropBottom;
+            properties.WidthGoal = properties.Width;
+            properties.HeightGoal = properties.Height;
             if (blipFill?.Blip?.Embed?.Value is string relId)
             {
                 var rootPart = OpenXmlHelpers.GetRootPart(drawing);

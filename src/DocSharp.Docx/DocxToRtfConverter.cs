@@ -9,6 +9,7 @@ using DocSharp.Collections;
 using DocSharp.Helpers;
 using DocSharp.Writers;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
 
@@ -68,49 +69,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         // Insert generic information such as title, author, etc. if present in DOCX
         if (document.GetWordprocessingDocument() is WordprocessingDocument doc)
         {
-            var coreProps = doc.PackageProperties;
-            sb.Write(@"{\info");
-            if (!string.IsNullOrEmpty(coreProps.Creator))
-            {
-                sb.Write(@"{\author ");
-                sb.WriteRtfEscaped(coreProps.Creator!);
-                sb.Write('}');
-            }
-            if (!string.IsNullOrEmpty(coreProps.Title))
-            {
-                sb.Write(@"{\title ");
-                sb.WriteRtfEscaped(coreProps.Title!);
-                sb.Write('}');
-            }
-            if (!string.IsNullOrEmpty(coreProps.Subject))
-            {
-                sb.Write(@"{\subject ");
-                sb.WriteRtfEscaped(coreProps.Subject!);
-                sb.Write('}');
-            }
-            if (!string.IsNullOrEmpty(coreProps.Category))
-            {
-                sb.Write(@"{\category ");
-                sb.WriteRtfEscaped(coreProps.Category!);
-                sb.Write('}');
-            }
-            if (!string.IsNullOrEmpty(coreProps.Keywords))
-            {
-                sb.Write(@"{\keywords ");
-                sb.WriteRtfEscaped(coreProps.Keywords!);
-                sb.Write('}');
-            }
-            if (coreProps.Created != null)
-            {
-                sb.Write(@"{\creatim");
-                sb.Write($"\\yr{coreProps.Created.Value.Year}");
-                sb.Write($"\\mo{coreProps.Created.Value.Month}");
-                sb.Write($"\\dy{coreProps.Created.Value.Day}");
-                sb.Write($"\\hr{coreProps.Created.Value.Hour}");
-                sb.Write($"\\min{coreProps.Created.Value.Minute}");
-                sb.Write('}');
-            }
-            sb.Write('}');
+            ProcessProperties(doc, sb);
         }
 
         // Prepare fonts table 
@@ -145,9 +104,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);        
         if (document.MainDocumentPart?.DocumentSettingsPart?.Settings is Settings documentSettings)
         {
-            ProcessFootnoteProperties(documentSettings.GetFirstChild<FootnoteDocumentWideProperties>(), contentSb);
-            ProcessEndnoteProperties(documentSettings.GetFirstChild<EndnoteDocumentWideProperties>(), contentSb);
-            ProcessFacingPages(documentSettings.GetFirstChild<EvenAndOddHeaders>(), contentSb);
+            ProcessSettings(documentSettings, sb);
         }
         switch (FootnotesEndnotes)
         {
@@ -211,33 +168,5 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         // Not needed in this converter
         //sb.WriteLine(@"\par");
-    }
-
-    internal override void ProcessDocumentBackground(DocumentBackground documentBackground, RtfStringWriter sb)
-    {
-        //if (documentBackground.Background != null) // TODO
-        //{
-        //}
-        // documentBackground.Background requires VML support, which is not implemented yet for other elements as well.
-        // VML can contain images, shapes and effects but is mostly replaced by DrawingML in recent MS Word versions,
-        // and maintained for compatibility reasons.
-        // However, in RTF there is no direct equivalent of documentBackground.Color, so it is implemented as a special case of VML.
-        if (documentBackground.Color?.Value != null)
-        {
-            string hex = documentBackground.Color.Value.TrimStart('#');
-            if (hex.Length == 6)
-            {
-                int r = System.Convert.ToInt32(hex.Substring(0, 2), 16);
-                int g = System.Convert.ToInt32(hex.Substring(2, 2), 16);
-                int b = System.Convert.ToInt32(hex.Substring(4, 2), 16);
-                int bgr = (b << 16) + (g << 8) + r;
-
-                sb.Write(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0\shplid1025{\sp{\sn shapeType}{\sv 1}}{\sp{\sn fFlipH}{\sv 0}}{\sp{\sn fFlipV}{\sv 0}}{\sp{\sn fillColor}{\sv ");
-                sb.Write(bgr);
-                sb.Write(@"}}{\sp{\sn fFilled}{\sv 1}}{\sp{\sn lineWidth}{\sv 0}}{\sp{\sn fLine}{\sv 0}}{\sp{\sn bWMode}{\sv 9}}{\sp{\sn fBackground}{\sv 1}}{\sp{\sn fLayoutInCell}{\sv 1}}}}}");
-                sb.WriteLine();
-                sb.WriteLine(@"\viewbksp1");
-            }
-        }
-    }
+    }    
 }
