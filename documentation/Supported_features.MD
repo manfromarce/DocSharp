@@ -36,6 +36,7 @@
 | Revisions | ❌ | ❌ | - | - | ⏳ |
 | Mail merge | ❌ | - | - | - | ❌ |
 | Macros | ❌ | - | - | - | ❌ |
+| Document background | 🟡[12] | 🟡[13] | - | - | ⏳ |
 | Document information (title, author, ...) | ✅ | ❌ | - | - | ⏳ |
 | Document settings and protection | 🟡 | - | - | - | ❌ |
 
@@ -69,6 +70,11 @@ floating objects are ignored to prevent layout issues.
 
 [11]: Modern text effects are not supported in RTF and removed by Microsoft Word too.
 
+[12]: Most background types are supported in DOCX to RTF conversion, including solid colors, gradients, patterns, textures and pictures.  
+Only watermarks are not supported because they require full VML support in order to translate text paths.
+
+[13]: Only solid background is supported.
+
 ## RTF converters
 
 | Feature       | ➡️ HTML | ➡️ Markdown | ➡️ TXT | ➡️ DOCX |
@@ -81,7 +87,7 @@ floating objects are ignored to prevent layout issues.
 | External pictures | ✅ | ✅ | - | ⏳ |
 | Lists | 🟡 | 🟡 | 🟡 | ⏳ |
 | Tables | ✅ | 🟡 | 🟡 | ⏳ |
-| Styles | 🟡[12] | 🟡[12] | - | ⏳ |
+| Styles | 🟡[14] | 🟡[14] | - | ⏳ |
 | Hyperlinks | ✅ | ✅ | - | ⏳ |
 | Bookmarks | ✅ | ✅ | - | ⏳ |
 | Header and footer | 🟡 | 🟡 | 🟡 | ⏳ |
@@ -94,9 +100,11 @@ floating objects are ignored to prevent layout issues.
 | Math | ❌ | ❌ | ❌ | ⏳ |
 | OLE objects | - | - | - | ⏳ |
 | Comments | - | - | - | ⏳ |
+| Document background | ❌ | - | - | ⏳ |
 | Document information | 🟡 | - | - | ⏳ |
+| Document settings and protection | - | - | - | ⏳ |
 
-[12] preserved as inline formatting if possible.  
+[14] preserved as inline formatting if possible.  
 
 ## Markdown renderers
 
@@ -106,14 +114,14 @@ floating objects are ignored to prevent layout issues.
 | Paragraphs | ✅ | ✅ |
 | Headings | ✅ | ✅ |
 | Emojis | ✅ | ✅ |
-| Inline code blocks [13] | ✅ | ✅ |
-| Fenced code blocks [13] | ✅ | ✅ |
+| Inline code blocks [15] | ✅ | ✅ |
+| Fenced code blocks [15] | ✅ | ✅ |
 | Syntax highlight for code blocks | ❌ | ❌ |
-| Quote blocks [13] | ✅ | ✅ |
-| Lists [13] | ✅ | ✅ |
+| Quote blocks [15] | ✅ | ✅ |
+| Lists [15] | ✅ | ✅ |
 | Task lists | ✅ | ✅ |
 | Breaks | ✅ | ✅ |
-| Pictures [14] | ✅ | ✅ |
+| Pictures [16] | ✅ | ✅ |
 | Links | ✅ | ✅ |
 | Bookmarks on headings | ✅ | ✅ |
 | HTML inline tags | 🟡 | ❌ |
@@ -125,9 +133,9 @@ floating objects are ignored to prevent layout issues.
 | Definition lists | ❌ | ❌ |
 | Figures | ❌ | ❌ |
 
-[13]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
+[15]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
 
-[14]: WebP, AVIF and JXL images are not supported in DOCX and RTF, and GIF is also not supported in RTF.  
+[16]: WebP, AVIF and JXL images are not supported in DOCX and RTF, and GIF is also not supported in RTF.  
 JPEG and PNG have the broadest support. To convert other images, you can use the DocSharp.ImageSharp or DocSharp.SystemDrawing package or set the ImageConverter property on a custom converter which returns PNG bytes.  
 The ImagesBaseUri property has to be set in order to support relative URLs, otherwise only images referenced with absolute URLs are processed (see the wiki or sample app for examples).  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.

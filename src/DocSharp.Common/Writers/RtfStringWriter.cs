@@ -64,4 +64,68 @@ public sealed class RtfStringWriter : BaseStringWriter
     {
         Write(color.ToRtfColor());
     }
+
+    public void WriteShapeProperty(string name, string value)
+    {
+        Write(@"{\sp{\sn ");
+        Write(name);
+        Write(@"}{\sv ");
+        Write(value);
+        Write("}}");
+    }
+
+    public void WriteShapeProperty(string name, bool value)
+    {
+        WriteShapeProperty(name, value ? 1 : 0);
+    }
+
+    public void WriteShapeProperty(string name, int value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, long value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, double value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, float value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, decimal value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, short value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, uint value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, ulong value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, ushort value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
+
+    public void WriteShapeProperty(string name, byte value)
+    {
+        WriteShapeProperty(name, value.ToStringInvariant());
+    }
 }
