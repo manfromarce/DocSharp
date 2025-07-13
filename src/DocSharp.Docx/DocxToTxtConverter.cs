@@ -230,7 +230,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
-        sb.WriteText(text.InnerText, font, sb);
+        sb.WriteText(text.InnerText, font);
     }
 
     internal override void ProcessParagraph(Paragraph paragraph, TxtStringWriter sb)
@@ -323,7 +323,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                         if (levelText?.Value != null)
                         {
                             string font = runPr?.RunFonts?.Ascii?.Value ?? string.Empty;
-                            sb.WriteText(levelText.Value, font, sb);
+                            sb.WriteText(levelText.Value, font);
                         }
                         else
                         {
