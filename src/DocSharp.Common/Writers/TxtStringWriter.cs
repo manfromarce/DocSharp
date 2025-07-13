@@ -6,11 +6,11 @@ namespace DocSharp.Writers;
 
 public sealed class TxtStringWriter : BaseStringWriter
 {
-    public void WriteText(string text, string fontName, TxtStringWriter sb)
+    public void WriteText(string text, string fontName)
     {
         foreach (char c in text)
         {
-            sb.Write(FontConverter.ToUnicode(fontName, c));
+            Write(FontConverter.ToUnicode(fontName, c));
         }
     }
 }

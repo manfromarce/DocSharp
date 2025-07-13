@@ -230,7 +230,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
-        sb.WriteText(text.InnerText, font, sb);
+        sb.WriteText(text.InnerText, font);
     }
 
     internal override void ProcessParagraph(Paragraph paragraph, TxtStringWriter sb)
@@ -323,7 +323,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                         if (levelText?.Value != null)
                         {
                             string font = runPr?.RunFonts?.Ascii?.Value ?? string.Empty;
-                            sb.WriteText(levelText.Value, font, sb);
+                            sb.WriteText(levelText.Value, font);
                         }
                         else
                         {
@@ -333,7 +333,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                     else 
                     {
                         // Numbered list
-                        string numberString = GetNumberString(levelText, listType, numberingId, levelIndex);
+                        string numberString = ListHelpers.GetNumberString(levelText, listType, numberingId, levelIndex, _listLevelCounters);
                         sb.Write(numberString);
                     }
 
@@ -350,45 +350,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                 }
             }
         }
-    }
-
-    internal string GetNumberString(string? levelText, EnumValue<NumberFormatValues> listType, int numberingId, int levelIndex)
-    {
-        if (listType == NumberFormatValues.Bullet)
-        {
-            return "•";
-        }
-
-        if (levelText != null)
-        {
-            string formattedText = levelText;
-            foreach (var kvp in _listLevelCounters.Where(k => k.Key.NumberingId == numberingId))
-            {
-                var placeholder = kvp.Key.LevelIndex + 1;
-                string value = kvp.Value.ToString();
-                if (listType == NumberFormatValues.LowerLetter)
-                {
-                    value = ListHelpers.NumberToLetter(kvp.Value, false);
-                }
-                else if (listType == NumberFormatValues.UpperLetter)
-                {
-                    value = ListHelpers.NumberToLetter(kvp.Value, true);
-                }
-                else if (listType == NumberFormatValues.LowerRoman)
-                {
-                    value = ListHelpers.NumberToRomanLetter(kvp.Value, false);
-                }
-                else if (listType == NumberFormatValues.UpperRoman)
-                {
-                    value = ListHelpers.NumberToRomanLetter(kvp.Value, true);
-                }
-                formattedText = formattedText.Replace($"%{placeholder}", value);
-            }
-            return formattedText;
-        }
-
-        return _listLevelCounters[(numberingId, levelIndex)].ToString();
-    }
+    }   
 
     internal override void ProcessBreak(Break br, TxtStringWriter sb)
     {

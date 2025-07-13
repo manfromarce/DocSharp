@@ -91,6 +91,10 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             ProcessDocumentBackground(bg, sb);
         }
+        // else
+        // {
+        //     sb.WriteElementString("style", @"* { white-space: pre; }");
+        // }
 
         // Process body content
         if (document.Body is Body body)
@@ -108,6 +112,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             string color = $"#{background.Color.Value}";
             sb.WriteElementString("style", $"body {{ background-color: {color}; }}");
+            // sb.WriteElementString("style", $"body {{ background-color: {color}; }} \n * {{ white-space: pre; }}");
         }
         //else if (background.Background != null)
         //{

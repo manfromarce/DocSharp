@@ -258,7 +258,7 @@ public static class FontConverter
             case '\u00FD': return "❎";
             case '\u00FE': return "✅";
             case '\u00FF': return "🪟"; // Window emoji (may not be displayed by Visual Studio)
-            default: return "";
+            default: return wingdings.ToString();
         }
     }
 
@@ -506,7 +506,7 @@ public static class FontConverter
             case '\u00F7': return "⯍";
             case '\u00F8': return "※";
             case '\u00F9': return "⁂";
-            default: return "";
+            default: return wingdings2.ToString();
         }
     }
 
@@ -745,7 +745,7 @@ public static class FontConverter
             case '\u00ef': return "🢕";
 
             case '\u00f0': return "🢗";
-            default: return "";
+            default: return wingdings3.ToString();
         }
     }
 
@@ -1000,7 +1000,7 @@ public static class FontConverter
             case '\u00FD': return "🌏";
             case '\u00FE': return "🌎";
             case '\u00FF': return "🕊";
-            default: return "";
+            default: return webdings.ToString();
         }
     }
 
@@ -1217,7 +1217,7 @@ public static class FontConverter
             case '\u00FC': return "⎫";
             case '\u00FD': return "⎬";
             case '\u00FE': return "⎭";
-            default: return "";
+            default: return symbol.ToString();
         }
     }
 
@@ -1243,6 +1243,10 @@ public static class FontConverter
     /// <returns></returns>
     public static string ToUnicode(string fontName, char symbol)
     {
+        if (char.IsControl(symbol))
+        {
+            return symbol.ToString();
+        }
         switch (fontName.ToLowerInvariant())
         {
             case "wingdings":

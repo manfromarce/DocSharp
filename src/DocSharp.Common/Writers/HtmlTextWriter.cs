@@ -571,19 +571,14 @@ public sealed class HtmlTextWriter : XmlWriter
 
     public void Write(string val, string font)
     {
-        if (val == "\r")
-        {
-            // Ignore as it's usually followed by \n
-        }
-        else if (val == "\n")
-        {
-            WriteBreak();
-        }
-        else
-        {
-            string s = FontConverter.ToUnicode(font, val);
-            WriteString(s);
-        }
+        string s = FontConverter.ToUnicode(font, val);
+        WriteString(s);
+    }
+
+    public void Write(char c, string font)
+    {
+        string s = FontConverter.ToUnicode(font, c);
+        WriteString(s);
     }
 
     public void WriteString(char c)
@@ -593,7 +588,7 @@ public sealed class HtmlTextWriter : XmlWriter
 
     public override void WriteString(string? text)
     {
-        text = text ?? "";
+        text ??= string.Empty;
         if (_state == InternalState.AttributeStart)
         {
             if (text.Length <= 0)
@@ -609,7 +604,10 @@ public sealed class HtmlTextWriter : XmlWriter
                 switch (text[i])
                 {
                     case '&': WriteInternal("&amp;"); break;
+                    case '\t': WriteInternal("&#x2001;"); break;
                     case '\u00a0': WriteInternal("&nbsp;"); break;
+                    case '\u2002': WriteInternal("&ensp;"); break;
+                    case '\u2003': WriteInternal("&emsp;"); break;
                     case '\u2007': WriteInternal("&#8199;"); break;
                     case '>': WriteInternal("&gt;"); break;
                     case '<': WriteInternal("&lt;"); break;
@@ -625,6 +623,7 @@ public sealed class HtmlTextWriter : XmlWriter
                         else
                             WriteInternal("'");
                         break;
+                    case '\r': break; // ignore as it's usually followed by \n
                     case '\n': WriteInternal(_settings.NewLineChars); break;
                     default: WriteInternal(text[i]); break;
                 }
@@ -653,10 +652,14 @@ public sealed class HtmlTextWriter : XmlWriter
                     switch (text[i])
                     {
                         case '&': _writer.Write("&amp;"); break;
+                        case '\t': _writer.Write("&x2001;"); break;
                         case '\u00a0': _writer.Write("&nbsp;"); break;
-                        case '\u2007': WriteInternal("&#8199;"); break;
+                        case '\u2002': _writer.Write("&ensp;"); break;
+                        case '\u2003': _writer.Write("&emsp;"); break;
+                        case '\u2007': _writer.Write("&#8199;"); break;
                         case '>': _writer.Write("&gt;"); break;
                         case '<': _writer.Write("&lt;"); break;
+                        case '\r': break; // ignore
                         case '\n': _writer.Write(_settings.NewLineChars); break;
                         default: _writer.Write(text[i]); break;
                     }

@@ -10,7 +10,7 @@
 | Page setup   | ✅ | - | - | - | ⏳ |
 | Columns | ✅ | ✅ | ❌ | ❌ |⏳ |
 | Pictures [1] | ✅ | ✅ | ✅ | - | ⏳ |
-| Lists | ✅ | ❌ | ✅[2] | ✅[2] | ⏳ |
+| Lists | ✅ | ✅ | ✅[2] | ✅[2] | ⏳ |
 | Tables [3]  | ✅ | ✅ | 🟡 | 🟡 | ⏳ |
 | Styles [4] | 🟡 | 🟡 | 🟡 | - | ⏳ |
 | Header and footer | ✅ | ✅ | ✅ | ✅ | ⏳ |

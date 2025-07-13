@@ -60,8 +60,12 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         //var numberSpacing = OpenXmlHelpers.GetEffectiveProperty<W14.NumberSpacing>(run);
 
         // Build CSS style string
-        var styles = new List<string>();
-        if (!string.IsNullOrEmpty(font) && !FontConverter.IsNonUnicodeFont(font!)) // non unicode fonts will be converted in ProcessText
+        var styles = new List<string>
+        {
+            "white-space: pre;"
+        };
+
+        if (!string.IsNullOrEmpty(font) && !FontConverter.IsNonUnicodeFont(font!)) // some special fonts will be converted in ProcessText
         {
             styles.Add($"font-family: {font};");
         }
