@@ -10,6 +10,7 @@ using DocSharp.Writers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using V = DocumentFormat.OpenXml.Vml;
 
 namespace DocSharp.Docx;
 
@@ -387,8 +388,26 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
         }
     }
 
-    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb) 
-    { 
+    internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb)
+    {
+        if (picture.Descendants<TextBoxContent>().FirstOrDefault() is TextBoxContent txbxContent)
+        {
+            foreach (var element in txbxContent.Elements())
+            {
+                ProcessBodyElement(element, sb);
+            }
+        }
+        else if (picture.Descendants<V.Shape>() is V.Shape shape &&
+                 shape.GetFirstChild<V.TextPath>() is V.TextPath textPath &&
+                 textPath.String?.Value != null)
+        {
+            EnsureSpace(sb);
+            ProcessText(new Text(textPath.String.Value), sb);
+        }
+    }
+
+    internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb)
+    {
         if (this.ExportFootnotesEndnotes)
         {
             base.ProcessFootnoteReference(footnoteReference, sb);
@@ -421,11 +440,12 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, TxtStringWriter sb) { }
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, TxtStringWriter sb) { }
+    internal override void ProcessCommentStart(CommentRangeStart commentStart, TxtStringWriter sb) { }
+    internal override void ProcessCommentEnd(CommentRangeEnd commentEnd, TxtStringWriter sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, TxtStringWriter sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, TxtStringWriter sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, TxtStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, TxtStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber pageNumber, TxtStringWriter sb) { }
-    internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb) { }
 
 }

@@ -10,6 +10,33 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
+    internal override void ProcessSimpleField(SimpleField field, RtfStringWriter sb)
+    {
+        sb.WriteLine(@"{\field");
+        if (field.Instruction?.Value != null)
+        {
+            // // TODO: FieldData
+            // if (field.FieldData != null)
+            // {
+            // }
+
+            // Open field instruction group
+            sb.Write(@"{\*\fldinst {");
+
+            // Write field instruction code. Fields may contain special characters such as '\' that need to be escaped.
+            sb.WriteRtfEscaped(field.Instruction.Value);
+
+            // Close field instruction group and open field result group.
+            sb.Write(@"}}{\fldrslt {"); 
+
+            // Process field result content
+            base.ProcessSimpleField(field, sb); 
+
+            // Close field result group and field destination.
+            sb.WriteLine("}}}"); 
+        }
+    }
+
     internal override void ProcessFieldChar(FieldChar fieldChar, RtfStringWriter sb)
     {
         // Note: the content between the begin, separate and end parts is not processed here.
@@ -27,20 +54,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write("\\flddirty");
                 }
 
-                //if (fieldChar.FieldData != null)
-                //{
-                //    // Custom field data (base64 binary value)
-                //    sb.Append(@"{{\*\datafield ");
-                //    // ...
-                //    sb.Append(@"}}");
-                //}
-
                 if (fieldChar.FormFieldData != null)
                 {
                     // The field is a form field
                     sb.Write(@"{{\*\formfield ");
 
-                    if (fieldChar.FormFieldData.GetFirstChild<Enabled>() is Enabled enabled && 
+                    if (fieldChar.FormFieldData.GetFirstChild<Enabled>() is Enabled enabled &&
                         enabled.Val != null && !enabled.Val)
                     {
                         // Disabled
@@ -237,12 +256,25 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write(@"}}");
                 }
 
+                // TODO: FieldData, NumberingChange
+                //if (fieldChar.FieldData != null)
+                //{
+                //    // Custom field data (base64 binary value)
+                //    sb.Append(@"{{\*\datafield ");
+                //    // ...
+                //    sb.Append(@"}}");
+                //}
+
+                // if (fieldChar.NumberingChange != null)
+                // {
+                // }
+
                 sb.Write(@"{\*\fldinst {"); // Open field instruction group.
                 //The last bracket is closed by the parent Run
             }
             else if (fieldChar.FieldCharType == FieldCharValues.Separate)
             {
-                sb.Write(@"}}{\fldrslt {"); // Close field instruction and open field result group.
+                sb.Write(@"}}{\fldrslt {"); // Close field instruction group and open field result group.
                 //The last bracket is closed by the parent Run.
             }
             else if (fieldChar.FieldCharType == FieldCharValues.End)

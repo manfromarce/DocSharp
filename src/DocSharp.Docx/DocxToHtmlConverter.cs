@@ -82,7 +82,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             }
         }
     }
-   
+
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
         sb.WriteHtmlHeader(document.MainDocumentPart?.OpenXmlPackage.PackageProperties.Title);
@@ -316,9 +316,28 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         if (shading != null && shading.Fill?.Value is string fill && fill.Length == 6)
         {
             styles.Add($"background-color: #{fill};");
-
             // Not supported: foreground (pattern)
         }
+    }
+
+    internal override void ProcessRuby(Ruby ruby, HtmlTextWriter writer)
+    {
+        writer.WriteStartElement("ruby");
+        base.ProcessRuby(ruby, writer); // Processes RubyBase
+        if (ruby.RubyContent != null)
+        {
+            writer.WriteStartElement("rt");
+            // TODO: <rp> element for browsers that don't support Ruby
+            foreach (var element in ruby.RubyContent.Elements())
+            {
+                ProcessRubyElement(element, writer);
+            }
+            writer.WriteEndElement("rt");
+        }
+        writer.WriteEndElement("ruby");
+        // if (ruby.RubyProperties != null)
+        // {
+        // }
     }
 
     internal override void ProcessPageNumber(PageNumber pageNumber, HtmlTextWriter sb)
@@ -336,4 +355,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     internal override void ProcessFieldCode(FieldCode field, HtmlTextWriter sb)
     {
     }
+    
+    internal override void ProcessCommentStart(CommentRangeStart commentStart, HtmlTextWriter sb) { }
+    internal override void ProcessCommentEnd(CommentRangeEnd commentEnd, HtmlTextWriter sb) { }
 }

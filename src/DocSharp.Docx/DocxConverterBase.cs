@@ -74,6 +74,7 @@ public abstract class DocxConverterBase<TOutput>
 
     internal virtual void ProcessBodyElement(OpenXmlElement element, TOutput sb)
     {
+        // Body, table cells, header, footer, endnotes, footnotes, comments and text boxes can contain mostly the same elements.
         switch (element)
         {
             case Paragraph paragraph:
@@ -88,23 +89,48 @@ public abstract class DocxConverterBase<TOutput>
             case BookmarkEnd bookmarkEnd:
                 ProcessBookmarkEnd(bookmarkEnd, sb);
                 break;
+            case CommentRangeStart commentStart:
+                ProcessCommentStart(commentStart, sb);
+                break;
+            case CommentRangeEnd commentEnd:
+                ProcessCommentEnd(commentEnd, sb);
+                break;
             case SdtBlock sdtBlock:
                 ProcessSdtBlock(sdtBlock, sb);
+                break;
+            case ContentPart contentPart:
+                ProcessContentPart(contentPart, sb);
+                break;
+            case CustomXmlBlock customXmlBlock:
+                ProcessCustomXmlBlock(customXmlBlock, sb);
+                break;
+            case AltChunk altChunk:
+                ProcessAltChunk(altChunk, sb);
+                break;
+            case AlternateContent alternateContent:
+                if (alternateContent.GetFirstChild<AlternateContentChoice>() is AlternateContentChoice choice)
+                {
+                    foreach (var choiceElement in choice.Elements())
+                    {
+                        ProcessBodyElement(choiceElement, sb);
+                    }
+                }
                 break;
         }
     }
 
     internal virtual void ProcessParagraph(Paragraph paragraph, TOutput sb)
     {
-        foreach(var element in paragraph.Elements())
+        // Specific converters should override this method to process paragraph properties.
+        foreach (var element in paragraph.Elements())
         {
             ProcessParagraphElement(element, sb);
         }
     }
 
-    // Used for paragraphs and other composite elements
     internal virtual void ProcessParagraphElement(OpenXmlElement element, TOutput sb)
     {
+        // Paragraphs, hyperlinks and others can contain these elements.
         switch (element)
         {
             case Run run:
@@ -115,6 +141,12 @@ public abstract class DocxConverterBase<TOutput>
                 break;
             case BookmarkEnd bookmarkEnd:
                 ProcessBookmarkEnd(bookmarkEnd, sb);
+                break;
+            case CommentRangeStart commentStart:
+                ProcessCommentStart(commentStart, sb);
+                break;
+            case CommentRangeEnd commentEnd:
+                ProcessCommentEnd(commentEnd, sb);
                 break;
             case Picture picture:
                 ProcessVml(picture, sb);
@@ -143,8 +175,27 @@ public abstract class DocxConverterBase<TOutput>
             case ContentPart contentPart:
                 ProcessContentPart(contentPart, sb);
                 break;
+            case CustomXmlRun customXmlRun:
+                ProcessCustomXmlRun(customXmlRun, sb);
+                break;
+            case SubDocumentReference subDocReference:
+                ProcessSubDocumentReference(subDocReference, sb);
+                break;
+            // TODO: 
+            // case BidirectionalEmbedding bidirectionalEmbedding:
+            // case BidirectionalOverride bidirectionalOverride:
+            // break;
+            case AlternateContent alternateContent:
+                if (alternateContent.GetFirstChild<AlternateContentChoice>() is AlternateContentChoice choice)
+                {
+                    foreach (var choiceElement in choice.Elements())
+                    {
+                        ProcessParagraphElement(choiceElement, sb);
+                    }
+                }
+                break;
             default:
-                if (element.NamespaceUri.Equals(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase))
+                if (element.IsMathElement())
                 {
                     ProcessMathElement(element, sb);
                 }
@@ -152,11 +203,148 @@ public abstract class DocxConverterBase<TOutput>
         }
     }
 
+    internal virtual void ProcessTable(Table table, TOutput sb)
+    {
+        foreach (var element in table.Elements())
+        {
+            ProcessTableElement(element, sb);
+        }
+    }
+
+    internal virtual void ProcessTableElement(OpenXmlElement element, TOutput sb)
+    {
+        // Specific converters should override this method to process TableProperties and TableGrid if necessary.
+        switch (element)
+        {
+            case BookmarkStart bookmarkStart:
+                ProcessBookmarkStart(bookmarkStart, sb);
+                break;
+            case BookmarkEnd bookmarkEnd:
+                ProcessBookmarkEnd(bookmarkEnd, sb);
+                break;
+            case CommentRangeStart commentStart:
+                ProcessCommentStart(commentStart, sb);
+                break;
+            case CommentRangeEnd commentEnd:
+                ProcessCommentEnd(commentEnd, sb);
+                break;
+            case ContentPart contentPart:
+                ProcessContentPart(contentPart, sb);
+                break;
+            case TableRow tableRow:
+                ProcessTableRow(tableRow, sb);
+                break;
+            case SdtRow sdtRow:
+                ProcessSdtRow(sdtRow, sb);
+                break;
+            case CustomXmlRow customXmlRow:
+                ProcessCustomXmlRow(customXmlRow, sb);
+                break;
+            case AlternateContent alternateContent:
+                if (alternateContent.GetFirstChild<AlternateContentChoice>() is AlternateContentChoice choice)
+                {
+                    foreach (var choiceElement in choice.Elements())
+                    {
+                        ProcessTableElement(choiceElement, sb);
+                    }
+                }
+                break;
+        }
+    }
+
+    internal virtual void ProcessTableRow(TableRow tableRow, TOutput sb)
+    {
+        foreach (var element in tableRow.Elements())
+        {
+            ProcessTableRowElement(element, sb);
+        }
+    }
+
+    internal virtual void ProcessTableRowElement(OpenXmlElement element, TOutput sb)
+    {
+        // Specific converters should override this method to process TableRowProperties and TablePropertyExceptions if necessary.
+        switch (element)
+        {
+            case TableCell tableCell:
+                ProcessTableCell(tableCell, sb);
+                break;
+            case SdtCell sdtCell:
+                ProcessSdtCell(sdtCell, sb);
+                break;
+            case CustomXmlCell customXmlCell:
+                ProcessCustomXmlCell(customXmlCell, sb);
+                break;
+            case BookmarkStart bookmarkStart:
+                ProcessBookmarkStart(bookmarkStart, sb);
+                break;
+            case BookmarkEnd bookmarkEnd:
+                ProcessBookmarkEnd(bookmarkEnd, sb);
+                break;
+            case CommentRangeStart commentStart:
+                ProcessCommentStart(commentStart, sb);
+                break;
+            case CommentRangeEnd commentEnd:
+                ProcessCommentEnd(commentEnd, sb);
+                break;
+            case ContentPart contentPart:
+                ProcessContentPart(contentPart, sb);
+                break;
+            case AlternateContent alternateContent:
+                if (alternateContent.GetFirstChild<AlternateContentChoice>() is AlternateContentChoice choice)
+                {
+                    foreach (var choiceElement in choice.Elements())
+                    {
+                        ProcessTableRowElement(choiceElement, sb);
+                    }
+                }
+                break;
+        }
+    }
+    
+    internal virtual void ProcessTableCell(TableCell tableCell, TOutput sb)
+    {
+        // Specific converters should override this method to process TableCellProperties.
+        foreach (var element in tableCell.Elements())
+        {
+            ProcessBodyElement(element, sb);
+        }
+    }
+
+    internal virtual void ProcessSubDocumentReference(SubDocumentReference subDocReference, TOutput sb)
+    {
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.subdocumentreference?view=openxml-3.0.1
+    }
+
+    internal virtual void ProcessAltChunk(AltChunk altChunk, TOutput sb)
+    {
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.altchunk?view=openxml-3.0.1
+        // Override if supported in the output format.
+    }
+
     internal virtual void ProcessContentPart(ContentPart contentPart, TOutput sb)
     {
         // This element specifies a reference to XML content in a format not defined by Open XML,
         // such as MathML, SVG or SMIL.
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.presentation.contentpart?view=openxml-3.0.1
         // Override if supported in the output format.
+    }
+
+    internal virtual void ProcessRun(Run run, TOutput sb)
+    {
+        // Specific converters should override this method to process run properties.
+        foreach (var element in run.Elements())
+        {
+            ProcessRunElement(element, sb);
+        }
+    }
+
+    internal virtual void ProcessHyperlink(Hyperlink hyperlink, TOutput sb)
+    {
+        // Specific converters should override this method to process the hyperlink target and other properties.
+        foreach (var element in hyperlink.Elements())
+        {
+            ProcessParagraphElement(element, sb);
+        }
     }
 
     internal virtual bool ProcessRunElement(OpenXmlElement? element, TOutput sb)
@@ -317,51 +505,21 @@ public abstract class DocxConverterBase<TOutput>
 
     internal virtual void ProcessSimpleField(SimpleField field, TOutput sb)
     {
+        // Individual converters should override this method to process the Instruction and FieldData attributes.
         foreach (var element in field.Elements())
         {
             ProcessParagraphElement(element, sb);
         }
     }
 
-    internal virtual void ProcessSdtRun(SdtRun sdtRun, TOutput sb)
-    {
-        if (sdtRun.SdtContentRun != null)
-        {
-            foreach (var element in sdtRun.Elements())
-            {
-                switch (element)
-                {
-                    case BookmarkStart bookmarkStart:
-                        ProcessBookmarkStart(bookmarkStart, sb);
-                        break;
-                    case BookmarkEnd bookmarkEnd:
-                        ProcessBookmarkEnd(bookmarkEnd, sb);
-                        break;
-                }
-            }
-            foreach (var element in sdtRun.SdtContentRun.Elements())
-            {
-                ProcessParagraphElement(element, sb);
-            }
-        }
-    }
-
     internal virtual void ProcessSdtBlock(SdtBlock sdtBlock, TOutput sb)
     {
+        // Specifies the presence of a structured document tag around one or more block-level structures (paragraphs, tables, ...). 
+        // The sdtPr and sdtContent child elements are used to specify the properties and content of the structured document tag, respectively.
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.SdtBlock?view=openxml-3.0.1
+        ProcessSdtElement(sdtBlock, sb);
         if (sdtBlock.SdtContentBlock != null)
         {
-            foreach (var element in sdtBlock.Elements())
-            {
-                switch (element)
-                {
-                    case BookmarkStart bookmarkStart:
-                        ProcessBookmarkStart(bookmarkStart, sb);
-                        break;
-                    case BookmarkEnd bookmarkEnd:
-                        ProcessBookmarkEnd(bookmarkEnd, sb);
-                        break;
-                }
-            }
             foreach (var element in sdtBlock.SdtContentBlock.Elements())
             {
                 ProcessBodyElement(element, sb);
@@ -369,36 +527,178 @@ public abstract class DocxConverterBase<TOutput>
         }
     }
 
+    internal virtual void ProcessSdtRun(SdtRun sdtRun, TOutput sb)
+    {
+        // Specifies the presence of a structured document tag around one or more inline-level structures (runs, images, fields, ...). 
+        // The sdtPr and sdtContent child elements are used to specify the properties and content of the structured document tag, respectively.
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.SdtRun?view=openxml-3.0.1
+        ProcessSdtElement(sdtRun, sb);
+        if (sdtRun.SdtContentRun != null)
+        {
+            foreach (var element in sdtRun.SdtContentRun.Elements())
+            {
+                ProcessParagraphElement(element, sb);
+            }
+        }
+    }
+
+    internal virtual void ProcessSdtRow(SdtRow sdtRow, TOutput sb)
+    {
+        // Specifies the presence of a structured document tag around a single table row.
+        // The sdtPr and sdtContent child elements are used to specify the properties and content of the structured document tag, respectively.
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.SdtRow?view=openxml-3.0.1
+        ProcessSdtElement(sdtRow, sb);
+        if (sdtRow.SdtContentRow != null)
+        {
+            foreach (var element in sdtRow.SdtContentRow.Elements())
+            {
+                ProcessTableElement(element, sb);
+            }
+        }
+    }
+
+    internal virtual void ProcessSdtCell(SdtCell sdtCell, TOutput sb)
+    {
+        // Specifies the presence of a structured document tag around a single table cell.
+        // The sdtPr and sdtContent child elements are used to specify the properties and content of the structured document tag, respectively.
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.SdtCell?view=openxml-3.0.1
+        ProcessSdtElement(sdtCell, sb);
+        if (sdtCell.SdtContentCell != null)
+        {
+            foreach (var element in sdtCell.SdtContentCell.Elements())
+            {
+                ProcessTableRowElement(element, sb);
+            }
+        }
+    }
+
+    internal virtual void ProcessSdtElement(SdtElement sdtElement, TOutput sb)
+    {
+        // SdtBlock, SdtRun, SdtTable, SdtRow and SdtCell inherit from SdtElement and can contain mostly the same elements,
+        // except for the content (SdtContentBlock, SdtContentRun, ...).
+        foreach (var element in sdtElement.Elements())
+        {
+            switch (element)
+            {
+                case BookmarkStart bookmarkStart:
+                    ProcessBookmarkStart(bookmarkStart, sb);
+                    break;
+                case BookmarkEnd bookmarkEnd:
+                    ProcessBookmarkEnd(bookmarkEnd, sb);
+                    break;
+                case CommentRangeStart commentStart:
+                    ProcessCommentStart(commentStart, sb);
+                    break;
+                case CommentRangeEnd commentEnd:
+                    ProcessCommentEnd(commentEnd, sb);
+                    break;
+            }
+        }
+        // Specific converters can override this method to process SdtProperties and SdtEndCharProperties if necessary.
+    }
+
+    internal virtual void ProcessCustomXmlBlock(CustomXmlBlock customXmlBlock, TOutput sb)
+    {
+        // Specifies the presence of a custom XML element around one or more block level structures (paragraphs, tables, ...).
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.customxmlblock?view=openxml-3.0.1
+        foreach (var element in customXmlBlock)
+        {
+            ProcessBodyElement(customXmlBlock, sb);
+        }
+        // Specific converters can override this method to process CustomXmlProperties and Element.
+    }
+
+    internal virtual void ProcessCustomXmlRun(CustomXmlRun customXmlRun, TOutput sb)
+    {
+        // Specifies the presence of a custom XML element around one or more inline level structures (runs, images, fields, ...) within a paragraph.
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.customxmlrun?view=openxml-3.0.1
+        foreach (var element in customXmlRun)
+        {
+            ProcessParagraphElement(element, sb);
+        }
+        // Specific converters can override this method to process CustomXmlProperties and Element.
+    }
+
+    internal virtual void ProcessCustomXmlRow(CustomXmlRow customXmlRow, TOutput sb)
+    {
+        // Specifies the presence of a custom XML element around a single table row. 
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.customxmlrow?view=openxml-3.0.1
+        foreach (var element in customXmlRow)
+        {
+            ProcessTableElement(element, sb);
+        }
+        // Specific converters can override this method to process CustomXmlProperties and Element.
+    }
+
+    internal virtual void ProcessCustomXmlCell(CustomXmlCell customXmlRow, TOutput sb)
+    {
+        // Specifies the presence of a custom XML element around a single table cell. 
+        // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.customxmlcell?view=openxml-3.0.1
+        foreach (var element in customXmlRow)
+        {
+            ProcessTableRowElement(element, sb);
+        }
+        // Specific converters can override this method to process CustomXmlProperties and Element.
+    }
+
     internal virtual void ProcessRuby(Ruby ruby, TOutput sb)
     {
         // Only the base content is currently handled.
-        // Converters can override this method and process the guide text (RubyContent).
+        // Converters can override this method and process the guide text (RubyContent) and RubyProperties.
         if (ruby.RubyBase != null)
         {
             foreach (var element in ruby.RubyBase.Elements())
             {
-                switch (element)
-                {
-                    case HyperlinkRuby hyperlink:
-                        ProcessHyperlinkRuby(hyperlink, sb);
-                        break;
-                    case SdtRunRuby sdtRun:
-                        ProcessSdtRunRuby(sdtRun, sb);
-                        break;
-                    case SimpleFieldRuby simpleField:
-                        ProcessSimpleFieldRuby(simpleField, sb);
-                        break;
-                    case Run run:
-                        ProcessRun(run, sb);
-                        break;
-                    case BookmarkStart bookmarkStart:
-                        ProcessBookmarkStart(bookmarkStart, sb);
-                        break;
-                    case BookmarkEnd bookmarkEnd:
-                        ProcessBookmarkEnd(bookmarkEnd, sb);
-                        break;
-                }
+                ProcessRubyElement(element, sb);
             }
+        }
+        // TODO: we could put the guide text between parentheses by default for formats that don't support Ruby.
+    }
+
+    internal virtual void ProcessRubyElement(OpenXmlElement element, TOutput sb)
+    {
+        // Both RubyContent and RubyBase inherit from RubyContentType and can contain mostly the same elements.
+        switch (element)
+        {
+            case HyperlinkRuby hyperlink:
+                ProcessHyperlinkRuby(hyperlink, sb);
+                break;
+            case SdtRunRuby sdtRun:
+                ProcessSdtRunRuby(sdtRun, sb);
+                break;
+            case CustomXmlRuby customXmlRuby:
+                ProcessCustomXmlRuby(customXmlRuby, sb);
+                break;
+            case SimpleFieldRuby simpleField:
+                ProcessSimpleFieldRuby(simpleField, sb);
+                break;
+            case Run run:
+                ProcessRun(run, sb);
+                break;
+            case BookmarkStart bookmarkStart:
+                ProcessBookmarkStart(bookmarkStart, sb);
+                break;
+            case BookmarkEnd bookmarkEnd:
+                ProcessBookmarkEnd(bookmarkEnd, sb);
+                break;
+            case ContentPart contentPart:
+                ProcessContentPart(contentPart, sb);
+                break;
+            case AlternateContent alternateContent:
+                if (alternateContent.GetFirstChild<AlternateContentChoice>() is AlternateContentChoice choice)
+                {
+                    foreach (var choiceElement in choice.Elements())
+                    {
+                        ProcessRubyElement(choiceElement, sb);
+                    }
+                }
+                break;
+            default:
+                if (element.IsMathElement())
+                {
+                    ProcessMathElement(element, sb);
+                }
+                break;
         }
     }
 
@@ -418,6 +718,12 @@ public abstract class DocxConverterBase<TOutput>
     {
         var field = new SimpleField(fieldRuby.OuterXml);
         ProcessSimpleField(field, sb);
+    }
+
+    internal virtual void ProcessCustomXmlRuby(CustomXmlRuby customXmlRuby, TOutput sb)
+    {
+        var customXml = new CustomXmlRun(customXmlRuby.OuterXml);
+        ProcessCustomXmlRun(customXml, sb);
     }
 
     internal virtual void ProcessEmbeddedObject(EmbeddedObject obj, TOutput sb)
@@ -623,14 +929,13 @@ public abstract class DocxConverterBase<TOutput>
 
     internal abstract void EnsureSpace(TOutput sb);
 
-    internal abstract void ProcessRun(Run run, TOutput sb);
     internal abstract void ProcessBreak(Break @break, TOutput sb);
     internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, TOutput sb);
     internal abstract void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, TOutput sb);
-    internal abstract void ProcessHyperlink(Hyperlink hyperlink, TOutput sb);
+    internal abstract void ProcessCommentStart(CommentRangeStart commentStart, TOutput sb);
+    internal abstract void ProcessCommentEnd(CommentRangeEnd commentEnd, TOutput sb);
     internal abstract void ProcessDrawing(Drawing picture, TOutput sb);
     internal abstract void ProcessVml(OpenXmlElement picture, TOutput sb);
-    internal abstract void ProcessTable(Table table, TOutput sb);
     internal abstract void ProcessText(Text text, TOutput sb);
     internal abstract void ProcessFieldChar(FieldChar field, TOutput sb);
     internal abstract void ProcessFieldCode(FieldCode field, TOutput sb);

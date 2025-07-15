@@ -787,7 +787,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         sb.Write(@"\cellx" + totalWidth);
     }
 
-    internal void ProcessTableCell(TableCell cell, RtfStringWriter sb)
+    internal override void ProcessTableCell(TableCell cell, RtfStringWriter sb)
     {
         this.isInTable = true;
         foreach (var element in cell.Elements())

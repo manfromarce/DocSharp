@@ -746,5 +746,6 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     internal override void ProcessPositionalTab(PositionalTab posTab, MarkdownStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, MarkdownStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber background, MarkdownStringWriter sb) { }
-
+    internal override void ProcessCommentStart(CommentRangeStart commentStart, MarkdownStringWriter sb) { }
+    internal override void ProcessCommentEnd(CommentRangeEnd commentEnd, MarkdownStringWriter sb) { }
 }
