@@ -20,7 +20,7 @@
 | Drop cap and frame properties | ✅ | ❌ | ❌ | ❌ | ⏳ |
 | Symbols | ✅ | ✅[5] | ✅[5] | ✅[5] | ⏳ |
 | Page numbers | ✅ | ❌ | ❌ | ❌ | ⏳ |
-| Ruby | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Ruby | ❌ | ✅ | ❌ | ❌ | ❌ |
 | Modern text effects / WordArt | -[11] | 🟡[9] | ❌ | 🟡 [10] | ❌ |
 | Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[9] | ❌ | - | ❌ |
 | Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | ❌ | 🟡 [10] | ❌ |
@@ -40,8 +40,9 @@
 | Document information (title, author, ...) | ✅ | ❌ | - | - | ⏳ |
 | Document settings and protection | 🟡 | - | - | - | ❌ |
 
-[1]: Only inline images are supported. Floating and wrap-positioned images depend on DrawingML/VML shapes which are not implemented yet.  
-RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
+[1]: Wrap layouts and floating images are preserved in RTF, as well as few basic transforms (crop, flip, rotate).  
+Other converters support inline images only, without transforms/effects.  
+RTF supports JPEG, PNG, WMF and EMF formats; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
 Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  
 For Markdown, the ImagesOutputFolder has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
