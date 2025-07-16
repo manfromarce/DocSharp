@@ -28,17 +28,20 @@
 | Charts | ❌ | ❌ | ❌ | - | ❌ |
 | Diagrams | ❌ | ❌ | ❌ | - | ❌ |
 | Math | ✅ | 🟡 | ✅ | ❌ | ⏳ |
+| Ink [6] | 🟡 | 🟡 | 🟡 | - | ⏳ |
+| Signature line [6] | 🟡 | 🟡 | 🟡 | - | ⏳ |
 | OLE objects [6] | 🟡 | 🟡 | 🟡 | - | ⏳ |
 | Fields and standard parts [7] | ✅ | 🟡 | 🟡 | 🟡 | ⏳ |
 | Form fields | 🟡[8] | ❌ | - | - | ⏳ |
-| Content part (SVG, MathML, SMIL, ...) | ❌ | ✅ SVG, MathML, SMIL | ❌ | - | ⏳ |
-| Comments | ❌ | ❌ | - | - | ⏳ |
+| Comments | ✅ | ❌ | - | - | ⏳ |
 | Revisions | ❌ | ❌ | - | - | ⏳ |
 | Mail merge | ❌ | - | - | - | ❌ |
 | Macros | ❌ | - | - | - | ❌ |
 | Document background | 🟡[12] | 🟡[13] | - | - | ⏳ |
 | Document information (title, author, ...) | ✅ | ❌ | - | - | ⏳ |
 | Document settings and protection | 🟡 | - | - | - | ❌ |
+| Sub-documents | ⏳ | ❌ | ❌ | ❌ | ❌ |
+| Alternate content | ⏳ RTF, HTML | ✅ HTML, SVG, MathML, SMIL | ❌ | ❌ | ❌ |
 
 [1]: Wrap layouts and floating images are preserved in RTF, as well as few basic transforms (crop, flip, rotate).  
 Other converters support inline images only, without transforms/effects.  
@@ -55,7 +58,8 @@ See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional info
 
 [5]: Special fonts such as Wingdings, Webdings and Symbol are converted to Unicode characters.  
 
-[6]: OLE objects are preserved as images when possible.
+[6]: Ink, signature line and OLE objects are preserved as images when possible.  
+(Word processors usually write a picture fallaback for these elements).
 
 [7]: Fields (including table of contents) are supported in RTF; in other formats only the field result/text can be preserved.  
 Standard parts are converted to regular (static) content (same behavior as Microsoft Word).

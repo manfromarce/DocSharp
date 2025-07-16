@@ -7,6 +7,8 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.ExtendedProperties;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using A = DocumentFormat.OpenXml.Drawing;
+using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace DocSharp.Docx;
 
@@ -147,12 +149,6 @@ public abstract class DocxConverterBase<TOutput>
                 break;
             case CommentRangeEnd commentEnd:
                 ProcessCommentEnd(commentEnd, sb);
-                break;
-            case Picture picture:
-                ProcessVml(picture, sb);
-                break;
-            case Drawing drawing:
-                ProcessDrawing(drawing, sb);
                 break;
             case Hyperlink hyperlink:
                 ProcessHyperlink(hyperlink, sb);
@@ -313,6 +309,7 @@ public abstract class DocxConverterBase<TOutput>
     internal virtual void ProcessSubDocumentReference(SubDocumentReference subDocReference, TOutput sb)
     {
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.subdocumentreference?view=openxml-3.0.1
+        // Override if supported in the output format.
     }
 
     internal virtual void ProcessAltChunk(AltChunk altChunk, TOutput sb)
@@ -358,8 +355,16 @@ public abstract class DocxConverterBase<TOutput>
                 ProcessVml(picture, sb);
                 return true;
             case Drawing drawing:
-                ProcessDrawing(drawing, sb);
-                return true;
+                if (drawing.Descendants<A.GraphicData>() is A.GraphicData graphicData && 
+                    IsSupportedGraphicData(graphicData))
+                // If the drawing type is not supported, return false in order to look for a fallback.
+                // MS Word and other word processors may have wrapped the drawing in an AlternateContent elements,
+                // for example ink is usually written as image too.
+                {
+                    ProcessDrawing(drawing, sb);
+                    return true;
+                }
+                return false;
             case EmbeddedObject obj:
                 ProcessEmbeddedObject(obj, sb);
                 return true;
@@ -380,6 +385,12 @@ public abstract class DocxConverterBase<TOutput>
                 return true;
             case ContinuationSeparatorMark continuationSepMark:
                 ProcessContinuationSeparatorMark(continuationSepMark, sb);
+                return true;
+            case CommentReference commentRef:
+                ProcessCommentReference(commentRef, sb);
+                return true;
+            case AnnotationReferenceMark annotationRef:
+                ProcessAnnotationReference(annotationRef, sb);
                 return true;
             case Break br:
                 ProcessBreak(br, sb);
@@ -439,6 +450,12 @@ public abstract class DocxConverterBase<TOutput>
                 break;
         }
         return false;
+    }
+
+    internal virtual bool IsSupportedGraphicData(A.GraphicData graphicData)
+    {
+        // Converters can override this function to support more drawing types.
+        return graphicData.GetFirstChild<Pic.Picture>() != null;
     }
 
     internal virtual void ProcessFootnoteReference(FootnoteReference footnoteReference, TOutput sb)
@@ -934,6 +951,8 @@ public abstract class DocxConverterBase<TOutput>
     internal abstract void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, TOutput sb);
     internal abstract void ProcessCommentStart(CommentRangeStart commentStart, TOutput sb);
     internal abstract void ProcessCommentEnd(CommentRangeEnd commentEnd, TOutput sb);
+    internal abstract void ProcessCommentReference(CommentReference commentRef, TOutput sb);
+    internal abstract void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, TOutput sb);
     internal abstract void ProcessDrawing(Drawing picture, TOutput sb);
     internal abstract void ProcessVml(OpenXmlElement picture, TOutput sb);
     internal abstract void ProcessText(Text text, TOutput sb);

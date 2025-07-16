@@ -94,9 +94,9 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         base.ProcessSection(section, mainPart, writer);
 
         // Add horizontal rule between sections
-        if (section != Sections[Sections.Count - 1]) 
+        if (section != Sections[Sections.Count - 1])
         {
-            writer.WriteHorizontalLine();        
+            writer.WriteHorizontalLine();
         }
     }
 
@@ -152,8 +152,8 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 }
             }
         }
-        
-        base.ProcessParagraph(paragraph, sb);        
+
+        base.ProcessParagraph(paragraph, sb);
     }
 
     internal void ProcessListItem(NumberingProperties numPr, MarkdownStringWriter sb)
@@ -189,7 +189,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                     }
                     else
                     {
-                        int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ?? 
+                        int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ??
                                           levelOverrideLevel?.StartNumberingValue?.Val ??
                                           level.StartNumberingValue?.Val ?? 1;
                         sb.Write($"{startNumber}. "); // Markdown renderers will automatically increase the number.
@@ -230,7 +230,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             isBold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run) is Bold b && (b.Val is null || b.Val);
             isItalic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run) is Italic i && (i.Val is null || i.Val);
 
-            isUnderline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run) is Underline u && 
+            isUnderline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run) is Underline u &&
                           u.Val != null && u.Val != UnderlineValues.None;
 
             isStrikethrough = (OpenXmlHelpers.GetEffectiveProperty<DoubleStrike>(run) is DoubleStrike ds &&
@@ -277,7 +277,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         isInEmphasis = true;
         foreach (var element in run.Elements())
         {
-            base.ProcessRunElement(element, sb);              
+            base.ProcessRunElement(element, sb);
         }
         isInEmphasis = false;
         isAllCaps = false;
@@ -356,7 +356,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         sb.EnsureEmptyLine();
 
         int rowIndex = 0;
-        foreach(var element in table.Elements())
+        foreach (var element in table.Elements())
         {
             switch (element)
             {
@@ -394,7 +394,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 case TableCell cell:
                     ProcessCell(cell, sb);
                     ++currentCellCount;
-                    if (currentCellCount < maxCellsCount && 
+                    if (currentCellCount < maxCellsCount &&
                         cell.TableCellProperties?.GridSpan?.Val != null)
                     {
                         // Markdown does not support merged cells, add another empty cell for consistency.
@@ -430,7 +430,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             ProcessParagraph(paragraph, builder);
         }
         sb.Write(builder.ToString().TrimEnd());
-        sb.Write(" | ");      
+        sb.Write(" | ");
     }
 
     internal override void ProcessHyperlink(Hyperlink hyperlink, MarkdownStringWriter sb)
@@ -446,7 +446,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                string url = relationship.Uri.ToString();             
+                string url = relationship.Uri.ToString();
                 sb.Write($"[{displayTextBuilder.ToString()}]({url})");
             }
         }
@@ -463,7 +463,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
             {
                 var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
-                if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip && 
+                if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
                     svgBlip.Embed?.Value is string svgRelId)
                 {
                     // Prefer the actual SVG image as web browsers can display it.
@@ -602,7 +602,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 htmlEntity = $"&#{decimalValue};";
             }
             sb.Write(htmlEntity);
-        }        
+        }
     }
 
     internal override void ProcessMathElement(OpenXmlElement element, MarkdownStringWriter sb)
@@ -613,7 +613,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
                 // TODO: Ensure blank line before ?
                 foreach (var subElement in oMathPara.Elements())
                 {
-                    if (subElement is M.OfficeMath || 
+                    if (subElement is M.OfficeMath ||
                         subElement is M.Run)
                     {
                         ProcessMathElement(subElement, sb);
@@ -654,7 +654,7 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
 #endif
                 }
                 if (!string.IsNullOrWhiteSpace(latex))
-                { 
+                {
                     sb.Write($" $` {latex} `$ ");
                 }
                 if (element.LastChild != null && !element.LastChild.IsMathElement())
@@ -748,4 +748,6 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     internal override void ProcessPageNumber(PageNumber background, MarkdownStringWriter sb) { }
     internal override void ProcessCommentStart(CommentRangeStart commentStart, MarkdownStringWriter sb) { }
     internal override void ProcessCommentEnd(CommentRangeEnd commentEnd, MarkdownStringWriter sb) { }
+    internal override void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, MarkdownStringWriter sb) { }
+    internal override void ProcessCommentReference(CommentReference commentRef, MarkdownStringWriter sb) { }
 }

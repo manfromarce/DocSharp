@@ -165,7 +165,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
     internal override void ProcessContentPart(ContentPart contentPart, HtmlTextWriter writer)
     {
-        // MathML, SVG and SMIL are supported by most browsers
+        // MathML, SVG and SMIL are supported by most browsers.
         var id = contentPart.Id;
         var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(contentPart);
         if (id?.Value != null)
@@ -181,9 +181,12 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                        part.ContentType == "application/mathml-presentation+xml" ||
                        part.ContentType == "application/mathml-content+xml" ||
                        part.ContentType == "image/svg+xml" ||
-                       part.ContentType == "application/smil+xml")
+                       part.ContentType == "application/smil+xml" ||
+                       part.ContentType == "text/html" ||
+                       part.ContentType == "application/xhtml+xml")
                     {
-                        // Read the content and append it to the HTML
+                        // Read the content and append it to the HTML.
+                        // TODO: skip DOCTYPE.
                         try
                         {
                             using (var reader = XmlReader.Create(stream))
@@ -201,6 +204,57 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 }
             }
         }
+    }
+
+    internal override void ProcessAltChunk(AltChunk altChunk, HtmlTextWriter writer)
+    {
+        var id = altChunk.Id;
+        var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(altChunk);
+        if (id?.Value != null)
+        {
+            var part = mainDocumentPart?.GetPartById(id.Value);
+            if (part != null)
+            {
+                // Read the part content
+                using (var stream = part.GetStream())
+                {
+                    // Check the AltChunk MIME type.
+                    if (part.ContentType == "text/html" ||
+                       part.ContentType == "application/xhtml+xml")
+                    {
+                        // Read the content and append it to the HTML.
+                        // TODO: ignore DOCTYPE and <html> tag if present.
+                        try
+                        {
+                            using (var sr = new StreamReader(stream))
+                            {
+                                writer.WriteRaw('\n');
+                                writer.WriteRaw(sr.ReadToEnd());
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+#if DEBUG
+                            Debug.WriteLine("Error in ProcessAltChunk: " + ex.Message);
+#endif
+                        }
+                    }
+                    else if (part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                             part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.template" ||
+                             part.ContentType == "application/vnd.ms-word.document.macroEnabled.12" ||
+                             part.ContentType == "application/vnd.ms-word.template.macroEnabled.12")
+                    {
+                        // TODO: if the part is Open XML (docx, dotx, ...), convert it normally in a separate div, 
+                        // or create a standalone file (like images) and write a link.
+                    }
+                }
+            }
+        }
+    }
+
+    internal override void ProcessSubDocumentReference(SubDocumentReference subDocReference, HtmlTextWriter sb)
+    {
+        // TODO: get sub-document and process content the same way as regular document elements.
     }
 
     internal override void ProcessText(Text text, HtmlTextWriter sb)
@@ -355,7 +409,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     internal override void ProcessFieldCode(FieldCode field, HtmlTextWriter sb)
     {
     }
-    
+
     internal override void ProcessCommentStart(CommentRangeStart commentStart, HtmlTextWriter sb) { }
     internal override void ProcessCommentEnd(CommentRangeEnd commentEnd, HtmlTextWriter sb) { }
+    internal override void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, HtmlTextWriter sb) { }
+    internal override void ProcessCommentReference(CommentReference commentRef, HtmlTextWriter sb) { }
 }

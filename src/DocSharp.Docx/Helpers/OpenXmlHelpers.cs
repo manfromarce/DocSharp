@@ -100,7 +100,7 @@ public static class OpenXmlHelpers
 
     public static OpenXmlElement GetRoot(this OpenXmlElement element)
     {
-        OpenXmlElement rootElement = element;       
+        OpenXmlElement rootElement = element;
         while (rootElement.Parent != null)
         {
             rootElement = rootElement.Parent;

@@ -364,6 +364,11 @@ public sealed class HtmlTextWriter : XmlWriter
         _writer.Write(data);
     }
 
+    public void WriteRaw(char c)
+    {
+        _writer.Write(c);
+    }
+
     public override void WriteRaw(char[] buffer, int index, int count)
     {
         _writer.Write(buffer, index, count);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -32,13 +33,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
 
-    private FastStringCollection fonts = new FastStringCollection(); 
+    private FastStringCollection fonts = new FastStringCollection();
     private FastStringCollection colors = new FastStringCollection();
 
     public DocxToRtfConverter()
     {
         DefaultSettings = new DocumentDefaultSettings();
-    }    
+    }
 
     internal override void ProcessDocument(Document document, RtfStringWriter sb)
     {
@@ -57,7 +58,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     sb.Write(@"\deflangfe");
                     sb.Write(RtfHelpers.GetLanguageCode(rPr.Languages.EastAsia.Value));
-                }                
+                }
                 if (rPr.Languages?.Bidi?.Value != null)
                 {
                     sb.Write(@"\adeflang");
@@ -101,7 +102,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
 
         // Add document properties
-        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);        
+        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);
         if (document.MainDocumentPart?.DocumentSettingsPart?.Settings is Settings documentSettings)
         {
             ProcessSettings(documentSettings, sb);
@@ -168,5 +169,116 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         // Not needed in this converter
         //sb.WriteLine(@"\par");
-    }    
+    }
+
+    internal override void ProcessContentPart(ContentPart contentPart, RtfStringWriter writer)
+    {
+        var id = contentPart.Id;
+        var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(contentPart);
+        if (id?.Value != null)
+        {
+            var part = mainDocumentPart?.GetPartById(id.Value);
+            if (part != null)
+            {
+                // Read the part content
+                using (var stream = part.GetStream())
+                {
+                    try
+                    {
+                        // Check if the part is HTML or SVG.
+                        if (part.ContentType == "text/html" ||
+                            part.ContentType == "application/xhtml+xml")
+                        {
+                            using (var sr = new StreamReader(stream))
+                            {
+                                ProcessHtml(sr.ReadToEnd(), writer);
+                            }
+                        }
+                        else if (part.ContentType == "image/svg+xml")
+                        {
+                            // TODO: convert SVG to image
+                            // using (var sr = new StreamReader(stream))
+                            // {
+                            // }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+#if DEBUG
+                        Debug.WriteLine("Error in ProcessContentPart: " + ex.Message);
+#endif
+                    }
+                }
+            }
+        }
+    }
+
+    internal override void ProcessAltChunk(AltChunk altChunk, RtfStringWriter writer)
+    {
+        var id = altChunk.Id;
+        var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(altChunk);
+        if (id?.Value != null)
+        {
+            var part = mainDocumentPart?.GetPartById(id.Value);
+            if (part != null)
+            {
+                // Read the part content
+                using (var stream = part.GetStream())
+                {
+                    try
+                    {
+                        // Check if the part is HTML or RTF.
+                        if (part.ContentType == "text/html" ||
+                            part.ContentType == "application/xhtml+xml")
+                        {
+                            // TODO: insert HTML using \*\htmltagN and \htmlrtfN
+                            using (var sr = new StreamReader(stream))
+                            {
+                                ProcessHtml(sr.ReadToEnd(), writer);
+                            }
+                        }
+                        else if (part.ContentType == "application/rtf" ||
+                                 part.ContentType == "text/rtf")
+                        {
+                            // TODO: write the RTF as sub-document, 
+                            // because writing the full RTF here (including \rtf1, header, ...) would not be recognized by RTF readers.
+                            // using (var sr = new StreamReader(stream))
+                            // {
+                            // }
+                        }
+                        else if (part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                                 part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.template" ||
+                                 part.ContentType == "application/vnd.ms-word.document.macroEnabled.12" ||
+                                 part.ContentType == "application/vnd.ms-word.template.macroEnabled.12")
+                        {
+                            // TODO: convert to RTF normally and create a sub-document.
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+#if DEBUG
+                        Debug.WriteLine("Error in ProcessContentPart: " + ex.Message);
+#endif
+                    }
+                }
+            }
+        }
+    }
+
+    internal override void ProcessSubDocumentReference(SubDocumentReference subDocReference, RtfStringWriter sb)
+    {
+        // Note: this method assumes that the file table destination (\filetbl) has already been written.
+        if (subDocReference.Id != null)
+        {
+            // files.TryAddAndGetIndex(file, out int fileIndex);
+            // sb.Write($"\\subdocument{fileIndex}");
+        }
+    }
+
+    internal void ProcessHtml(string html, RtfStringWriter writer)
+    {
+        // TODO: 
+        // - \fromhtml should be written in the RTF header.
+        // - write htmlrtf and htmltag here
+    }
 }

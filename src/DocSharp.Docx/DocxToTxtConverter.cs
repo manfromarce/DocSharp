@@ -100,7 +100,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             sb.Write('+');
             foreach (var cell in cells)
             {
-                int gridSpan = GetGridSpan(cell);                    
+                int gridSpan = GetGridSpan(cell);
                 int width = columnWidths.Skip(currentColumnIndex).Take(gridSpan).Sum() + (gridSpan - 1) * 3;
                 if (!IsVerticalMerge(cell))
                 {
@@ -120,7 +120,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
             {
                 sb.Write('|');
                 currentColumnIndex = 0;
-                foreach(var cell in cells)
+                foreach (var cell in cells)
                 {
                     int gridSpan = GetGridSpan(cell);
                     string text = GetCellText(cell);
@@ -193,7 +193,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
         else
         {
             var cellTextBuilder = new TxtStringWriter();
-            foreach(var paragraph in cell.Elements<Paragraph>())
+            foreach (var paragraph in cell.Elements<Paragraph>())
             {
                 ProcessParagraph(paragraph, cellTextBuilder);
             }
@@ -295,14 +295,14 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                     // }
                     // else
                     // {
-                        if (!_listLevelCounters.ContainsKey(key))
-                        {
-                            _listLevelCounters[key] = start ?? 1;
-                        }
-                        else
-                        {
-                            _listLevelCounters[key]++;
-                        }
+                    if (!_listLevelCounters.ContainsKey(key))
+                    {
+                        _listLevelCounters[key] = start ?? 1;
+                    }
+                    else
+                    {
+                        _listLevelCounters[key]++;
+                    }
                     // }
 
                     // Reset counters for deeper levels of this NumberingId
@@ -331,7 +331,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                             sb.Write('•');
                         }
                     }
-                    else 
+                    else
                     {
                         // Numbered list
                         string numberString = ListHelpers.GetNumberString(levelText, listType, numberingId, levelIndex, _listLevelCounters);
@@ -351,7 +351,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                 }
             }
         }
-    }   
+    }
 
     internal override void ProcessBreak(Break br, TxtStringWriter sb)
     {
@@ -414,7 +414,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
         }
     }
 
-    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, TxtStringWriter sb) 
+    internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, TxtStringWriter sb)
     {
         if (this.ExportFootnotesEndnotes)
         {
@@ -447,5 +447,6 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
     internal override void ProcessPositionalTab(PositionalTab posTab, TxtStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, TxtStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber pageNumber, TxtStringWriter sb) { }
-
+    internal override void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, TxtStringWriter sb) { }
+    internal override void ProcessCommentReference(CommentReference commentRef, TxtStringWriter sb) { }
 }
