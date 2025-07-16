@@ -355,7 +355,7 @@ public abstract class DocxConverterBase<TOutput>
                 ProcessVml(picture, sb);
                 return true;
             case Drawing drawing:
-                if (drawing.Descendants<A.GraphicData>() is A.GraphicData graphicData && 
+                if (drawing.Descendants<A.GraphicData>().FirstOrDefault() is A.GraphicData graphicData &&
                     IsSupportedGraphicData(graphicData))
                 // If the drawing type is not supported, return false in order to look for a fallback.
                 // MS Word and other word processors may have wrapped the drawing in an AlternateContent elements,
