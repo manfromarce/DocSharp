@@ -23,7 +23,6 @@ public abstract class DocxConverterBase<TOutput>
 #endif
 
     internal List<(List<OpenXmlElement> content, SectionProperties properties)> Sections;
-    internal int CurrentSectionIndex = 0;
     internal bool TitlePage = false;
     internal bool FacingPages = false;
 
@@ -49,10 +48,9 @@ public abstract class DocxConverterBase<TOutput>
 
         // Add sections
         var mainPart = body.GetMainDocumentPart();
-        for (int i = 0; i < Sections.Count; i++)
+        foreach (var section in Sections)
         {
-            CurrentSectionIndex = i;
-            ProcessSection(Sections[i], mainPart, sb);
+                        ProcessSection(section, mainPart, sb);
         }
 
         // Add footnotes and endnotes
@@ -863,11 +861,14 @@ public abstract class DocxConverterBase<TOutput>
 
     internal SectionProperties? FindPreviousSectionProperties(SectionProperties sectionProperties)
     {
-        if (CurrentSectionIndex < 1)
+        var section = Sections.Where(s => s.properties == sectionProperties).FirstOrDefault();
+        int i = Sections.IndexOf(section);
+        if (i == 0)
         {
+// This is the first section
             return null;
         }
-        return Sections[CurrentSectionIndex - 1].properties;
+        return Sections[i - 1].properties;
     }
 
     internal HeaderReference? FindHeaderReference(SectionProperties? sectionProperties, HeaderFooterValues type)
