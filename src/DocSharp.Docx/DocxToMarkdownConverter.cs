@@ -446,7 +446,8 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                string url = relationship.Uri.ToString();
+                // Use OriginalString (rather than ToString) as the Uri is already escaped in Open XML.
+                string url = relationship.Uri.OriginalString;
                 sb.Write($"[{displayTextBuilder.ToString()}]({url})");
             }
         }
