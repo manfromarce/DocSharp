@@ -91,10 +91,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             ProcessDocumentBackground(bg, sb);
         }
-        // else
-        // {
-        //     sb.WriteElementString("style", @"* { white-space: pre; }");
-        // }
 
         // Process body content
         if (document.Body is Body body)

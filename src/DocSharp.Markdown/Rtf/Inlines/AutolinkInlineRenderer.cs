@@ -30,7 +30,7 @@ public class AutolinkInlineRenderer : RtfObjectRenderer<AutolinkInline>
 
         renderer.RtfWriter.Write(@"{\field{\*\fldinst{HYPERLINK ");
         renderer.RtfWriter.Write(@"""" + uri + @"""}}");
-        renderer.RtfWriter.Write(@"{\fldrslt{\cf16\ul ");
+        renderer.RtfWriter.Write(@"{\fldrslt{\cf17\ul ");
         renderer.RtfWriter.WriteRtfEscaped(title);
         renderer.RtfWriter.Write(@"}}}");
     }
