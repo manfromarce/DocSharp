@@ -68,6 +68,10 @@ public static class DocxExtensions
                 var docxToRtfConverter = new DocxToRtfConverter();
                 docxToRtfConverter.Convert(document, outputStream);
                 break;
+            case SaveFormat.Html:
+                var docxToHtmlConverter = new DocxToHtmlConverter();
+                docxToHtmlConverter.Convert(document, outputStream);
+                break;
             case SaveFormat.Markdown:
                 var docxToMdConverter = new DocxToMarkdownConverter();
                 docxToMdConverter.Convert(document, outputStream);

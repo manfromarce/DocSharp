@@ -5,7 +5,6 @@ using System.Text;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocSharp.Writers;
-using DocSharp.Helpers;
 
 namespace DocSharp.Docx;
 
@@ -21,7 +20,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"""");
                 // Escape chars that are valid for filenames but not valid in RTF,
-                // but don't use \'5c for slashes that are not recognized in this context.
+                // but don't use \'5c for slashes as they are not recognized in this context.
                 sb.WriteRtfEscaped(relationship.Uri.OriginalString.Replace(@"\", "/"));
                 sb.Write(@"""}}");
             }
