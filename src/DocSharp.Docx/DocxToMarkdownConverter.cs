@@ -446,8 +446,9 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                // Use OriginalString (rather than ToString) as the Uri is already escaped in Open XML.
-                string url = relationship.Uri.OriginalString;
+                // Microsoft Word already escapes spaces, but other DOCX writers may not do it 
+                // causing the link not to be recognized properly in Markdown.
+                string url = relationship.Uri.OriginalString.Replace(" ", "%20");
                 sb.Write($"[{displayTextBuilder.ToString()}]({url})");
             }
         }

@@ -18,11 +18,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                string url = relationship.Uri.ToString();
-                // Note: don't use Uri.OriginalString here, as Open XML can contain URIs such as file:///C:\Users\... 
-                // that are not recognized properly in RTF because of the reverse slashes.
-                // Use to ToString() that produces file:///C:/Users/... instead.
-                sb.Write(@"""" + url + @"""}}");
+                sb.Write(@"""");
+                // Escape chars that are valid for filenames but not valid in RTF,
+                // but don't use \'5c for slashes as they are not recognized in this context.
+                sb.WriteRtfEscaped(relationship.Uri.OriginalString.Replace(@"\", "/"));
+                sb.Write(@"""}}");
             }
         }
         else if (hyperlink.Anchor?.Value is string anchor)

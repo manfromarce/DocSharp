@@ -10,7 +10,7 @@ namespace DocSharp.Writers;
 public sealed class MarkdownStringWriter : BaseStringWriter
 {
     private static char[] _specialChars = { '\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '<', '>',
-                                            '#', '+', '-', '!', '|', '~' };
+                                            '#', '+', '-', '!', '|', '~', '$' };
 
     public MarkdownStringWriter()
     {
