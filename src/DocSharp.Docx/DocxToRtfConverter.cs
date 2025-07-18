@@ -13,6 +13,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
+using Path = System.IO.Path;
 
 namespace DocSharp.Docx;
 
@@ -27,6 +28,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     public DocumentDefaultSettings DefaultSettings { get; set; }
 
     /// <summary>
+    /// Get or set the output folder path, which will be used for saving sub-documents (if any) and calculating their relative file paths.
+    /// If null or empty, sub-documents will not be preserved.
+    /// </summary>
+    public string? OutputFolderPath { get; set; }
+
+    /// <summary>
     /// Image converter to preserve TIFF, GIF and other image types when converting to RTF. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
     /// this property can be set to a new instance of ImageSharpConverter or SystemDrawingConverter. 
@@ -35,6 +42,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     private FastStringCollection fonts = new FastStringCollection();
     private FastStringCollection colors = new FastStringCollection();
+    private FastStringCollection files = new FastStringCollection();
 
     public DocxToRtfConverter()
     {
@@ -149,6 +157,88 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(RtfHelpers.ConvertToRtfColor(color.Key) ?? @"\red0\green0\blue0;");
         }
         sb.WriteLine("}");
+        if (files.Count > 0 && !string.IsNullOrWhiteSpace(OriginalFolderPath) && !string.IsNullOrWhiteSpace(OutputFolderPath)
+            && document.MainDocumentPart is MainDocumentPart mainPart)
+        {
+            sb.Write(@"{\*\filetbl ");
+            foreach (var file in files)
+            {
+                var rel = mainPart.ExternalRelationships.Where(r => r.Id != null && r.Id == file.Key).FirstOrDefault();
+                if (rel?.Uri != null)
+                {
+                    string unescapedPath;
+                    string outputFilePath = OutputFolderPath;
+                    try
+                    {
+                        if (!Directory.Exists(OutputFolderPath))
+                        {
+                            Directory.CreateDirectory(OutputFolderPath);
+                        }
+
+                        string url = rel.Uri.OriginalString;
+                        unescapedPath = Uri.UnescapeDataString(url); // Unescapes sequences such as %20
+                        unescapedPath = Path.Combine(OriginalFolderPath, unescapedPath);
+                        
+                        if (File.Exists(unescapedPath)) // Ensure the original subdocument exists
+                        {
+                            // Build file path for the converted subdocument
+                            string outputFileName = Path.GetFileNameWithoutExtension(unescapedPath) + ".rtf";
+                            outputFilePath = Path.Combine(OutputFolderPath, outputFileName);
+                            using (var secondDoc = WordprocessingDocument.Open(unescapedPath, false))
+                            {
+                                // Convert the subdocument
+                                var secondConverter = new DocxToRtfConverter()
+                                {
+                                    ImageConverter = this.ImageConverter,
+                                    DefaultSettings = this.DefaultSettings
+                                };
+                                secondConverter.Convert(secondDoc, outputFilePath);
+
+                                if (File.Exists(outputFilePath)) // Ensure the converted subdocument exists
+                                {
+                                    sb.Write(@"{\file ");
+                                    sb.Write(@$"\fid{file.Value} "); // index (referenced by \subdocumentN in the document)
+
+                                    if (!rel.Uri.IsAbsoluteUri)
+                                    {
+                                        // If the original URI was relative, keep it relative.
+                                        int i = outputFilePath.IndexOf(outputFileName);
+                                        if (i >= 0)
+                                            sb.Write(@$"\frelative{i} ");
+                                    }
+
+                                    // TODO
+                                    // if (true)
+                                    // {
+                                        sb.Write(@"\fvalidntfs ");
+                                        // sb.Write(@"\fvalidmac ");
+                                        // sb.Write(@"\fvaliddos ");
+                                        // sb.Write(@"\fvalidhpfs ");
+                                    // }
+                                    
+                                    if (rel.Uri.IsAbsoluteUri && rel.Uri.IsUnc)
+                                    {
+                                        sb.Write(@"\fnetwork ");
+                                    }
+
+                                    sb.WriteRtfEscaped(outputFilePath); // Escape chars that are valid for filenames but not valid in RTF
+                                    sb.WriteLine('}');
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+#if DEBUG
+                        Debug.WriteLine($"Exception in processing subdocument: {ex.Message}");
+#endif
+                        break;
+                    }
+                }
+            }
+            sb.WriteLine("}");
+            
+        }
 
         // Add content
         sb.Write(contentSb);
@@ -171,48 +261,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         //sb.WriteLine(@"\par");
     }
 
-    internal override void ProcessContentPart(ContentPart contentPart, RtfStringWriter writer)
-    {
-        var id = contentPart.Id;
-        var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(contentPart);
-        if (id?.Value != null)
-        {
-            var part = mainDocumentPart?.GetPartById(id.Value);
-            if (part != null)
-            {
-                // Read the part content
-                using (var stream = part.GetStream())
-                {
-                    try
-                    {
-                        // Check if the part is HTML or SVG.
-                        if (part.ContentType == "text/html" ||
-                            part.ContentType == "application/xhtml+xml")
-                        {
-                            using (var sr = new StreamReader(stream))
-                            {
-                                ProcessHtml(sr.ReadToEnd(), writer);
-                            }
-                        }
-                        else if (part.ContentType == "image/svg+xml")
-                        {
-                            // TODO: convert SVG to image
-                            // using (var sr = new StreamReader(stream))
-                            // {
-                            // }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-#if DEBUG
-                        Debug.WriteLine("Error in ProcessContentPart: " + ex.Message);
-#endif
-                    }
-                }
-            }
-        }
-    }
-
     internal override void ProcessAltChunk(AltChunk altChunk, RtfStringWriter writer)
     {
         var id = altChunk.Id;
@@ -220,46 +268,43 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (id?.Value != null)
         {
             var part = mainDocumentPart?.GetPartById(id.Value);
-            if (part != null)
+            if (part is AlternativeFormatImportPart alternativeFormatImportPart)
             {
-                // Read the part content
-                using (var stream = part.GetStream())
+                try
                 {
-                    try
+                    // Read the part content
+                    using (var stream = part.GetStream())
                     {
-                        // Check if the part is HTML or RTF.
-                        if (part.ContentType == "text/html" ||
-                            part.ContentType == "application/xhtml+xml")
+                        // Check the AltChunk MIME type.
+                        if (alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.Rtf.ContentType)
                         {
-                            // TODO: insert HTML using \*\htmltagN and \htmlrtfN
+                            // Read the content and append it to the RTF.
                             using (var sr = new StreamReader(stream))
                             {
-                                ProcessHtml(sr.ReadToEnd(), writer);
+                                writer.WriteLine();
+                                writer.Write('{');
+                                // TODO: skip the RTF header
+                                writer.Write(sr.ReadToEnd());
+                                writer.WriteLine('}');
                             }
                         }
-                        else if (part.ContentType == "application/rtf" ||
-                                 part.ContentType == "text/rtf")
-                        {
-                            // TODO: write the RTF as sub-document, 
-                            // because writing the full RTF here (including \rtf1, header, ...) would not be recognized by RTF readers.
-                            // using (var sr = new StreamReader(stream))
-                            // {
-                            // }
-                        }
-                        else if (part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-                                 part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.template" ||
-                                 part.ContentType == "application/vnd.ms-word.document.macroEnabled.12" ||
-                                 part.ContentType == "application/vnd.ms-word.template.macroEnabled.12")
-                        {
-                            // TODO: convert to RTF normally and create a sub-document.
-                        }
+                        // else if (alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.Html.ContentType)
+                        // {
+                        //      using (var sr = new StreamReader(stream))
+                        //     {
+                        //         ProcessHtml(sr.ReadToEnd(), writer);
+                        //     }
+                        // }
+                        // else if (alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.Mht.ContentType)
+                        // {
+                        // }
                     }
-                    catch (Exception ex)
-                    {
+                }
+                catch (Exception ex)
+                {
 #if DEBUG
-                        Debug.WriteLine("Error in ProcessContentPart: " + ex.Message);
+                    Debug.WriteLine("Error in ProcessAltChunk: " + ex.Message);
 #endif
-                    }
                 }
             }
         }
@@ -267,18 +312,21 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal override void ProcessSubDocumentReference(SubDocumentReference subDocReference, RtfStringWriter sb)
     {
-        // Note: this method assumes that the file table destination (\filetbl) has already been written.
-        if (subDocReference.Id != null)
+        if (!string.IsNullOrWhiteSpace(OriginalFolderPath) &&
+            !string.IsNullOrWhiteSpace(OutputFolderPath) &&
+            subDocReference.Id?.Value != null)
         {
-            // files.TryAddAndGetIndex(file, out int fileIndex);
-            // sb.Write($"\\subdocument{fileIndex}");
+            // Keep track of the file in the file table
+            files.TryAddAndGetIndex(subDocReference.Id.Value, out int fileIndex);
+            sb.Write($"\\subdocument{fileIndex}");
         }
     }
 
     internal void ProcessHtml(string html, RtfStringWriter writer)
     {
-        // TODO: 
-        // - \fromhtml should be written in the RTF header.
-        // - write htmlrtf and htmltag here
+        // TODO
+
+        // https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxrtfex/fc107c62-c62f-48d4-b114-d7e3d1c8f54b
+        // https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxrtfex/4f09a809-9910-43f3-a67c-3506b09ca5ac
     }
 }

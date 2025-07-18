@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -436,6 +437,12 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
         {
             base.ProcessEndnotes(endnotes, sb);
         }
+    }
+
+    internal override void ProcessBody(Body body, TxtStringWriter sb)
+    {
+        EnsureSpace(sb); // For sub-documents / AltChunks
+        base.ProcessBody(body, sb);
     }
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, TxtStringWriter sb) { }

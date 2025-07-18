@@ -446,8 +446,9 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                // Use OriginalString (rather than ToString) as the Uri is already escaped in Open XML.
-                string url = relationship.Uri.OriginalString;
+                // Microsoft Word already escapes spaces, but other DOCX writers may not do it 
+                // causing the link not to be recognized properly in Markdown.
+                string url = relationship.Uri.OriginalString.Replace(" ", "%20");
                 sb.Write($"[{displayTextBuilder.ToString()}]({url})");
             }
         }
@@ -739,6 +740,12 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
     {
         // We don't need to check ExportFootnotesEndnotes because it's already called inside the Endnotes part.
         sb.Write($"[{endnoteReferenceMark.GetEndnoteIdString()}]: "); // Avoid escaping in this case
+    }
+
+    internal override void ProcessBody(Body body, MarkdownStringWriter sb)
+    {
+        EnsureSpace(sb); // For sub-documents / AltChunks
+        base.ProcessBody(body, sb);
     }
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, MarkdownStringWriter sb) { }

@@ -41,8 +41,7 @@
 | Document background | 🟡[12] | 🟡[13] | - | - | ⏳ |
 | Document information (title, author, ...) | ✅ | ❌ | - | - | ⏳ |
 | Document settings and protection | 🟡 | - | - | - | ❌ |
-| Sub-documents | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ |
-| Alternate content | ⏳ RTF, HTML | ✅ HTML, SVG, MathML, SMIL | ❌ | ❌ | ❌ |
+| Sub-documents / Alternate content | ✅ DOCX, RTF | ✅ DOCX, HTML, SVG, MathML, SMIL | ✅ DOCX | ✅ DOCX | ⏳ |
 
 [1]: Wrap layouts and floating images are preserved in RTF, as well as few basic transforms (crop, flip, rotate).  
 Other converters support inline images only, without transforms/effects.  

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,11 @@ namespace DocSharp.Docx;
 
 public abstract class DocxConverterBase<TOutput>
 {
+    /// <summary>
+    /// Get or set the base file path for processing external sub-documents (if any).
+    /// If null or empty, sub-documents will not be preserved.
+    /// </summary>
+    public string? OriginalFolderPath { get; set; }
 
 #if !NETFRAMEWORK
     static DocxConverterBase()
@@ -50,7 +56,7 @@ public abstract class DocxConverterBase<TOutput>
         var mainPart = body.GetMainDocumentPart();
         foreach (var section in Sections)
         {
-                        ProcessSection(section, mainPart, sb);
+            ProcessSection(section, mainPart, sb);
         }
 
         // Add footnotes and endnotes
@@ -307,13 +313,95 @@ public abstract class DocxConverterBase<TOutput>
     internal virtual void ProcessSubDocumentReference(SubDocumentReference subDocReference, TOutput sb)
     {
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.subdocumentreference?view=openxml-3.0.1
-        // Override if supported in the output format.
+        // By default we convert the subdocument and append the content to the current output;
+        // can be overriden if the output format supports subdocuments / files (e.g. RTF).
+        if (!string.IsNullOrWhiteSpace(OriginalFolderPath) &&
+            subDocReference.Id?.Value != null &&
+            subDocReference.GetMainDocumentPart() is MainDocumentPart mainPart)
+        {
+            var rel = mainPart.ExternalRelationships.FirstOrDefault(r => r.Id != null && r.Id == subDocReference.Id.Value);
+            if (rel?.Uri != null)
+            {
+                try
+                {
+                    string unescapedPath;
+                    // if (rel.Uri.IsAbsoluteUri && rel.Uri.IsFile)
+                    // {
+                    //     unescapedPath = rel.Uri.LocalPath;
+                    // }
+                    // else
+                    // {
+                    //     string url = rel.Uri.ToString(); // or OriginalString ?
+                    //     unescapedPath = Uri.UnescapeDataString(url); // Unescape sequences such as %20
+                    //     unescapedPath = Path.Combine(OriginalFolderPath, unescapedPath);
+                    // }
+                    
+                    string url = rel.Uri.OriginalString;
+                    unescapedPath = Uri.UnescapeDataString(url); // Unescapes sequences such as %20
+                    unescapedPath = Path.Combine(OriginalFolderPath, unescapedPath);
+
+                    if (File.Exists(unescapedPath))
+                    {
+                        using (var secondDoc = WordprocessingDocument.Open(unescapedPath, false))
+                        {
+                            if (secondDoc.MainDocumentPart?.Document?.Body is Body body)
+                            {
+                                ProcessBody(body, sb);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Debug.WriteLine($"Exception in ProcessSubDocumentReference: {ex.Message}");
+#endif
+                }
+            }
+        }
     }
 
-    internal virtual void ProcessAltChunk(AltChunk altChunk, TOutput sb)
+    internal virtual void ProcessAltChunk(AltChunk altChunk, TOutput output)
     {
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.altchunk?view=openxml-3.0.1
-        // Override if supported in the output format.
+        // By default if the AltChunk type it's Open XML (docx/dotx/...) we convert it as a regular document 
+        // and append the content to the current output; if it's plain text we just process it as text.
+        // Can be overriden if the output format can support other types (e.g. HTML, RTF, ...)
+        var id = altChunk.Id;
+        var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(altChunk);
+        if (id?.Value != null)
+        {
+            var part = mainDocumentPart?.GetPartById(id.Value);
+            if (part is AlternativeFormatImportPart alternativeFormatImportPart)
+            {
+                // Read the part content
+                using (var stream = part.GetStream())
+                {
+                    // Check the AltChunk MIME type.
+                    if (alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.WordprocessingML.ContentType ||
+                        alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.OfficeWordMacroEnabled.ContentType ||
+                        alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.OfficeWordMacroEnabledTemplate.ContentType ||
+                        alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.OfficeWordTemplate.ContentType)
+                    {
+                        // Convert the nested Open XML document
+                        using (var secondDocument = WordprocessingDocument.Open(stream, false))
+                        {
+                            if (secondDocument.MainDocumentPart?.Document?.Body is Body b)
+                            {
+                                ProcessBody(b, output);
+                            }
+                        }
+                    }
+                    else if (alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.TextPlain.ContentType)
+                    {
+                        using (var sr = new StreamReader(stream))
+                        {
+                            ProcessText(new Text(sr.ReadToEnd()), output);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     internal virtual void ProcessContentPart(ContentPart contentPart, TOutput sb)
@@ -865,7 +953,7 @@ public abstract class DocxConverterBase<TOutput>
         int i = Sections.IndexOf(section);
         if (i == 0)
         {
-// This is the first section
+            // This is the first section
             return null;
         }
         return Sections[i - 1].properties;

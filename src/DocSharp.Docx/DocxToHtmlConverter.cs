@@ -209,48 +209,39 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         if (id?.Value != null)
         {
             var part = mainDocumentPart?.GetPartById(id.Value);
-            if (part != null)
+            if (part is AlternativeFormatImportPart alternativeFormatImportPart)
             {
-                // Read the part content
-                using (var stream = part.GetStream())
+                try
                 {
-                    // Check the AltChunk MIME type.
-                    if (part.ContentType == "text/html" ||
-                       part.ContentType == "application/xhtml+xml")
+                    // Read the part content
+                    using (var stream = part.GetStream())
                     {
-                        // Read the content and append it to the HTML.
-                        // TODO: ignore DOCTYPE and <html> tag if present.
-                        try
+                        // Check the AltChunk MIME type.
+                        if (alternativeFormatImportPart.ContentType == AlternativeFormatImportPartType.Html.ContentType)
                         {
+                            // Read the content and append it to the HTML.
+                            // TODO: skip DOCTYPE, <html>, <body>
                             using (var sr = new StreamReader(stream))
                             {
                                 writer.WriteRaw('\n');
                                 writer.WriteRaw(sr.ReadToEnd());
+                                writer.WriteRaw('\n');
                             }
                         }
-                        catch (Exception ex)
+                        else
                         {
-#if DEBUG
-                            Debug.WriteLine("Error in ProcessAltChunk: " + ex.Message);
-#endif
+                            base.ProcessAltChunk(altChunk, writer);
                         }
                     }
-                    else if (part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-                             part.ContentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.template" ||
-                             part.ContentType == "application/vnd.ms-word.document.macroEnabled.12" ||
-                             part.ContentType == "application/vnd.ms-word.template.macroEnabled.12")
-                    {
-                        // TODO: if the part is Open XML (docx, dotx, ...), convert it normally in a separate div, 
-                        // or create a standalone file (like images) and write a link.
-                    }
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Debug.WriteLine("Error in ProcessAltChunk: " + ex.Message);
+#endif
                 }
             }
         }
-    }
-
-    internal override void ProcessSubDocumentReference(SubDocumentReference subDocReference, HtmlTextWriter sb)
-    {
-        // TODO: get sub-document and process content the same way as regular document elements.
     }
 
     internal override void ProcessText(Text text, HtmlTextWriter sb)
@@ -266,7 +257,21 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         for (int i = 0; i < stringInfo.LengthInTextElements; i++)
         {
             string textElement = stringInfo.SubstringByTextElements(i, 1);
-            sb.Write(textElement, font);
+            if (textElement == "\r")
+            {
+                // Ignore as it's usually followed by \n
+            }
+            else if (textElement == "\n")
+            {
+                // Line endings are not converted to <br> in the Write method, because 
+                // it's not valide in other contexts such as attributes strings.
+                // So, replace them here.
+                sb.WriteBreak();
+            }
+            else
+            {
+                sb.Write(textElement, font);
+            }
         }
     }
 
@@ -337,8 +342,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                // Use OriginalString (rather than ToString) as the Uri is already escaped in Open XML.
-                string url = relationship.Uri.OriginalString;
+                string url = relationship.Uri.OriginalString.Replace(" ", "%20");
                 hasUrl = true;
                 sb.WriteStartElement("a");
                 sb.WriteAttributeString("href", url);

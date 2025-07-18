@@ -138,8 +138,9 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToRtfConverter()
                     {
-                        ImageConverter = new ImageSharpConverter()
-                        // Converts TIFF, GIF and other formats which are not supported in RTF.
+                        ImageConverter = new ImageSharpConverter(), // Converts TIFF, GIF and other formats which are not supported in RTF.
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName), // Converts sub-documents (if any)
+                        OutputFolderPath = Path.GetDirectoryName(sfd.FileName), // Converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -173,8 +174,9 @@ public partial class MainWindow : Window
                     {
                         ExportHeaderFooter = true,
                         ExportFootnotesEndnotes = true,
-                        ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
+                        ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
                                                                       // (ImageSharp does not support WMF / EMF yet)
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -241,8 +243,10 @@ public partial class MainWindow : Window
                         ImagesBaseUriOverride = "",
                         //ImagesBaseUriOverride = "..",
                         //ImagesBaseUriOverride = "images/",
-                        ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
+                        ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
                                                                       // (ImageSharp does not support WMF / EMF yet)
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // Converts sub-documents (if any)
+
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -275,7 +279,8 @@ public partial class MainWindow : Window
                     var converter = new DocxToTxtConverter()
                     {
                         ExportHeaderFooter = true,
-                        ExportFootnotesEndnotes = true
+                        ExportFootnotesEndnotes = true,
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // Converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }

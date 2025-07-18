@@ -56,7 +56,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         if (sectionProperties == null)
         {
             return;
-        }              
+        }
 
         var columns = sectionProperties.GetFirstChild<Columns>();
         if (columns != null)
