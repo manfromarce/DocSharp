@@ -19,6 +19,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 string url = relationship.Uri.ToString();
+                // Note: don't use Uri.OriginalString here, as Open XML can contain URIs such as file:///C:\Users\... 
+                // that are not recognized properly in RTF because of the reverse slashes.
+                // Use to ToString() that produces file:///C:/Users/... instead.
                 sb.Write(@"""" + url + @"""}}");
             }
         }

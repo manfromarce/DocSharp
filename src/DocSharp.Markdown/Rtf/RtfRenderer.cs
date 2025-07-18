@@ -90,23 +90,25 @@ public class RtfRenderer : RendererBase
         RtfWriter.WriteLine($"{{\\f8 {Settings.QuoteFont};}}}}");
 
         // Color table
-        RtfWriter.Write($"{{\\colortbl ;{Settings.DefaultTextColor}");
-        RtfWriter.Write($"{Settings.HeadingColors[1]}");
-        RtfWriter.Write($"{Settings.HeadingColors[2]}");
-        RtfWriter.Write($"{Settings.HeadingColors[3]}");
-        RtfWriter.Write($"{Settings.HeadingColors[4]}");
-        RtfWriter.Write($"{Settings.HeadingColors[5]}");
-        RtfWriter.Write($"{Settings.HeadingColors[6]}");
-        RtfWriter.Write($"{Settings.CodeFontColor}");
-        RtfWriter.Write($"{Settings.CodeBorderColor}");
-        RtfWriter.Write($"{Settings.CodeBackgroundColor}");
-        RtfWriter.Write($"{Settings.QuoteFontColor}");
-        RtfWriter.Write($"{Settings.QuoteBorderColor}");
-        RtfWriter.Write($"{Settings.QuoteBackgroundColor}");
+        RtfWriter.Write("{\\colortbl ;");
+        RtfWriter.Write(Settings.DefaultTextColor);
+        RtfWriter.Write(Settings.HeadingColors[1]);
+        RtfWriter.Write(Settings.HeadingColors[2]);
+        RtfWriter.Write(Settings.HeadingColors[3]);
+        RtfWriter.Write(Settings.HeadingColors[4]);
+        RtfWriter.Write(Settings.HeadingColors[5]);
+        RtfWriter.Write(Settings.HeadingColors[6]);
+        RtfWriter.Write(Settings.CodeFontColor);
+        RtfWriter.Write(Settings.CodeBorderColor);
+        RtfWriter.Write(Settings.CodeBackgroundColor);
+        RtfWriter.Write(Settings.QuoteFontColor);
+        RtfWriter.Write(Settings.QuoteBorderColor);
+        RtfWriter.Write(Settings.QuoteBackgroundColor);
         RtfWriter.Write(System.Drawing.Color.Yellow); // for highlighted/marked text
         RtfWriter.Write(System.Drawing.Color.LightGreen); // for inserted text
         RtfWriter.Write(System.Drawing.Color.FromArgb(217, 217, 217)); // for table header background
-        RtfWriter.WriteLine($"{Settings.LinkColor}}}");
+        RtfWriter.Write(Settings.LinkColor);
+        RtfWriter.WriteLine("}");
 
         // Enable endnotes
         RtfWriter.WriteLine(@"\sectd\endnhere");

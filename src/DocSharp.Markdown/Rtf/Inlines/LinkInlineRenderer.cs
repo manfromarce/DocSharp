@@ -95,7 +95,7 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
             // Link to bookmark
             renderer.RtfWriter.Write(@"\\l """ + anchorName + @"""}}");
         }
-        renderer.RtfWriter.Write(@"{\fldrslt{\cf16\ul ");
+        renderer.RtfWriter.Write(@"{\fldrslt{\cf17\ul ");
         renderer.WriteChildren(obj);
         renderer.RtfWriter.Write(@"}}}");
     }
