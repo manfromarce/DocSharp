@@ -374,7 +374,7 @@ public static class OpenXmlHelpers
     // Helper function to get cell formatting from cell/table properties or style.
     public static T? GetEffectiveProperty<T>(this TableCell cell) where T : OpenXmlElement
     {
-        // Check cell properties        
+        // Check cell properties
         T? propertyValue = cell.TableCellProperties?.GetFirstChild<T>();
         if (propertyValue != null)
         {
