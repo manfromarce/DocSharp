@@ -121,7 +121,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
                 else if (pos.VerticalAnchor.Value == VerticalAnchorValues.Margin)
                 {
-                    tableProperties.Write(@"\tpvpg");
+                    tableProperties.Write(@"\tpvmrg");
                 }
             }
         }
@@ -129,7 +129,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         var overlap = table.GetEffectiveProperty<TableOverlap>();
         if (overlap != null)
         {
-            if(overlap.Val != null && overlap.Val == TableOverlapValues.Never)
+            if (overlap.Val != null && overlap.Val == TableOverlapValues.Never)
             {
                 tableProperties.Write(@"\tabsnoovrlp");
             }
@@ -259,7 +259,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     sb.Write($"\\tblind{ind.Width.Value}\\tblindtype2");
                 }
-                else // twips
+                else if (ind.Type.Value == TableWidthUnitValues.Dxa)
                 {
                     sb.Write($"\\tblind{ind.Width.Value}\\tblindtype3");
                 }
@@ -294,7 +294,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         //var gridBefore = row.GetEffectiveProperty<GridBefore>();
         //var gridAfter = row.GetEffectiveProperty<GridAfter>();
         var widthBefore = row.GetEffectiveProperty<WidthBeforeTableRow>();
-        var widthAfter = row.GetEffectiveProperty<WidthAfterTableRow>();
         if (widthBefore?.Type != null)
         {
             if (widthBefore.Type.Value == TableWidthUnitValues.Nil)
@@ -317,6 +316,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
             }
         }
+        var widthAfter = row.GetEffectiveProperty<WidthAfterTableRow>();
         if (widthAfter?.Type != null)
         {
             if (widthAfter.Type.Value == TableWidthUnitValues.Nil)
@@ -340,6 +340,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
+        long cellSpacing = 0;
         if (OpenXmlHelpers.GetEffectiveProperty<TableCellSpacing>(row) is TableCellSpacing spacing &&
             spacing.Type != null && spacing.Type.HasValue)
         {
@@ -349,9 +350,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             else if (spacing.Width != null && spacing.Width.HasValue)
             {
-                if (spacing.Type.Value == TableWidthUnitValues.Dxa)
+                if (spacing.Type.Value == TableWidthUnitValues.Dxa && long.TryParse(spacing.Width.Value, out cellSpacing))
                 {
-                    sb.Write($@"\trspdl{spacing.Width.Value}\trspdt{spacing.Width.Value}\trspdb{spacing.Width.Value}\trspdr{spacing.Width.Value}\trspdfl3\trspdft3\trspdfb3\trspdfr3");
+                    sb.Write($@"\trspdl{cellSpacing}\trspdt{cellSpacing}\trspdb{cellSpacing}\trspdr{cellSpacing}\trspdfl3\trspdft3\trspdfb3\trspdfr3");
                 }
                 else if (spacing.Type.Value == TableWidthUnitValues.Pct || spacing.Type.Value == TableWidthUnitValues.Auto)
                 {
@@ -539,7 +540,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         int columnCount = cells.Count();
         foreach (var cell in cells)
         {
-            ProcessTableCellProperties(cell, sb, ref totalWidth, avg, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
+            ProcessTableCellProperties(cell, sb, ref totalWidth, cellSpacing, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
             sb.WriteLine();
             ++columnNumber;
         }
@@ -630,9 +631,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\clpadfl0");
             }
-            else if (leftMargin.Type.Value == TableWidthUnitValues.Dxa && leftMargin.Width != null && int.TryParse(leftMargin.Width, out int bottom))
+            else if (leftMargin.Type.Value == TableWidthUnitValues.Dxa && leftMargin.Width != null && int.TryParse(leftMargin.Width, out int left))
             {
-                sb.Write($"\\clpadl{bottom}\\clpadfl3");
+                sb.Write($"\\clpadl{left}\\clpadfl3");
             }
         }
         if (rightMargin?.Type != null)
@@ -710,7 +711,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write(@"\clmrg");
             }
         }
-        //var gridSpan = cell.TableCellProperties?.GridSpan;
+        int gridSpan = 1;
+        var gridSp = cell.TableCellProperties?.GridSpan?.Val;
+        if (gridSp != null && gridSp > 1)
+        {
+            gridSpan = gridSp.Value;
+        }
+        // var merge = cell.TableCellProperties?.GetFirstChild<CellMerge>(); // only used for revisions
 
         // The GetEffectiveBorder function deals with various complexities in retrieving borders
         // (e.g. start / end / insideHorizontal / insideVertical are considered depending on the case).
@@ -780,10 +787,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             else // twips
             {
                 sb.Write($"\\clwWidth{width}\\clftsWidth3");
-            }          
+            }
         }
 
-        totalWidth += (width + cellSpacing);
+        totalWidth += width - (cellSpacing * ((2 * gridSpan) - 2));
         sb.Write(@"\cellx" + totalWidth);
     }
 

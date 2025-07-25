@@ -101,10 +101,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
 
         // Add document properties
-        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), sb);        
+        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), contentSb);
         if (document.MainDocumentPart?.DocumentSettingsPart?.Settings is Settings documentSettings)
         {
-            ProcessSettings(documentSettings, sb);
+            ProcessSettings(documentSettings, contentSb);
         }
         switch (FootnotesEndnotes)
         {
@@ -119,7 +119,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 break;
         }
 
-        // Add footnotes and endnotes content             
+        // Add footnotes and endnotes content
         if (document.MainDocumentPart?.FootnotesPart != null)
         {
             ProcessFootnotes(document.MainDocumentPart.FootnotesPart, contentSb);
