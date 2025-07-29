@@ -252,7 +252,7 @@ public partial class MainWindow : Window
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
-                }                
+                }
             }
         }
     }
@@ -313,6 +313,7 @@ public partial class MainWindow : Window
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
                     var converter = new MarkdownConverter()
                     {
+                        LinksBaseUri = Path.GetDirectoryName(ofd.FileName), // this will make links absolute
                         ImagesBaseUri = Path.GetDirectoryName(ofd.FileName),
                         ImageConverter = new ImageSharpConverter() // Convert WEBP and GIF images which are not supported in RTF
                                                                    // (possibly AVIF and JXL too in a future release) 

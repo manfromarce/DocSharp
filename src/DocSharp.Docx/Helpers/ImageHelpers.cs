@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DocSharp.IO;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using DocumentFormat.OpenXml.Packaging;
@@ -74,39 +75,70 @@ public static class ImageHelpers
             ));
     }
 
+    public static PartTypeInfo? ToImagePartType(this ImageFormat imageFormat)
+    {
+        switch (imageFormat)
+        {
+            case ImageFormat.Jpeg:
+                return ImagePartType.Jpeg;
+            case ImageFormat.Png:
+                return ImagePartType.Png;
+            case ImageFormat.Gif:
+                return ImagePartType.Gif;
+            case ImageFormat.Bitmap:
+                return ImagePartType.Bmp;
+            case ImageFormat.Tiff:
+                return ImagePartType.Tiff;
+            case ImageFormat.Wmf:
+                return ImagePartType.Wmf;
+            case ImageFormat.Emf:
+                return ImagePartType.Emf;
+            case ImageFormat.Ico:
+                return ImagePartType.Icon;
+            case ImageFormat.Jpeg2000:
+                return ImagePartType.Jp2;
+            case ImageFormat.Pcx:
+                return ImagePartType.Pcx;
+            case ImageFormat.Svg:
+                return ImagePartType.Svg;
+            default:
+                return null;
+        }
+    }
+
     internal static PartTypeInfo? ImagePartTypeFromExtension(string ext)
     {
-        PartTypeInfo? imageFormat = null;
-        switch (ext.ToLower())
+        switch (ext.ToLowerInvariant())
         {
             case ".jpg":
             case ".jpeg":
             case ".jpe":
             case ".jfif":
-                imageFormat = ImagePartType.Jpeg; break;
+                return ImagePartType.Jpeg;
             case ".png":
-                imageFormat = ImagePartType.Png; break;
+                return ImagePartType.Png;
             case ".gif":
-                imageFormat = ImagePartType.Gif; break;
+                return ImagePartType.Gif;
             case ".bmp":
-                imageFormat = ImagePartType.Bmp; break;
+                return ImagePartType.Bmp;
             case ".tif":
-                imageFormat = ImagePartType.Tif; break;
+                return ImagePartType.Tif;
             case ".tiff":
-                imageFormat = ImagePartType.Tiff; break;
+                return ImagePartType.Tiff;
             case ".wmf":
-                imageFormat = ImagePartType.Wmf; break;
+                return ImagePartType.Wmf;
             case ".emf":
-                imageFormat = ImagePartType.Emf; break;
+                return ImagePartType.Emf;
             case ".ico":
-                imageFormat = ImagePartType.Icon; break;
+                return ImagePartType.Icon;
             case ".jp2":
-                imageFormat = ImagePartType.Jp2; break;
+                return ImagePartType.Jp2;
             case ".pcx":
-                imageFormat = ImagePartType.Pcx; break;
+                return ImagePartType.Pcx;
             case ".svg":
-                imageFormat = ImagePartType.Svg; break;
+                return ImagePartType.Svg;
+            default:
+                return null;
         }
-        return imageFormat;
     }
 }

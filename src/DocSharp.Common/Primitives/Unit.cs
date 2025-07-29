@@ -129,7 +129,7 @@ readonly struct Unit
                 // 1 DIU = 1/96 inch = 914400/96 EMUs = 9525 EMUs
                 return (long) (value * 9525L);
             case UnitMetric.Pixel:
-                // Considering 96 DPI
+                // Considering 96 DPI as Microsoft Word uses this value
                 return (long) (value * 9525L);
             default: goto case UnitMetric.Pixel;
         }

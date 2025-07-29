@@ -8,6 +8,42 @@ namespace DocSharp.IO
 {
     public static class ImageFormatExtensions
     {
+        public static bool IsSupportedInOpenXml(this ImageFormat fileType)
+        {
+            switch (fileType)
+            {
+                case ImageFormat.Bitmap:
+                case ImageFormat.Emf:
+                case ImageFormat.Gif:
+                case ImageFormat.Ico:
+                case ImageFormat.Jpeg:
+                case ImageFormat.Jpeg2000:
+                case ImageFormat.Pcx:
+                case ImageFormat.Png:
+                case ImageFormat.Svg:
+                case ImageFormat.Tiff:
+                case ImageFormat.Wmf:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsSupportedInRtf(this ImageFormat fileType)
+        {
+            switch (fileType)
+            {
+                case ImageFormat.Emf:
+                case ImageFormat.Jpeg:
+                // case ImageFormat.Pict:
+                case ImageFormat.Png:
+                case ImageFormat.Wmf:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public static string ToFileExtension(this ImageFormat fileType)
         {
             switch (fileType)

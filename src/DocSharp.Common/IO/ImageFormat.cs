@@ -19,5 +19,6 @@ public enum ImageFormat
     Jxl,
     Jxr,
     Pcx,
+    // Pict,
     Svg
 }

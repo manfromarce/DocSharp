@@ -8,6 +8,7 @@ using Markdig.Syntax;
 using Markdig.Renderers.Docx;
 using Markdig.Renderers.Rtf;
 using DocSharp.Writers;
+using System;
 
 namespace DocSharp.Markdown;
 
@@ -22,6 +23,14 @@ public class MarkdownConverter
     /// Note: base64 images are not supported.
     /// </summary>
     public string? ImagesBaseUri { get; set; } = null;
+
+    /// <summary>
+    /// Gets or set the base absolute URI for resolving links which are specified as relative URIs.
+    /// This can be a local folder path or an http(s) URL, allowing to keep e.g. relative GitHub links working.
+    /// If null or empty, relative links will be kept as relative  
+    /// (this can be desirable when rendering an offline Markdown file and saving the output document in the same folder).
+    /// </summary>
+    public string? LinksBaseUri { get; set; } = null;
 
     /// <summary>
     /// If set to true, the converter will not try to download online images or access local images.
@@ -64,7 +73,7 @@ public class MarkdownConverter
         using (var document = ToWordprocessingDocument(markdown, outputFilePath, openXmlDocumentType, append))
         {
             document.Save();
-        }        
+        }
     }
 
     /// <summary>
@@ -107,6 +116,7 @@ public class MarkdownConverter
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
             ImagesBaseUri = this.ImagesBaseUri,
+            LinksBaseUri = this.LinksBaseUri,
             SkipImages = this.SkipImages,
             ImageConverter = this.ImageConverter
         };
@@ -140,6 +150,7 @@ public class MarkdownConverter
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
             ImagesBaseUri = this.ImagesBaseUri,
+            LinksBaseUri = this.LinksBaseUri,
             SkipImages = this.SkipImages,
             ImageConverter = this.ImageConverter
         };
@@ -198,6 +209,7 @@ public class MarkdownConverter
         var renderer = new DocxDocumentRenderer(outputDocument, styles)
         {
             ImagesBaseUri = this.ImagesBaseUri,
+            LinksBaseUri = this.LinksBaseUri,
             SkipImages = this.SkipImages,
             ImageConverter = this.ImageConverter
         };
@@ -211,7 +223,12 @@ public class MarkdownConverter
     /// <param name="outputFilePath">The output RTF file path.</param>
     public void ToRtf(MarkdownSource markdown, string outputFilePath, MarkdownToRtfSettings? settings = null)
     {
-        File.WriteAllText(outputFilePath, ToRtfString(markdown));
+        using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+        {
+            settings ??= new MarkdownToRtfSettings();
+            var rtfBuilder = new RtfStringWriter() { ExternalWriter = sw };
+            RenderToRtf(markdown.Document, rtfBuilder, settings);
+        }
     }
 
     /// <summary>
@@ -223,13 +240,23 @@ public class MarkdownConverter
     {
         using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
         {
-            sw.Write(ToRtfString(markdown));
+            settings ??= new MarkdownToRtfSettings();
+            var rtfBuilder = new RtfStringWriter() { ExternalWriter = sw };
+            RenderToRtf(markdown.Document, rtfBuilder, settings);
         }
     }
 
-    // public void ToRtf(MarkdownSource markdown, TextWriter output, MarkdownToRtfSettings? settings = null)
-    // {
-    // }
+    /// <summary>
+    /// Convert Markdown to RTF and write to a TextWriter.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="output">The output writer.</param>
+    public void ToRtf(MarkdownSource markdown, TextWriter output, MarkdownToRtfSettings? settings = null)
+    {
+        settings ??= new MarkdownToRtfSettings();
+        var rtfBuilder = new RtfStringWriter() { ExternalWriter = output };
+        RenderToRtf(markdown.Document, rtfBuilder, settings);
+    }
 
     /// <summary>
     /// Convert Markdown to RTF and returns a string.
@@ -240,12 +267,19 @@ public class MarkdownConverter
     {
         settings ??= new MarkdownToRtfSettings();
         var rtfBuilder = new RtfStringWriter();
+        RenderToRtf(markdown.Document, rtfBuilder, settings);
+        return rtfBuilder.ToString();
+    }
+    
+    private void RenderToRtf(MarkdownDocument document, RtfStringWriter rtfBuilder, MarkdownToRtfSettings settings)
+    {
         var renderer = new RtfRenderer(rtfBuilder, settings)
         {
             ImagesBaseUri = this.ImagesBaseUri,
+            LinksBaseUri = this.LinksBaseUri,
+            ImageConverter = this.ImageConverter,
             SkipImages = this.SkipImages
         };
-        renderer.Render(markdown.Document);
-        return rtfBuilder.ToString();
+        renderer.Render(document);
     }
 }

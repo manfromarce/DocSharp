@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DocSharp;
 using DocSharp.Helpers;
 using DocSharp.Markdown;
 using DocSharp.Writers;
@@ -17,8 +18,11 @@ namespace Markdig.Renderers.Rtf;
 public class RtfRenderer : RendererBase
 {
     public string? ImagesBaseUri { get; set; } = null;
+    public string? LinksBaseUri { get; set; } = null;
 
     public bool SkipImages { get; set; } = false;
+
+    public IImageConverter? ImageConverter { get; set; } = null;
 
     public MarkdownToRtfSettings Settings;
 
@@ -32,7 +36,7 @@ public class RtfRenderer : RendererBase
 
     public RtfRenderer(RtfStringWriter rtfBuilder, MarkdownToRtfSettings settings)
     {
-        Settings = settings;        
+        Settings = settings;
         RtfWriter = rtfBuilder;
 
         // Default block renderers
@@ -72,8 +76,8 @@ public class RtfRenderer : RendererBase
     {
         RtfWriter.WriteRtfHeader();
 
-        // A4 paper size in twips (1/1440 inch)
-        RtfWriter.WriteLine(@"\paperw11906\paperh16780");
+        // Write A4 paper size and margins in twips (1 inch is 1440 twips)
+        RtfWriter.WriteLine(@"\paperw11906\paperh16838\margl1440\margr1440\margt1440\margb1440");
 
         // Enable endnotes
         RtfWriter.WriteLine(@"\enddoc\aenddoc");

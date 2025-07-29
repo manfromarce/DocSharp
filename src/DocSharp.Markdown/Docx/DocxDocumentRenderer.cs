@@ -21,6 +21,7 @@ public class DocxDocumentRenderer : RendererBase
     public IImageConverter? ImageConverter { get; set; } = null;
 
     public string? ImagesBaseUri { get; set; } = null;
+    public string? LinksBaseUri { get; set; } = null;
 
     public bool SkipImages { get; set; } = false;
 

@@ -57,6 +57,7 @@ public static class ImageHeader
         { new byte[] { 0, 0, 0x1, 0 }, ImageFormat.Ico }, 
         { new byte[] { 0, 0, 0x2, 0 }, ImageFormat.Cur },
         { new byte[] { 0x0A }, ImageFormat.Pcx }, // needs further analysis
+        // { ?, ImageFormat.Pict },
         
         // Signatures for AVIF and HEIF start from the 5th byte (the first 4 can be skipped)
         { Encoding.UTF8.GetBytes("ftypavif"), ImageFormat.Avif },

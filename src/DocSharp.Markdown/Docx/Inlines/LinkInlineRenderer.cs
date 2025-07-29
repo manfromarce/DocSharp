@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using DocSharp.Docx;
 using DocSharp.IO;
+using DocSharp.Markdown.Common;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Markdig.Renderers.Html;
 using Markdig.Syntax.Inlines;
 
 namespace Markdig.Renderers.Docx.Inlines;
@@ -27,136 +31,89 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         {
             if (!renderer.SkipImages)
             {
-                ProcessImage(renderer, obj.Url, obj.Label, obj.Title);
+                LinkImageRenderHelper.GetImageAttributes(obj, out double width, out double height);
+                ProcessImage(renderer, obj.Url, obj.Label, obj.Title, width, height);
             }
-            return;
         }
-
-        Uri? uri = null;
-
-        var isAbsoluteUri = Uri.TryCreate(obj.Url, UriKind.Absolute, out uri);
-        bool isExternal = true;
-        string anchorName = string.Empty;
-        
-        if (!isAbsoluteUri)
+        else
         {
-            isExternal = !obj.Url.StartsWith("#"); // anchor link
-            
-            if (isExternal)
-            {
-                string fixedUrl = string.Empty;
-                if (!obj.Url.StartsWith("."))
-                {
-                    // Relative URIs like "file.txt" or "/file.txt" need be changed to
-                    // "./file.txt" to work in Microsoft Word, otherwise the document will result corrupted.
-                    fixedUrl = "./" + obj.Url.TrimStart(['/', '\\']);
-                }
-                else
-                {
-                    fixedUrl = obj.Url;
-                }
-                if (!string.IsNullOrWhiteSpace(fixedUrl))
-                {
-                    Uri.TryCreate(fixedUrl, UriKind.Relative, out uri);
-                }
-            }
-            else
+            bool isAnchor = obj.Url.StartsWith("#");
+            string anchorName = string.Empty;
+            Uri? uri = null;
+            if (isAnchor)
             {
                 // Note: bookmarks are currently created in HeadingRenderer (for headings).
                 // It should be done in HtmlInline/HtmlBlock renderer too (for <a> tags),
                 // but it's not implemented yet.
                 anchorName = TryGetBookmark(renderer, obj.Url.Trim('#'));
             }
-        }
-
-        if (isExternal && uri != null && ((!isAbsoluteUri) || uri.IsFile))
-        {
-            // Remove anchor (if any) from local file URLs, as it does not work in Word.
-            // Note that IsFile throws exception for relative URIs, it should be called only if URI is absolute
-            int i = obj.Url.LastIndexOf('#');
-            if (i >= 0)
+            else
             {
-                string url = uri.OriginalString.Substring(0, i);
-                uri = new Uri(url, isAbsoluteUri ? UriKind.Absolute : UriKind.Relative);
+                uri = LinkImageRenderHelper.NormalizeLinkUri(obj.Url, renderer.LinksBaseUri);
             }
-        }
 
-        if (uri == null && anchorName == string.Empty)
-        {
-            // Don't create the hyperlink if no valid Uri or anchor was created.
+            if (uri == null && anchorName == string.Empty)
+            {
+                // Don't create the hyperlink if no valid Uri or anchor was created.
+                renderer.WriteChildren(obj);
+                return;
+            }
+            
+            var linkId = $"L{_hyperlinkIdCounter++}";
+            Debug.Assert(renderer.Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
+
+            Hyperlink hl;
+            if (isAnchor)
+            {
+                // Link to bookmark
+                hl = new Hyperlink()
+                {
+                    Anchor = anchorName
+                };
+            }
+            else
+            {
+                renderer.Document.MainDocumentPart.AddHyperlinkRelationship(uri!, true, linkId);
+                hl = new Hyperlink()
+                {
+                    Id = linkId,
+                };
+            }
+
+            renderer.Cursor.Write(hl);
+            renderer.Cursor.GoInto(hl);
+            
+            renderer.TextStyle.Push(renderer.Styles.MarkdownStyles["Hyperlink"]);
             renderer.WriteChildren(obj);
-            return;
-        }
-                  
-        var linkId = $"L{_hyperlinkIdCounter++}";
-        Debug.Assert(renderer.Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
-
-        Hyperlink hl;
-        if (isExternal)
-        {
-            renderer.Document.MainDocumentPart.AddHyperlinkRelationship(uri!, isExternal, linkId);
-            hl = new Hyperlink()
-            {
-                Id = linkId,
-            };
-        }
-        else
-        {
-            // Link to bookmark
-            hl = new Hyperlink()
-            {
-                Anchor = anchorName
-            };
-        }
-
-        renderer.Cursor.Write(hl);
-        renderer.Cursor.GoInto(hl);
+            renderer.TextStyle.Pop();
             
-        renderer.TextStyle.Push(renderer.Styles.MarkdownStyles["Hyperlink"]);
-        renderer.WriteChildren(obj);
-        renderer.TextStyle.Pop();
-            
-        renderer.Cursor.PopAndAdvanceAfter(hl);
+            renderer.Cursor.PopAndAdvanceAfter(hl);
+        }
     }
 
-    private void ProcessImage(DocxDocumentRenderer renderer, string url, string? label, string? title)
+    private void ProcessImage(DocxDocumentRenderer renderer, string url, string? label, string? title, double width, double height)
     {
-        Uri? uri = null;
-
-        var isAbsoluteUri = Uri.TryCreate(url, UriKind.Absolute, out uri);
-
-        if (!isAbsoluteUri)
-        {
-            // Could be a relative URL
-            if (Uri.TryCreate(url, UriKind.Relative, out uri) && !string.IsNullOrEmpty(renderer.ImagesBaseUri))
-            {
-                // Relative URI is well formatted, check ImagesBaseUri and add a final slash,
-                // otherwise it is interpreted as file and relative links starting with . or .. won't work properly.
-                // Note that ImagesPathUri should not be a file path.
-                string normalizedBaseUri = renderer.ImagesBaseUri.TrimEnd('\\', '/') + @"/";
-                if (Uri.TryCreate(normalizedBaseUri, UriKind.Absolute, out Uri? baseUri)
-                    && baseUri != null)
-                {
-                    uri = new Uri(baseUri, uri);
-                }
-            }
-        } // else the URI can be directly processed as absolute
-
+        Uri? uri = LinkImageRenderHelper.NormalizeImageUri(url, renderer.ImagesBaseUri);
         if (uri != null)
         {
             try
             {
-                if (uri.IsFile)
+                if (uri.IsAbsoluteUri && uri.IsFile)
                 {
-                    InsertImage(renderer, uri.LocalPath, label, title);
+                    using (var fs = new FileStream(uri.LocalPath, FileMode.Open, FileAccess.Read))
+                    {
+                        InsertImage(renderer, fs, label, title, width, height);
+                    }
                 }
                 else if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
                 {
                     // Only HTTP and HTTPS are supported for automatic download
-                    var bytes = ResourceDownloader.DownloadFile(url);
-                    if (bytes != null)
+                    using (var stream = ResourceDownloader.GetDownloadStream(url))
                     {
-                        InsertImage(renderer, bytes, label, title);
+                        if (stream != null)
+                        {
+                            InsertImage(renderer, stream, label, title, width, height);
+                        }
                     }
                 }
             }
@@ -170,140 +127,44 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         }
     }
 
-    private void InsertImage(DocxDocumentRenderer renderer, string filePath, string? label, string? title)
+    private void InsertImage(DocxDocumentRenderer renderer, Stream stream, string? label, string? title, double desiredWidth, double desiredHeight)
     {
-        using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+        try
         {
-            InsertImage(renderer, fs, label, title);
-        }
-    }
-
-    private void InsertImage(DocxDocumentRenderer renderer, byte[] bytes, string? label, string? title)
-    {
-        using (var ms = new MemoryStream(bytes))
-        {
-            InsertImage(renderer, ms, label, title);
-        }
-    }
-
-    private void InsertImage(DocxDocumentRenderer renderer, Stream stream, string? label, string? title)
-    {
-        if (ImageHeader.TryDetectFileType(stream, out ImageFormat fileType))
-        {
-            var imagePart = TryInsertImagePart(renderer, stream, fileType);
-            if (imagePart != null && renderer.Document.MainDocumentPart?.GetIdOfPart(imagePart) is string rId)
+            using (var tempStream = LinkImageRenderHelper.ConvertAndScaleImage(stream,
+                                                           out ImageFormat fileType,
+                                                           renderer.Document.GetEffectivePageSize(), DocSharp.UnitMetric.Twip,
+                                                           desiredWidth, desiredHeight, DocSharp.UnitMetric.Pixel,
+                                                           out long calculatedWidth, out long calculatedHeight,
+                                                           false, renderer.ImageConverter))
             {
-                System.Drawing.Size size = System.Drawing.Size.Empty;
-                try
+                PartTypeInfo? imagePartType = fileType.ToImagePartType();
+                if (tempStream != null && imagePartType != null && imagePartType.HasValue && calculatedWidth > 0 && calculatedHeight > 0)
                 {
-                    size = ImageHeader.GetDimensions(stream, fileType);
-                }
-                catch
-                {
-                    return;
-                }
-                if (size == System.Drawing.Size.Empty || size.Width < 0 || size.Height < 0)
-                {
-                    return;
-                }
-                // GetDimensions returns width and height in pixels, except for WMF
-                // whose dimensions are returned in inches as it's not device-independent.
-                var unit = fileType == ImageFormat.Wmf ? DocSharp.UnitMetric.Inch : DocSharp.UnitMetric.Pixel;
-                
-                // Convert to EMUs
-                var width = DocSharp.UnitMetricHelper.ConvertToEmus(size.Width, unit);
-                var height = DocSharp.UnitMetricHelper.ConvertToEmus(size.Height, unit);
-
-                // Try to scale image size to fit the page.
-                var pageSize = renderer.Document.GetEffectivePageSize();
-                // Convert twips to EMUs (used for image dimensions),
-                // and assume 75% of the page size as maximum (empirical). 
-                var maxWidth = pageSize.Width * 635 * 0.75;
-                var maxHeight = pageSize.Height * 635 * 0.75;
-
-                ScaleImageSize(ref width, ref height, maxWidth, maxHeight);
-
-                var imageElement = ImageHelpers.CreateImage(rId, width, height, _imageIdCounter, label, title);
-                ++_imageIdCounter;
-                if (renderer.Cursor.Container is Run run)
-                {
-                    renderer.Cursor.Write(imageElement);
-                }
-                else
-                {
-                    renderer.Cursor.Write(new Run(imageElement));
+                    tempStream.Position = 0;
+                    var imagePart = renderer.Document.MainDocumentPart?.AddImagePart(tempStream, imagePartType.Value);
+                    if (imagePart != null && renderer.Document.MainDocumentPart?.GetIdOfPart(imagePart) is string rId)
+                    {
+                        var imageElement = ImageHelpers.CreateImage(rId, calculatedWidth, calculatedHeight, _imageIdCounter, label, title);
+                        ++_imageIdCounter;
+                        if (renderer.Cursor.Container is Run run)
+                        {
+                            renderer.Cursor.Write(imageElement);
+                        }
+                        else
+                        {
+                            renderer.Cursor.Write(new Run(imageElement));
+                        }
+                    }
                 }
             }
         }
-    }
-
-    private ImagePart? TryInsertImagePart(DocxDocumentRenderer renderer, Stream stream, ImageFormat fileType)
-    {
-        PartTypeInfo? partType = null;
-        switch (fileType)
+        catch (Exception ex)
         {
-            case ImageFormat.Bitmap:
-                partType = ImagePartType.Bmp;
-                break;
-            case ImageFormat.Gif:
-                partType = ImagePartType.Gif;
-                break;
-            case ImageFormat.Jpeg:
-                partType = ImagePartType.Jpeg;
-                break;
-            case ImageFormat.Png:
-                partType = ImagePartType.Png;
-                break;
-            case ImageFormat.Tiff:
-                partType = ImagePartType.Tiff;
-                break;
-            case ImageFormat.Svg:
-                partType = ImagePartType.Svg;
-                break;
-            case ImageFormat.Ico:
-                partType = ImagePartType.Icon;
-                break;
-            case ImageFormat.Jpeg2000:
-                partType = ImagePartType.Jp2;
-                break;
-            case ImageFormat.Webp:
-            case ImageFormat.Avif:
-            case ImageFormat.Jxl:
-            case ImageFormat.Heif:
-            case ImageFormat.Jxr:
-                using (var ms = new MemoryStream())
-                {
-                    if (renderer.ImageConverter != null &&
-                        renderer.ImageConverter.ConvertToPng(stream, ms, fileType))
-                    {
-                        ms.Position = 0;
-                        var part = renderer.Document.MainDocumentPart?.AddImagePart(ms, ImagePartType.Png);
-                        renderer.Document.Save();
-                        return part;
-                    }
-                }
-                break;
-        }
-        if (partType != null)
-        {
-            return renderer.Document.MainDocumentPart?.AddImagePart(stream, partType.Value);
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    // Scale image dimensions to be less than max width and height, keeping aspect ratio.
-    private static void ScaleImageSize(ref long width, ref long height, double maxWidth, double maxHeight)
-    {
-        if (width > maxWidth || height > maxHeight)
-        {
-            var ratioX = maxWidth / width;
-            var ratioY = maxHeight / height;
-            var ratio = Math.Min(ratioX, ratioY);
-            width = Math.Max((int)(width * ratio), 1);
-            height = Math.Max((int)(height * ratio), 1);
+#if DEBUG
+            Debug.WriteLine($"Exception in InsertImage: {ex.Message}");
+#endif
+            return;
         }
     }
 
@@ -313,8 +174,8 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         var bookmarkName = renderer.Document.MainDocumentPart?.Document.Body?
                            .Descendants<BookmarkStart>()
                            .Select(bs => bs.Name)
-                           .Where(name => name != null && 
-                                          name.Value != null && 
+                           .Where(name => name != null &&
+                                          name.Value != null &&
                                           name.Value.Equals(anchorId, StringComparison.OrdinalIgnoreCase));
         return bookmarkName?.FirstOrDefault()?.Value ?? "";
     }
