@@ -128,4 +128,34 @@ public sealed class RtfStringWriter : BaseStringWriter
     {
         WriteShapeProperty(name, value.ToStringInvariant());
     }
+
+    public void WriteRtfDate(DateTime value)
+    {
+        // https://stackoverflow.com/questions/23127120/rtf-date-stamp-converted-to-a-datetime-format-and-vice-versa-in-net
+
+        /*
+        Date/time references use the following bit field structure (DTTM): 
+        | Bit numbers | Information  | Range           |
+        | ----------- | ------------ | ----------------|
+        | 0–5         | Minute       | 0–59            |
+        | 6–10        | Hour         | 0–23            |
+        | 11–15       | Day of month | 1–31            |
+        | 16–19       | Month        | 1–12            |
+        | 20–28       | Year         | = Year – 1900   |
+        | 29–31       | Day of week  | 0 (Sun)–6 (Sat) |
+        */
+        
+        long nDT = (uint)value.DayOfWeek;
+        nDT <<= 9;
+        nDT += (value.Year - 1900 ) & 0x1ff;
+        nDT <<= 4;
+        nDT += value.Month & 0xf;
+        nDT <<= 5;
+        nDT += value.Day & 0x1f;
+        nDT <<= 5;
+        nDT += value.Hour & 0x1f;
+        nDT <<= 6;
+        nDT += value.Minute & 0x3f;
+        Write(nDT);
+    }
 }

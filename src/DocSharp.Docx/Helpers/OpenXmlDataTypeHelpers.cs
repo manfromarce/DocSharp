@@ -13,6 +13,7 @@ using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using DocumentFormat.OpenXml.Math;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using OnOffType = DocumentFormat.OpenXml.Wordprocessing.OnOffType;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace DocSharp.Docx;
@@ -22,6 +23,28 @@ public static class OpenXmlDataTypeHelpers
     public static bool ToBool(this EnumValue<BooleanValues> val)
     {
         return val == BooleanValues.True || val == BooleanValues.On || val == BooleanValues.One;
+    }
+
+    public static bool ToBool(this OnOffOnlyType? property, bool defaultIfNotPresent = false, bool defaultIfNoValue = true)
+    {
+        if (property == null)
+            return defaultIfNotPresent;
+
+        if (property.Val == null)
+            return defaultIfNoValue;
+
+        return property.Val == OnOffOnlyValues.On;
+    }
+
+    public static bool ToBool(this OnOffType? property, bool defaultIfNotPresent = false, bool defaultIfNoValue = true)
+    {
+        if (property == null)
+            return defaultIfNotPresent;
+
+        if (property.Val == null)
+            return defaultIfNoValue;
+
+        return property.Val;
     }
 
     public static long ToLong(this HexBinaryValue value)

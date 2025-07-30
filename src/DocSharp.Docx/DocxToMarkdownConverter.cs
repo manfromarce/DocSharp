@@ -460,9 +460,9 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
 
     internal override void ProcessDrawing(Drawing drawing, MarkdownStringWriter sb)
     {
-        if ((!string.IsNullOrWhiteSpace(ImagesOutputFolder)))
+        if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
         {
-            if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
+            if (drawing.Inline?.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
             {
                 var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
                 if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip && 
@@ -742,11 +742,20 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
         sb.Write($"[{endnoteReferenceMark.GetEndnoteIdString()}]: "); // Avoid escaping in this case
     }
 
+    internal override void ProcessBody(Body body, MarkdownStringWriter sb)
+    {
+        EnsureSpace(sb); // For sub-documents / AltChunks
+        base.ProcessBody(body, sb);
+    }
+
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, MarkdownStringWriter sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, MarkdownStringWriter sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, MarkdownStringWriter sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, MarkdownStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, MarkdownStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber background, MarkdownStringWriter sb) { }
-
+    internal override void ProcessCommentStart(CommentRangeStart commentStart, MarkdownStringWriter sb) { }
+    internal override void ProcessCommentEnd(CommentRangeEnd commentEnd, MarkdownStringWriter sb) { }
+    internal override void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, MarkdownStringWriter sb) { }
+    internal override void ProcessCommentReference(CommentReference commentRef, MarkdownStringWriter sb) { }
 }

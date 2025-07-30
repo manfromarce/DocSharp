@@ -27,6 +27,13 @@ public static class OpenXmlHelpers
         return element.NamespaceUri.StartsWith(OpenXmlConstants.VmlNamespace, StringComparison.OrdinalIgnoreCase);
     }
 
+    public static bool HasContent(this Paragraph p)
+    {
+        // If run contains only RunProperties or unsupported elements, return false
+        return p.HasChildren && !p.Elements().All(x => x is ParagraphProperties ||
+                                                       x is DeletedRun);
+    }
+
     public static bool HasContent(this Run run)
     {
         // If run contains only RunProperties or unsupported elements, return false
@@ -39,7 +46,7 @@ public static class OpenXmlHelpers
     {
         if (element != null && element.GetFirstAncestor<Document>() is Document document)
         {
-            return document.Descendants<T>().FirstOrDefault(x => x.IsAfter(element));           
+            return document.Descendants<T>().FirstOrDefault(x => x.IsAfter(element));
         }
         return null;
     }
@@ -100,7 +107,7 @@ public static class OpenXmlHelpers
 
     public static OpenXmlElement GetRoot(this OpenXmlElement element)
     {
-        OpenXmlElement rootElement = element;       
+        OpenXmlElement rootElement = element;
         while (rootElement.Parent != null)
         {
             rootElement = rootElement.Parent;
@@ -124,6 +131,157 @@ public static class OpenXmlHelpers
     public static Numbering? GetNumberingPart(this OpenXmlElement element)
     {
         return GetMainDocumentPart(element)?.NumberingDefinitionsPart?.Numbering;
+    }
+
+    internal static ConditionalFormattingFlags GetFlags(this ConditionalFormatStyle? cfs)
+    {
+        if (cfs == null) return ConditionalFormattingFlags.None;
+
+        ConditionalFormattingFlags flags = ConditionalFormattingFlags.None;
+        if (cfs.FirstRow?.Value == true) flags |= ConditionalFormattingFlags.FirstRow;
+        if (cfs.LastRow?.Value == true) flags |= ConditionalFormattingFlags.LastRow;
+        if (cfs.FirstColumn?.Value == true) flags |= ConditionalFormattingFlags.FirstColumn;
+        if (cfs.LastColumn?.Value == true) flags |= ConditionalFormattingFlags.LastColumn;
+        if (cfs.OddHorizontalBand?.Value == true) flags |= ConditionalFormattingFlags.OddRowBanding;
+        if (cfs.EvenHorizontalBand?.Value == true) flags |= ConditionalFormattingFlags.EvenRowBanding;
+        if (cfs.OddVerticalBand?.Value == true) flags |= ConditionalFormattingFlags.OddColumnBanding;
+        if (cfs.EvenVerticalBand?.Value == true) flags |= ConditionalFormattingFlags.EvenColumnBanding;
+        if (cfs.FirstRowFirstColumn?.Value == true) flags |= ConditionalFormattingFlags.NorthWestCell;
+        if (cfs.FirstRowLastColumn?.Value == true) flags |= ConditionalFormattingFlags.NorthEastCell;
+        if (cfs.LastRowFirstColumn?.Value == true) flags |= ConditionalFormattingFlags.SouthWestCell;
+        if (cfs.LastRowLastColumn?.Value == true) flags |= ConditionalFormattingFlags.SouthEastCell;
+
+        if (flags == ConditionalFormattingFlags.None && cfs.Val?.Value != null)
+        {
+            string val = cfs.Val.Value.PadLeft(12, '0');
+            if (val.Length == 12)
+            {
+                // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.conditionalformatstyle.val?view=openxml-3.0.1#documentformat-openxml-wordprocessing-conditionalformatstyle-val
+                if (val[0] == '1') flags |= ConditionalFormattingFlags.FirstRow;
+                if (val[1] == '1') flags |= ConditionalFormattingFlags.LastRow;
+                if (val[2] == '1') flags |= ConditionalFormattingFlags.FirstColumn;
+                if (val[3] == '1') flags |= ConditionalFormattingFlags.LastColumn;
+                if (val[4] == '1') flags |= ConditionalFormattingFlags.OddColumnBanding;
+                if (val[5] == '1') flags |= ConditionalFormattingFlags.EvenColumnBanding;
+                if (val[6] == '1') flags |= ConditionalFormattingFlags.OddRowBanding;
+                if (val[7] == '1') flags |= ConditionalFormattingFlags.EvenRowBanding;
+                if (val[9] == '1') flags |= ConditionalFormattingFlags.NorthEastCell;
+                if (val[8] == '1') flags |= ConditionalFormattingFlags.NorthWestCell;
+                if (val[11] == '1') flags |= ConditionalFormattingFlags.SouthEastCell;
+                if (val[10] == '1') flags |= ConditionalFormattingFlags.SouthWestCell;
+            }
+        }
+        return flags;
+    }
+
+    internal static ConditionalFormattingFlags GetCombinedConditionalFormattingFlags(this OpenXmlElement element)
+    {
+        ConditionalFormattingFlags flags = ConditionalFormattingFlags.None;
+
+        Paragraph? paragraph = null;
+        TableRow? row = null;
+        TableCell? cell = null;
+
+        if (element is Run)
+            paragraph = element.GetFirstAncestor<Paragraph>();
+        else if (element is Paragraph)
+            paragraph = element as Paragraph;
+
+        if (paragraph != null)
+            flags |= paragraph.ParagraphProperties?.ConditionalFormatStyle.GetFlags() ?? ConditionalFormattingFlags.None;
+
+        if (element is TableCell)
+            cell = element as TableCell;
+        else if (paragraph != null)
+            cell = paragraph.GetFirstAncestor<TableCell>();
+
+        if (cell != null)
+            flags |= cell.TableCellProperties?.ConditionalFormatStyle.GetFlags() ?? ConditionalFormattingFlags.None;
+
+        if (element is TableRow)
+            row = element as TableRow;
+        else if (cell != null)
+            row = cell.GetFirstAncestor<TableRow>();
+        else if (paragraph != null)
+            row = paragraph.GetFirstAncestor<TableRow>();
+
+        if (row != null)
+            // TODO: can it contain multiple ConditionalFormatStyle ?
+            flags |= row.TableRowProperties?.GetFirstChild<ConditionalFormatStyle>().GetFlags() ?? ConditionalFormattingFlags.None;
+
+        return flags;
+    }
+
+    public static List<TableStyleProperties>? GetConditionalFormattingStyles(Style tableStyle, ConditionalFormattingFlags conditionalFormattingFlags)
+    {
+        if (conditionalFormattingFlags == ConditionalFormattingFlags.None)
+            return null;
+
+        var typesToCheck = new List<TableStyleOverrideValues>();
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.FirstRow))
+            typesToCheck.Add(TableStyleOverrideValues.FirstRow);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.LastRow))
+            typesToCheck.Add(TableStyleOverrideValues.LastRow);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.FirstColumn))
+            typesToCheck.Add(TableStyleOverrideValues.FirstColumn);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.LastColumn))
+            typesToCheck.Add(TableStyleOverrideValues.LastColumn);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.OddRowBanding))
+            typesToCheck.Add(TableStyleOverrideValues.Band1Horizontal);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.EvenRowBanding))
+            typesToCheck.Add(TableStyleOverrideValues.Band2Horizontal);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.OddColumnBanding))
+            typesToCheck.Add(TableStyleOverrideValues.Band1Vertical);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.EvenColumnBanding))
+            typesToCheck.Add(TableStyleOverrideValues.Band2Vertical);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.NorthWestCell))
+            typesToCheck.Add(TableStyleOverrideValues.NorthWestCell);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.NorthEastCell))
+            typesToCheck.Add(TableStyleOverrideValues.NorthEastCell);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.SouthWestCell))
+            typesToCheck.Add(TableStyleOverrideValues.SouthWestCell);
+        if (conditionalFormattingFlags.HasFlag(ConditionalFormattingFlags.SouthEastCell))
+            typesToCheck.Add(TableStyleOverrideValues.SouthEastCell);
+
+        return tableStyle.Elements<TableStyleProperties>()
+            .Where(x => x.Type != null && typesToCheck.Contains(x.Type.Value))
+            .ToList();
+    }
+
+    internal static T? GetConditionalFormattingProperty<T>(Styles? stylesPart, Paragraph p, ConditionalFormattingFlags conditionalFormattingFlags) where T : OpenXmlElement
+    {
+        if (stylesPart != null && conditionalFormattingFlags != ConditionalFormattingFlags.None)
+        {
+            if (p.GetFirstAncestor<Table>() is Table table &&
+                table.GetFirstChild<TableProperties>() is TableProperties tPr &&
+                tPr.TableStyle?.Val != null)
+            {
+                var tableStyle = stylesPart.GetStyleFromId(tPr.TableStyle.Val, StyleValues.Table);
+                T? propertyValue = null;
+                while (tableStyle != null)
+                {
+                    var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+
+                    if (conditionalStyles != null)
+                    {
+                        foreach (var conditionalStyle in conditionalStyles)
+                        {
+                            propertyValue = conditionalStyle?.RunPropertiesBaseStyle?.GetFirstChild<T>() ??
+                                            conditionalStyle?.StyleParagraphProperties?.GetFirstChild<T>();
+
+                            if (propertyValue != null)
+                            {
+                                return propertyValue;
+                            }
+                        }
+                    }
+
+                    // Check styles from which the current style inherits
+                    tableStyle = stylesPart.GetBaseStyle(tableStyle);
+                }
+            }
+        }
+        return null;
     }
 
     public static T? GetEffectiveProperty<T>(this OpenXmlElement element) where T : OpenXmlElement
@@ -174,6 +332,14 @@ public static class OpenXmlHelpers
 
         var stylesPart = GetStylesPart(paragraph);
 
+        // Check conditional formatting, if any
+        var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
+        propertyValue = GetConditionalFormattingProperty<T>(stylesPart, paragraph, conditionalFormattingType);
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
         // Check paragraph style
         var paragraphStyle = stylesPart.GetStyleFromId(paragraph.ParagraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
         while (paragraphStyle != null)
@@ -189,7 +355,7 @@ public static class OpenXmlHelpers
         }
 
         // Check table paragraph style
-        if (paragraph.GetFirstAncestor<Table>() is Table table && 
+        if (paragraph.GetFirstAncestor<Table>() is Table table &&
             table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
         {
             var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
@@ -222,8 +388,20 @@ public static class OpenXmlHelpers
 
         var stylesPart = GetStylesPart(run);
 
+        // Check conditional formatting, if any
+        var paragraph = run.GetFirstAncestor<Paragraph>();
+        var conditionalFormattingType = paragraph is null ? ConditionalFormattingFlags.None : paragraph.GetCombinedConditionalFormattingFlags();
+        if (paragraph != null && conditionalFormattingType != ConditionalFormattingFlags.None)
+        {
+            propertyValue = GetConditionalFormattingProperty<T>(stylesPart, paragraph, conditionalFormattingType);
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+        }
+
         // Check run style
-        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character) ?? 
+        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character) ??
                        stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Paragraph);
         while (runStyle != null)
         {
@@ -250,6 +428,24 @@ public static class OpenXmlHelpers
 
             // Check styles from which the current style inherits
             paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
+        }
+
+        // Check table run style
+        if (run.GetFirstAncestor<Table>() is Table table &&
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+            while (tableStyle != null)
+            {
+                propertyValue = tableStyle.StyleRunProperties?.GetFirstChild<T>();
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+
+                // Check styles from which the current style inherits
+                tableStyle = stylesPart.GetBaseStyle(tableStyle);
+            }
         }
 
         // Check default run style for the current document
@@ -287,13 +483,7 @@ public static class OpenXmlHelpers
     public static T? GetEffectiveProperty<T>(this NumberingSymbolRunProperties runPr) where T : OpenXmlElement
     {
         // Check run properties
-        T? propertyValue = runPr.GetFirstChild<T>();
-        if (propertyValue != null)
-        {
-            return propertyValue;
-        }
-
-        return null;
+        return runPr.GetFirstChild<T>();
     }
 
     // Helper function to get table formatting from table properties or style.
@@ -308,12 +498,31 @@ public static class OpenXmlHelpers
         }
 
         var stylesPart = GetStylesPart(table);
+        var conditionalFormattingFlags = table.GetCombinedConditionalFormattingFlags();
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
         {
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    propertyValue = conditionalStyle?.TableStyleConditionalFormattingTableProperties?.GetFirstChild<T>();
+
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check regular table style
             propertyValue = tableStyle.StyleTableProperties?.GetFirstChild<T>();
+            // (should we also check row properties here ?)
+
             if (propertyValue != null)
             {
                 return propertyValue;
@@ -353,12 +562,33 @@ public static class OpenXmlHelpers
         }
 
         var stylesPart = GetStylesPart(row);
+        var conditionalFormattingFlags = row.GetCombinedConditionalFormattingFlags();
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
         {
-            propertyValue = tableStyle.StyleTableProperties?.GetFirstChild<T>();
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    propertyValue = conditionalStyle?.TableStyleConditionalFormattingTableRowProperties?.GetFirstChild<T>() ??
+                                    conditionalStyle?.TableStyleConditionalFormattingTableProperties?.GetFirstChild<T>();
+
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check regular table style
+            propertyValue = tableStyle.TableStyleConditionalFormattingTableRowProperties?.GetFirstChild<T>() ??
+                            tableStyle.StyleTableProperties?.GetFirstChild<T>();
+            // (should we also check cell properties here ?)
+
             if (propertyValue != null)
             {
                 return propertyValue;
@@ -374,7 +604,7 @@ public static class OpenXmlHelpers
     // Helper function to get cell formatting from cell/table properties or style.
     public static T? GetEffectiveProperty<T>(this TableCell cell) where T : OpenXmlElement
     {
-        // Check cell properties        
+        // Check cell properties
         T? propertyValue = cell.TableCellProperties?.GetFirstChild<T>();
         if (propertyValue != null)
         {
@@ -386,7 +616,7 @@ public static class OpenXmlHelpers
         var tableRowProperties = row?.TableRowProperties; // can have e.g. TableCellSpacing
         var tablePropertiesExceptions = row?.TablePropertyExceptions; // has exceptions to TableProperties and many of the same properties,
                                                                       // so it's considered less specific than row properties
-        propertyValue = tableRowProperties?.GetFirstChild<T>() ?? 
+        propertyValue = tableRowProperties?.GetFirstChild<T>() ??
                         tablePropertiesExceptions?.GetFirstChild<T>();
         if (propertyValue != null)
         {
@@ -403,13 +633,35 @@ public static class OpenXmlHelpers
         }
 
         var stylesPart = GetStylesPart(cell);
+        var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
         {
-            propertyValue = tableStyle.StyleTableCellProperties?.GetFirstChild<T>() ?? 
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    propertyValue = conditionalStyle?.TableStyleConditionalFormattingTableCellProperties?.GetFirstChild<T>() ??
+                                    conditionalStyle?.TableStyleConditionalFormattingTableRowProperties?.GetFirstChild<T>() ??
+                                    conditionalStyle?.TableStyleConditionalFormattingTableProperties?.GetFirstChild<T>();
+
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check regular table style
+            propertyValue = tableStyle.StyleTableCellProperties?.GetFirstChild<T>() ??
+                            tableStyle.TableStyleConditionalFormattingTableRowProperties?.GetFirstChild<T>() ??
                             tableStyle.StyleTableProperties?.GetFirstChild<T>();
+            // (should TableStyleConditionalFormattingTableRowProperties have precedence over StyleTableCellProperties?)
+
             if (propertyValue != null)
             {
                 return propertyValue;
@@ -424,7 +676,7 @@ public static class OpenXmlHelpers
 
     // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
     public static BorderType? GetEffectiveBorder(this TableCell cell, Primitives.BorderValue borderValue,
-                                                 int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft)
+                                                     int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft = false)
     {
         bool isFirstRow = rowNumber == 1;
         bool isFirstColumn = columnNumber == 1;
@@ -455,6 +707,28 @@ public static class OpenXmlHelpers
                 {
                     targetTypesTable.Add(typeof(RightBorder));
                     targetTypesTable.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
+                }
+                else
+                {
+                    targetTypesTable.Add(typeof(InsideVerticalBorder));
+                }
+                break;
+            case Primitives.BorderValue.Start:
+                targetTypesCell.Add(typeof(StartBorder));
+                if (isLastColumn)
+                {
+                    targetTypesTable.Add(typeof(StartBorder));
+                }
+                else
+                {
+                    targetTypesTable.Add(typeof(InsideVerticalBorder));
+                }
+                break;
+            case Primitives.BorderValue.End:
+                targetTypesCell.Add(typeof(EndBorder));
+                if (isLastColumn)
+                {
+                    targetTypesTable.Add(typeof(EndBorder));
                 }
                 else
                 {
@@ -500,8 +774,8 @@ public static class OpenXmlHelpers
             {
                 return (BorderType)res;
             }
-        }        
-        
+        }
+
         // Check table properties
         var tableProperties = cell.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
         foreach (var type in targetTypesTable)
@@ -515,10 +789,30 @@ public static class OpenXmlHelpers
 
         // Check table style
         var stylesPart = GetStylesPart(cell);
+        var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
         {
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    res = conditionalStyle?.TableStyleConditionalFormattingTableCellProperties?.TableCellBorders?.FirstOrDefault(element => targetTypesCell.Contains(element.GetType())) ??
+                          conditionalStyle?.TableStyleConditionalFormattingTableProperties?.TableBorders?.FirstOrDefault(element => targetTypesTable.Contains(element.GetType()));
+
+                    if (res != null)
+                    {
+                        return (BorderType)res;
+                    }
+                }
+            }
+
+            // Check regular table style
             res = tableStyle.StyleTableProperties?.TableBorders?.FirstOrDefault(element => targetTypesTable.Contains(element.GetType()));
+            // (StyleTableCellProperties and row properties do not contain borders according to Open XML spec)
+
             if (res != null)
             {
                 return (BorderType)res;
@@ -553,9 +847,27 @@ public static class OpenXmlHelpers
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+        var conditionalFormattingFlags = row.GetCombinedConditionalFormattingFlags();
         while (tableStyle != null)
         {
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    propertyValue = conditionalStyle?.TableStyleConditionalFormattingTableProperties?.TableBorders?.GetFirstChild<T>();
+
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check regular table style
             propertyValue = tableStyle.StyleTableProperties?.TableBorders?.GetFirstChild<T>();
+            // (row properties do not contain borders according to Open XML spec)
             if (propertyValue != null)
             {
                 return propertyValue;
@@ -567,6 +879,137 @@ public static class OpenXmlHelpers
         return null;
     }
 
+    public static OpenXmlElement? GetEffectiveMargin(this TableCell cell, Primitives.MarginValue marginValue, bool isRightToLeft = false)
+    {
+        // This method does not check table default margins by design,
+        // as that would create double margins in the cell. 
+        // Instead, table default margins should be processed separately.
+        var targetTypesCell = new List<Type>();
+        switch (marginValue)
+        {
+            case Primitives.MarginValue.Left:
+                targetTypesCell.Add(typeof(LeftMargin));
+                targetTypesCell.Add(typeof(TableCellLeftMargin));
+                targetTypesCell.Add(isRightToLeft ? typeof(EndMargin) : typeof(StartMargin));
+                break;
+            case Primitives.MarginValue.Right:
+                targetTypesCell.Add(typeof(RightMargin));
+                targetTypesCell.Add(typeof(TableCellRightMargin));
+                targetTypesCell.Add(isRightToLeft ? typeof(StartMargin) : typeof(EndMargin));
+                break;
+            case Primitives.MarginValue.Start:
+                targetTypesCell.Add(typeof(StartMargin));
+                break;
+            case Primitives.MarginValue.End:
+                targetTypesCell.Add(typeof(EndMargin));
+                break;
+            case Primitives.MarginValue.Top:
+                targetTypesCell.Add(typeof(TopMargin));
+                break;
+            case Primitives.MarginValue.Bottom:
+                targetTypesCell.Add(typeof(BottomMargin));
+                break;
+        }
+
+        // The types should be checked in order to preserve the correct priority.
+        // For example, left and right should have precedence over start and end as they are more specific.
+        OpenXmlElement? res = null;
+        foreach (var type in targetTypesCell)
+        {
+            res = cell.TableCellProperties?.TableCellMargin?.FirstOrDefault(element => element.GetType() == type);
+            if (res != null)
+            {
+                return res;
+            }
+        }
+
+        // Check table style
+        var tableProperties = cell.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
+        var stylesPart = GetStylesPart(cell);
+        var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
+        var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+        while (tableStyle != null)
+        {
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    res = conditionalStyle?.TableStyleConditionalFormattingTableCellProperties?.TableCellMargin?.FirstOrDefault(element => targetTypesCell.Contains(element.GetType()));
+
+                    if (res != null)
+                    {
+                        return res;
+                    }
+                }
+            }
+
+            // Check regular table style
+            res = tableStyle.StyleTableCellProperties?.TableCellMargin?.FirstOrDefault(element => targetTypesCell.Contains(element.GetType()));
+            if (res != null)
+            {
+                return res;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = stylesPart.GetBaseStyle(tableStyle);
+        }
+        return null;
+    }
+
+    public static T? GetEffectiveMargin<T>(this TableRow row) where T : OpenXmlElement
+    {
+        // Check row properties
+        var tablePropertiesExceptions = row.TablePropertyExceptions;
+        T? propertyValue = tablePropertiesExceptions?.TableCellMarginDefault?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check table properties
+        var tableProperties = row.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
+        propertyValue = tableProperties?.TableCellMarginDefault?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        var stylesPart = GetStylesPart(row);
+
+        // Check table style
+        var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+        var conditionalFormattingFlags = row.GetCombinedConditionalFormattingFlags();
+        while (tableStyle != null)
+        {
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    propertyValue = conditionalStyle?.TableStyleConditionalFormattingTableProperties?.TableCellMarginDefault?.GetFirstChild<T>();
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check regular table style
+            propertyValue = tableStyle.StyleTableProperties?.TableCellMarginDefault?.GetFirstChild<T>();
+            // (row properties do not contain margins according to Open XML spec)
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = stylesPart.GetBaseStyle(tableStyle);
+        }
+        return null;
+    }
 
     public static void InsertAfterLastOfType<T>(this OpenXmlCompositeElement parent, OpenXmlElement element)
         where T : OpenXmlElement

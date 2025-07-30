@@ -202,7 +202,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             ProcessNumberingFormat(nf, sb);
         }
 
-        if (level.IsLegalNumberingStyle != null && (level.IsLegalNumberingStyle.Val == null || level.IsLegalNumberingStyle.Val))
+        if (level.IsLegalNumberingStyle.ToBool()) 
         {
             sb.Write($@"\levellegal1");
         }
@@ -216,7 +216,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         if (level.ParagraphStyleIdInLevel is ParagraphStyleIdInLevel paragraphStyleIdInLevel)
         {
-
+            // TODO
         }
 
         sb.WriteLine('}');

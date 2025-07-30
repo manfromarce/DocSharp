@@ -59,7 +59,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessFacingPages(EvenAndOddHeaders? evenAndOddHeaders, RtfStringWriter writer)
     {
-        if (evenAndOddHeaders != null && (evenAndOddHeaders.Val == null || evenAndOddHeaders.Val == true))
+        if (evenAndOddHeaders.ToBool())
         {
             writer.Write(@"\facingp");
         }
@@ -67,7 +67,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessTitlePage(TitlePage? titlePage, RtfStringWriter writer)
     {
-        if (titlePage != null && (titlePage.Val is null || titlePage.Val == true))
+        if (titlePage.ToBool())
         {
             writer.Write(@"\titlepg");
         }

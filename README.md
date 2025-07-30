@@ -5,7 +5,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
-- DocSharp.Docx: convert DOCX to Markdown, RTF and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
 
 Packages can be installed via NuGet:  
@@ -37,6 +37,7 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 ### Roadmap
 
 - Support more elements and attributes, and fix issues on edge cases
+- Reduce code duplication, cleanup
 - Async functions/progress callback (some tasks such as downloading images referenced in Markdown may take some time)
 - Improve support for right-to-left and complex script languages
 
@@ -54,8 +55,9 @@ Forked:
 
 Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
-- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) conversion
-- [OpenXmlToHtml](https://github.com/Codeuctivity/OpenXmlToHtml), [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
+- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion
+- [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion
+- [RtfPipe](https://github.com/erdomke/RtfPipe), [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
 
 ### License
 

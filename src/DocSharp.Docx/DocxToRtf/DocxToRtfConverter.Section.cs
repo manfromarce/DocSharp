@@ -89,17 +89,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        if (sectionProperties.GetFirstChild<BiDi>() is BiDi bidi)
+        if (sectionProperties.GetFirstChild<NoProof>().ToBool())
         {
-            if (bidi.Val == null || bidi.Val)
-            {
-                // Left to right by default; right to left if the element is present unless explicitly set to false
-                sb.Write(@"\rtlsect");
-            }
-            else
-            {
-                sb.Write(@"\ltrsect");
-            }
+            // Left to right by default; right to left if the element is present unless explicitly set to false
+            sb.Write(@"\rtlsect");
+        }
+        else
+        {
+            sb.Write(@"\ltrsect");
         }
 
         if (sectionProperties.GetFirstChild<TextDirection>() is TextDirection direction && direction.Val != null)

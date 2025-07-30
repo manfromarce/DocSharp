@@ -10,11 +10,33 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    private bool isInTable = false;
+    private int tableNestingLevel = 0;
+    // 0 means no table, 1 means inside a table, 2 means inside a nested table, etc.
 
     internal override void ProcessTable(Table table, RtfStringWriter sb)
     {
+        this.tableNestingLevel++;
+
         var tableProperties = new RtfStringWriter();
+
+        // var grid = table.GetFirstChild<TableGrid>();
+        // if (grid != null)
+        // {
+        //     // \gridtbl (not emitted by Word)
+        //     foreach (var gridColumn in grid.Elements<GridColumn>())
+        //     {
+        //         // \gcwN (not emitted by Word)
+        //     }
+        // }
+
+        // var shading = table.GetEffectiveProperty<Shading>();
+        // if (shading != null)
+        // {
+        //     // In RTF, table properties are usually specified for single rows.
+        //     // However, unfortunately table row shading is not applied to spacing between cells, unlike table shading.
+        //     // So we just process shading for table cells (it will get the table shading if it is not specified for the cell).
+        //     ProcessShading(shading, sb, ShadingType.TableRow);
+        // }
 
         // Positioned Wrapped Tables (the following properties must be the same for all rows in the table)
         var pos = table.GetEffectiveProperty<TablePositionProperties>();
@@ -135,7 +157,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        var rows = table.Elements<TableRow>();
+        // Select all table rows (in the top-level table or wrapped inside a CustomXmlRow or SdtRow).
+        var rows = table.Elements().SelectMany(e =>
+            {
+                if (e is TableRow tr)
+                {
+                    return new[] { tr };
+                }
+                else if (e is CustomXmlRow customXmlRow)
+                {
+                    return customXmlRow.Elements<TableRow>();
+                }
+                else if (e is SdtRow sdtRow)
+                {
+                    return sdtRow.SdtContentRow?.Elements<TableRow>() ?? Enumerable.Empty<TableRow>();
+                }
+                return Enumerable.Empty<TableRow>();
+            }); // TODO: process other elements such as bookmarks, SdtProperties, ...
         int rowNumber = 1;
         int rowCount = rows.Count();
         foreach (var row in rows)
@@ -144,23 +182,63 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             ++rowNumber;
         }
         sb.WriteLine();
+        
+        this.tableNestingLevel--;
     }
 
     internal void ProcessTableRow(TableRow row, RtfStringWriter sb, int rowNumber, int rowCount, string tableProperties = "")
     {
+        if ((row.TableRowProperties?.GetFirstChild<Hidden>()).ToBool())
+        {
+            // I haven't found a way to make hidden rows work in RTF, for now just skip them.
+            // In addition, it seems that the hidden attribute is not applied in DOCX 
+            // if it is specified in <trPr> in the table style but not in <trPr> in the row itself,
+            // so we only check TableRowProperties.
+            return; 
+        }
+
+        // Select all cells (in the table row directly or wrapped inside a CustomXmlCell or SdtCell).
+        var cells = row.SelectMany(e => 
+            {
+                if (e is TableCell cell)
+                {
+                    return new[] { cell };
+                }
+                else if (e is CustomXmlCell customXmlCell)
+                {
+                    return customXmlCell.Elements<TableCell>();
+                }
+                else if (e is SdtCell sdtCell)
+                {
+                    return sdtCell.SdtContentCell?.Elements<TableCell>() ?? Enumerable.Empty<TableCell>();
+                }
+                return Enumerable.Empty<TableCell>();
+            }); // TODO: process other elements such as bookmarks, SdtProperties, ...
+
+        if (tableNestingLevel > 1)
+        {
+            // Nested cells are expected to be before the nested table properties group.
+            foreach (var cell in cells)
+            {
+                ProcessTableCell(cell, sb);
+                sb.WriteLine();
+            }
+
+            sb.Write(@"{\*\nesttableprops");
+        }
         sb.Write(@"\trowd");
 
         sb.Write(tableProperties);
 
         bool isRightToLeft = false;
         var biDiVisual = row.GetEffectiveProperty<BiDiVisual>();
-        if (biDiVisual != null && (biDiVisual.Val == null || biDiVisual.Val.Value == OnOffOnlyValues.On))
+        if (biDiVisual != null && biDiVisual.ToBool())
         {
             isRightToLeft = true;
         }
         if (biDiVisual is null)
         {
-            isRightToLeft = currentSectionProperties?.GetFirstChild<BiDi>() is BiDi biDi && (biDi.Val == null || biDi.Val.Value);
+            isRightToLeft = (currentSectionProperties?.GetFirstChild<BiDi>()).ToBool();
         }
         if (isRightToLeft)
         {
@@ -195,13 +273,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write($"\\trrh{tableRowHeight.Val.Value}");
             }
         }
-        if (rowProperties?.GetFirstChild<TableHeader>() is TableHeader header && 
-            (header.Val is null || header.Val == OnOffOnlyValues.On))
+        if (row.GetEffectiveProperty<TableHeader>().ToBool())
         {
             sb.Write(@"\trhdr");
         }
-        if (rowProperties?.GetFirstChild<CantSplit>() is CantSplit cantSplit &&
-            (cantSplit.Val is null || cantSplit.Val == OnOffOnlyValues.On))
+        if (row.GetEffectiveProperty<CantSplit>().ToBool())
         {
             sb.Write(@"\trkeep");
         }
@@ -225,22 +301,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
 
         var layout = row.GetEffectiveProperty<TableLayout>();
-        if (layout?.Type != null)
+        if (layout?.Type != null && layout.Type.Value == TableLayoutValues.Fixed)
         {
-            if (layout.Type.Value == TableLayoutValues.Autofit)
-            {
-                sb.Write(@"\trautofit1"); // AutoFit enabled for the row. Can be overriden by \clwWidthN and \trwWidthN
-            }
-            else
-            {
-                sb.Write(@"\trautofit0"); // No auto-fit (default)
-            }
+            sb.Write(@"\trautofit0"); // No auto-fit
         }
-
-        //var look = row.GetEffectiveProperty<TableLook>();
-        //if (look != null)
-        //{
-        //}
+        else
+        {
+            sb.Write(@"\trautofit1"); // AutoFit enabled for the row; disabled by default in RTF so we have to write it. 
+                                      // Can be overriden by \clwWidthN and \trwWidthN.
+        }
 
         var ind = row.GetEffectiveProperty<TableIndentation>();
         if (ind?.Type != null)
@@ -262,6 +331,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 else if (ind.Type.Value == TableWidthUnitValues.Dxa)
                 {
                     sb.Write($"\\tblind{ind.Width.Value}\\tblindtype3");
+                    // sb.Write($"\\trleft{ind.Width.Value}"); // Breaks something, not used
                 }
             }
         }
@@ -361,13 +431,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
             }
         }
+
         var topBorder = OpenXmlHelpers.GetEffectiveBorder<TopBorder>(row);
         var bottomBorder = OpenXmlHelpers.GetEffectiveBorder<BottomBorder>(row);
         BorderType? leftBorder = OpenXmlHelpers.GetEffectiveBorder<LeftBorder>(row);
         BorderType? rightBorder = OpenXmlHelpers.GetEffectiveBorder<RightBorder>(row);
         // Left/right should have priority over start/end as they are more specific.
         leftBorder ??= isRightToLeft ? OpenXmlHelpers.GetEffectiveBorder<EndBorder>(row) : OpenXmlHelpers.GetEffectiveBorder<StartBorder>(row);
-        rightBorder ??= isRightToLeft ? OpenXmlHelpers.GetEffectiveBorder<StartBorder>(row) : OpenXmlHelpers.GetEffectiveBorder<EndBorder>(row);       
+        rightBorder ??= isRightToLeft ? OpenXmlHelpers.GetEffectiveBorder<StartBorder>(row) : OpenXmlHelpers.GetEffectiveBorder<EndBorder>(row);
         var insideH = OpenXmlHelpers.GetEffectiveBorder<InsideHorizontalBorder>(row);
         var insideV = OpenXmlHelpers.GetEffectiveBorder<InsideVerticalBorder>(row);
         if (topBorder != null)
@@ -389,7 +460,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             sb.Write(@"\trbrdrr");
             ProcessBorder(rightBorder, sb);
-        }        
+        }
         if (insideH != null)
         {
             sb.Write(@"\trbrdrh");
@@ -401,13 +472,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             ProcessBorder(insideV, sb);
         }
 
-        var marginDefault = OpenXmlHelpers.GetEffectiveProperty<TableCellMarginDefault>(row);
-        var topMargin = marginDefault?.TopMargin;
-        var bottomMargin = marginDefault?.BottomMargin;
-        var startMargin = marginDefault?.StartMargin;
-        var endMargin = marginDefault?.EndMargin;
-        var leftMargin = marginDefault?.TableCellLeftMargin;
-        var rightMargin = marginDefault?.TableCellRightMargin;
+        var topMargin = row.GetEffectiveMargin<TopMargin>();
+        var bottomMargin = row.GetEffectiveMargin<BottomMargin>();
+        var startMargin = row.GetEffectiveMargin<StartMargin>();
+        var endMargin = row.GetEffectiveMargin<EndMargin>();
+        var leftMargin = row.GetEffectiveMargin<TableCellLeftMargin>();
+        var rightMargin = row.GetEffectiveMargin<TableCellRightMargin>();
         if (topMargin?.Type != null)
         {
             if (topMargin.Type.Value == TableWidthUnitValues.Nil)
@@ -430,7 +500,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write($"\\trpaddb{bottom}\\trpaddfb3");
             }
-        }       
+        }
         // Left/right should have priority over start/end as they are more specific.
         int leftM = 0;
         int rightM = 0;
@@ -461,7 +531,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     leftMUnit = 3;
                     leftM = startM;
                 }
-            }            
+            }
         }
         if (endMargin?.Type != null)
         {
@@ -525,33 +595,45 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         if (rightMUnit >= 0)
         {
-            sb.Write($"\\trpaddfl{rightMUnit}");
-        }      
+            sb.Write($"\\trpaddfr{rightMUnit}");
+        }
         if (rightMUnit > 0)
         {
-            sb.Write($"\\trpaddl{rightM}");
+            sb.Write($"\\trpaddr{rightM}");
         }
-        var avg = (long)Math.Round((leftM + rightM) / 2m);        
+        var avg = (long)Math.Round((leftM + rightM) / 2m);
         sb.Write($"\\trgaph{avg}"); // MS Word adds this value for compatibility with older RTF readers.
 
         long totalWidth = 0;
-        var cells = row.Elements<TableCell>();
         int columnNumber = 1;
         int columnCount = cells.Count();
+        sb.WriteLine();
         foreach (var cell in cells)
         {
+            // Process table cell properties, including \cellx
             ProcessTableCellProperties(cell, sb, ref totalWidth, cellSpacing, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
             sb.WriteLine();
             ++columnNumber;
         }
-
-        foreach (var cell in row.Elements<TableCell>())
+        if (tableNestingLevel > 1)
         {
-            ProcessTableCell(cell, sb);
-            sb.WriteLine();
+            // Close the nested table properties
+            sb.WriteLine(@"\nestrow}{\nonesttables\par}");
         }
 
-        sb.Write(@"\row");
+        if (tableNestingLevel == 1)
+        {
+            // For regular (non nested) tables, row properties are written at the beginning of the row 
+            // (it is not mandatory, but RTF readers may expect it).
+            foreach (var cell in cells)
+            {
+                ProcessTableCell(cell, sb);
+                sb.WriteLine();
+            }
+
+            // Close regular table row
+            sb.Write(@"\row");
+        }
     }
 
     internal void ProcessTableCellProperties(TableCell cell, RtfStringWriter sb, ref long totalWidth, long cellSpacing, 
@@ -594,14 +676,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        var margin = OpenXmlHelpers.GetEffectiveProperty<TableCellMargin>(cell);
-        var topMargin = margin?.TopMargin;
-        var bottomMargin = margin?.BottomMargin;
-        TableWidthType? leftMargin = margin?.LeftMargin;
-        TableWidthType? rightMargin = margin?.RightMargin;
-        // Left/right should have priority over start/end as they are more specific.
-        leftMargin ??= isRightToLeft ? margin?.EndMargin : margin?.StartMargin;
-        rightMargin ??= isRightToLeft ? margin?.StartMargin : margin?.EndMargin;
+        var topMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Top, isRightToLeft) as TopMargin;
+        var bottomMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Bottom, isRightToLeft) as BottomMargin;
+        var leftMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Left, isRightToLeft);
+        var rightMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Right, isRightToLeft);
         if (topMargin?.Type != null)
         {
             if (topMargin.Type.Value == TableWidthUnitValues.Nil)
@@ -610,9 +688,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             else if (topMargin.Type.Value == TableWidthUnitValues.Dxa && topMargin.Width != null && int.TryParse(topMargin.Width, out int top))
             {
-                sb.Write($"\\clpadt{top}\\clpadft3");
+                sb.Write($"\\clpadt{top.ToStringInvariant()}\\clpadft3");
             }
-            // RTF does not have other units for these elements.
+            // RTF does not support other units for these elements.
         }
         if (bottomMargin?.Type != null)
         {
@@ -622,29 +700,51 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             else if (bottomMargin.Type.Value == TableWidthUnitValues.Dxa && bottomMargin.Width != null && int.TryParse(bottomMargin.Width, out int bottom))
             {
-                sb.Write($"\\clpadb{bottom}\\clpadfb3");
+                sb.Write($"\\clpadb{bottom.ToStringInvariant()}\\clpadfb3");
             }
         }
-        if (leftMargin?.Type != null)
+        if (leftMargin is TableWidthType twt1 && twt1?.Type != null)
         {
-            if (leftMargin.Type.Value == TableWidthUnitValues.Nil)
+            if (twt1.Type.Value == TableWidthUnitValues.Nil)
             {
                 sb.Write(@"\clpadfl0");
             }
-            else if (leftMargin.Type.Value == TableWidthUnitValues.Dxa && leftMargin.Width != null && int.TryParse(leftMargin.Width, out int left))
+            else if (twt1.Type.Value == TableWidthUnitValues.Dxa && twt1.Width != null && int.TryParse(twt1.Width, out int left))
             {
-                sb.Write($"\\clpadl{left}\\clpadfl3");
+                sb.Write($"\\clpadl{left.ToStringInvariant()}\\clpadfl3");
             }
         }
-        if (rightMargin?.Type != null)
+        else if (leftMargin is TableWidthDxaNilType dxaNilType1 && dxaNilType1?.Type != null)
         {
-            if (rightMargin.Type.Value == TableWidthUnitValues.Nil)
+            if (dxaNilType1.Type.Value == TableWidthValues.Nil)
+            {
+                sb.Write(@"\clpadfl0");
+            }
+            else if (dxaNilType1.Type.Value == TableWidthValues.Dxa && dxaNilType1.Width != null)
+            {
+                sb.Write($"\\clpadl{dxaNilType1.Width.Value.ToStringInvariant()}\\clpadfl3");
+            }
+        }
+        if (rightMargin is TableWidthType twt2 && twt2?.Type != null)
+        {
+            if (twt2.Type.Value == TableWidthUnitValues.Nil)
             {
                 sb.Write(@"\clpadfr0");
             }
-            else if (rightMargin.Type.Value == TableWidthUnitValues.Dxa && rightMargin.Width != null && int.TryParse(rightMargin.Width, out int right))
+            else if (twt2.Type.Value == TableWidthUnitValues.Dxa && twt2.Width != null && int.TryParse(twt2.Width, out int right))
             {
                 sb.Write($"\\clpadr{right}\\clpadfr3");
+            }
+        }
+        else if (rightMargin is TableWidthDxaNilType dxaNilType2 && dxaNilType2?.Type != null)
+        {
+            if (dxaNilType2.Type.Value == TableWidthValues.Nil)
+            {
+                sb.Write(@"\clpadfr0");
+            }
+            else if (dxaNilType2.Type.Value == TableWidthValues.Dxa && dxaNilType2.Width != null)
+            {
+                sb.Write($"\\clpadr{dxaNilType2.Width.Value.ToStringInvariant()}\\clpadfr3");
             }
         }
 
@@ -665,20 +765,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        var fitText = OpenXmlHelpers.GetEffectiveProperty<TableCellFitText>(cell);
-        if (fitText != null && (fitText.Val is null || fitText.Val == OnOffOnlyValues.On))
+        if (cell.GetEffectiveProperty<TableCellFitText>().ToBool())
         {
             sb.Write(@"\clFitText");
         }
 
-        var noWrap = OpenXmlHelpers.GetEffectiveProperty<NoWrap>(cell);
-        if (noWrap != null && (noWrap.Val is null || noWrap.Val == OnOffOnlyValues.On))
+        if (cell.GetEffectiveProperty<NoWrap>().ToBool())
         {
             sb.Write(@"\clNoWrap");
         }
 
-        var hideMark = OpenXmlHelpers.GetEffectiveProperty<HideMark>(cell);
-        if (hideMark != null && (hideMark.Val is null || hideMark.Val == OnOffOnlyValues.On))
+        if (cell.GetEffectiveProperty<HideMark>().ToBool())
         {
             sb.Write(@"\clhidemark");
         }
@@ -784,7 +881,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write($"\\clwWidth{width}\\clftsWidth2");
             }
-            else // twips
+            else if (cellWidth.Type.Value == TableWidthUnitValues.Dxa)
             {
                 sb.Write($"\\clwWidth{width}\\clftsWidth3");
             }
@@ -794,18 +891,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         sb.Write(@"\cellx" + totalWidth);
     }
 
-    internal void ProcessTableCell(TableCell cell, RtfStringWriter sb)
+    internal override void ProcessTableCell(TableCell cell, RtfStringWriter sb)
     {
-        this.isInTable = true;
         foreach (var element in cell.Elements())
         {
-            // Nested tables are not currently supported.
-            if (element is not Table)
-            {
-                ProcessBodyElement(element, sb);
-            }
+            ProcessBodyElement(element, sb);
         }
-        this.isInTable = false;
-        sb.Write(@"\cell");
+        sb.Write(tableNestingLevel > 1 ? @"\nestcell" : @"\cell");
     }
 }

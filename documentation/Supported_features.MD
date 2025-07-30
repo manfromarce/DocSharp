@@ -2,66 +2,75 @@
 
 ## DOCX converters
 
-| Feature       | ➡️ RTF | ➡️ HTML | ➡️ Markdown | ➡️ TXT | ➡️ PDF |
-| ------------- | :----: | :-----: | :--------: | :----: | :----: |
-| Character formatting | ✅ | ✅ | - |
-| Paragraph formatting | ✅ | - | - |
-| Section formatting   | ✅ | - | - |
-| Page setup | ✅ | - | - |
-| Columns | ✅ | ❌ | ❌ |
-| Pictures [1] | ✅ | ✅ | - |
-| Lists | ✅ | ✅[2] | ✅[2] |
-| Tables [3]  | ✅ | 🟡 | 🟡 |
-| Styles [4] | 🟡 | 🟡 | - |
-| Header and footer | ✅ | ✅ | ✅ |
-| Footnotes and endnotes | ✅ | ✅ | ✅ |
-| Hyperlinks | ✅ | ✅ | - |
-| Bookmarks | ✅ | ✅ | - |
-| Drop cap and frame properties | ✅ | ❌ | ❌ |
-| Symbols | ✅ | ✅[5] | ✅[5] |
-| Page numbers | ✅ | ❌ | ❌ |
-| Ruby | ❌ | ❌ | ❌ |
-| Modern text effects / WordArt | ❌[11] | ❌ | 🟡 [10] |
-| Legacy font shadow/outline/emboss/imprint | ✅ | ❌ | - |
-| Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | 🟡 [10] |
-| Legacy shapes, text boxes, effects and WordArt (VML) | ❌ | ❌ | 🟡 [10] |
-| Charts | ❌ | ❌ | - |
-| Diagrams | ❌ | ❌ | - |
-| Math | ✅ | ✅ | ❌ |
-| OLE objects [6] | 🟡 | 🟡 | - |
-| Fields and standard parts [7] | ✅ | 🟡 | 🟡 |
-| Form fields | 🟡[8] | - | - |
-| Content part (SVG, MathML, SMIL, ...) | ❌ | - | - |
-| Comments | ❌ | - | - |
-| Revisions | ❌ | - | - |
-| Mail merge | ❌ | - | - |
-| Macros | ❌ | - | - |
-| Document background | 🟡[12] | - | - |
-| Document information (title, author, ...) | ✅ | - | - |
-| Document settings and protection | 🟡 | - | - |
+| Feature       | ➡️ RTF | ➡️ HTML | ➡️ Markdown | ➡️ TXT |
+| ------------- | :----: | :-----: | :--------: | :----: |
+| Character formatting | ✅ | ✅ | ✅ | - |
+| Paragraph formatting | ✅ | ✅ | - | - |
+| Section formatting   | ✅ | 🟡 | - | - |
+| Page setup   | ✅ | - | - | - |
+| Columns | ✅ | ✅ | ❌ | ❌ 
+| Pictures [1] | ✅ | ✅ | ✅ | - |
+| Lists | ✅ | ✅ | ✅[2] | ✅[2] |
+| Tables [3]  | ✅ | ✅ | 🟡 | 🟡 |
+| Styles [4] | 🟡 | 🟡 | 🟡 | - |
+| Header and footer | ✅ | ✅ | ✅ | ✅ |
+| Footnotes and endnotes | ✅ | ✅ | ✅ | ✅ |
+| Hyperlinks | ✅ | ✅ | ✅ | - |
+| Bookmarks | ✅ | ✅ | ✅ | - |
+| Drop cap and frame properties | ✅ | ❌ | ❌ | ❌ |
+| Symbols | ✅ | ✅[5] | ✅[5] | ✅[5] |
+| Page numbers | ✅ | ❌ | ❌ | ❌ |
+| Ruby | ❌ | ✅ | ❌ | ❌ |
+| Modern text effects and WordArt | -[11] | 🟡[9] | ❌ | 🟡 [10] |
+| Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[9] | ❌ | - |
+| Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | ❌ | 🟡 [10] |
+| Legacy shapes, text boxes, effects and WordArt (VML) | ❌ | ❌ | ❌ | 🟡 [10] |
+| Charts | ❌ | ❌ | ❌ | - |
+| Diagrams | ❌ | ❌ | ❌ | - |
+| Math | ✅ | 🟡 | ✅ | ❌ |
+| Ink [6] | 🟡 | 🟡 | 🟡 | - |
+| Signature line [6] | 🟡 | 🟡 | 🟡 | - |
+| OLE objects [6] | 🟡 | 🟡 | 🟡 | - |
+| 3D; videos [6] | 🟡 | 🟡 | 🟡 | - |
+| Fields and standard parts [7] | ✅ | 🟡 | 🟡 | 🟡 |
+| Form fields | 🟡[8] | ❌ | ❌ | ❌ |
+| Comments | ✅ | ❌ | - | - |
+| Revisions | ❌ | ❌ | - | - |
+| Mail merge | ❌ | - | - | - |
+| Macros | ❌ | - | - | - |
+| Document background | 🟡[12] | 🟡[13] | - | - |
+| Document information (title, author, ...) | ✅ | ❌ | - | - |
+| Document settings and protection | 🟡 | - | - | - |
+| Sub-documents / Alternate content | ✅ DOCX, RTF | ✅ DOCX, HTML, SVG, MathML, SMIL | ✅ DOCX | ✅ DOCX |
 
-[1]: Only inline images are supported. Floating and wrap-positioned images depend on DrawingML/VML shapes which are not implemented yet.  
-RTF supports JPEG, PNG, WMF and EMF; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
+[1]: Wrap layouts and floating images are preserved in RTF, as well as few basic transforms (crop, flip, rotate).  
+Other converters support inline images only, without transforms/effects.  
+RTF supports JPEG, PNG, WMF and EMF formats; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
 Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  
 For Markdown, the ImagesOutputFolder has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
 
 [2]: Very limited support for number format and indentation in Markdown and TXT.  
 
-[3]: Nested tables and conditional formatting are not supported yet for DOCX --> RTF; while for DOCX --> MD / TXT only basic cell content can be preserved.
+[3]: In DOCX --> MD / TXT conversion only basic cell content can be preserved.  
+HTML has minor limitations, such as diagonal borders inside cells are not supported.  
+RTF should support everything, including conditional formatting and nested tables.
 
-[4]: Styles are converted to inline formatting  
+[4]: Styles are converted to inline formatting.  
 
 [5]: Special fonts such as Wingdings, Webdings and Symbol are converted to Unicode characters.  
 
-[6]: OLE objects are preserved as images when possible.
+[6]: Ink, signature line, OLE objects and 3D/media are preserved as images when possible.  
+Word processors usually write a picture fallaback for these elements.
 
 [7]: Fields (including table of contents) are supported in RTF; in other formats only the field result/text can be preserved.  
-Standard parts are converted to regular (static) content (same behavior as Microsoft Word).
+Standard/quick parts are converted to regular static content because they are not supported in RTF (same behavior as Microsoft Word).
 
 [8]: Modern form fields are not supported in RTF but the result/text is preserved (same behavior as Microsoft Word);  
 legacy form fields using field code/char are supported;  
 ActiveX controls are preserved as images (like OLE objects).
+
+[9]: Basic shadow, emboss/imprint, outline and fill effects are partially supported; floating text boxes are not supported.
 
 [10]: Text is extracted from shapes, text boxes and WordArt when converting to TXT but only for inline objects,  
 floating objects are ignored to prevent layout issues.
@@ -71,6 +80,7 @@ floating objects are ignored to prevent layout issues.
 [12]: Most background types are supported in DOCX to RTF conversion, including solid colors, gradients, patterns, textures and pictures.  
 Only watermarks are not supported because they require full VML support in order to translate text paths.
 
+[13]: Only solid background is supported.
 
 ## Markdown renderers
 

@@ -12,6 +12,18 @@ public enum BorderValue
     Top,
     Right,
     Bottom,
+    Start,
+    End,
     TopLeftToBottomRightDiagonal,
     TopRightToBottomLeftDiagonal
+}
+
+public enum MarginValue
+{
+    Left,
+    Top,
+    Right,
+    Bottom,
+    Start,
+    End,
 }

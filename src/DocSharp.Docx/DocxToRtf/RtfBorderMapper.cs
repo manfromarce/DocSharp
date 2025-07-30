@@ -56,7 +56,12 @@ internal static class RtfBorderMapper
         else if (borderValue == BorderValues.ThinThickThinLargeGap)
             return @"\brdrtnthtnlg";
         else if (borderValue == BorderValues.Nil)
-            return @"\brdrnil";
+            // return @"\brdrnil"; 
+            // In DOCX nil means no border.
+            // "brdrnil" in RTF is interpreted differently by MS Word (probably like a default border) causing some issues,
+            // although in LibreOffice and OnlyOffice is interpreted as no border.
+            // We should use brdrnone instead.
+            return @"\brdrnone";
         else if (borderValue == BorderValues.None)
             return @"\brdrnone";
 

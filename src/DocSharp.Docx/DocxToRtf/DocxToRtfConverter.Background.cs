@@ -489,7 +489,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                             Width = (long)Math.Round(imageWidth * 1.76),
                             Height = (long)Math.Round(imageHeight * 1.76),
                         };
-                        ProcessImagePart(rootPart, rId, properties, pictWriter, skipPicProp: true);
+                        ProcessImagePart(rootPart, rId, properties, pictWriter);
                         sb.WriteShapeProperty("fillBlip", pictWriter.ToString());
                     }
                 }

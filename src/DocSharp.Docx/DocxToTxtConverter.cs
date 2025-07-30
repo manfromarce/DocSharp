@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,7 @@ using DocSharp.Writers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using V = DocumentFormat.OpenXml.Vml;
 
 namespace DocSharp.Docx;
 
@@ -333,7 +335,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                     else 
                     {
                         // Numbered list
-                        string numberString = GetNumberString(levelText, listType, numberingId, levelIndex);
+                        string numberString = ListHelpers.GetNumberString(levelText, listType, numberingId, levelIndex, _listLevelCounters);
                         sb.Write(numberString);
                     }
 
@@ -350,44 +352,6 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                 }
             }
         }
-    }
-
-    internal string GetNumberString(string? levelText, EnumValue<NumberFormatValues> listType, int numberingId, int levelIndex)
-    {
-        if (listType == NumberFormatValues.Bullet)
-        {
-            return "•";
-        }
-
-        if (levelText != null)
-        {
-            string formattedText = levelText;
-            foreach (var kvp in _listLevelCounters.Where(k => k.Key.NumberingId == numberingId))
-            {
-                var placeholder = kvp.Key.LevelIndex + 1;
-                string value = kvp.Value.ToString();
-                if (listType == NumberFormatValues.LowerLetter)
-                {
-                    value = ListHelpers.NumberToLetter(kvp.Value, false);
-                }
-                else if (listType == NumberFormatValues.UpperLetter)
-                {
-                    value = ListHelpers.NumberToLetter(kvp.Value, true);
-                }
-                else if (listType == NumberFormatValues.LowerRoman)
-                {
-                    value = ListHelpers.NumberToRomanLetter(kvp.Value, false);
-                }
-                else if (listType == NumberFormatValues.UpperRoman)
-                {
-                    value = ListHelpers.NumberToRomanLetter(kvp.Value, true);
-                }
-                formattedText = formattedText.Replace($"%{placeholder}", value);
-            }
-            return formattedText;
-        }
-
-        return _listLevelCounters[(numberingId, levelIndex)].ToString();
     }
 
     internal override void ProcessBreak(Break br, TxtStringWriter sb)
@@ -415,13 +379,31 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     internal override void ProcessDrawing(Drawing drawing, TxtStringWriter sb)
     {
-        var txbxContent = drawing.Descendants<TextBoxContent>().FirstOrDefault();
+        var txbxContent = drawing.Inline?.Descendants<TextBoxContent>().FirstOrDefault();
         if (txbxContent != null)
         {
             foreach (var element in txbxContent.Elements())
             {
                 ProcessBodyElement(element, sb);
             }
+        }
+    }
+
+    internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb)
+    {
+        if (picture.Descendants<TextBoxContent>().FirstOrDefault() is TextBoxContent txbxContent)
+        {
+            foreach (var element in txbxContent.Elements())
+            {
+                ProcessBodyElement(element, sb);
+            }
+        }
+        else if (picture.Descendants<V.Shape>() is V.Shape shape &&
+                 shape.GetFirstChild<V.TextPath>() is V.TextPath textPath &&
+                 textPath.String?.Value != null)
+        {
+            EnsureSpace(sb);
+            ProcessText(new Text(textPath.String.Value), sb);
         }
     }
 
@@ -457,13 +439,21 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
         }
     }
 
+    internal override void ProcessBody(Body body, TxtStringWriter sb)
+    {
+        EnsureSpace(sb); // For sub-documents / AltChunks
+        base.ProcessBody(body, sb);
+    }
+
     internal override void ProcessBookmarkStart(BookmarkStart bookmark, TxtStringWriter sb) { }
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmark, TxtStringWriter sb) { }
+    internal override void ProcessCommentStart(CommentRangeStart commentStart, TxtStringWriter sb) { }
+    internal override void ProcessCommentEnd(CommentRangeEnd commentEnd, TxtStringWriter sb) { }
     internal override void ProcessFieldChar(FieldChar simpleField, TxtStringWriter sb) { }
     internal override void ProcessFieldCode(FieldCode simpleField, TxtStringWriter sb) { }
     internal override void ProcessPositionalTab(PositionalTab posTab, TxtStringWriter sb) { }
     internal override void ProcessDocumentBackground(DocumentBackground background, TxtStringWriter sb) { }
     internal override void ProcessPageNumber(PageNumber pageNumber, TxtStringWriter sb) { }
-    internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb) { }
-
+    internal override void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, TxtStringWriter sb) { }
+    internal override void ProcessCommentReference(CommentReference commentRef, TxtStringWriter sb) { }
 }

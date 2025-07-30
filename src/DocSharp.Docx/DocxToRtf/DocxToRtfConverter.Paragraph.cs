@@ -12,15 +12,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 {
     internal override void ProcessParagraph(Paragraph paragraph, RtfStringWriter sb)
     {
-
         sb.Write("\\pard\\plain");
-        if (isInTable)
+        if (tableNestingLevel > 0)
         {
             sb.Write(@"\intbl");
+            sb.Write(@$"\itap{tableNestingLevel.ToStringInvariant()}");
         }
 
-        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish hidden && 
-            (hidden.Val is null || hidden.Val))
+        bool isHidden = paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
+                        (h.Val is null || h.Val);
+        if (isHidden)
         {
             // Special handling of paragraphs with the vanish attribute 
             // (can be used by word processors to increment the list item numbers)
@@ -45,11 +46,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write("\\par");
         }
 
-        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
-            (h.Val is null || h.Val))
+        if (isHidden)
         {
             // Special handling of paragraphs with the vanish attribute
-            sb.Write("\\v0 ");
+            sb.Write("\\v0");
         }
 
         sb.WriteLine();
@@ -63,8 +63,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             ProcessListItem(numberingProperties, sb);
         }
 
-        var bidi = OpenXmlHelpers.GetEffectiveProperty<BiDi>(paragraph);
-        if (bidi != null && (bidi.Val == null || bidi.Val)) 
+        if (paragraph.GetEffectiveProperty<BiDi>().ToBool()) 
         {
             // Left to right by default; right to left if the element is present unless explicitly set to false.
             sb.Write(@"\rtlpar");
@@ -220,8 +219,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write($"\\sl{defaultSpacing}\\slmult1");
         }
 
-        var adjustRight = OpenXmlHelpers.GetEffectiveProperty<AdjustRightIndent>(paragraph);
-        if (adjustRight != null && (adjustRight.Val == null || adjustRight.Val.Value))
+        if (paragraph.GetEffectiveProperty<AdjustRightIndent>().ToBool()) 
         {
             sb.Write("\\adjustright");
         }
@@ -378,33 +376,27 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // If OverflowPunctuation is set to off, lines should break even if the next character is a punctuation mark.
             sb.Write(@"\nooverflow");
         }
-        var autoSpaceDE = OpenXmlHelpers.GetEffectiveProperty<AutoSpaceDE>(paragraph);
-        if (autoSpaceDE?.Val == null || autoSpaceDE.Val) // true by default
-        {            
+        if (paragraph.GetEffectiveProperty<AutoSpaceDE>().ToBool(defaultIfNotPresent: true)) 
+        { // true by default in DOCX
             sb.Write(@"\aspalpha");
         }
-        var autoSpaceDN = OpenXmlHelpers.GetEffectiveProperty<AutoSpaceDN>(paragraph);
-        if (autoSpaceDN?.Val == null || autoSpaceDN.Val) // true by default
-        {
+        if (paragraph.GetEffectiveProperty<AutoSpaceDN>().ToBool(defaultIfNotPresent: true)) 
+        { // true by default in DOCX
             sb.Write(@"\aspnum");
         }
-        var tlp = OpenXmlHelpers.GetEffectiveProperty<TopLinePunctuation>(paragraph);
-        if (tlp != null && (tlp.Val == null || tlp.Val)) // false by default, true if element is present without value
+        if (paragraph.GetEffectiveProperty<TopLinePunctuation>().ToBool()) 
         {
             sb.Write(@"\toplinepunct");
         }
-        var noAutoHyphen = OpenXmlHelpers.GetEffectiveProperty<SuppressAutoHyphens>(paragraph);
-        if (noAutoHyphen != null && (noAutoHyphen.Val == null || noAutoHyphen.Val))
+        if (paragraph.GetEffectiveProperty<SuppressAutoHyphens>().ToBool()) 
         {
             sb.Write(@"\hyphpar0");
         }
-        var noLineNumbers = OpenXmlHelpers.GetEffectiveProperty<SuppressLineNumbers>(paragraph);
-        if (noLineNumbers!= null && (noLineNumbers.Val == null || noLineNumbers.Val))
+        if (paragraph.GetEffectiveProperty<SuppressLineNumbers>().ToBool()) 
         {
             sb.Write(@"\noline");
         }
-        var pageBb = OpenXmlHelpers.GetEffectiveProperty<PageBreakBefore>(paragraph);
-        if (pageBb != null && (pageBb.Val == null || pageBb.Val))
+        if (paragraph.GetEffectiveProperty<PageBreakBefore>().ToBool()) 
         {
             sb.Write(@"\pagebb");
         }

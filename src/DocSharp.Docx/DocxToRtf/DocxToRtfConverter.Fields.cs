@@ -10,6 +10,33 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
+    internal override void ProcessSimpleField(SimpleField field, RtfStringWriter sb)
+    {
+        sb.WriteLine(@"{\field");
+        if (field.Instruction?.Value != null)
+        {
+            // // TODO: FieldData
+            // if (field.FieldData != null)
+            // {
+            // }
+
+            // Open field instruction group
+            sb.Write(@"{\*\fldinst {");
+
+            // Write field instruction code. Fields may contain special characters such as '\' that need to be escaped.
+            sb.WriteRtfEscaped(field.Instruction.Value);
+
+            // Close field instruction group and open field result group.
+            sb.Write(@"}}{\fldrslt {"); 
+
+            // Process field result content
+            base.ProcessSimpleField(field, sb); 
+
+            // Close field result group and field destination.
+            sb.WriteLine("}}}"); 
+        }
+    }
+
     internal override void ProcessFieldChar(FieldChar fieldChar, RtfStringWriter sb)
     {
         // Note: the content between the begin, separate and end parts is not processed here.
@@ -27,21 +54,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write("\\flddirty");
                 }
 
-                //if (fieldChar.FieldData != null)
-                //{
-                //    // Custom field data (base64 binary value)
-                //    sb.Append(@"{{\*\datafield ");
-                //    // ...
-                //    sb.Append(@"}}");
-                //}
-
                 if (fieldChar.FormFieldData != null)
                 {
                     // The field is a form field
                     sb.Write(@"{{\*\formfield ");
 
-                    if (fieldChar.FormFieldData.GetFirstChild<Enabled>() is Enabled enabled && 
-                        enabled.Val != null && !enabled.Val)
+                    if (fieldChar.FormFieldData.GetFirstChild<Enabled>().ToBool())
                     {
                         // Disabled
                         sb.Write(@"\ffprot1");
@@ -52,8 +70,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                         sb.Write(@"\ffprot0");
                     }
 
-                    if (fieldChar.FormFieldData.GetFirstChild<CalculateOnExit>() is CalculateOnExit calcOnExit &&
-                       calcOnExit != null && (calcOnExit.Val == null || calcOnExit.Val))
+                    if (fieldChar.FormFieldData.GetFirstChild<CalculateOnExit>().ToBool())
                     {
                         // Recalculate on exit if the CalculateOnExit element is present and not set to false
                         sb.Write(@"\ffrecalc1");
@@ -122,8 +139,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                             sb.Write($@"\ffhps{checkBoxSize.Val}"); // Check box size in half points
                         }
 
-                        if (checkBox.GetFirstChild<AutomaticallySizeFormField>() is AutomaticallySizeFormField autoSize &&
-                            autoSize != null && (autoSize.Val == null || autoSize.Val))
+                        if (checkBox.GetFirstChild<AutomaticallySizeFormField>().ToBool())
                         {
                             sb.Write(@"\ffsize0"); // Auto size
                         }
@@ -142,8 +158,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                             sb.Write(@"\ffdefres0"); // Unchecked by default
                         }
 
-                        if (checkBox.GetFirstChild<Checked>() is Checked @checked &&
-                            @checked != null && (@checked.Val == null || @checked.Val))
+                        if (checkBox.GetFirstChild<Checked>().ToBool())
                         {
                             sb.Write(@"\ffres1"); // Checked if the Checked element is present and not false
                         }
@@ -237,12 +252,25 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write(@"}}");
                 }
 
+                // TODO: FieldData, NumberingChange
+                //if (fieldChar.FieldData != null)
+                //{
+                //    // Custom field data (base64 binary value)
+                //    sb.Append(@"{{\*\datafield ");
+                //    // ...
+                //    sb.Append(@"}}");
+                //}
+
+                // if (fieldChar.NumberingChange != null)
+                // {
+                // }
+
                 sb.Write(@"{\*\fldinst {"); // Open field instruction group.
                 //The last bracket is closed by the parent Run
             }
             else if (fieldChar.FieldCharType == FieldCharValues.Separate)
             {
-                sb.Write(@"}}{\fldrslt {"); // Close field instruction and open field result group.
+                sb.Write(@"}}{\fldrslt {"); // Close field instruction group and open field result group.
                 //The last bracket is closed by the parent Run.
             }
             else if (fieldChar.FieldCharType == FieldCharValues.End)

@@ -39,8 +39,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             return;
         }
 
-        var rtl = OpenXmlHelpers.GetEffectiveProperty<RightToLeftText>(run);
-        if (rtl != null && (rtl.Val == null || rtl.Val))
+        if (run.GetEffectiveProperty<RightToLeftText>().ToBool())
         {
             sb.Write(@"\rtlch");
         }
@@ -63,12 +62,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\langfenp" + code);
         }
 
-        if (OpenXmlHelpers.GetEffectiveProperty<NoProof>(run) is NoProof noProof)
+        if (run.GetEffectiveProperty<NoProof>().ToBool())
         {
-            if (noProof.Val == null || noProof.Val.Value)
-            {
-                sb.Write(@"\noproof\lang1024");
-            }
+            sb.Write(@"\noproof\lang1024");
         }
 
         // To be improved (Ascii value may not be present, although rare)
@@ -85,7 +81,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
 
         string? color = OpenXmlHelpers.GetEffectiveProperty<Color>(run)?.Val;
-        if ((!string.IsNullOrEmpty(color)) && 
+        if ((!string.IsNullOrEmpty(color)) &&
              !color.Equals("auto", StringComparison.OrdinalIgnoreCase))
         {
             colors.TryAddAndGetIndex(color, out int colorIndex);
@@ -139,17 +135,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write($"\\expndtw{sp}");
         }
 
-        var bold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run);
-        // Formatting options such as bold are considered enabled if the element is present,
+        // Most formatting options such as bold are considered enabled if the element is present,
         // unless OnOffValue is explicitly set to false.
         // (e.g. <w:b /> without value means bold is enabled, otherwise it would not be present at all)
-        if (bold != null && (bold.Val is null || bold.Val)) 
+        if (run.GetEffectiveProperty<Bold>().ToBool())
         {
             sb.Write(@"\b");
         }
 
-        var italic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run);
-        if (italic != null && (italic.Val is null || italic.Val))
+        if (run.GetEffectiveProperty<Italic>().ToBool())
         {
             sb.Write(@"\i");
         }
@@ -163,7 +157,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write(ul);
             }
 
-            if ((!string.IsNullOrEmpty(underline.Color?.Value)) && 
+            if ((!string.IsNullOrEmpty(underline.Color?.Value)) &&
                 !underline.Color.Value.Equals("auto", StringComparison.OrdinalIgnoreCase))
             {
                 colors.TryAddAndGetIndex(underline.Color.Value, out int colorIndex);
@@ -171,16 +165,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        var doubleStrike = OpenXmlHelpers.GetEffectiveProperty<DoubleStrike>(run);
-        if (doubleStrike != null && (doubleStrike.Val is null || doubleStrike.Val))
+        if (run.GetEffectiveProperty<DoubleStrike>().ToBool())
         {
             sb.Write(@"\striked1");
         }
         else
         {
             // Don't add strike if double strike is already active.
-            var strike = OpenXmlHelpers.GetEffectiveProperty<Strike>(run);
-            if (strike != null && (strike.Val is null || strike.Val))
+            if (run.GetEffectiveProperty<Strike>().ToBool())
             {
                 sb.Write(@"\strike");
             }
@@ -229,7 +221,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     sb.Write($"\\dn{pos}");
                 }
-                else if (pos > 0) 
+                else if (pos > 0)
                 {
                     sb.Write($"\\up{pos}");
                 }
@@ -261,51 +253,43 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        var smallCaps = OpenXmlHelpers.GetEffectiveProperty<SmallCaps>(run);
-        if (smallCaps != null && (smallCaps.Val is null || smallCaps.Val))
+        if (run.GetEffectiveProperty<SmallCaps>().ToBool())
         {
             sb.Write(@"\scaps");
         }
         else
         {
             // Small caps and All caps are mutually exclusive
-            var allCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run);
-            if (allCaps != null && (allCaps.Val is null || allCaps.Val))
+            if (run.GetEffectiveProperty<Caps>().ToBool())
             {
                 sb.Write(@"\caps");
             }
         }
 
-        var emboss = OpenXmlHelpers.GetEffectiveProperty<Emboss>(run);
-        if (emboss != null && (emboss.Val is null || emboss.Val))
+        if (run.GetEffectiveProperty<Emboss>().ToBool())
         {
             sb.Write(@"\embo");
         }
 
-        var engrave = OpenXmlHelpers.GetEffectiveProperty<Imprint>(run);
-        if (engrave != null && (engrave.Val is null || engrave.Val))
+        if (run.GetEffectiveProperty<Imprint>().ToBool())
         {
             sb.Write(@"\impr");
         }
 
-        // RTF does not support advanced shadow and outline effects introduced with Office 2010,
+        // Note: RTF does not support advanced shadow and outline effects introduced with Office 2010 (Shadow14, Outline14),
+        // but only the legacy Shadow and Outline properties.
         // so they are converted to the legacy font effect.
-        var shadow = OpenXmlHelpers.GetEffectiveProperty<Shadow>(run);
-        if ((shadow != null && (shadow.Val is null || shadow.Val)) ||
-             OpenXmlHelpers.GetEffectiveProperty<Shadow14>(run) != null)
+        if (run.GetEffectiveProperty<Shadow>().ToBool())
         {
             sb.Write(@"\shad");
         }
 
-        var outline = OpenXmlHelpers.GetEffectiveProperty<Outline>(run);        
-        if ((outline != null && (outline.Val is null || outline.Val)) ||
-             OpenXmlHelpers.GetEffectiveProperty<Outline14>(run) != null)
+        if (run.GetEffectiveProperty<Outline>().ToBool())
         {
             sb.Write(@"\outl");
         }
 
-        var hidden = OpenXmlHelpers.GetEffectiveProperty<Vanish>(run);
-        if (hidden != null && (hidden.Val is null || hidden.Val))
+        if (run.GetEffectiveProperty<Vanish>().ToBool())
         {
             sb.Write(@"\v");
         }
@@ -313,6 +297,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         var border = OpenXmlHelpers.GetEffectiveProperty<Border>(run);
         if (border != null)
         {
+            // Character border is the same for top, left, bottom and right.
             sb.Write(@"\chbrdr");
             ProcessBorder(border, sb);
         }
@@ -323,8 +308,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             ProcessShading(shading, sb, ShadingType.Character);
         }
 
-        var snapToGrid = OpenXmlHelpers.GetEffectiveProperty<SnapToGrid>(run);
-        if (snapToGrid?.Val != null && !snapToGrid.Val) // True by default
+        if (run.GetEffectiveProperty<SnapToGrid>().ToBool(defaultIfNotPresent: true))
+        {
+            // Enabled by default in DOCX but not in RTF.
+            sb.Write(@"\cgrid");
+        }
+        else
         {
             sb.Write(@"\cgrid0");
         }
