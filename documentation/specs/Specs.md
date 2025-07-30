@@ -18,6 +18,7 @@ This is a list of file format specifications which may be useful for this projec
   + Drawing: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-ODRAW/%5bMS-ODRAW%5d.pdf>
   + Charts: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-OGRAPH/%5bMS-OGRAPH%5d.pdf>
   + Forms: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-OFORMS/%5bMS-OFORMS%5d.pdf>
+  + VBA: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-OVBA/%5bMS-OVBA%5d.pdf>
   + XLDM (spreadsheet data model): <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-XLDM/%5bMS-XLDM%5d.pdf>
 - ODF (Open Document Format)
   + ODF 1.1: <http://docs.oasis-open.org/office/v1.1/OpenDocument-v1.1.html>
