@@ -65,6 +65,36 @@ public sealed class RtfStringWriter : BaseStringWriter
         Write(color.ToRtfColor());
     }
 
+    public void WriteWordWithValue(string word, int value)
+    {
+        Write($"\\{word}");
+        Write(value);
+    }
+
+    public void WriteWordWithValue(string word, long value)
+    {
+        Write($"\\{word}");
+        Write(value);
+    }
+
+    public void WriteWordWithValue(string word, double value)
+    {
+        Write($"\\{word}");
+        Write((long)Math.Round(value));
+    }
+
+    public void WriteWordWithValue(string word, decimal value)
+    {
+        Write($"\\{word}");
+        Write((long)Math.Round(value));
+    }
+
+    public void WriteWordWithValue(string word, float value)
+    {
+        Write($"\\{word}");
+        Write((long)Math.Round(value));
+    }
+
     public void WriteShapeProperty(string name, string value)
     {
         Write(@"{\sp{\sn ");
@@ -137,12 +167,12 @@ public sealed class RtfStringWriter : BaseStringWriter
         Date/time references use the following bit field structure (DTTM): 
         | Bit numbers | Information  | Range           |
         | ----------- | ------------ | ----------------|
-        | 0–5         | Minute       | 0–59            |
-        | 6–10        | Hour         | 0–23            |
-        | 11–15       | Day of month | 1–31            |
-        | 16–19       | Month        | 1–12            |
-        | 20–28       | Year         | = Year – 1900   |
-        | 29–31       | Day of week  | 0 (Sun)–6 (Sat) |
+        | 0ï¿½5         | Minute       | 0ï¿½59            |
+        | 6ï¿½10        | Hour         | 0ï¿½23            |
+        | 11ï¿½15       | Day of month | 1ï¿½31            |
+        | 16ï¿½19       | Month        | 1ï¿½12            |
+        | 20ï¿½28       | Year         | = Year ï¿½ 1900   |
+        | 29ï¿½31       | Day of week  | 0 (Sun)ï¿½6 (Sat) |
         */
         
         long nDT = (uint)value.DayOfWeek;

@@ -78,29 +78,29 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 //}
                 if (pictureBullet.PictureBulletBase != null)
                 {
-                    ProcessVml(pictureBullet.PictureBulletBase, sb);
+                    ProcessVml(pictureBullet.PictureBulletBase, sb, ignoreWrapLayouts: true);
                 }
                 else if (pictureBullet.Drawing != null)
                 {
-                    ProcessDrawing(pictureBullet.Drawing, sb);
+                    ProcessDrawing(pictureBullet.Drawing, sb, ignoreWrapLayouts: true);
                 }
                 else if (pictureBullet.Elements<Picture>().FirstOrDefault() is Picture pict)
                 {
-                    ProcessVml(pict, sb); // PictureBulletBase might incorrectly be interpreted as Picture
+                    ProcessVml(pict, sb, ignoreWrapLayouts: true); // PictureBulletBase might incorrectly be interpreted as Picture
                 }
                 else if (pictureBullet.GetFirstChild<AlternateContent>() is AlternateContent alternateContent)
                 {
                     if (alternateContent.Descendants<PictureBulletBase>().FirstOrDefault() is PictureBulletBase pbb)
                     {
-                        ProcessVml(pbb, sb);
+                        ProcessVml(pbb, sb, ignoreWrapLayouts: true);
                     }
                     else if (alternateContent.Descendants<Drawing>().FirstOrDefault() is Drawing drawing1)
                     {
-                        ProcessDrawing(drawing1, sb);
+                        ProcessDrawing(drawing1, sb, ignoreWrapLayouts: true);
                     }
                     else if (alternateContent.Descendants<Picture>().FirstOrDefault() is Picture pict1)
                     {
-                        ProcessVml(pict1, sb);
+                        ProcessVml(pict1, sb, ignoreWrapLayouts: true);
                     }
                 }
             }

@@ -107,18 +107,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write(@"{\pict");
                 if (!string.IsNullOrEmpty(shapeProperties))
                 {
-                    // There are three cases:
-                    // - Simple \pict elements used e.g. for document background and picture bullet: 
-                    // shape properties can be ignored.
-                    // - Inline pictures: modern versions of Microsoft Word produce a group like {\*\shppict {\pict …}}{\nonshppict {\pict …}}
-                    // and only the first pict element supports {\*\picprop}. However, to avoid bloating the document size too much,
-                    // currently we just write {\pict {\*\picprop} …} and works fine, RTF readers that don't support shape properties 
-                    // will skip the picprop group.
-                    // - Non-inline pictures: a group like this is produced: {\shp{\*\shpinst ...}{\shprslt ...}.
-                    // In this case, the {\*\picprop} will not be written because shape properties are already written in 
-                    // the shpinst group, for readers that support them. shprslt should contain a fallback such as an inline picture.
-                    sb.Write(@"{\*\picprop");
-                    // TODO: get properties
+                    // This method should be called with the appropriate shapeProperties depending on the context: 
+                    // 1. Simple \pict elements used e.g. for document background and picture bullet: 
+                    // shape properties should be empty
+                    //
+                    // 2. Inline pictures: 
+                    // shape properties should be written here. 
+                    // Modern versions of Microsoft Word produce a group like {\*\shppict {\pict …}}{\nonshppict {\pict …}}
+                    // and only the first pict element supports {\*\picprop}. 
+                    // However, to avoid bloating the document size too much, currently we just write {\pict {\*\picprop} …} 
+                    // and works fine (RTF readers that don't support shape properties will skip the picprop group).
+                    // 
+                    // 3. Non-inline pictures (floating images or wrap layouts): 
+                    // shape properties should **not** be written here, but in the \*\shpinst destination.
+                    // This is handled in the ProcessDrawing and ProcessVml methods, that will produce a shape group: 
+                    // {\shp{\*\shpinst ...}{\shprslt ...}. shprslt should contain a fallback such as an inline picture.
+                    sb.Write(@"{\*\picprop ");
+                    sb.Write(shapeProperties);
                     sb.Write(@"}");
                 }
                 sb.Write(format);

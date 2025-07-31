@@ -21,6 +21,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 {
     internal override void ProcessDrawing(Drawing drawing, RtfStringWriter sb)
     {
+        ProcessDrawing(drawing, sb, false);
+    }
+
+    internal void ProcessDrawing(Drawing drawing, RtfStringWriter sb, bool ignoreWrapLayouts)
+    {
         var properties = new PictureProperties();
         var extent = drawing.Descendants<Wp.Extent>().FirstOrDefault();
         var pic = drawing.Descendants<Pictures.Picture>().FirstOrDefault();
@@ -61,16 +66,20 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 var rootPart = OpenXmlHelpers.GetRootPart(drawing);
 
+                // Generic properties such as rotation and flip are supported for both inline and floating/anchored images
                 var shapePropertiesBuilder = new RtfStringWriter();
                 ProcessShapeProperties(pic.ShapeProperties, shapePropertiesBuilder);
                 string shapeProperties = shapePropertiesBuilder.ToString();
 
-                if (drawing.Anchor != null)
+                if (ignoreWrapLayouts || drawing.Inline != null)
                 {
-                    // If the image is not inline with text, additional properties should be processed.
+                    // Inline image (\pict destination)
+                    ProcessImagePart(rootPart, relId, properties, sb, shapeProperties);
+                }
+                else if (drawing.Anchor != null)
+                {
+                    // Image with advanced properties (\shp destination)
 
-                    // TODO: don't write this part if retrieving the image data fails for any reason, 
-                    // but avoid using a temp writer for the picture bytes for performance reasons.
                     sb.Write(@"{\shp{\*\shpinst");
 
                     if (rootPart is MainDocumentPart)
@@ -78,29 +87,26 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                     // Write position properties
                     ProcessDrawingAnchor(drawing.Anchor, sb);
-                    // Write shape properties
+
+                    // Write generic shape properties 
+                    // (process after anchor so that all standard control words such as \shpleft have been written
+                    // before writing {\sp ...} groups)
                     sb.Write(shapeProperties);
 
                     // Write the pict group itself.
                     sb.Write(@"{\sp{\sn pib}{\sv ");
                     ProcessImagePart(rootPart, relId, properties, sb);
-                    sb.Write("}}"); // close property
+                    sb.WriteLine("}}"); // close property
 
-                    // Close shape instruction group
-                    sb.WriteLine('}');
-                    // Close shape result group
-                    sb.Write(@"{\shprslt ");
+                    // Close shape instruction group and open shape result group
+                    sb.Write(@"}{\shprslt ");
 
                     // Write fallback for RTF reader that don't support shapes.
                     // This is the same behavior as Microsoft Word but less evolved, 
                     // currently just writes an inline picture.
                     ProcessImagePart(rootPart, relId, properties, sb);
 
-                    sb.WriteLine("}}"); // Close shape destination and shape result group
-                }
-                else if (drawing.Inline != null)
-                {
-                    ProcessImagePart(rootPart, relId, properties, sb, shapeProperties);
+                    sb.WriteLine("}}"); // Close shape result group and shape destination
                 }
             }
         }
@@ -118,9 +124,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         shapePropertiesBuilder.WriteShapeProperty("fFlipH", picProp.Transform2D?.HorizontalFlip != null && picProp.Transform2D.HorizontalFlip.Value);
         shapePropertiesBuilder.WriteShapeProperty("fFlipV", picProp.Transform2D?.VerticalFlip != null && picProp.Transform2D.VerticalFlip.Value);
+        /*
+        The standard states that the rot attribute specifies the clockwise rotation in 1/64000ths of a degree. (This is also used in RTF and VML).
+        In Office and the schema, the rot attribute specifies the clockwise rotation in 1/60000ths of a degree
+        */
         if (picProp.Transform2D?.Rotation != null)
         {
-            shapePropertiesBuilder.WriteShapeProperty("rotation", picProp.Transform2D.Rotation.Value);
+            // Convert 1/60000 of degree to 1/64000 of degree.
+            shapePropertiesBuilder.WriteShapeProperty("rotation", (long)Math.Round(picProp.Transform2D.Rotation.Value * 16.0 / 15.0));
         }
         //if (picProp.Transform2D.Offset != null)
         // Not supported in RTF
@@ -308,7 +319,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                 // RTF readers that understand posrelh should ignore \shpbxpage, \shpbxmargin and \shpbxcolumn
                 sb.Write(@"\shpbxignore");
-            }            
+            }
 
             if (positionV?.RelativeFrom != null)
             {
