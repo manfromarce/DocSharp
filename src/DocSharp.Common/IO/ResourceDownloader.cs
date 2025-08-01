@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ public static class ResourceDownloader
 
     public static Stream? GetDownloadStream(string url)
     {
-        using (var client = new System.Net.Http.HttpClient())
+        using (var client = new HttpClient())
         {
             // Fix issue with servers refusing connections from clients without a user agent
             client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
@@ -23,7 +24,11 @@ public static class ResourceDownloader
             var response = client.GetAsync(url).Result;
             if (response.IsSuccessStatusCode)
             {
+#if NETFRAMEWORK
+                return response.Content.ReadAsStreamAsync().Result;
+#else
                 return response.Content.ReadAsStream();
+#endif
             }
         }
         return null;
