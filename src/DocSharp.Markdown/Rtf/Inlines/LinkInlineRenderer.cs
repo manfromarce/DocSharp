@@ -25,14 +25,14 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
         {
             if (!renderer.SkipImages)
             {
-                double width, height;
+                long width, height;
                 LinkImageRenderHelper.GetImageAttributes(obj, out width, out height);
-                ProcessImage(renderer, obj.Url, obj.Label, obj.Title, width, height);
+                ProcessImage(renderer, obj.Url!, obj.Label, obj.Title, width, height);
             }
         }
         else
         {
-            bool isAnchor = obj.Url.StartsWith("#");
+            bool isAnchor = obj.Url!.StartsWith("#");
             string anchorName = string.Empty;
             Uri? uri = null;
             if (isAnchor)
@@ -71,7 +71,7 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
         }
     }
 
-    private void ProcessImage(RtfRenderer renderer, string url, string? label, string? title, double width, double height)
+    private void ProcessImage(RtfRenderer renderer, string url, string? label, string? title, long width, long height)
     {
         Uri? uri = LinkImageRenderHelper.NormalizeImageUri(url, renderer.ImagesBaseUri);
         if (uri != null)
@@ -107,15 +107,15 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
         }
     }
 
-    private void InsertImage(RtfRenderer renderer, Stream stream, string? label, string? title, double desiredWidth, double desiredHeight)
+    private void InsertImage(RtfRenderer renderer, Stream stream, string? label, string? title, long desiredWidth, long desiredHeight)
     {
         try
         {
             var pageSize = new System.Drawing.Size(9026, 13958); // A4 page size - margins (in twips)
             using (var tempStream = LinkImageRenderHelper.ConvertAndScaleImage(stream,
                                                            out ImageFormat fileType,
-                                                           pageSize, DocSharp.UnitMetric.Twip,
-                                                           desiredWidth, desiredHeight, DocSharp.UnitMetric.Pixel,
+                                                           pageSize,
+                                                           desiredWidth, desiredHeight,
                                                            out long calculatedWidth, out long calculatedHeight,
                                                            true, renderer.ImageConverter))
             {

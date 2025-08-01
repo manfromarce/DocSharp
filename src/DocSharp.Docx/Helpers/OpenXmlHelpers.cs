@@ -1066,7 +1066,7 @@ public static class OpenXmlHelpers
     }
 
     /// <summary>
-    /// Get page size of the last section in DXA (1/20th of point) excluding page margins.
+    /// Get page size of the last section in DXA (also called twips) (1/20th of point) excluding page margins.
     /// </summary>
     /// <param name="document">The word processing document object</param>
     /// <returns>A Size in twenthies of a point.</returns>

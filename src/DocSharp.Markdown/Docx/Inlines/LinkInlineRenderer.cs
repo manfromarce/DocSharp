@@ -31,13 +31,13 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         {
             if (!renderer.SkipImages)
             {
-                LinkImageRenderHelper.GetImageAttributes(obj, out double width, out double height);
-                ProcessImage(renderer, obj.Url, obj.Label, obj.Title, width, height);
+                LinkImageRenderHelper.GetImageAttributes(obj, out long widthInTwips, out long heightInTwips);
+                ProcessImage(renderer, obj.Url!, obj.Label, obj.Title, widthInTwips, heightInTwips);
             }
         }
         else
         {
-            bool isAnchor = obj.Url.StartsWith("#");
+            bool isAnchor = obj.Url!.StartsWith("#");
             string anchorName = string.Empty;
             Uri? uri = null;
             if (isAnchor)
@@ -91,7 +91,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         }
     }
 
-    private void ProcessImage(DocxDocumentRenderer renderer, string url, string? label, string? title, double width, double height)
+    private void ProcessImage(DocxDocumentRenderer renderer, string url, string? label, string? title, long widthInTwips, long heightInTwips)
     {
         Uri? uri = LinkImageRenderHelper.NormalizeImageUri(url, renderer.ImagesBaseUri);
         if (uri != null)
@@ -102,7 +102,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 {
                     using (var fs = new FileStream(uri.LocalPath, FileMode.Open, FileAccess.Read))
                     {
-                        InsertImage(renderer, fs, label, title, width, height);
+                        InsertImage(renderer, fs, label, title, widthInTwips, heightInTwips);
                     }
                 }
                 else if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
@@ -112,7 +112,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                     {
                         if (stream != null)
                         {
-                            InsertImage(renderer, stream, label, title, width, height);
+                            InsertImage(renderer, stream, label, title, widthInTwips, heightInTwips);
                         }
                     }
                 }
@@ -127,14 +127,14 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         }
     }
 
-    private void InsertImage(DocxDocumentRenderer renderer, Stream stream, string? label, string? title, double desiredWidth, double desiredHeight)
+    private void InsertImage(DocxDocumentRenderer renderer, Stream stream, string? label, string? title, long widthInTwips, long heightInTwips)
     {
         try
         {
             using (var tempStream = LinkImageRenderHelper.ConvertAndScaleImage(stream,
                                                            out ImageFormat fileType,
-                                                           renderer.Document.GetEffectivePageSize(), DocSharp.UnitMetric.Twip,
-                                                           desiredWidth, desiredHeight, DocSharp.UnitMetric.Pixel,
+                                                           renderer.Document.GetEffectivePageSize(), 
+                                                           widthInTwips, heightInTwips,
                                                            out long calculatedWidth, out long calculatedHeight,
                                                            false, renderer.ImageConverter))
             {
