@@ -135,7 +135,8 @@ public partial class MainWindow : Window
                     {
                         ImageConverter = new ImageSharpConverter(),
                         // Converts TIFF, GIF and other formats which are not supported in RTF.
-                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName), // converts sub-documents (if any)
+                        OutputFolderPath = Path.GetDirectoryName(sfd.FileName)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -207,8 +208,9 @@ public partial class MainWindow : Window
                         ImagesBaseUriOverride = "",
                         //ImagesBaseUriOverride = "..",
                         //ImagesBaseUriOverride = "images/",
-                        ImageConverter = new SystemDrawingConverter() // Converts TIFF, WMF and EMF
-                                                                      // (ImageSharp does not support WMF / EMF yet)
+                        ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
+                                                                       // (ImageSharp does not support WMF / EMF yet)
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -238,7 +240,10 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var converter = new DocxToTxtConverter();
+                    var converter = new DocxToTxtConverter()
+                    {
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
+                    };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)
