@@ -37,9 +37,12 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
             this._writer.WriteAttributeString("xmlns", "r", "", OpenXmlNamespaces.Relationships);
 
             // fileVersion
-            this._writer.WriteStartElement(Sml.Workbook.ElFileVersion, Sml.Ns);
-            this._writer.WriteAttributeString(Sml.Workbook.AttrAppName, "xl");
-            this._writer.WriteEndElement();
+            // this._writer.WriteStartElement(Sml.Workbook.ElFileVersion, Sml.Ns);
+            // this._writer.WriteAttributeString(Sml.Workbook.AttrAppName, "xl");
+            // this._writer.WriteAttributeString(Sml.Workbook.AttrLastEdited, "");
+            // this._writer.WriteAttributeString(Sml.Workbook.AttrLowestEdited, "");
+            // this._writer.WriteAttributeString(Sml.Workbook.AttrRupBuild, "");
+            // this._writer.WriteEndElement();
 
             // workbookPr
             this._writer.WriteStartElement(Sml.Workbook.ElWorkbookPr, Sml.Ns);
@@ -48,8 +51,6 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
                 this._writer.WriteAttributeString(Sml.Workbook.AttrCodeName, workbookData.CodeName.codeName.Value);
             }
             this._writer.WriteEndElement();
-
-
 
             this._writer.WriteStartElement("sheets");
 
