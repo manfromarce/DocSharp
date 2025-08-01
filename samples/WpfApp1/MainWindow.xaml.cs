@@ -133,8 +133,9 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToRtfConverter()
                     {
-                        ImageConverter = new ImageSharpConverter()
+                        ImageConverter = new ImageSharpConverter(),
                         // Converts TIFF, GIF and other formats which are not supported in RTF.
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
