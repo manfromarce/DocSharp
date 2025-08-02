@@ -20,9 +20,13 @@ using DocSharp.Binary.Spreadsheet.XlsFileFormat;
 using DocSharp.Binary.PptFileFormat;
 using DocSharp.Binary.StructuredStorage.Reader;
 using DocSharp.Docx;
-using DocSharp.Markdown;
 using DocSharp.Imaging;
+using DocSharp.Markdown;
+using DocSharp.Rtf;
 using HtmlToOpenXml;
+using PeachPDF;
+using PeachPDF.Network;
+using System.Net.Http;
 
 namespace WpfApp1;
 /// <summary>
@@ -133,10 +137,9 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToRtfConverter()
                     {
-                        ImageConverter = new ImageSharpConverter(),
-                        // Converts TIFF, GIF and other formats which are not supported in RTF.
-                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName), // converts sub-documents (if any)
-                        OutputFolderPath = Path.GetDirectoryName(sfd.FileName)
+                        ImageConverter = new ImageSharpConverter(), // Converts TIFF, GIF and other formats which are not supported in RTF.
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName), // Converts sub-documents (if any)
+                        OutputFolderPath = Path.GetDirectoryName(sfd.FileName), // Converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -204,13 +207,16 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToMarkdownConverter()
                     {
+                        ExportHeaderFooter = true,
+                        ExportFootnotesEndnotes = true,
                         ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
                         ImagesBaseUriOverride = "",
                         //ImagesBaseUriOverride = "..",
                         //ImagesBaseUriOverride = "images/",
                         ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
-                                                                       // (ImageSharp does not support WMF / EMF yet)
-                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
+                                                                      // (ImageSharp does not support WMF / EMF yet)
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // Converts sub-documents (if any)
+
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
                 }
@@ -242,9 +248,135 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToTxtConverter()
                     {
-                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
+                        ExportHeaderFooter = true,
+                        ExportFootnotesEndnotes = true,
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // Converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void RtfToDocx_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Word OpenXML document|*.docx",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    rtf.ToDocx(sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+    
+    private void RtfToHtml_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+                Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    rtf.ToHtml(sfd.FileName, new RtfToHtmlSettings()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    rtf.ToMarkdown(sfd.FileName, new RtfToMdSettings()
+                    {
+                        ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                        ImagesBaseUriOverride = "",
+                        ImageConverter = new ImageSharpConverter()
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+                    }
+                }
+
+    private void RtfToTxt_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Plain text|*.txt",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".txt"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    rtf.ToPlainText(sfd.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -284,7 +416,7 @@ public partial class MainWindow : Window
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
-                }
+                }                
             }
         }
     }
@@ -325,7 +457,6 @@ public partial class MainWindow : Window
 
     private void MarkdownToRtf_Click(object sender, RoutedEventArgs e)
     {
-        // Currently achieved through a two steps conversion.
         var ofd = new OpenFileDialog()
         {
             Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
@@ -345,7 +476,6 @@ public partial class MainWindow : Window
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
                     var converter = new MarkdownConverter()
                     {
-                        LinksBaseUri = Path.GetDirectoryName(ofd.FileName), // this will make links absolute
                         ImagesBaseUri = Path.GetDirectoryName(ofd.FileName),
                         ImageConverter = new ImageSharpConverter() // Convert WEBP and GIF images which are not supported in RTF
                                                                    // (possibly AVIF and JXL too in a future release) 
@@ -389,7 +519,7 @@ public partial class MainWindow : Window
                     var rtb = new RichTextBox()
                     {
                         HorizontalAlignment = HorizontalAlignment.Stretch,
-                        VerticalAlignment = VerticalAlignment.Stretch,
+                        VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
                         IsInactiveSelectionHighlightEnabled = true,
                         AutoWordSelection = false,
                         AcceptsReturn = true,
@@ -408,37 +538,46 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void RtfToHtmlDocx_Click(object sender, RoutedEventArgs e)
+    private async void HtmlToRtf_Click(object sender, RoutedEventArgs e)
     {
-        // RTF to DOCX/HTML is not implemented yet in DocSharp but it's planned.
-        // This is a workaround based on other open source libraries and will be used as comparison.
+        // Convert HTML to DOCX using the HtmlToOpenXml library and then DOCX to RTF using DocSharp.
         var ofd = new OpenFileDialog()
         {
-            Filter = "Rich Text Format|*.rtf",
+            Filter = "HTML|*.html;*.htm",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
         {
             var sfd = new SaveFileDialog()
             {
-                Filter = "Word OpenXML document|*.docx",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
+                Filter = "Rich Text Format|*.rtf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".rtf"
             };
             if (sfd.ShowDialog(this) == true)
             {
                 try
                 {
-                    string html = RtfPipe.Rtf.ToHtml(File.ReadAllText(ofd.FileName));
-                    File.WriteAllText(Path.ChangeExtension(sfd.FileName, ".html"), html);
-                    using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(sfd.FileName, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+                    string html = File.ReadAllText(ofd.FileName);
+                    // Move styles inline for better results.
+                    var result = PreMailer.Net.PreMailer.MoveCssInline(html);
+                    string normalizedHtml = result.Html;
+
+                    string docxFilePath = Path.ChangeExtension(sfd.FileName, ".docx");
+                    using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(docxFilePath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
                     {
                         var mainPart = package.AddMainDocumentPart();
                         mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
-                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());
+                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());                        
                         var htmlConverter = new HtmlConverter(mainPart);
-                        await htmlConverter.ParseBody(html);
+                        await htmlConverter.ParseBody(normalizedHtml);
                         package.Save();
                     }
+
+                    var converter = new DocxToRtfConverter()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    };
+                    converter.Convert(docxFilePath, sfd.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -450,6 +589,7 @@ public partial class MainWindow : Window
 
     private void DocToRtf_Click(object sender, RoutedEventArgs e)
     {
+        // Convert DOC to DOCX and then DOCX to RTF.
         var ofd = new OpenFileDialog()
         {
             Multiselect = true,
@@ -471,14 +611,14 @@ public partial class MainWindow : Window
                     {
                         var doc = new WordDocument(reader);
                         using (var docx = WordprocessingDocument.Create(tempFile, WordprocessingDocumentType.Document))
-                        {
+                    {
                             DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
                         }
                     }
-                    var converter = new DocxToRtfConverter()
-                    {
-                        ImageConverter = new ImageSharpConverter()
-                    };
+                            var converter = new DocxToRtfConverter()
+                            {
+                                ImageConverter = new ImageSharpConverter()
+                            };
                     converter.Convert(tempFile, sfd.FileName);
                 }
                 catch (Exception ex)
@@ -486,9 +626,9 @@ public partial class MainWindow : Window
                     MessageBox.Show(ex.Message);
                 }
                 finally
-                {
+    {
                     File.Delete(tempFile);
-                }
+            }
             }
         }
     }
@@ -539,60 +679,13 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void HtmlToRtf_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "HTML|*.html;*.htm",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "Rich Text Format|*.rtf",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".rtf"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                try
-                {
-                    string html = File.ReadAllText(ofd.FileName);
-                    // Move styles inline for better results.
-                    var result = PreMailer.Net.PreMailer.MoveCssInline(html);
-                    string normalizedHtml = result.Html;
-
-                    string docxFilePath = Path.ChangeExtension(sfd.FileName, ".docx");
-                    using (var package = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Create(docxFilePath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
-                    {
-                        var mainPart = package.AddMainDocumentPart();
-                        mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
-                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());
-                        var htmlConverter = new HtmlConverter(mainPart);
-                        await htmlConverter.ParseBody(normalizedHtml);
-                        package.Save();
-                    }
-
-                    var converter = new DocxToRtfConverter()
-                    {
-                        ImageConverter = new ImageSharpConverter()
-                    };
-                    converter.Convert(docxFilePath, sfd.FileName);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
-    }
-
     private void XlsToHtml_Click(object sender, RoutedEventArgs e)
     {
+        // Convert XLS to XLSX using DocSharp and then XLSX to HTML using the XlsxToHtmlConverter library.
         var ofd = new OpenFileDialog()
         {
             Multiselect = true,
-            Filter = "Microsoft Excel 97-2003 spreadsheet|*.xls;*.xlt;*.xlr",
+            Filter = "Spreadsheet|*.xlsx;*.xltx;*.xls;*.xlt;*.xlr",
         };
         if (ofd.ShowDialog(this) == true)
         {
@@ -606,6 +699,14 @@ public partial class MainWindow : Window
                 var tempFile = Path.GetTempFileName();
                 try
                 {
+                    bool isXls = false;
+                    switch (Path.GetExtension(Path.GetFileNameWithoutExtension(ofd.FileName)).ToLower())
+                    {
+                        case ".xls":
+                        case ".xlt":
+                        case ".xlr":
+                            isXls = true;
+                            // Convert XLS to XLSX using DocSharp.Binary if necessary
                     using (var reader = new StructuredStorageReader(ofd.FileName))
                     {
                         var xls = new XlsDocument(reader);
@@ -614,9 +715,11 @@ public partial class MainWindow : Window
                             DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
                         }
                     }
+                        break;  
+                    }
                     using (var outputStream = new FileStream(sfd.FileName, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        XlsxToHtmlConverter.Converter.ConvertXlsx(tempFile, outputStream);
+                        XlsxToHtmlConverter.Converter.ConvertXlsx(isXls ? tempFile : ofd.FileName, outputStream);
                     }
                 }
                 catch (Exception ex)
@@ -630,5 +733,170 @@ public partial class MainWindow : Window
             }
         }
     }
+    
+    private async void DocxToPdf_Click(object sender, RoutedEventArgs e)
+    {
+    	// Convert DOCX to HTML using DocSharp and then HTML to PDF using PeachPdf
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "PDF|*.pdf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToHtmlConverter()
+                    {
+                        ExportHeaderFooter = true,
+                        ExportFootnotesEndnotes = true,
+                        ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
+                                                                      // (ImageSharp does not support WMF / EMF yet)
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
+                    };
+                    string html = converter.ConvertToString(ofd.FileName);
+                    var pdfConfig = new PdfGenerateConfig()
+                    {
+                        PageSize = PeachPDF.PdfSharpCore.PageSize.Letter,
+                        PageOrientation = PeachPDF.PdfSharpCore.PageOrientation.Portrait
+                    };
+                    var generator = new PdfGenerator();
+                    using (var document = await generator.GeneratePdf(html, pdfConfig))
+                    {
+                        document.Save(sfd.FileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
 
+    private async void RtfToPdf_Click(object sender, RoutedEventArgs e)
+    {
+        // Convert RTF to HTML using DocSharp and then HTML to PDF using PeachPdf
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "PDF|*.pdf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var rtf = RtfSource.FromFile(ofd.FileName);
+                    string html = rtf.ToHtml(new RtfToHtmlSettings()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    });
+                    var pdfConfig = new PdfGenerateConfig()
+                    {
+                        PageSize = PeachPDF.PdfSharpCore.PageSize.Letter,
+                        PageOrientation = PeachPDF.PdfSharpCore.PageOrientation.Portrait
+                    };
+                    var generator = new PdfGenerator();
+                    using (var document = await generator.GeneratePdf(html, pdfConfig))
+                    {
+                        document.Save(sfd.FileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private async void HtmlToPdf_Click(object sender, RoutedEventArgs e)
+    {
+        // For HTML to PDF you can use the PeachPDF library.
+        // DocSharp also uses the PeachPDF.PdfSharpCore package for DOCX to PDF conversion,
+        // so that few dependencies are needed.
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "HTML|*.html;*.htm;*.mhtml;*.mht",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "PDF|*.pdf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                bool isMhtml = Path.GetExtension(ofd.FileName).ToLower() switch
+                {
+                    ".mhtml" => true,
+                    ".mht" => true,
+                    _ => false
+                };
+                FileStream? mhtmlStream = null;
+                var currentDir = Directory.GetCurrentDirectory();
+                try
+                {
+                    // For MHTML archives, pass null to GeneratePdf to load the content from the NetworkLoader instead.
+                    var html = isMhtml ? null : File.ReadAllText(ofd.FileName);
+                    if (isMhtml)
+                    {
+                        // Open stream to the MHTML file.
+                        mhtmlStream = File.OpenRead(ofd.FileName);
+                    }
+                    using (var httpClient = new HttpClient())
+                    {
+                        // Fixes issue with servers refusing connections from clients without a user agent
+                        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0");
+                        httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+                        // Set directory to process local files (images, stylesheets, ...) referenced in the HTML page.
+                        var directory = Path.GetFullPath(Path.GetDirectoryName(ofd.FileName) ?? currentDir);
+                        Directory.SetCurrentDirectory(directory);
+
+                        var pdfConfig = new PdfGenerateConfig()
+                        {
+                            PageSize = PeachPDF.PdfSharpCore.PageSize.Letter,
+                            PageOrientation = PeachPDF.PdfSharpCore.PageOrientation.Portrait,
+                            // For regular HTML, allow access to online resources;
+                            // for MHTML, a special NetworkLoader is needed.
+                            NetworkLoader = isMhtml ? new MimeKitNetworkLoader(mhtmlStream) :
+                                                      new HttpClientNetworkLoader(httpClient, new Uri(directory))
+                        };
+
+                        var generator = new PdfGenerator();
+                        using (var document = await generator.GeneratePdf(html, pdfConfig))
+                        {
+                            document.Save(sfd.FileName);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                // Close the MHTML stream, if any
+                mhtmlStream?.Dispose();
+
+                // Restore the current directory
+                Directory.SetCurrentDirectory(currentDir);
+            }
+        }
+    }
 }

@@ -82,6 +82,37 @@ Only watermarks are not supported because they require full VML support in order
 
 [13]: Only solid background is supported.
 
+## RTF converters
+
+| Feature       | ➡️ HTML | ➡️ Markdown | ➡️ TXT | ➡️ DOCX |
+| ------------- | :------: | :-----: | :---------: | :----: |
+| Character formatting | ✅ | ✅ | - | ⏳ |
+| Paragraph formatting | ✅ | - | - | ⏳ |
+| Section formatting  | 🟡 | - | - | ⏳ |
+| Page setup   | ❌ | - | - | ⏳ |
+| Pictures | ✅ | ✅ | - | ⏳ |
+| External pictures | ✅ | ✅ | - | ⏳ |
+| Lists | 🟡 | 🟡 | 🟡 | ⏳ |
+| Tables | ✅ | 🟡 | 🟡 | ⏳ |
+| Styles | 🟡[14] | 🟡[14] | - | ⏳ |
+| Hyperlinks | ✅ | ✅ | - | ⏳ |
+| Bookmarks | ✅ | ✅ | - | ⏳ |
+| Header and footer | 🟡 | 🟡 | 🟡 | ⏳ |
+| Foonotes and endnotes | 🟡 | 🟡 | 🟡 | ⏳ |
+| Fields | 🟡 | 🟡 | 🟡 | ⏳ |
+| Page numbers | 🟡 | 🟡 | 🟡 | ⏳ |
+| Shapes | ❌ | ❌ | ❌ | ⏳ |
+| WordArt | ❌ | ❌ | ❌ | ⏳ |
+| Image effects | ❌ | ❌ | ❌ | ⏳ |
+| Math | ❌ | ❌ | ❌ | ⏳ |
+| OLE objects | - | - | - | ⏳ |
+| Comments | - | - | - | ⏳ |
+| Document background | ❌ | - | - | ⏳ |
+| Document information | 🟡 | - | - | ⏳ |
+| Document settings and protection | - | - | - | ⏳ |
+
+[14] preserved as inline formatting if possible.  
+
 ## Markdown renderers
 
 | Feature       | ➡️ DOCX | ➡️ RTF |
