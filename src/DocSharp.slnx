@@ -23,5 +23,6 @@
   </Folder>
   <Project Path="DocSharp.Common/DocSharp.Common.csproj" />
   <Project Path="DocSharp.Docx/DocSharp.Docx.csproj" />
+  <Project Path="DocSharp.Rtf/DocSharp.Rtf.csproj" />
   <Project Path="DocSharp.Markdown/DocSharp.Markdown.csproj" />
 </Solution>

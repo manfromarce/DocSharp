@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0;net9.0;net462</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <NeutralLanguage>en-US</NeutralLanguage>
+  </PropertyGroup>
+
+  <!-- NuGet package -->
+  <PropertyGroup>
+    <AssemblyName>DocSharp.Rtf</AssemblyName>
+    <AssemblyTitle>DocSharp.Rtf</AssemblyTitle>
+    <PackageId>DocSharp.Rtf</PackageId>
+    <Title>DocSharp.Rtf</Title>
+    <Description>.NET library for converting documents. The DocSharp.Rtf package provides RTF to HTML, Markdown and plain text conversion.</Description>
+    <PackageTags>rtf docx openxml html markdown txt convert converter</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocSharp.Common\DocSharp.Common.csproj" />
+    <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
+  </ItemGroup>
+</Project>
