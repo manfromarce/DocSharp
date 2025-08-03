@@ -494,7 +494,7 @@ public partial class MainWindow : Window
     {
         // Please note that the WPF RichTextBox supports a subset of RTF features.
         // To test the DOCX --> RTF conversion provided by DocSharp,
-        // the RTF document should be opened in MS Word.
+        // the RTF document should be opened in Microsoft Word or another advanced RTF reader.
         var ofd = new OpenFileDialog()
         {
             Filter = "Word OpenXML document|*.docx",
@@ -567,7 +567,7 @@ public partial class MainWindow : Window
                     {
                         var mainPart = package.AddMainDocumentPart();
                         mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
-                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());                        
+                        mainPart.Document.AddChild(new DocumentFormat.OpenXml.Wordprocessing.Body());
                         var htmlConverter = new HtmlConverter(mainPart);
                         await htmlConverter.ParseBody(normalizedHtml);
                         package.Save();
@@ -820,82 +820,6 @@ public partial class MainWindow : Window
                 {
                     MessageBox.Show(ex.Message);
                 }
-            }
-        }
-    }
-
-    private async void HtmlToPdf_Click(object sender, RoutedEventArgs e)
-    {
-        // For HTML to PDF you can use the PeachPDF library.
-        // DocSharp also uses the PeachPDF.PdfSharpCore package for DOCX to PDF conversion,
-        // so that few dependencies are needed.
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "HTML|*.html;*.htm;*.mhtml;*.mht",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "PDF|*.pdf",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                bool isMhtml = Path.GetExtension(ofd.FileName).ToLower() switch
-                {
-                    ".mhtml" => true,
-                    ".mht" => true,
-                    _ => false
-                };
-                FileStream? mhtmlStream = null;
-                var currentDir = Directory.GetCurrentDirectory();
-                try
-                {
-                    // For MHTML archives, pass null to GeneratePdf to load the content from the NetworkLoader instead.
-                    var html = isMhtml ? null : File.ReadAllText(ofd.FileName);
-                    if (isMhtml)
-                    {
-                        // Open stream to the MHTML file.
-                        mhtmlStream = File.OpenRead(ofd.FileName);
-                    }
-                    using (var httpClient = new HttpClient())
-                    {
-                        // Fixes issue with servers refusing connections from clients without a user agent
-                        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0");
-                        httpClient.Timeout = TimeSpan.FromSeconds(30);
-
-                        // Set directory to process local files (images, stylesheets, ...) referenced in the HTML page.
-                        var directory = Path.GetFullPath(Path.GetDirectoryName(ofd.FileName) ?? currentDir);
-                        Directory.SetCurrentDirectory(directory);
-
-                        var pdfConfig = new PdfGenerateConfig()
-                        {
-                            PageSize = PeachPDF.PdfSharpCore.PageSize.Letter,
-                            PageOrientation = PeachPDF.PdfSharpCore.PageOrientation.Portrait,
-                            // For regular HTML, allow access to online resources;
-                            // for MHTML, a special NetworkLoader is needed.
-                            NetworkLoader = isMhtml ? new MimeKitNetworkLoader(mhtmlStream) :
-                                                      new HttpClientNetworkLoader(httpClient, new Uri(directory))
-                        };
-
-                        var generator = new PdfGenerator();
-                        using (var document = await generator.GeneratePdf(html, pdfConfig))
-                        {
-                            document.Save(sfd.FileName);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-                // Close the MHTML stream, if any
-                mhtmlStream?.Dispose();
-
-                // Restore the current directory
-                Directory.SetCurrentDirectory(currentDir);
             }
         }
     }
