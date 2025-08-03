@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.SystemDrawing", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSharp.Rtf", "DocSharp.Rtf\DocSharp.Rtf.csproj", "{BB385E7D-9F8A-6350-6446-96E0D598262F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinFormsViewer", "..\samples\WinFormsViewer\WinFormsViewer.csproj", "{67F2B8FB-1BA6-F99C-7FC3-9C44E428AD6E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +93,10 @@ Global
 		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB385E7D-9F8A-6350-6446-96E0D598262F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67F2B8FB-1BA6-F99C-7FC3-9C44E428AD6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67F2B8FB-1BA6-F99C-7FC3-9C44E428AD6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67F2B8FB-1BA6-F99C-7FC3-9C44E428AD6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67F2B8FB-1BA6-F99C-7FC3-9C44E428AD6E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -103,6 +109,7 @@ Global
 		{DCE126AF-361A-47D6-A6E0-6148362B6453} = {D4B9A0DF-568D-43A8-BEFD-858AAEA41838}
 		{FC884F18-C779-4B1F-B957-4BC31C6D71C1} = {6C83A596-D32D-B35F-00DD-F0C99B673980}
 		{C5A5B630-2A06-491C-AF17-97DB195F7050} = {6C83A596-D32D-B35F-00DD-F0C99B673980}
+		{67F2B8FB-1BA6-F99C-7FC3-9C44E428AD6E} = {D4B9A0DF-568D-43A8-BEFD-858AAEA41838}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {66D6BFB0-ECBD-49CD-B3E2-CABBD74AF79E}

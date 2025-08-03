@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DocSharp.Docx\DocSharp.Docx.csproj" />
+    <ProjectReference Include="..\..\src\DocSharp.Markdown\DocSharp.Markdown.csproj" />
+    <ProjectReference Include="..\..\src\DocSharp.SystemDrawing\DocSharp.SystemDrawing.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

@@ -11,6 +11,7 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="../samples/WpfApp1/WpfApp1.csproj" />
+    <Project Path="../samples/WinFormsViewer/WinFormsViewer.csproj" />
   </Folder>
   <Folder Name="/Solution items/">
     <File Path="../.editorconfig" />
