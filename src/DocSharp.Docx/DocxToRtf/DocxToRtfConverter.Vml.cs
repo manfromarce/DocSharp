@@ -25,12 +25,29 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
-            // Width and height should be in a v:shape element in the style attribute: 
-            // style="width:165.6pt;height:110.4pt;visibility:visible..."
+            OpenXmlElement? shape;
+            // This method supports can be called for either a picture container (w:pict)
+            // or the underlying shape/rectangle.
+            // Usually ImageData is contained in a shape of type 75 (picture),
+            // but a rectangle may also be used (e.g. by WordPad for OLE objects).
+            if (element is V.Shape || element is V.Rectangle)
+            {
+                shape = element;
+            }
+            else
+            {
+                shape = element.Elements<V.Shape>().FirstOrDefault() ?? element.Elements<V.Rectangle>().FirstOrDefault() as OpenXmlElement;
+            }
 
-            var shape = element as V.Shape ?? element.Elements<V.Shape>().FirstOrDefault();
-            var style = shape?.Style;
-            if (style?.Value != null)
+            if (shape == null)
+            {
+                return;
+            }
+            
+            // Width and height are specified in the style attribute, like this: 
+            // style="width:165.6pt;height:110.4pt;visibility:visible..."
+            var style = shape.GetAttribute("style", "");
+            if (style.Value != null)
             {
                 var properties = new PictureProperties();
 
@@ -135,7 +152,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
     }
 
-    private void ProcessVmlShapeStyleProperties(Dictionary<string, string> properties, RtfStringWriter sb, V.Shape shape, long width, long height)
+    private void ProcessVmlShapeStyleProperties(Dictionary<string, string> properties, RtfStringWriter sb, OpenXmlElement shape, long width, long height)
     {
         long left = 0;
         long top = 0;
@@ -231,7 +248,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.WriteWordWithValue("pctVertPos", ParseTwips(pctTop));
         }
 
-        var wrap = shape!.Elements<W10.TextWrap>().FirstOrDefault();
+        var wrap = shape.Elements<W10.TextWrap>().FirstOrDefault();
         if (wrap != null)
         {
             if (wrap.Type != null && wrap.Type.Value == W10.WrapValues.TopAndBottom)
@@ -313,8 +330,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
 
         sb.WriteShapeProperty("shapeType", "75");
-        sb.WriteShapeProperty("fAllowOverlap ", shape.AllowOverlap == null ? true : shape.AllowOverlap.Value);
-        sb.WriteShapeProperty("fLayoutInCell", shape.AllowInCell == null ? true : shape.AllowInCell.Value);
+
+        if (shape is V.Shape shp)
+        {
+            sb.WriteShapeProperty("fAllowOverlap ", shp.AllowOverlap == null ? true : shp.AllowOverlap.Value);
+            sb.WriteShapeProperty("fLayoutInCell", shp.AllowInCell == null ? true : shp.AllowInCell.Value);
+        }
+        else if (shape is V.Rectangle rect)
+        {
+            sb.WriteShapeProperty("fAllowOverlap ", rect.AllowOverlap == null ? true : rect.AllowOverlap.Value);
+            sb.WriteShapeProperty("fLayoutInCell", rect.AllowInCell == null ? true : rect.AllowInCell.Value);
+        }
 
         if (properties.TryGetValue("mso-position-horizontal", out string? hPos))
         {
