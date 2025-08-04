@@ -15,7 +15,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     internal override void ProcessParagraph(Paragraph paragraph, HtmlTextWriter sb)
     {
         var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph)?.Val?.Value;
-        var indent = OpenXmlHelpers.GetEffectiveProperty<Indentation>(paragraph);
+        var indent = OpenXmlHelpers.GetEffectiveIndent(paragraph);
         var borders = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);
         var spacing = OpenXmlHelpers.GetEffectiveProperty<SpacingBetweenLines>(paragraph);
         var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
@@ -24,18 +24,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         var widowControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
         var direction = OpenXmlHelpers.GetEffectiveProperty<TextDirection>(paragraph);
         // var frameProperties = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph); // TODO
-
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
-        var listLevel = ListHelpers.GetListLevel(numberingProperties);
-        // if (listLevel?.ParagraphStyleIdInLevel != null)
-        // {
-        //     // TODO
-        // }
-        if (listLevel?.PreviousParagraphProperties?.Indentation is Indentation ind)
-        {
-            indent = ind;
-            // TODO: replace other properties if specified in the level paragraph properties
-        }
 
         // Build CSS style string
         var styles = new List<string>();
@@ -191,15 +180,15 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         sb.WriteEndElement("p");
     }
 
-    internal void ProcessIndentation(Indentation indent, ref List<string> styles)
+    internal void ProcessIndentation(DocSharp.Docx.Model.Indent indent, ref List<string> styles)
     {
         if (indent.LeftChars != null)
         {
             styles.Add($"padding-left: {indent.LeftChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.Left != null && double.TryParse(indent.Left.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double li))
+        else if (indent.Left != null)
         {
-            double leftIndent = li / 20.0; // Convert twips to points
+            double leftIndent = indent.Left.Value / 20.0; // Convert twips to points
             styles.Add($"padding-left: {leftIndent.ToStringInvariant()}pt;");
         }
 
@@ -207,28 +196,30 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             styles.Add($"padding-right: {indent.RightChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.Right != null && double.TryParse(indent.Right.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double ri))
+        else if (indent.Right != null)
         {
-            double rightIndent = ri / 20.0; // Convert twips to points
+            double rightIndent = indent.Right.Value / 20.0; // Convert twips to points
             styles.Add($"padding-right: {rightIndent.ToStringInvariant()}pt;");
         }
+
+        // TODO: start / end indent
 
         if (indent.FirstLineChars != null)
         {
             styles.Add($"text-indent: {indent.FirstLineChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.FirstLine != null && double.TryParse(indent.FirstLine.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double fi))
+        else if (indent.FirstLine != null)
         {
-            double firstLineIndent = fi / 20.0; // Convert twips to points
+            double firstLineIndent = indent.FirstLine.Value / 20.0; // Convert twips to points
             styles.Add($"text-indent: {firstLineIndent.ToStringInvariant()}pt;");
         }
         else if (indent.HangingChars != null)
         {
             styles.Add($"text-indent: -{indent.HangingChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.Hanging != null && double.TryParse(indent.Hanging.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double hi))
+        else if (indent.Hanging != null)
         {
-            double hangingIndent = hi / 20.0; // Convert twips to points
+            double hangingIndent = indent.Hanging.Value / 20.0; // Convert twips to points
             styles.Add($"text-indent: -{hangingIndent.ToStringInvariant()}pt;");
         }
     }

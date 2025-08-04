@@ -224,127 +224,33 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write("\\adjustright");
         }
 
-        var ind = OpenXmlHelpers.GetEffectiveProperty<Indentation>(paragraph);
+        var ind = OpenXmlHelpers.GetEffectiveIndent(paragraph);
+        if (ind?.LeftChars != null)
+            sb.Write($"\\culi{ind.LeftChars.Value}"); // overwrites \liN
+        else if (ind?.Left != null)
+            sb.Write($"\\li{ind.Left.Value}");
 
-        if (numberingProperties?.NumberingLevelReference?.Val != null &&
-            numberingProperties?.NumberingId?.Val != null &&
-            paragraph.GetNumberingPart()?.NumberingDefinitionsPart?.Numbering is Numbering numbering)
-        {
-            if (numbering.Elements<NumberingInstance>().FirstOrDefault(x => x.NumberID != null &&
-                                                                                    x.NumberID.Value == numberingProperties.NumberingId.Val)
-                        is NumberingInstance num)
-            {
-                Level? level = null;
-                // If NumberingInstance has a LevelOverride, use it.
-                level = num.Elements<LevelOverride>()
-                    .FirstOrDefault(x => x.Level?.LevelIndex != null &&
-                                         x.Level.LevelIndex == numberingProperties.NumberingLevelReference.Val)?.Level;
-                // Otherwise get level from AbstractNum
-                if (num.AbstractNumId?.Val != null)
-                {
-                    level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null &&
-                                                                              x.AbstractNumberId.Value == num.AbstractNumId.Val)?
-                                 .Elements<Level>()
-                                 .FirstOrDefault(x => x.LevelIndex != null &&
-                                                 x.LevelIndex == numberingProperties.NumberingLevelReference.Val);
-                }
-                // Get paragraph properties for list level
-                if (level?.PreviousParagraphProperties != null)
-                {
-                    if (paragraph.ParagraphProperties?.Indentation?.LeftChars != null)
-                    {
-                        sb.Write($"\\culi{paragraph.ParagraphProperties.Indentation.LeftChars}"); // overwrites \liN
-                    }
-                    else if (paragraph.ParagraphProperties?.Indentation?.Left != null)
-                    {
-                        sb.Write($"\\li{paragraph.ParagraphProperties.Indentation.Left}");
-                    }
-                    else if (level.PreviousParagraphProperties.Indentation?.Left != null)
-                    {
-                        sb.Write($"\\li{level.PreviousParagraphProperties.Indentation.Left}");
-                    }
+        if (ind?.Start != null)
+            sb.Write($"\\lin{ind.Start.Value}");
 
-                    if (paragraph.ParagraphProperties?.Indentation?.Start != null)
-                    {
-                        sb.Write($"\\lin{paragraph.ParagraphProperties.Indentation.Start}");
-                    }
-                    else if (level.PreviousParagraphProperties.Indentation?.Start != null)
-                    {
-                        sb.Write($"\\lin{level.PreviousParagraphProperties.Indentation.Start}");
-                    }
+        if (ind?.RightChars != null)
+            sb.Write($"\\curi{ind.RightChars.Value}"); // overwrites \riN
+        else if (ind?.Right != null)
+            sb.Write($"\\ri{ind.Right.Value}");
 
-                    if (paragraph.ParagraphProperties?.Indentation?.FirstLineChars != null)
-                    {
-                        sb.Write($"\\cufi{paragraph.ParagraphProperties?.Indentation.FirstLineChars}"); // overwrites \fiN
-                    }
-                    if (paragraph.ParagraphProperties?.Indentation?.FirstLine != null)
-                    {
-                        sb.Write($"\\fi{paragraph.ParagraphProperties?.Indentation.FirstLine}");
-                    }
-                    else if (level.PreviousParagraphProperties.Indentation?.FirstLine != null)
-                    {
-                        sb.Write($"\\fi{level.PreviousParagraphProperties.Indentation?.FirstLine}");
-                    }
-                    else if (paragraph.ParagraphProperties?.Indentation?.HangingChars != null)
-                    {
-                        sb.Write($"\\cufi-{paragraph.ParagraphProperties?.Indentation.HangingChars}"); // overwrites \fiN
-                    }
-                    else if (paragraph.ParagraphProperties?.Indentation?.Hanging != null)
-                    {
-                        sb.Write($"\\fi-{paragraph.ParagraphProperties?.Indentation.Hanging}");
-                    }
-                    else if (level.PreviousParagraphProperties.Indentation?.Hanging != null)
-                    {
-                        sb.Write($"\\fi-{level.PreviousParagraphProperties.Indentation?.Hanging}");
-                    }
+        if (ind?.End != null)
+            sb.Write($"\\rin{ind.End.Value}");
 
-                    // TODO: 
-                    // ProcessPreviousParagraphProperties processes
-                    // left, hanging and first line indents only, because
-                    // \listlevel in RTF does not support other properties.
-                    // We could preserve others here.
+        // StartCharacters and EndCharacters have no equivalent in RTF.
 
-                    if (ind?.RightChars != null)
-                        sb.Write($"\\curi{ind.RightChars}"); // overwrites \riN
-                    else if (ind?.Right != null)
-                        sb.Write($"\\ri{ind.Right}");
-                    else if (ind?.End != null)
-                        sb.Write($"\\rin{ind.End}");
-
-                    // StartCharacters and EndCharacters have no equivalent in RTF.
-                }
-            }
-        }
-        else
-        {
-            if (ind?.LeftChars != null)
-                sb.Write($"\\culi{ind.LeftChars}"); // overwrites \liN
-            else if (ind?.Left != null)
-                sb.Write($"\\li{ind.Left}");
-
-            if (ind?.Start != null)
-                sb.Write($"\\lin{ind.Start}");
-
-            if (ind?.RightChars != null)
-                sb.Write($"\\curi{ind.RightChars}"); // overwrites \riN
-            else if (ind?.Right != null)
-                sb.Write($"\\ri{ind.Right}");
-
-            if (ind?.End != null)
-                sb.Write($"\\rin{ind.End}");
-
-            // StartCharacters and EndCharacters have no equivalent in RTF.
-
-            if (ind?.FirstLineChars != null)
-                sb.Write($"\\cufi{ind.FirstLineChars}"); // overwrites \fiN
-            else if (ind?.FirstLine != null)
-                sb.Write($"\\fi{ind.FirstLine}");
-            else if (ind?.HangingChars != null)
-                sb.Write($"\\cufi-{ind.HangingChars}"); // overwrites \fiN
-            else if (ind?.Hanging != null)
-                sb.Write($"\\fi-{ind.Hanging}");
-        }        
-
+        if (ind?.FirstLineChars != null)
+            sb.Write($"\\cufi{ind.FirstLineChars.Value}"); // overwrites \fiN
+        else if (ind?.FirstLine != null)
+            sb.Write($"\\fi{ind.FirstLine.Value}");
+        else if (ind?.HangingChars != null)
+            sb.Write($"\\cufi-{ind.HangingChars.Value}"); // overwrites \fiN
+        else if (ind?.Hanging != null)
+            sb.Write($"\\fi-{ind.Hanging.Value}");
 
         var mirrorIndent = OpenXmlHelpers.GetEffectiveProperty<MirrorIndents>(paragraph);
         if (mirrorIndent != null && (mirrorIndent.Val is null || mirrorIndent.Val))
