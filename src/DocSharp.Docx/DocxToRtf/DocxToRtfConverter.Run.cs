@@ -219,7 +219,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (pos < 0)
                 {
-                    sb.Write($"\\dn{pos}");
+                    sb.Write($"\\dn{Math.Abs(pos)}");
                 }
                 else if (pos > 0)
                 {
