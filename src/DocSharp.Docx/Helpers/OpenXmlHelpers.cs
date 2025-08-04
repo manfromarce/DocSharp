@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -320,6 +321,151 @@ public static class OpenXmlHelpers
         }
     }
 
+    public static DocSharp.Docx.Model.Indent? GetEffectiveIndent(this Paragraph paragraph)
+    {
+        var res = new DocSharp.Docx.Model.Indent();
+
+        var attributes = new string[] { "left", "leftChars",
+                                        "right", "rightChars",
+                                        "start", "startChars",
+                                        "end", "endChars",
+                                        "firstLine", "firstLineChars",
+                                        "hanging", "hangingChars" };
+
+        // Check paragraph properties
+        var indent = paragraph.ParagraphProperties?.GetFirstChild<Indentation>();
+        var attrs = indent?.GetAttributes();
+        if (attrs != null)
+        {
+            foreach (var targetAttribute in attributes)
+            {
+                if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
+                {
+                    res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
+                }
+            }
+        }
+
+        // Check numbering properties
+        if (paragraph.ParagraphProperties?.NumberingProperties is NumberingProperties numProperties &&
+            numProperties?.NumberingLevelReference?.Val != null &&
+            numProperties?.NumberingId?.Val != null &&
+            paragraph.GetNumberingPart()?.NumberingDefinitionsPart?.Numbering is Numbering numbering)
+        {
+            if (numbering.Elements<NumberingInstance>().FirstOrDefault(x => x.NumberID != null &&
+                                                                            x.NumberID.Value == numProperties.NumberingId.Val)
+                        is NumberingInstance num)
+            {
+                Level? level = null;
+                // If NumberingInstance has a LevelOverride, use it.
+                level = num.Elements<LevelOverride>()
+                    .FirstOrDefault(x => x.Level?.LevelIndex != null &&
+                                            x.Level.LevelIndex == numProperties.NumberingLevelReference.Val)?.Level;
+                // Otherwise get level from AbstractNum
+                if (num.AbstractNumId?.Val != null)
+                {
+                    level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null &&
+                                                                                x.AbstractNumberId.Value == num.AbstractNumId.Val)?
+                                    .Elements<Level>()
+                                    .FirstOrDefault(x => x.LevelIndex != null &&
+                                                        x.LevelIndex == numProperties.NumberingLevelReference.Val);
+                }
+                // Get paragraph properties for list level
+                indent = level?.PreviousParagraphProperties?.Indentation;
+                attrs = indent?.GetAttributes();
+                if (attrs != null)
+                {
+                    foreach (var targetAttribute in attributes)
+                    {
+                        if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
+                        {
+                            res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
+                        }
+                    }
+                }
+            }
+        }
+
+        var stylesPart = GetStylesPart(paragraph);
+
+        // Check conditional formatting, if any
+        var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
+        indent = GetConditionalFormattingProperty<Indentation>(stylesPart, paragraph, conditionalFormattingType);
+        attrs = indent?.GetAttributes();
+        if (attrs != null)
+        {
+            foreach (var targetAttribute in attributes)
+            {
+                if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
+                {
+                    res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
+                }
+            }
+        }
+
+        // Check paragraph style
+        var paragraphStyle = stylesPart.GetStyleFromId(paragraph.ParagraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
+        while (paragraphStyle != null)
+        {
+            indent = paragraphStyle.StyleParagraphProperties?.GetFirstChild<Indentation>();
+            attrs = indent?.GetAttributes();
+            if (attrs != null)
+            {
+                foreach (var targetAttribute in attributes)
+                {
+                    if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
+                    {
+                        res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
+                    }
+                }
+            }
+
+            // Check styles from which the current style inherits
+            paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
+        }
+
+        // Check table paragraph style
+        if (paragraph.GetFirstAncestor<Table>() is Table table &&
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+            while (tableStyle != null)
+            {
+                indent = tableStyle.StyleParagraphProperties?.GetFirstChild<Indentation>();
+                attrs = indent?.GetAttributes();
+                if (attrs != null)
+                {
+                    foreach (var targetAttribute in attributes)
+                    {
+                        if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
+                        {
+                            res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
+                        }
+                    }
+                }
+
+                // Check styles from which the current style inherits
+                tableStyle = stylesPart.GetBaseStyle(tableStyle);
+            }
+        }
+
+        // Check default paragraph style for the current document
+        indent = stylesPart.GetDefaultParagraphStyle()?.GetFirstChild<Indentation>();
+        attrs = indent?.GetAttributes();
+        if (attrs != null)
+        {
+            foreach (var targetAttribute in attributes)
+            {
+                if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
+                {
+                    res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
+                }
+            }
+        }
+
+        return res;
+    }
+
     // Helper function to get paragraph formatting from paragraph properties, style or default style.
     public static T? GetEffectiveProperty<T>(this Paragraph paragraph) where T : OpenXmlElement
     {
@@ -329,6 +475,41 @@ public static class OpenXmlHelpers
         {
             return propertyValue;
         }
+
+        //if (typeof(T) == typeof(Indentation))
+        //{
+        //    // Check numbering properties
+        //    if (paragraph.ParagraphProperties?.NumberingProperties is NumberingProperties numProperties &&
+        //        numProperties?.NumberingLevelReference?.Val != null &&
+        //        numProperties?.NumberingId?.Val != null &&
+        //        paragraph.GetNumberingPart()?.NumberingDefinitionsPart?.Numbering is Numbering numbering)
+        //    {
+        //        if (numbering.Elements<NumberingInstance>().FirstOrDefault(x => x.NumberID != null &&
+        //                                                                        x.NumberID.Value == numProperties.NumberingId.Val)
+        //                    is NumberingInstance num)
+        //        {
+        //            Level? level = null;
+        //            // If NumberingInstance has a LevelOverride, use it.
+        //            level = num.Elements<LevelOverride>()
+        //                .FirstOrDefault(x => x.Level?.LevelIndex != null &&
+        //                                     x.Level.LevelIndex == numProperties.NumberingLevelReference.Val)?.Level;
+        //            // Otherwise get level from AbstractNum
+        //            if (num.AbstractNumId?.Val != null)
+        //            {
+        //                level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null &&
+        //                                                                          x.AbstractNumberId.Value == num.AbstractNumId.Val)?
+        //                             .Elements<Level>()
+        //                             .FirstOrDefault(x => x.LevelIndex != null &&
+        //                                                  x.LevelIndex == numProperties.NumberingLevelReference.Val);
+        //            }
+        //            // Get paragraph properties for list level
+        //            if (level?.PreviousParagraphProperties?.Indentation is Indentation indent)
+        //            {
+        //                return indent as T;
+        //            }
+        //        }
+        //    }
+        //}
 
         var stylesPart = GetStylesPart(paragraph);
 

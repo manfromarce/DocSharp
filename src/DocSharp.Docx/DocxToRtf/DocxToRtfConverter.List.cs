@@ -12,6 +12,9 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
+    private Dictionary<long, long> abstractNumDictionary = [];
+    private Dictionary<long, long> numIdDictionary = [];
+
     internal void ProcessNumberingPart(Numbering numbering, RtfStringWriter sb)
     {
         sb.Write(@"{\*\listtable");
@@ -24,17 +27,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     private void ProcessListTable(Numbering numbering, RtfStringWriter sb)
     {
-        foreach (var abstractNum in numbering.Elements<AbstractNum>())
+        foreach (var abstractNum in numbering.Elements<AbstractNum>().Where(a => a.AbstractNumberId != null))
         {
             sb.Write(@"{\list");
-            if (abstractNum.Nsid?.Val != null)
-            {
-                sb.Write(@$"\listid{abstractNum.Nsid.Val.ToLong()}");
-            }
-            if (abstractNum.TemplateCode?.Val != null)
-            {
-                sb.Write(@$"\listemplateid{abstractNum.TemplateCode.Val.ToLong()}");
-            }
+
+            // If Nsid is missing (e.g. documents created by WordPad) lists will result broken in RTF,
+            // so we use a dictionary and a counter instead.
+            //if (abstractNum.Nsid?.Val != null) 
+            //{
+            //    sb.Write(@$"\listid{abstractNum.Nsid.Val.ToLong()}");
+            //}
+            //if (abstractNum.TemplateCode?.Val != null)
+            //{
+            //    sb.Write(@$"\listemplateid{abstractNum.TemplateCode.Val.ToLong()}");
+            //}
+            sb.Write(@$"\listid{abstractNumDictionary.Count + 1}\listemplateid{abstractNumDictionary.Count + 1}");
+            abstractNumDictionary.Add(abstractNum.AbstractNumberId!.Value, abstractNumDictionary.Count + 1);
+
             if (abstractNum.MultiLevelType?.Val != null)
             {
                 if (abstractNum.MultiLevelType.Val == MultiLevelValues.SingleLevel)
@@ -50,7 +59,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write(@"\listhybrid");
                 }
             }
-            foreach (var level in abstractNum.Elements<Level>())
+            foreach (var level in abstractNum.Elements<Level>()
+                                             .OrderBy(lvl => lvl.LevelIndex != null ? lvl.LevelIndex.Value : 0))
             {
                 ProcessLevel(level, sb);
             }
@@ -116,18 +126,22 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             sb.Write(@"\lvltentative");
         }
+
         //if (level.LevelIndex != null)
         //{
-        // Not supported in RTF, add levels in order instead
+        // Not supported in RTF, process levels in order instead
         //}
+
         if (level.LevelRestart is LevelRestart restart)
         {
 
         }
+
         if (level.LevelPictureBulletId is LevelPictureBulletId pictureBulletId)
         {
             sb.Write($@"\levelpicture{pictureBulletId.Val}");
         }
+
         if (level.LevelJustification?.Val != null)
         {
             if (level.LevelJustification.Val == LevelJustificationValues.Left)
@@ -159,6 +173,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write("\\levelfollow2"); 
             }
         }
+        else
+        {
+            sb.Write("\\levelfollow0"); // Default
+        }
 
         if (level.LevelText is LevelText levelText)
         {
@@ -187,9 +205,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             sb.Write(@"\levelindent0\levelspace0");
         }
+
         if (level.StartNumberingValue?.Val != null)
         {
             sb.Write($@"\levelstartat{level.StartNumberingValue.Val}");
+        }
+        else
+        {
+            sb.Write(@"\levelstartat0");
         }
 
         if (level.NumberingFormat is NumberingFormat numberingFormat)
@@ -206,6 +229,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             sb.Write($@"\levellegal1");
         }
+
         if (level.PreviousParagraphProperties is PreviousParagraphProperties prevParagraphProperties)
         {
             ProcessPreviousParagraphProperties(prevParagraphProperties, sb);
@@ -293,6 +317,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             sb.Write(@"\levelnfc7"); // First, Second, Third
         }
+        else if (numberingFormat.Val == NumberFormatValues.Chicago)
+        {
+            sb.Write(@"\levelnfc9"); // *, †, ‡, §
+        }
         else if (numberingFormat.Val == NumberFormatValues.ChineseCounting ||
                  numberingFormat.Val == NumberFormatValues.IdeographDigital ||
                  numberingFormat.Val == NumberFormatValues.KoreanDigital ||
@@ -335,6 +363,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                  numberingFormat.Val == NumberFormatValues.DecimalFullWidth2)
         {
             sb.Write(@"\levelnfc19"); // Double-byte Arabic numbering 
+        }
+        else if (numberingFormat.Val == NumberFormatValues.DecimalZero)
+        {
+            sb.Write(@"\levelnfc22"); // Leading zero (01, 02, 03, ...)
         }
         else if (numberingFormat.Val == NumberFormatValues.Bullet)
         {
@@ -438,7 +470,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else if (numberingFormat.Val == NumberFormatValues.Custom)
         {
-            if (numberingFormat.Format != null)
+            if (numberingFormat.Format?.Value != null)
             {
                 switch (numberingFormat.Format.Value)
                 {
@@ -551,7 +583,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     private void ProcessListOverrideTable(Numbering numbering, RtfStringWriter sb)
     {
-        foreach (var num in numbering.Elements<NumberingInstance>())
+        foreach (var num in numbering.Elements<NumberingInstance>()
+                .Where(n => n.NumberID != null && n.NumberID.HasValue))
         {
             sb.Write(@"{\listoverride"); 
 
@@ -559,18 +592,30 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (num.AbstractNumId?.Val != null &&
                 numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null && 
                                                                       x.AbstractNumberId == num.AbstractNumId.Val) 
-                                                  is AbstractNum abstractNum && 
-                abstractNum.Nsid?.Val != null)
+                                                  is AbstractNum abstractNum)
+
+            // If Nsid is missing (e.g. documents created by WordPad), lists will result broken in RTF.
+            // Since list override table is processed after list table, we can look into the previously
+            // created dictionary that associates AbstractNumId and a counter.
             {
-                sb.Write(@$"\listid{abstractNum.Nsid.Val.ToLong()}");
+                if (abstractNumDictionary.ContainsKey(num.AbstractNumId.Val.Value))
+                {
+                    sb.Write(@$"\listid{abstractNumDictionary[num.AbstractNumId.Val.Value]}");
+                }
             }
 
+            // If the numbering part skips few numberIDs, lists will result broken in RTF because \lsN
+            // should be associated to the entry index in the list table.
+            // For this reason, we use a dictionary that associates NumberID and a counter.
             if (num.NumberID != null && num.NumberID.HasValue)
             {
-                sb.Write(@$"\ls{num.NumberID.Value}");
+                sb.Write(@$"\ls{numIdDictionary.Count + 1}\listemplateid{numIdDictionary.Count + 1}");
+                numIdDictionary.Add(num.NumberID!.Value, numIdDictionary.Count + 1);
             }
 
-            var levelOverrides = num.Elements<LevelOverride>();
+            var levelOverrides = num.Elements<LevelOverride>()
+                                .OrderBy(lvl => lvl.LevelIndex != null ? lvl.LevelIndex.Value : 
+                                                (lvl.Level?.LevelIndex != null ? lvl.Level.LevelIndex : 0));
             if (levelOverrides == null || !levelOverrides.Any())
             {
                 sb.Write(@"\listoverridecount0");
@@ -623,7 +668,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             fonts.TryAddAndGetIndex("Arial", out int fontIndex);
             sb.Write($@"{{\listtext \f{fontIndex}\bullet\tab}}");
 
-            sb.Write($@"\ls{numPr.NumberingId.Val}\ilvl{numPr.NumberingLevelReference.Val}");
+
+            // Retrieve the correct list style number from the dictionary.
+            if (numIdDictionary.ContainsKey(numPr.NumberingId.Val))
+            {
+                sb.Write(@$"\ls{numIdDictionary[numPr.NumberingId.Val.Value]}");
+            }
+            sb.Write(@$"\ilvl{numPr.NumberingLevelReference.Val}");
         }
     }
 }
