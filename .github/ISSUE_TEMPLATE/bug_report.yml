@@ -1,4 +1,3 @@
----
 name: Bug report
 about: Create a bug report to help improve the library
 title: "[BUG] - "
@@ -59,5 +58,3 @@ body:
     attributes:
       label: OS
       description: Operating system and version
-
----
