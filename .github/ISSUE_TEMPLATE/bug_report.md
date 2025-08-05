@@ -4,17 +4,60 @@ about: Create a bug report to help improve the library
 title: "[BUG] - "
 labels: bug
 assignees: ''
+body:
+  - type: dropdown
+    id: projects
+    attributes:
+      label: Affected projects
+      description: Projects affected by this bug
+      multiple: true
+      options:
+        - DocSharp.Binary
+        - DocSharp.Docx
+        - DocSharp.Markdown
+        - General / other
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Description
+      description: A clear description of the bug and the expected behavior.
+      placeholder: What happened?
+      value: ""
+    validations:
+      required: true
+  - type: textarea
+    id: to-reproduce
+    attributes:
+      label: To reproduce
+      description: If the issue is about a specific document (or few specific documents), please attach it here, or describe the steps to produce it and the original application/library used, if known.
+      placeholder: ""
+      value: ""
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: ""
+      value: ""
+  - type: input
+    id: library-version
+    attributes:
+      label: Version
+      description: Library version
+    validations:
+      required: true
+  - type: input
+    id: dotnet-version
+    attributes:
+      label: .NET version
+      description: .NET / .NET Framework version
+  - type: input
+    id: version
+    attributes:
+      label: OS
+      description: Operating system and version
 
 ---
-
-**Describe the bug**
-A clear description of what the bug is, and the expected behavior.
-
-**To Reproduce**
-If the issue is about a specific document (or few specific documents), please attach it here, or describe the steps to produce it and the original application/library used, if known.
-
-**Additional information**
-- .NET version: 
-- OS: 
-- If applicable, add screenshots to help explain your problem.
-- You can add any other context about the problem here.
