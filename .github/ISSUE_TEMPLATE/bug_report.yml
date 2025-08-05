@@ -1,8 +1,7 @@
 name: Bug report
-about: Create a bug report to help improve the library
+description: Create a bug report to help improve the library
 title: "[BUG] - "
 labels: bug
-assignees: ''
 body:
   - type: dropdown
     id: projects
@@ -24,7 +23,6 @@ body:
       label: Description
       description: A clear description of the bug and the expected behavior.
       placeholder: What happened?
-      value: ""
     validations:
       required: true
   - type: textarea
@@ -32,15 +30,11 @@ body:
     attributes:
       label: To reproduce
       description: If the issue is about a specific document (or few specific documents), please attach it here, or describe the steps to produce it and the original application/library used, if known.
-      placeholder: ""
-      value: ""
   - type: textarea
     id: screenshot
     attributes:
       label: Screenshot
       description: If applicable, add screenshots to help explain your problem.
-      placeholder: ""
-      value: ""
   - type: input
     id: library-version
     attributes:
@@ -54,7 +48,7 @@ body:
       label: .NET version
       description: .NET / .NET Framework version
   - type: input
-    id: version
+    id: os-version
     attributes:
       label: OS
       description: Operating system and version
