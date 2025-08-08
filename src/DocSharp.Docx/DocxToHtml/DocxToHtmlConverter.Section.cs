@@ -66,9 +66,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 styles.Add($"column-count: {columns.ColumnCount.Value};");
             }
 
-            if (columns.Space != null && double.TryParse(columns.Space.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double columnGap))
+            if (columns.Space.ToDecimal() is decimal columnGap)
             {
-                styles.Add($"column-gap: {(columnGap / 20.0).ToStringInvariant()}pt;");
+                styles.Add($"column-gap: {(columnGap / 20m).ToStringInvariant(2)}pt;");
             }
 
             if (columns.EqualWidth != null && columns.EqualWidth.Value == false)

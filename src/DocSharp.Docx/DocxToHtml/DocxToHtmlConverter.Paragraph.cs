@@ -16,8 +16,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     {
         var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph)?.Val?.Value;
         var indent = OpenXmlHelpers.GetEffectiveIndent(paragraph);
-        var borders = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);
-        var spacing = OpenXmlHelpers.GetEffectiveProperty<SpacingBetweenLines>(paragraph);
+        var spacing = OpenXmlHelpers.GetEffectiveSpacing(paragraph);
         var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
         var keepLines = OpenXmlHelpers.GetEffectiveProperty<KeepLines>(paragraph);
         var keepNext = OpenXmlHelpers.GetEffectiveProperty<KeepNext>(paragraph);
@@ -42,21 +41,18 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 styles.Add("text-align: justify;");
         }
 
-        if (borders != null)
-        {
-            if (borders.TopBorder != null)
-                ProcessBorder(borders.TopBorder, ref styles, false);
-            if (borders.BottomBorder != null)
-                ProcessBorder(borders.BottomBorder, ref styles, false);
-            if (borders.LeftBorder != null)
-                ProcessBorder(borders.LeftBorder, ref styles, false);
-            if (borders.RightBorder != null)
-                ProcessBorder(borders.RightBorder, ref styles, false);
-            if (borders.BarBorder != null)
-                ProcessBorder(borders.BarBorder, ref styles, false);
-            if (borders.BetweenBorder != null)
-                ProcessBorder(borders.BetweenBorder, ref styles, false);
-        }
+        if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
+            ProcessBorder(topBorder, ref styles, false);
+        if (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder)
+            ProcessBorder(bottomBorder, ref styles, false);
+        if (paragraph.GetEffectiveBorder<LeftBorder>() is LeftBorder leftBorder)
+            ProcessBorder(leftBorder, ref styles, false);
+        if (paragraph.GetEffectiveBorder<RightBorder>() is RightBorder rightBorder)
+            ProcessBorder(rightBorder, ref styles, false);
+        if (paragraph.GetEffectiveBorder<BarBorder>() is BarBorder barBorder)
+            ProcessBorder(barBorder, ref styles, false);
+        if (paragraph.GetEffectiveBorder<BetweenBorder>() is BetweenBorder betweenBorder)
+            ProcessBorder(betweenBorder, ref styles, false);
 
         ProcessShading(OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph), ref styles);
 
@@ -180,26 +176,25 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         sb.WriteEndElement("p");
     }
 
-    internal void ProcessIndentation(DocSharp.Docx.Model.Indent indent, ref List<string> styles)
+    internal void ProcessIndentation(Indentation indent, ref List<string> styles)
     {
         if (indent.LeftChars != null)
         {
             styles.Add($"padding-left: {indent.LeftChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.Left != null)
+        else if (indent.Left.ToLong() is long left)
         {
-            double leftIndent = indent.Left.Value / 20.0; // Convert twips to points
-            styles.Add($"padding-left: {leftIndent.ToStringInvariant()}pt;");
+            // Convert twips to points
+            styles.Add($"padding-left: {(left / 20m).ToStringInvariant(2)}pt;");
         }
 
         if (indent.RightChars != null)
         {
             styles.Add($"padding-right: {indent.RightChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.Right != null)
+        else if (indent.Right.ToLong() is long right)
         {
-            double rightIndent = indent.Right.Value / 20.0; // Convert twips to points
-            styles.Add($"padding-right: {rightIndent.ToStringInvariant()}pt;");
+            styles.Add($"padding-right: {(right / 20m).ToStringInvariant(2)}pt;");
         }
 
         // TODO: start / end indent
@@ -208,19 +203,17 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             styles.Add($"text-indent: {indent.FirstLineChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.FirstLine != null)
+        else if (indent.FirstLine.ToLong() is long firstLine)
         {
-            double firstLineIndent = indent.FirstLine.Value / 20.0; // Convert twips to points
-            styles.Add($"text-indent: {firstLineIndent.ToStringInvariant()}pt;");
+            styles.Add($"text-indent: {(firstLine / 20m).ToStringInvariant(2)}pt;");
         }
         else if (indent.HangingChars != null)
         {
             styles.Add($"text-indent: -{indent.HangingChars.Value.ToStringInvariant()}ch;");
         }
-        else if (indent.Hanging != null)
+        else if (indent.Hanging.ToLong() is long hanging)
         {
-            double hangingIndent = indent.Hanging.Value / 20.0; // Convert twips to points
-            styles.Add($"text-indent: -{hangingIndent.ToStringInvariant()}pt;");
+            styles.Add($"text-indent: -{(hanging / 20m).ToStringInvariant()}pt;");
         }
     }
 }

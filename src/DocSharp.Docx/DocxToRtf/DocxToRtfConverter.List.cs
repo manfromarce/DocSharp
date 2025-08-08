@@ -192,13 +192,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             (legacy.Legacy == null || legacy.Legacy.Value))
         {
             sb.Write(@"\levelold1");
-            if (legacy.LegacyIndent != null && int.TryParse(legacy.LegacyIndent, out int legacyIndent))
+            if (legacy.LegacyIndent.ToLong() is long legacyIndent)
             {
-                sb.Write($@"\levelindent{legacyIndent}");
+                sb.WriteWordWithValue("levelindent", legacyIndent);
             }
-            if (legacy.LegacySpace != null && int.TryParse(legacy.LegacySpace, out int legacySpace))
+            if (legacy.LegacySpace.ToLong() is long legacySpace)
             {
-                sb.Write($@"\levelspace{legacySpace}");
+                sb.WriteWordWithValue("levelspace", legacySpace);
             }
         }
         else

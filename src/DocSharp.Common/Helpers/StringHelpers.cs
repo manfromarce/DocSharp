@@ -124,6 +124,27 @@ public static class StringHelpers
         return f.ToString(CultureInfo.InvariantCulture);
     }
 
+    public static string ToStringInvariant(this double d, int decimalDigits)
+    {
+        if (decimalDigits < 0)
+            decimalDigits = 0;
+        return d.ToString("0." + new string('#', decimalDigits), CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(this decimal d, int decimalDigits)
+    {
+        if (decimalDigits < 0)
+            decimalDigits = 0;
+        return d.ToString("0." + new string('#', decimalDigits), CultureInfo.InvariantCulture);
+    }
+
+    public static string ToStringInvariant(this float f, int decimalDigits)
+    {
+        if (decimalDigits < 0)
+            decimalDigits = 0;
+        return f.ToString("0." + new string('#', decimalDigits), CultureInfo.InvariantCulture);
+    }
+
     public static string ToStringInvariant(this long l)
     {
         return l.ToString(CultureInfo.InvariantCulture);

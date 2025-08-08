@@ -8,8 +8,6 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using Wp14 = DocumentFormat.OpenXml.Office2010.Word.Drawing;
-using DrawingML = DocumentFormat.OpenXml.Drawing;
-using ImageData = DocumentFormat.OpenXml.Vml.ImageData;
 using Pictures = DocumentFormat.OpenXml.Drawing.Pictures;
 using DocSharp.Writers;
 using System.Globalization;
@@ -32,8 +30,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (pic != null && extent?.Cx != null && extent?.Cy != null)
         {
             // Convert EMUs to twips
-            long w = extent.Cx.Value / 635;
-            long h = extent.Cy.Value / 635;
+            long w = (long)Math.Round(extent.Cx.Value / 635m);
+            long h = (long)Math.Round(extent.Cy.Value / 635m);
 
             var blipFill = pic.BlipFill;
             if (blipFill?.SourceRectangle != null)
@@ -41,19 +39,19 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 // Convert relative value used by Open XML to twips
                 if (blipFill.SourceRectangle?.Left != null)
                 {
-                    properties.CropLeft = w * blipFill.SourceRectangle.Left / 100000;
+                    properties.CropLeft = (long)Math.Round(w * blipFill.SourceRectangle.Left / 100000m);
                 }
                 if (blipFill.SourceRectangle?.Right != null)
                 {
-                    properties.CropRight = w * blipFill.SourceRectangle.Right / 100000;
+                    properties.CropRight = (long)Math.Round(w * blipFill.SourceRectangle.Right / 100000m);
                 }
                 if (blipFill.SourceRectangle?.Top != null)
                 {
-                    properties.CropTop = h * blipFill.SourceRectangle.Top / 100000;
+                    properties.CropTop = (long)Math.Round(h * blipFill.SourceRectangle.Top / 100000m);
                 }
                 if (blipFill.SourceRectangle?.Bottom != null)
                 {
-                    properties.CropBottom = h * blipFill.SourceRectangle.Bottom / 100000;
+                    properties.CropBottom = (long)Math.Round(h * blipFill.SourceRectangle.Bottom / 100000m);
                 }
             }
             // In RTF width and height should not be decreased by the crop value.
@@ -131,7 +129,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (picProp.Transform2D?.Rotation != null)
         {
             // Convert 1/60000 of degree to 1/64000 of degree.
-            shapePropertiesBuilder.WriteShapeProperty("rotation", (long)Math.Round(picProp.Transform2D.Rotation.Value * 16.0 / 15.0));
+            shapePropertiesBuilder.WriteShapeProperty("rotation", (long)Math.Round(picProp.Transform2D.Rotation.Value * 16.0m / 15.0m));
         }
         //if (picProp.Transform2D.Offset != null)
         // Not supported in RTF
@@ -247,7 +245,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\shpfblwtxt0");
         }
 
-        //if (useSimplePos)
+        //if (useSimplePos) // Unclear how simple position should be used in RTF
         //{
         //    if (anchor.SimplePosition is Wp.SimplePosition sp && sp.X != null && sp.Y != null)
         //    {
@@ -271,37 +269,45 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         //}
         //else
         //{
-            long posHtwips = 0;
-            long posVtwips = 0;
-            long extentX = 0;
-            long extentY = 0;
+            decimal posHtwips = 0;
+            decimal posVtwips = 0;
+            decimal extentXtwips = 0;
+            decimal extentYtwips = 0;
             if (positionH?.PositionOffset != null &&
                 long.TryParse(positionH.PositionOffset.InnerText, NumberStyles.Number, CultureInfo.CurrentCulture, out long posH))
             {
-                posHtwips = posH / 635;
-                sb.Write($"\\shpleft{posHtwips}");
+                posHtwips = posH / 635m;
+                sb.WriteWordWithValue("shpleft", posHtwips); // Convert EMUs to twips
+            }
+            else
+            {
+                sb.WriteWordWithValue("shpleft", 0);
             }
             if (positionV?.PositionOffset != null &&
                 long.TryParse(positionV.PositionOffset.InnerText, NumberStyles.Number, CultureInfo.CurrentCulture, out long posV))
             {
-                posVtwips = posV / 635;
-                sb.Write($"\\shptop{posVtwips}");
+                posVtwips = posV / 635m;
+                sb.WriteWordWithValue("shptop", posVtwips); // Convert EMUs to twips
             }
+            else
+            {
+                sb.WriteWordWithValue("shptop", 0);
+            }
+            
             if (extent != null)
             {
                 if (extent.Cx != null)
                 {
-                    extentX = extent.Cx.Value / 635;
-                    sb.Write($"\\shpright{posHtwips + extentX}");
+                    extentXtwips = extent.Cx.Value / 635.0m;
                 }
                 if (extent.Cy != null)
                 {
-                    extentY = extent.Cy.Value / 635;
-                    sb.Write($"\\shpbottom{posVtwips + extentY}");
+                    extentYtwips = extent.Cy.Value / 635.0m;
                 }
             }
-            sb.Write($"\\shpleft{posHtwips}\\shpright{posHtwips + extentX}\\shptop{posVtwips}\\shpbottom{posVtwips + extentY}");
-            
+            sb.WriteWordWithValue("shpright", posHtwips + extentXtwips);
+            sb.WriteWordWithValue("shpbottom", posVtwips + extentYtwips);
+
             if (positionH?.RelativeFrom != null)
             {
                 if (positionH.RelativeFrom.Value == Wp.HorizontalRelativePositionValues.Column)
@@ -514,7 +520,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (sizeRelH?.PercentageWidth != null && long.TryParse(sizeRelH.PercentageWidth.InnerText, NumberStyles.Number, CultureInfo.InvariantCulture, out long sizeRelHValue))
         {
             // Convert thousandths of a percent to tenths of a percent
-            sb.WriteShapeProperty("pctHoriz", (long)(sizeRelHValue / 100)); 
+            sb.WriteShapeProperty("pctHoriz", sizeRelHValue / 100.0m); 
 
             var relativeFrom = sizeRelH.GetAttribute("relativeFrom", ""); 
 
@@ -549,7 +555,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (sizeRelV?.PercentageHeight != null && long.TryParse(sizeRelV.PercentageHeight.InnerText, NumberStyles.Number, CultureInfo.InvariantCulture, out long sizeRelVValue))
         {
             // Convert thousandths of a percent to tenths of a percent
-            sb.WriteShapeProperty("pctVert", (long)(sizeRelVValue / 100));
+            sb.WriteShapeProperty("pctVert", sizeRelVValue / 100.0m);
             if (sizeRelV?.RelativeFrom != null)
             {
                 if (sizeRelV.RelativeFrom.Value == Wp14.SizeRelativeVerticallyValues.Margin)

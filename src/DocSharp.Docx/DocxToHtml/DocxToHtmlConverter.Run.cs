@@ -73,17 +73,17 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             styles.Add("font-weight: bold;");
         if (italic != null && (italic.Val == null || italic.Val != false))
             styles.Add("font-style: italic;");
-        if (!string.IsNullOrEmpty(fontSize) && double.TryParse(fontSize, out double fs))
+        if (!string.IsNullOrEmpty(fontSize) && decimal.TryParse(fontSize, out decimal fs))
         {
-            fs /= 2.0; // Convert half-points to points
-            styles.Add($"font-size: {fs.ToStringInvariant()}pt;");
+            fs /= 2m; // Convert half-points to points
+            styles.Add($"font-size: {fs.ToStringInvariant(2)}pt;");
         }
 
         // Spacing (letter-spacing)
         if (fontStretch?.Val != null)
         {
-            double letterSpacing = fontStretch.Val / 20.0; // Convert twips to points
-            styles.Add($"letter-spacing: {letterSpacing.ToStringInvariant()}pt;");
+            decimal letterSpacing = fontStretch.Val / 20m; // Convert twips to points
+            styles.Add($"letter-spacing: {letterSpacing.ToStringInvariant(2)}pt;");
         }
 
         // CharacterScale
@@ -117,19 +117,16 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             styles.Add("text-transform: uppercase;");
         }
 
-        if (position != null && position.Val != null && position.Val.Value != null)
+        if (position?.Val.ToDecimal() is decimal pos)
         {
             // Value is in half-points
-            if (int.TryParse(position.Val.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out int value))
+            if (pos > 0)
             {
-                if (value > 0)
-                {
-                    styles.Add($"position: relative; top: {(value / 2.0).ToStringInvariant()}pt;");
-                }
-                else if (value < 0)
-                {
-                    styles.Add($"position: relative; bottom: {(-value / 2.0).ToStringInvariant()}pt;");
-                }
+                styles.Add($"position: relative; top: {(pos / 2m).ToStringInvariant(2)}pt;");
+            }
+            else if (pos < 0)
+            {
+                styles.Add($"position: relative; bottom: {(-pos / 2m).ToStringInvariant(2)}pt;");
             }
         }
 
@@ -224,33 +221,20 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             styles.Add($"text-decoration-thickness: {underlineThickness}%;");
         }
 
-        // Highlight and shading
-        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(run);
-        if (shading != null && shading.Fill?.Value is string fill && fill.Length == 6)
+        // Highlight and shading (highlight has priority over shading)
+        var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
+        if (highlight?.Val != null && highlight.Val != HighlightColorValues.None)
         {
-            // Highlight has priority over shading
-            var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
-            if (highlight?.Val != null && highlight.Val != HighlightColorValues.None)
+            string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
+            if (!string.IsNullOrEmpty(hex))
             {
-                string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
-                if (!string.IsNullOrEmpty(hex))
-                {
-                    fill = hex!;
-                }
+                styles.Add($"background-color: #{hex};");
             }
-            styles.Add($"background-color: #{fill};");
         }
-        else
+        else if (OpenXmlHelpers.GetEffectiveProperty<Shading>(run) is Shading shading && 
+            shading.Fill?.Value is string fill && fill.Length == 6)
         {
-            var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
-            if (highlight?.Val != null && highlight.Val != HighlightColorValues.None)
-            {
-                string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
-                if (!string.IsNullOrEmpty(hex))
-                {
-                    styles.Add($"background-color: #{hex};");
-                }
-            }
+            styles.Add($"background-color: #{fill};");
         }
 
         if (border?.Val != null)
@@ -276,7 +260,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             string shadowColor = ColorHelpers.GetColor(shadow14, "#000000");
             double blurRadius = shadow14.BlurRadius?.Value / 12700.0 ?? 0; // Convert EMUs to points
 
-            styles.Add($"text-shadow: {hShadow.ToStringInvariant()}pt {vShadow.ToStringInvariant()}pt {blurRadius.ToStringInvariant()}pt {shadowColor};");
+            styles.Add($"text-shadow: {hShadow.ToStringInvariant(2)}pt {vShadow.ToStringInvariant(2)}pt {blurRadius.ToStringInvariant(2)}pt {shadowColor};");
         }
         else if (shadow != null && (shadow.Val == null || shadow.Val != false))
         {
@@ -317,7 +301,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             {
                 outlineColor = "transparent";
             }
-            styles.Add($"-webkit-text-stroke: {width.ToStringInvariant()}pt {outlineColor};");
+            styles.Add($"-webkit-text-stroke: {width.ToStringInvariant(2)}pt {outlineColor};");
         }
         else
         if (outline != null)

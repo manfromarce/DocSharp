@@ -20,18 +20,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (border.Size != null)
         {
             // Open XML uses 1/8 points for border width, while RTF uses twips
-            double twipsSize = Math.Round(border.Size.Value * 2.5);
-            sb.Write($"\\brdrw{twipsSize}");
+            sb.WriteWordWithValue("brdrw", Math.Round(border.Size.Value * 2.5m));
         }
         if (border.Space != null)
         {
             // Open XML uses points for border spacing, while RTF uses twips
-            uint twipsSize = border.Space.Value * 20;
-            sb.Write($"\\brsp{twipsSize}");
+            sb.WriteWordWithValue("brsp", Math.Round(border.Space.Value * 20.0m));
         }
         if (border.Color != null && !string.IsNullOrEmpty(border.Color?.Value))
         {
-            if (border.Color.Value.Equals("auto", StringComparison.OrdinalIgnoreCase))
+            if (border.Color!.Value!.Equals("auto", StringComparison.OrdinalIgnoreCase))
             {
                 sb.Write(@"\brdrcf0");
             }

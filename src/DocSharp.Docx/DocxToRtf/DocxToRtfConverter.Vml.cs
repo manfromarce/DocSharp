@@ -333,6 +333,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         if (shape is V.Shape shp)
         {
+            // Default is true if not specified
             sb.WriteShapeProperty("fAllowOverlap ", shp.AllowOverlap == null ? true : shp.AllowOverlap.Value);
             sb.WriteShapeProperty("fLayoutInCell", shp.AllowInCell == null ? true : shp.AllowInCell.Value);
         }
@@ -562,13 +563,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             return 0;
         }
 
-        double degrees;
-        if (value.EndsWith("fd") && double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
+        decimal degrees;
+        if (value.EndsWith("fd") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
         {
             return (long)Math.Round(degrees);
         }
         // fd is 1/64000 of degree and it's also used in RTF. If it is not specified, should we assume regular degrees?
-        else if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
+        else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
         {
             return (long)Math.Round(degrees);
         }
@@ -587,34 +588,34 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             return 0; // TODO: handle 'auto' based on property (sometimes an equivalent RTF control word may exist)
         }
 
-        double res;
+        decimal res;
         value = value.Trim();
-        if (value.EndsWith("pt") && double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        if (value.EndsWith("pt") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
             return (long)Math.Round(res * 20);
         }
-        else if (value.EndsWith("px") && double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        else if (value.EndsWith("px") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
             return (long)Math.Round(res * 15); // Assuming 96 DPI (used by Word)
         }
-        else if (value.EndsWith("pc") && double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        else if (value.EndsWith("pc") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
             return (long)Math.Round(res * 240);
         }
-        else if (value.EndsWith("in") && double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        else if (value.EndsWith("in") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
             return (long)Math.Round(res * 1440);
         }
-        else if (value.EndsWith("cm") && double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        else if (value.EndsWith("cm") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
-            return (long)Math.Round((res / 2.54) * 1440);
+            return (long)Math.Round((res / 2.54m) * 1440);
         }
-        else if (value.EndsWith("mm") && double.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        else if (value.EndsWith("mm") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
-            return (long)Math.Round((res / 25.4) * 1440);
+            return (long)Math.Round((res / 25.4m) * 1440);
         }
         // TODO: how should we handle ex, em and % ?
-        else if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
             // Assume pixels if no unit
             return (long)Math.Round(res * 15);

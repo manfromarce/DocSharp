@@ -20,6 +20,32 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlDataTypeHelpers
 {
+    public static long? ToLong(this StringValue? stringValue)
+    {
+        if (stringValue?.Value != null && 
+            decimal.TryParse(stringValue.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal val))
+        {
+            return (long)Math.Round(val);
+        }
+        else 
+        { 
+            return null; 
+        }
+    }
+
+    public static decimal? ToDecimal(this StringValue? stringValue)
+    {
+        if (stringValue?.Value != null &&
+            decimal.TryParse(stringValue.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal val))
+        {
+            return val;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public static bool ToBool(this EnumValue<BooleanValues> val)
     {
         return val == BooleanValues.True || val == BooleanValues.On || val == BooleanValues.One;

@@ -548,7 +548,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (column.MatrixColumnProperties.MatrixColumnCount?.Val != null &&
                 column.MatrixColumnProperties.MatrixColumnCount.Val.HasValue)
             {
-                sb.Write($@"{{\mcount {column.MatrixColumnProperties.MatrixColumnCount.Val.Value}}}");
+                sb.Write($@"{{\mcount {column.MatrixColumnProperties.MatrixColumnCount.Val.Value.ToStringInvariant()}}}");
             }
             if (column.MatrixColumnProperties.MatrixColumnJustification?.Val != null &&
                 column.MatrixColumnProperties.MatrixColumnJustification.Val.HasValue)
@@ -574,7 +574,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (columnSpacing?.Val != null && columnSpacing.Val.HasValue)
         {
-            sb.Write(@$"{{\mcSp{columnSpacing.Val.Value}}}");
+            sb.Write(@$"{{\mcSp{columnSpacing.Val.Value.ToStringInvariant()}}}");
         }
     }
 
@@ -582,11 +582,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (columnGapRule?.Val != null && columnGapRule.Val.HasValue)
         {
-            sb.Write(@$"{{\mcGpRule{columnGapRule.Val.Value}}}");
+            sb.Write(@$"{{\mcGpRule{columnGapRule.Val.Value.ToStringInvariant()}}}");
         }
         if (columnGap?.Val != null && columnGap.Val.HasValue)
         {
-            sb.Write(@$"{{\mcGp{columnGap.Val.Value}}}");
+            sb.Write(@$"{{\mcGp{columnGap.Val.Value.ToStringInvariant()}}}");
         }
     }
 
@@ -594,11 +594,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (rowSpacingRule?.Val != null && rowSpacingRule.Val.HasValue)
         {
-            sb.Write(@$"{{\mrSpRule{rowSpacingRule.Val.Value}}}");
+            sb.Write(@$"{{\mrSpRule{rowSpacingRule.Val.Value.ToStringInvariant()}}}");
         }
         if (rowSpacing?.Val != null && rowSpacing.Val.HasValue)
         {
-            sb.Write(@$"{{\mrSp{rowSpacing.Val.Value}}}");
+            sb.Write(@$"{{\mrSp{rowSpacing.Val.Value.ToStringInvariant()}}}");
         }
     }
 
@@ -1008,7 +1008,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else if (br.Val != null)
         {
-            sb.Write(br.Val.Value);
+            sb.Write(br.Val.Value.ToStringInvariant());
         }
         else
         {
@@ -1068,7 +1068,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (argumentProperties?.ArgumentSize?.Val != null)
         {
-            sb.Write("{\\margPr \\margSz" + argumentProperties.ArgumentSize.Val.Value + "}");
+            sb.Write("{\\margPr \\margSz" + argumentProperties.ArgumentSize.Val.Value.ToStringInvariant() + "}");
         }
     }
 
@@ -1076,7 +1076,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (mathProperties != null)
         {
-
+            // TODO
         }
     }
 }

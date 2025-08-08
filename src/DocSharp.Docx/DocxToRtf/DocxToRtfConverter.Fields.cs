@@ -88,12 +88,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                         if (textInput.GetFirstChild<MaxLength>() is MaxLength maxLength &&
                            maxLength.Val != null)
                         {
-                            sb.Write($@"\ffmaxlen{maxLength.Val}");
+                            sb.WriteWordWithValue("ffmaxlen", maxLength.Val.Value);
                         }
                         if (textInput.GetFirstChild<DefaultTextBoxFormFieldString>() is DefaultTextBoxFormFieldString defaultText &&
-                           defaultText.Val != null)
+                            defaultText.Val != null && !string.IsNullOrEmpty(defaultText.Val.Value))
                         {
-                            sb.Write($@"{{\*\ffdeftext {defaultText.Val}}}");
+                            sb.Write($@"{{\*\ffdeftext {defaultText.Val.Value}}}");
                         }
                         if (textInput.GetFirstChild<TextBoxFormFieldType>() is TextBoxFormFieldType textBoxType &&
                            textBoxType.Val != null)
@@ -124,9 +124,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                             }
                         }
                         if (textInput.GetFirstChild<Format>() is Format format &&
-                           format.Val != null)
+                            format.Val != null && !string.IsNullOrEmpty(format.Val.Value))
                         {
-                            sb.Write($@"{{\*\ffformat {format.Val}}}");
+                            sb.Write($@"{{\*\ffformat {format.Val.Value}}}");
                         }
                     }
                     else if (fieldChar.FormFieldData.GetFirstChild<CheckBox>() is CheckBox checkBox)
@@ -134,9 +134,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                         sb.Write(@"\fftype1");
 
                         if (checkBox.GetFirstChild<FormFieldSize>() is FormFieldSize checkBoxSize &&
-                            checkBoxSize.Val != null)
+                            checkBoxSize.Val.ToLong() is long chkSize)
                         {
-                            sb.Write($@"\ffhps{checkBoxSize.Val}"); // Check box size in half points
+                            sb.WriteWordWithValue("ffhps", chkSize); // Check box size in half points
                         }
 
                         if (checkBox.GetFirstChild<AutomaticallySizeFormField>().ToBool())
@@ -174,13 +174,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                         if (dropDownList.GetFirstChild<DefaultDropDownListItemIndex>() is DefaultDropDownListItemIndex defaultSelection &&
                             defaultSelection?.Val != null)
                         {
-                            sb.Write(@$"\ffdefres{defaultSelection?.Val}"); // Default selected index
+                            sb.WriteWordWithValue("ffdefres", defaultSelection.Val.Value); // Default selected index
                         }
 
                         if (dropDownList.GetFirstChild<DropDownListSelection>() is DropDownListSelection selection &&
                            selection?.Val != null)
                         {
-                            sb.Write(@$"\ffres{selection?.Val}"); // Current selected index
+                            sb.WriteWordWithValue("ffres", selection.Val.Value); // Current selected index
                         }
 
                         if (dropDownList.GetFirstChild<ListEntryFormField>() != null)
@@ -188,9 +188,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                             sb.Write(@"\ffhaslistbox1 ");
                             foreach (var listEntry in dropDownList.Elements<ListEntryFormField>())
                             {
-                                if (listEntry.Val != null)
+                                if (listEntry.Val?.Value != null)
                                 {
-                                    sb.Write($@"{{\*\ffl {listEntry.Val}}}");
+                                    sb.Write($@"{{\*\ffl {listEntry.Val.Value}}}");
                                 }
                             }
                         }
@@ -203,9 +203,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                     if (fieldChar.GetFirstChild<StatusText>() is StatusText statusText)
                     {
-                        if (statusText.Val != null)
+                        if (statusText.Val?.Value != null)
                         {
-                            sb.Write($@"\ffownstat1 {{\*\ffstattext {statusText.Val}}}");
+                            sb.Write($@"\ffownstat1 {{\*\ffstattext {statusText.Val.Value}}}");
                         }
                         else
                         {
@@ -215,9 +215,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                     if (fieldChar.GetFirstChild<HelpText>() is HelpText helpText)
                     {
-                        if (helpText.Val != null)
+                        if (helpText.Val?.Value != null)
                         {
-                            sb.Write($@"\ffownhelp1 {{\*\ffhelptext {helpText.Val}}}");
+                            sb.Write($@"\ffownhelp1 {{\*\ffhelptext {helpText.Val.Value}}}");
                         }
                         else
                         {
@@ -227,25 +227,25 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                     if (fieldChar.GetFirstChild<FormFieldName>() is FormFieldName name)
                     {
-                        if (name.Val != null)
+                        if (name.Val?.Value != null)
                         {
-                            sb.Write($@"{{\*\ffname {name.Val}}}");
+                            sb.Write($@"{{\*\ffname {name.Val.Value}}}");
                         }
                     }
 
                     if (fieldChar.GetFirstChild<EntryMacro>() is EntryMacro entryMacro)
                     {
-                        if (entryMacro.Val != null)
+                        if (entryMacro.Val?.Value != null)
                         {
-                            sb.Write($@"{{\*\ffentrymcr {entryMacro.Val}}}");
+                            sb.Write($@"{{\*\ffentrymcr {entryMacro.Val.Value}}}");
                         }
                     }
 
                     if (fieldChar.GetFirstChild<ExitMacro>() is ExitMacro exitMacro)
                     {
-                        if (exitMacro.Val != null)
+                        if (exitMacro.Val?.Value != null)
                         {
-                            sb.Write($@"{{\*\ffexitmcr {exitMacro.Val}}}");
+                            sb.Write($@"{{\*\ffexitmcr {exitMacro.Val.Value}}}");
                         }
                     }
 

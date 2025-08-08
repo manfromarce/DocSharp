@@ -164,11 +164,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (size.Width != null)
             {
-                sb.Write($"\\pgwsxn{size.Width.Value}");
+                sb.WriteWordWithValue("pgwsxn", size.Width.Value);
             }
             if (size.Height != null)
             {
-                sb.Write($"\\pghsxn{size.Height.Value}");
+                sb.WriteWordWithValue("pghsxn", size.Height.Value);
             }
             if (size.Orient != null && size.Orient.Value == PageOrientationValues.Landscape)
             {
@@ -179,31 +179,31 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {            
             if (margins.Top != null)
             {
-                sb.Write($"\\margtsxn{margins.Top.Value}");
+                sb.WriteWordWithValue("margtsxn", margins.Top.Value);
             }
             if (margins.Bottom != null)
             {
-                sb.Write($"\\margbsxn{margins.Bottom.Value}");
+                sb.WriteWordWithValue("margbsxn", margins.Bottom.Value);
             }
             if (margins.Left != null)
             {
-                sb.Write($"\\marglsxn{margins.Left.Value}");
+                sb.WriteWordWithValue("marglsxn", margins.Left.Value);
             }
             if (margins.Right != null)
             {
-                sb.Write($"\\margrsxn{margins.Right.Value}");
+                sb.WriteWordWithValue("margrsxn", margins.Right.Value);
             }
             if (margins.Gutter != null)
             {
-                sb.Write($"\\guttersxn{margins.Gutter.Value}");
+                sb.WriteWordWithValue("guttersxn", margins.Gutter.Value);
             }
             if (margins.Header != null)
             {
-                sb.Write($"\\headery{margins.Header.Value}");
+                sb.WriteWordWithValue("headery", margins.Header.Value);
             }
             if (margins.Footer != null)
             {
-                sb.Write($"\\footery{margins.Footer.Value}");
+                sb.WriteWordWithValue("footery", margins.Footer.Value);
             }
         }
         if (sectionProperties.GetFirstChild<PageBorders>() is PageBorders borders)
@@ -237,7 +237,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 pageBorderOptions |= 0 << 5; // Offset from text
             }
-            sb.Write(@"\pgbrdropt" + pageBorderOptions);
+            sb.WriteWordWithValue("pgbrdropt", pageBorderOptions);
             if (borders?.TopBorder != null)
             {
                 sb.Write(@"\pgbrdrt");
@@ -263,11 +263,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (cols.ColumnCount != null)
             {
-                sb.Write($"\\cols{cols.ColumnCount.Value}");
+                sb.WriteWordWithValue("cols", cols.ColumnCount.Value);
             }
-            if (cols.Space != null)
+            if (cols.Space.ToLong() is long columnSpace)
             {
-                sb.Write($"\\colsx{cols.Space.Value}");
+                sb.WriteWordWithValue("colsx", columnSpace);
             }
             if (cols.Separator != null && cols.Separator.HasValue && cols.Separator.Value)
             {
@@ -279,14 +279,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 int colIndex = 1;
                 foreach (var col in cols.Elements<Column>())
                 {
-                    sb.Write($"\\colno{colIndex}");
-                    if (col.Space != null)
+                    sb.WriteWordWithValue("colno", colIndex);
+                    if (col.Space.ToLong() is long colSpace)
                     {
-                        sb.Write($"\\colsr{col.Space.Value}");
+                        sb.WriteWordWithValue("colsr", colSpace);
                     }
-                    if (col.Width != null)
+                    if (col.Width.ToLong() is long colWidth)
                     {
-                        sb.Write($"\\colw{col.Width.Value}");
+                        sb.WriteWordWithValue("colw", colWidth);
                     }
                     ++colIndex;
                 }
@@ -518,6 +518,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // TODO: create default section properties (e.g. A4 page size, ...)
             return;
         }
+        if (sectionProperties.GetFirstChild<FormProtection>().ToBool())
+        {
+            sb.Write("\\formprot");
+        }
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {
             if (size.Width != null)
@@ -559,12 +563,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write($"\\gutter{margins.Gutter.Value}");
             }
-        }
-
-        if (sectionProperties.GetFirstChild<FormProtection>() is FormProtection formProtection &&
-           (formProtection.Val is null || formProtection.Val))
-        {
-            sb.Write(@"\formprot");
         }
     }
 }

@@ -65,6 +65,28 @@ public sealed class RtfStringWriter : BaseStringWriter
         Write(color.ToRtfColor());
     }
 
+    public void WriteWordIfTrue(string word, bool value)
+    {
+        if (value)
+        {
+            Write($"\\{word}");
+        }
+    }
+
+    public void WriteWordWithValueIfTrue(string word, bool value)
+    {
+        if (value)
+        {
+            Write($"\\{word}1");
+        }
+    }
+
+    public void WriteWordWithValue(string word, bool value)
+    {
+        Write($"\\{word}");
+        Write(value ? "1" : "0");
+    }
+
     public void WriteWordWithValue(string word, int value)
     {
         Write($"\\{word}");

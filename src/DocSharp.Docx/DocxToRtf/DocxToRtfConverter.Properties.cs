@@ -8,6 +8,8 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using V = DocumentFormat.OpenXml.Vml;
 using DocSharp.Writers;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.CustomProperties;
+using DocumentFormat.OpenXml.VariantTypes;
 
 namespace DocSharp.Docx;
 
@@ -15,48 +17,69 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 {
     internal void ProcessProperties(WordprocessingDocument doc, RtfStringWriter sb)
     {
-        var coreProps = doc.PackageProperties;
+        var packageProps = doc.PackageProperties;
         sb.Write(@"{\info");
-        if (!string.IsNullOrEmpty(coreProps.Creator))
+        if (!string.IsNullOrEmpty(packageProps.Creator))
         {
             sb.Write(@"{\author ");
-            sb.WriteRtfEscaped(coreProps.Creator!);
+            sb.WriteRtfEscaped(packageProps.Creator!);
             sb.Write('}');
         }
-        if (!string.IsNullOrEmpty(coreProps.Title))
+        if (!string.IsNullOrEmpty(packageProps.Title))
         {
             sb.Write(@"{\title ");
-            sb.WriteRtfEscaped(coreProps.Title!);
+            sb.WriteRtfEscaped(packageProps.Title!);
             sb.Write('}');
         }
-        if (!string.IsNullOrEmpty(coreProps.Subject))
+        if (!string.IsNullOrEmpty(packageProps.Subject))
         {
             sb.Write(@"{\subject ");
-            sb.WriteRtfEscaped(coreProps.Subject!);
+            sb.WriteRtfEscaped(packageProps.Subject!);
             sb.Write('}');
         }
-        if (!string.IsNullOrEmpty(coreProps.Category))
+        if (!string.IsNullOrEmpty(packageProps.Category))
         {
             sb.Write(@"{\category ");
-            sb.WriteRtfEscaped(coreProps.Category!);
+            sb.WriteRtfEscaped(packageProps.Category!);
             sb.Write('}');
         }
-        if (!string.IsNullOrEmpty(coreProps.Keywords))
+        if (!string.IsNullOrEmpty(packageProps.Keywords))
         {
             sb.Write(@"{\keywords ");
-            sb.WriteRtfEscaped(coreProps.Keywords!);
+            sb.WriteRtfEscaped(packageProps.Keywords!);
             sb.Write('}');
         }
-        if (coreProps.Created != null)
+        if (packageProps.Created != null)
         {
             sb.Write(@"{\creatim");
-            sb.Write($"\\yr{coreProps.Created.Value.Year}");
-            sb.Write($"\\mo{coreProps.Created.Value.Month}");
-            sb.Write($"\\dy{coreProps.Created.Value.Day}");
-            sb.Write($"\\hr{coreProps.Created.Value.Hour}");
-            sb.Write($"\\min{coreProps.Created.Value.Minute}");
+            sb.WriteWordWithValue("yr", packageProps.Created.Value.Year);
+            sb.WriteWordWithValue("mo", packageProps.Created.Value.Month);
+            sb.WriteWordWithValue("dy", packageProps.Created.Value.Day);
+            sb.WriteWordWithValue("hr", packageProps.Created.Value.Hour);
+            sb.WriteWordWithValue("min", packageProps.Created.Value.Minute);
             sb.Write('}');
         }
         sb.Write('}');
+
+        // Currently not used
+        //var coreProps = doc.CoreFilePropertiesPart;
+        //var appProps = doc.ExtendedFilePropertiesPart;
+        
+        var customProps = doc.CustomFilePropertiesPart?.Properties;
+        if (customProps != null)
+        {
+            sb.Write(@"{\*\userprops ");
+            foreach (var prop in customProps.Elements<CustomDocumentProperty>())
+            {
+                if (prop.Name?.Value != null && 
+                    prop.Name.Value.Equals("_MarkAsFinal", StringComparison.OrdinalIgnoreCase) && 
+                    prop.GetFirstChild<VTBool>() is VTBool vtBool && 
+                    vtBool.InnerText.Equals("true", StringComparison.OrdinalIgnoreCase))
+                {
+                    sb.Write(@"{{\propname _MarkAsFinal}\proptype11{\staticval 1}}");
+                }
+            }
+            sb.WriteLine(@"}");
+        }
     }
 }

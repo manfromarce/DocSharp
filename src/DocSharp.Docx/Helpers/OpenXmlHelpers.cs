@@ -321,32 +321,96 @@ public static class OpenXmlHelpers
         }
     }
 
-    public static DocSharp.Docx.Model.Indent? GetEffectiveIndent(this Paragraph paragraph)
+    private static void MergeAttributes(OpenXmlElement? target, OpenXmlElement? source, List<string> attributeNames)
     {
-        var res = new DocSharp.Docx.Model.Indent();
-
-        var attributes = new string[] { "left", "leftChars",
-                                        "right", "rightChars",
-                                        "start", "startChars",
-                                        "end", "endChars",
-                                        "firstLine", "firstLineChars",
-                                        "hanging", "hangingChars" };
-
-        // Check paragraph properties
-        var indent = paragraph.ParagraphProperties?.GetFirstChild<Indentation>();
-        var attrs = indent?.GetAttributes();
-        if (attrs != null)
+        if (target != null && source != null)
         {
-            foreach (var targetAttribute in attributes)
+            var attrsTarget = target.GetAttributes();
+            var attrsSource = source.GetAttributes();
+            if (attrsTarget != null && attrsSource != null)
             {
-                if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
+                foreach (var attr in attrsSource)
                 {
-                    res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
+                    // Important: attributes are only set if not already present, to preserve the correct priority (e.g. paragraph properties -> style -> base style -> ...)
+                    if (attributeNames.Contains(attr.LocalName, StringComparer.OrdinalIgnoreCase) &&
+                        attrsTarget.FirstOrDefault(a => a.LocalName.Equals(attr.LocalName, StringComparison.OrdinalIgnoreCase)).Value == null)
+                        target.SetAttribute(attr);
                 }
+                //or
+                //foreach (var attributeName in attributeNames)
+                //{
+                //    var attr = attrsSource.FirstOrDefault(a => a.LocalName.Equals(attributeName, StringComparison.OrdinalIgnoreCase));
+                //    if (attr.Value != null && attrsTarget.FirstOrDefault(a => a.LocalName.Equals(attributeName, StringComparison.OrdinalIgnoreCase)).Value == null)
+                //        target.SetAttribute(attr);
+                //}
+            }
+        }
+    }
+
+    public static T? GetEffectiveBorder<T>(this Paragraph paragraph, Styles? stylesPart = null) where T : BorderType
+    {
+        // Check paragraph properties
+        T? propertyValue = paragraph.ParagraphProperties?.ParagraphBorders?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Note: for all properties except left/firstLine/hanging indent, it's not clear if we should also check numbering styles
+        //propertyValue = paragraph.GetListParagraphProperties()?.ParagraphBorders?.GetFirstChild<T>();
+        //if (propertyValue != null)
+        //{
+        //    return propertyValue;
+        //}
+
+        stylesPart ??= GetStylesPart(paragraph);
+
+        // Check conditional formatting, if any
+        var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
+        propertyValue = GetConditionalFormattingProperty<ParagraphBorders>(stylesPart, paragraph, conditionalFormattingType)?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        // Check paragraph style
+        var paragraphStyle = stylesPart.GetStyleFromId(paragraph.ParagraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
+        while (paragraphStyle != null)
+        {
+            propertyValue = paragraphStyle.StyleParagraphProperties?.ParagraphBorders?.GetFirstChild<T>();
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
+        }
+
+        // Check table paragraph style
+        if (paragraph.GetFirstAncestor<Table>() is Table table &&
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+            while (tableStyle != null)
+            {
+                propertyValue = tableStyle.StyleParagraphProperties?.ParagraphBorders?.GetFirstChild<T>();
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+
+                // Check styles from which the current style inherits
+                tableStyle = stylesPart.GetBaseStyle(tableStyle);
             }
         }
 
-        // Check numbering properties
+        // Check default paragraph style for the current document
+        return stylesPart.GetDefaultParagraphStyle()?.ParagraphBorders?.GetFirstChild<T>();
+    }
+
+    public static PreviousParagraphProperties? GetListParagraphProperties(this Paragraph paragraph)
+    {
         if (paragraph.ParagraphProperties?.NumberingProperties is NumberingProperties numProperties &&
             numProperties?.NumberingLevelReference?.Val != null &&
             numProperties?.NumberingId?.Val != null &&
@@ -371,54 +435,36 @@ public static class OpenXmlHelpers
                                                         x.LevelIndex == numProperties.NumberingLevelReference.Val);
                 }
                 // Get paragraph properties for list level
-                indent = level?.PreviousParagraphProperties?.Indentation;
-                attrs = indent?.GetAttributes();
-                if (attrs != null)
-                {
-                    foreach (var targetAttribute in attributes)
-                    {
-                        if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
-                        {
-                            res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
-                        }
-                    }
-                }
+                return level?.PreviousParagraphProperties;
             }
         }
+        return null;
+    }
 
-        var stylesPart = GetStylesPart(paragraph);
+    public static SpacingBetweenLines? GetEffectiveSpacing(this Paragraph paragraph, Styles? stylesPart = null)
+    {
+        var res = new SpacingBetweenLines();
+        var attributes = new List<string> { "before", "beforeLines",
+                                        "after", "afterLines",
+                                        "beforeAutoSpacing", "afterAutoSpacing",
+                                        "line", "lineRule" };
+
+        MergeAttributes(res, paragraph.ParagraphProperties?.SpacingBetweenLines, attributes);
+
+        // Note: for all properties except left/firstLine/hanging indent, it's not clear if we should also check numbering styles
+        // MergeAttributes(res, paragraph.GetListParagraphProperties()?.SpacingBetweenLines, attributes);
+
+        stylesPart ??= GetStylesPart(paragraph);
 
         // Check conditional formatting, if any
         var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
-        indent = GetConditionalFormattingProperty<Indentation>(stylesPart, paragraph, conditionalFormattingType);
-        attrs = indent?.GetAttributes();
-        if (attrs != null)
-        {
-            foreach (var targetAttribute in attributes)
-            {
-                if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
-                {
-                    res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
-                }
-            }
-        }
+        MergeAttributes(res, GetConditionalFormattingProperty<SpacingBetweenLines>(stylesPart, paragraph, conditionalFormattingType), attributes);
 
         // Check paragraph style
         var paragraphStyle = stylesPart.GetStyleFromId(paragraph.ParagraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
         while (paragraphStyle != null)
         {
-            indent = paragraphStyle.StyleParagraphProperties?.GetFirstChild<Indentation>();
-            attrs = indent?.GetAttributes();
-            if (attrs != null)
-            {
-                foreach (var targetAttribute in attributes)
-                {
-                    if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
-                    {
-                        res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
-                    }
-                }
-            }
+            MergeAttributes(res, paragraphStyle?.StyleParagraphProperties?.SpacingBetweenLines, attributes);
 
             // Check styles from which the current style inherits
             paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
@@ -431,18 +477,7 @@ public static class OpenXmlHelpers
             var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
             while (tableStyle != null)
             {
-                indent = tableStyle.StyleParagraphProperties?.GetFirstChild<Indentation>();
-                attrs = indent?.GetAttributes();
-                if (attrs != null)
-                {
-                    foreach (var targetAttribute in attributes)
-                    {
-                        if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
-                        {
-                            res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
-                        }
-                    }
-                }
+                MergeAttributes(res, tableStyle?.StyleParagraphProperties?.SpacingBetweenLines, attributes);
 
                 // Check styles from which the current style inherits
                 tableStyle = stylesPart.GetBaseStyle(tableStyle);
@@ -450,24 +485,64 @@ public static class OpenXmlHelpers
         }
 
         // Check default paragraph style for the current document
-        indent = stylesPart.GetDefaultParagraphStyle()?.GetFirstChild<Indentation>();
-        attrs = indent?.GetAttributes();
-        if (attrs != null)
+        MergeAttributes(res, stylesPart.GetDefaultParagraphStyle()?.SpacingBetweenLines, attributes);
+
+        return res;
+    }
+
+    public static Indentation? GetEffectiveIndent(this Paragraph paragraph, Styles? stylesPart = null)
+    {
+        var res = new Indentation();
+        var attributes = new List<string> { "left", "leftChars",
+                                        "right", "rightChars",
+                                        "start", "startChars",
+                                        "end", "endChars",
+                                        "firstLine", "firstLineChars",
+                                        "hanging", "hangingChars" };
+
+        MergeAttributes(res, paragraph.ParagraphProperties?.Indentation, attributes);
+
+        // Check list style (numbering part), if any
+        MergeAttributes(res, paragraph.GetListParagraphProperties()?.Indentation, attributes);
+
+        stylesPart ??= GetStylesPart(paragraph);
+
+        // Check conditional formatting, if any
+        var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
+        MergeAttributes(res,  GetConditionalFormattingProperty<Indentation>(stylesPart, paragraph, conditionalFormattingType), attributes);
+
+        // Check paragraph style
+        var paragraphStyle = stylesPart.GetStyleFromId(paragraph.ParagraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
+        while (paragraphStyle != null)
         {
-            foreach (var targetAttribute in attributes)
+            MergeAttributes(res, paragraphStyle?.StyleParagraphProperties?.Indentation, attributes);
+
+            // Check styles from which the current style inherits
+            paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
+        }
+
+        // Check table paragraph style
+        if (paragraph.GetFirstAncestor<Table>() is Table table &&
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+            while (tableStyle != null)
             {
-                if (double.TryParse(attrs.FirstOrDefault(attr => attr.LocalName.Equals(targetAttribute, StringComparison.OrdinalIgnoreCase)).Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double val))
-                {
-                    res.SetFromAttribute(targetAttribute, (int)Math.Round(val));
-                }
+                MergeAttributes(res, tableStyle?.StyleParagraphProperties?.Indentation, attributes);
+
+                // Check styles from which the current style inherits
+                tableStyle = stylesPart.GetBaseStyle(tableStyle);
             }
         }
+
+        // Check default paragraph style for the current document
+        MergeAttributes(res, stylesPart.GetDefaultParagraphStyle()?.Indentation, attributes);
 
         return res;
     }
 
     // Helper function to get paragraph formatting from paragraph properties, style or default style.
-    public static T? GetEffectiveProperty<T>(this Paragraph paragraph) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this Paragraph paragraph, Styles? stylesPart = null) where T : OpenXmlElement
     {
         // Check paragraph properties
         T? propertyValue = paragraph.ParagraphProperties?.GetFirstChild<T>();
@@ -476,42 +551,14 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        //if (typeof(T) == typeof(Indentation))
+        // Note: for all properties except left/firstLine/hanging indent, it's not clear if we should also check numbering styles
+        //propertyValue = paragraph.GetListParagraphProperties()?.GetFirstChild<T>();
+        //if (propertyValue != null)
         //{
-        //    // Check numbering properties
-        //    if (paragraph.ParagraphProperties?.NumberingProperties is NumberingProperties numProperties &&
-        //        numProperties?.NumberingLevelReference?.Val != null &&
-        //        numProperties?.NumberingId?.Val != null &&
-        //        paragraph.GetNumberingPart()?.NumberingDefinitionsPart?.Numbering is Numbering numbering)
-        //    {
-        //        if (numbering.Elements<NumberingInstance>().FirstOrDefault(x => x.NumberID != null &&
-        //                                                                        x.NumberID.Value == numProperties.NumberingId.Val)
-        //                    is NumberingInstance num)
-        //        {
-        //            Level? level = null;
-        //            // If NumberingInstance has a LevelOverride, use it.
-        //            level = num.Elements<LevelOverride>()
-        //                .FirstOrDefault(x => x.Level?.LevelIndex != null &&
-        //                                     x.Level.LevelIndex == numProperties.NumberingLevelReference.Val)?.Level;
-        //            // Otherwise get level from AbstractNum
-        //            if (num.AbstractNumId?.Val != null)
-        //            {
-        //                level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null &&
-        //                                                                          x.AbstractNumberId.Value == num.AbstractNumId.Val)?
-        //                             .Elements<Level>()
-        //                             .FirstOrDefault(x => x.LevelIndex != null &&
-        //                                                  x.LevelIndex == numProperties.NumberingLevelReference.Val);
-        //            }
-        //            // Get paragraph properties for list level
-        //            if (level?.PreviousParagraphProperties?.Indentation is Indentation indent)
-        //            {
-        //                return indent as T;
-        //            }
-        //        }
-        //    }
+        //    return propertyValue;
         //}
 
-        var stylesPart = GetStylesPart(paragraph);
+        stylesPart ??= GetStylesPart(paragraph);
 
         // Check conditional formatting, if any
         var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
@@ -558,7 +605,7 @@ public static class OpenXmlHelpers
     }
 
     // Helper function to get run formatting from run/paragraph properties, style or default style.
-    public static T? GetEffectiveProperty<T>(this Run run) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this Run run, Styles? stylesPart = null) where T : OpenXmlElement
     {
         // Check run properties
         T? propertyValue = run.RunProperties?.GetFirstChild<T>();
@@ -567,7 +614,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(run);
+        stylesPart ??= GetStylesPart(run);
 
         // Check conditional formatting, if any
         var paragraph = run.GetFirstAncestor<Paragraph>();
@@ -633,7 +680,7 @@ public static class OpenXmlHelpers
         return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>();
     }
 
-    public static T? GetEffectiveProperty<T>(this RunProperties runPr) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this RunProperties runPr, Styles? stylesPart = null) where T : OpenXmlElement
     {
         // Check run properties
         T? propertyValue = runPr.GetFirstChild<T>();
@@ -642,7 +689,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(runPr);
+        stylesPart ??= GetStylesPart(runPr);
 
         // Check run style
         var runStyle = stylesPart.GetStyleFromId(runPr.RunStyle?.Val, StyleValues.Character) ??
@@ -668,7 +715,7 @@ public static class OpenXmlHelpers
     }
 
     // Helper function to get table formatting from table properties or style.
-    public static T? GetEffectiveProperty<T>(this Table table) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this Table table, Styles? stylesPart = null) where T : OpenXmlElement
     {
         // Check table properties
         var tableProperties = table.GetFirstChild<TableProperties>();
@@ -678,7 +725,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(table);
+        stylesPart ??= GetStylesPart(table);
         var conditionalFormattingFlags = table.GetCombinedConditionalFormattingFlags();
 
         // Check table style
@@ -717,7 +764,7 @@ public static class OpenXmlHelpers
     }
 
     // Helper function to get row formatting from row/table properties or style.
-    public static T? GetEffectiveProperty<T>(this TableRow row) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this TableRow row, Styles? stylesPart = null) where T : OpenXmlElement
     {
         // Check standard properties
         T? propertyValue = row.TableRowProperties?.GetFirstChild<T>();
@@ -742,7 +789,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(row);
+        stylesPart ??= GetStylesPart(row);
         var conditionalFormattingFlags = row.GetCombinedConditionalFormattingFlags();
 
         // Check table style
@@ -783,7 +830,7 @@ public static class OpenXmlHelpers
     }
 
     // Helper function to get cell formatting from cell/table properties or style.
-    public static T? GetEffectiveProperty<T>(this TableCell cell) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this TableCell cell, Styles? stylesPart = null) where T : OpenXmlElement
     {
         // Check cell properties
         T? propertyValue = cell.TableCellProperties?.GetFirstChild<T>();
@@ -813,7 +860,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(cell);
+        stylesPart ??= GetStylesPart(cell);
         var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
 
         // Check table style
@@ -857,7 +904,8 @@ public static class OpenXmlHelpers
 
     // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
     public static BorderType? GetEffectiveBorder(this TableCell cell, Primitives.BorderValue borderValue,
-                                                     int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft = false)
+                                                 int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft = false,
+                                                 Styles? stylesPart = null)
     {
         bool isFirstRow = rowNumber == 1;
         bool isFirstColumn = columnNumber == 1;
@@ -969,7 +1017,7 @@ public static class OpenXmlHelpers
         }
 
         // Check table style
-        var stylesPart = GetStylesPart(cell);
+        stylesPart ??= GetStylesPart(cell);
         var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
@@ -1006,7 +1054,7 @@ public static class OpenXmlHelpers
     }
 
     // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
-    public static T? GetEffectiveBorder<T>(this TableRow row) where T : BorderType
+    public static T? GetEffectiveBorder<T>(this TableRow row, Styles? stylesPart = null) where T : BorderType
     {
         // Check row properties
         var tablePropertiesExceptions = row.TablePropertyExceptions;
@@ -1024,7 +1072,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(row);
+        stylesPart ??= GetStylesPart(row);
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
@@ -1060,7 +1108,7 @@ public static class OpenXmlHelpers
         return null;
     }
 
-    public static OpenXmlElement? GetEffectiveMargin(this TableCell cell, Primitives.MarginValue marginValue, bool isRightToLeft = false)
+    public static OpenXmlElement? GetEffectiveMargin(this TableCell cell, Primitives.MarginValue marginValue, bool isRightToLeft = false, Styles? stylesPart = null)
     {
         // This method does not check table default margins by design,
         // as that would create double margins in the cell. 
@@ -1106,7 +1154,7 @@ public static class OpenXmlHelpers
 
         // Check table style
         var tableProperties = cell.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
-        var stylesPart = GetStylesPart(cell);
+        stylesPart ??= GetStylesPart(cell);
         var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
@@ -1139,7 +1187,7 @@ public static class OpenXmlHelpers
         return null;
     }
 
-    public static T? GetEffectiveMargin<T>(this TableRow row) where T : OpenXmlElement
+    public static T? GetEffectiveMargin<T>(this TableRow row, Styles? stylesPart = null) where T : OpenXmlElement
     {
         // Check row properties
         var tablePropertiesExceptions = row.TablePropertyExceptions;
@@ -1157,7 +1205,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        var stylesPart = GetStylesPart(row);
+        stylesPart ??= GetStylesPart(row);
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);

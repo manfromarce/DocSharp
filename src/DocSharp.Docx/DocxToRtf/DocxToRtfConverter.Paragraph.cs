@@ -57,8 +57,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessParagraphFormatting(Paragraph paragraph, RtfStringWriter sb)
     {
-        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
-        if (numberingProperties != null)
+        if (paragraph.GetEffectiveProperty<NumberingProperties>() is NumberingProperties numberingProperties)
         {
             ProcessListItem(numberingProperties, sb);
         }
@@ -73,7 +72,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\ltrpar");
         }
 
-        //var direction = OpenXmlHelpers.GetEffectiveProperty<TextDirection>(paragraph);
+        //var direction = paragraph.GetEffectiveProperty<TextDirection>();
         //if (direction != null && direction.Val != null)
         //{
         //    if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
@@ -105,7 +104,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         //    }
         //}
 
-        var vAlign = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
+        var vAlign = paragraph.GetEffectiveProperty<TextAlignment>();
         if (vAlign?.Val != null)
         {
             if (vAlign.Val == VerticalTextAlignmentValues.Auto)
@@ -130,19 +129,17 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        var tabs = OpenXmlHelpers.GetEffectiveProperty<Tabs>(paragraph);
-        if (tabs != null)
+        if (paragraph.GetEffectiveProperty<Tabs>() is Tabs tabs)
         {
             ProcessTabs(tabs, sb);
         }
 
-        var fp = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph);
-        if (fp != null)
+        if (paragraph.GetEffectiveProperty<FrameProperties>() is FrameProperties frameProps)
         {
-            ProcessFrameProperties(fp, sb);
+            ProcessFrameProperties(frameProps, sb);
         }
 
-        var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph);
+        var alignment = paragraph.GetEffectiveProperty<Justification>();
         if (alignment?.Val != null)
         {
             if (alignment.Val == JustificationValues.Left || alignment.Val == JustificationValues.Start)
@@ -165,18 +162,18 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write(@"\qk20");
         }
 
-        var spacing = OpenXmlHelpers.GetEffectiveProperty<SpacingBetweenLines>(paragraph);
+        var spacing = paragraph.GetEffectiveSpacing();
         if (spacing?.BeforeAutoSpacing != null && (!spacing.BeforeAutoSpacing.HasValue || spacing.BeforeAutoSpacing.Value))
         {
             sb.Write($"\\sbauto1");
         }
         else if (spacing?.BeforeLines != null)
         {
-            sb.Write($"\\sbauto0\\lisb{spacing.BeforeLines}"); // overrides \sb
+            sb.Write($"\\sbauto0\\lisb{spacing.BeforeLines.Value.ToStringInvariant()}"); // overrides \sb
         }
-        else if (spacing?.Before != null)
+        else if (spacing?.Before.ToLong() is long before) // Ensure that the value is valid for RTF 
         {
-            sb.Write($"\\sbauto0\\sb{spacing.Before}");
+            sb.Write($"\\sbauto0\\sb{before.ToStringInvariant()}");
         }
 
         if (spacing?.AfterAutoSpacing != null && (!spacing.AfterAutoSpacing.HasValue || spacing.AfterAutoSpacing.Value))
@@ -185,38 +182,40 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else if (spacing?.AfterLines != null)
         {
-            sb.Write($"\\saauto0\\lisa{spacing.AfterLines}"); // overrides \sa
+            sb.Write($"\\saauto0\\lisa{spacing.AfterLines.Value.ToStringInvariant()}"); // overrides \sa
         }
-        else if (spacing?.After != null)
+        else if (spacing?.After.ToLong() is long after) // Ensure that the value is valid for RTF 
         {
-            sb.Write($"\\saauto0\\sa{spacing.After}");
+            sb.Write($"\\saauto0\\sa{after.ToStringInvariant()}");
         }
         else
         {
             var defaultSpaceAfter = DefaultSettings.SpaceAfterParagraph * 20;
-            sb.Write($"\\saauto0\\sa{defaultSpaceAfter}");
+            sb.Write($"\\saauto0\\sa{defaultSpaceAfter.ToStringInvariant()}");
         }
 
-        if (spacing?.LineRule != null && spacing?.Line != null)
+        if (spacing?.Line.ToLong() is long line)
         {
-            if (spacing.LineRule == LineSpacingRuleValues.AtLeast)
+            if (spacing.LineRule != null && spacing.LineRule == LineSpacingRuleValues.AtLeast)
             {
-                sb.Write($"\\sl{spacing.Line}\\slmult0");
+                sb.Write($"\\sl{line.ToStringInvariant()}\\slmult0");
             }
-            else if (spacing.LineRule == LineSpacingRuleValues.Exact)
+            else if (spacing.LineRule != null && spacing.LineRule == LineSpacingRuleValues.Exact)
             {
-                sb.Write($"\\sl-{spacing.Line}\\slmult0");
+                sb.Write($"\\sl-{line.ToStringInvariant()}\\slmult0");
             }
-            else if (spacing.LineRule == LineSpacingRuleValues.Auto)
+            else if (spacing.LineRule == null || spacing.LineRule == LineSpacingRuleValues.Auto)
             {
-                sb.Write($"\\sl{spacing.Line}\\slmult1");
+                sb.Write($"\\sl{line.ToStringInvariant()}\\slmult1"); // default in no LineRule is specified in DOCX
+                                                                      // (e.g. documents created by WordPad)
             }
         }
         else
         {
             var defaultSpacing = Math.Round(DefaultSettings.LineSpacing * 240);
             // This value is expressed in 240th of lines.
-            sb.Write($"\\sl{defaultSpacing}\\slmult1");
+            sb.WriteWordWithValue("sl", defaultSpacing); // Ensures the value is written without decimals in RTF
+            sb.Write("\\slmult1");
         }
 
         if (paragraph.GetEffectiveProperty<AdjustRightIndent>().ToBool()) 
@@ -224,41 +223,43 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write("\\adjustright");
         }
 
-        var ind = OpenXmlHelpers.GetEffectiveIndent(paragraph);
-        if (ind?.LeftChars != null)
-            sb.Write($"\\culi{ind.LeftChars.Value}"); // overwrites \liN
-        else if (ind?.Left != null)
-            sb.Write($"\\li{ind.Left.Value}");
+        if (paragraph.GetEffectiveIndent() is Indentation indent)
+        {
+            if (indent.LeftChars != null)
+                sb.Write($"\\culi{indent.LeftChars.Value.ToStringInvariant()}"); // overwrites \liN
+            else if (indent.Left.ToLong() is long left)
+                sb.Write($"\\li{left.ToStringInvariant()}"); // in twips in both DOCX and RTF
 
-        if (ind?.Start != null)
-            sb.Write($"\\lin{ind.Start.Value}");
+            if (indent?.Start.ToLong() is long start)
+                sb.Write($"\\lin{start.ToStringInvariant()}");
 
-        if (ind?.RightChars != null)
-            sb.Write($"\\curi{ind.RightChars.Value}"); // overwrites \riN
-        else if (ind?.Right != null)
-            sb.Write($"\\ri{ind.Right.Value}");
+            if (indent?.RightChars != null)
+                sb.Write($"\\curi{indent.RightChars.Value.ToStringInvariant()}"); // overwrites \riN
+            else if (indent?.Right.ToLong() is long right)
+                sb.Write($"\\ri{right.ToStringInvariant()}");
 
-        if (ind?.End != null)
-            sb.Write($"\\rin{ind.End.Value}");
+            if (indent?.End.ToLong() is long end)
+                sb.Write($"\\rin{end.ToStringInvariant()}");
 
-        // StartCharacters and EndCharacters have no equivalent in RTF.
+            // StartCharacters and EndCharacters have no equivalent in RTF.
 
-        if (ind?.FirstLineChars != null)
-            sb.Write($"\\cufi{ind.FirstLineChars.Value}"); // overwrites \fiN
-        else if (ind?.FirstLine != null)
-            sb.Write($"\\fi{ind.FirstLine.Value}");
-        else if (ind?.HangingChars != null)
-            sb.Write($"\\cufi-{ind.HangingChars.Value}"); // overwrites \fiN
-        else if (ind?.Hanging != null)
-            sb.Write($"\\fi-{ind.Hanging.Value}");
+            if (indent?.FirstLineChars != null)
+                sb.Write($"\\cufi{indent.FirstLineChars.Value.ToStringInvariant()}"); // overwrites \fiN
+            else if (indent?.FirstLine.ToLong() is long firstLine)
+                sb.Write($"\\fi{firstLine.ToStringInvariant()}");
+            else if (indent?.HangingChars != null)
+                sb.Write($"\\cufi-{indent.HangingChars.Value.ToStringInvariant()}"); // overwrites \fiN
+            else if (indent?.Hanging.ToLong() is long hanging)
+                sb.Write($"\\fi-{hanging.ToStringInvariant()}");
+        }
 
-        var mirrorIndent = OpenXmlHelpers.GetEffectiveProperty<MirrorIndents>(paragraph);
+        var mirrorIndent = paragraph.GetEffectiveProperty<MirrorIndents>();
         if (mirrorIndent != null && (mirrorIndent.Val is null || mirrorIndent.Val))
         {
             sb.Write(@"\indmirror"); // Should we avoid this for lists ?
         }
 
-        var wControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
+        var wControl = paragraph.GetEffectiveProperty<WidowControl>();
         if (wControl?.Val != null && !wControl.Val)
         {
             sb.Write(@"\nowidctlpar");
@@ -268,14 +269,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\widctlpar"); // True by default
         }
 
-        var wordWrap = OpenXmlHelpers.GetEffectiveProperty<WordWrap>(paragraph);
+        var wordWrap = paragraph.GetEffectiveProperty<WordWrap>();
         if (wordWrap?.Val != null && !wordWrap.Val)
         {
             // By default text breaks in new lines at the word level.
             // If WordWrap is set to off the document allows to break at character level.
             sb.Write(@"\nowwrap");
         }
-        var op = OpenXmlHelpers.GetEffectiveProperty<OverflowPunctuation>(paragraph);
+        var op = paragraph.GetEffectiveProperty<OverflowPunctuation>();
         if (op?.Val != null && !op.Val)
         {
             // By default punctuation chars are allowed to extend past the end of the line by one character.
@@ -306,71 +307,66 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             sb.Write(@"\pagebb");
         }
-        var snapToGrid = OpenXmlHelpers.GetEffectiveProperty<SnapToGrid>(paragraph);
+        var snapToGrid = paragraph.GetEffectiveProperty<SnapToGrid>();
         if (snapToGrid?.Val != null && !snapToGrid.Val) // True by default
         {
             sb.Write(@"\nosnaplinegrid");
         }
-        var outlineLevel = OpenXmlHelpers.GetEffectiveProperty<OutlineLevel>(paragraph);
+        var outlineLevel = paragraph.GetEffectiveProperty<OutlineLevel>();
         if (outlineLevel?.Val != null &&  outlineLevel.Val.HasValue)
         {
             sb.Write($"\\outline{outlineLevel.Val.Value}");
         }
 
-        var contextualSpacing = OpenXmlHelpers.GetEffectiveProperty<ContextualSpacing>(paragraph);
+        var contextualSpacing = paragraph.GetEffectiveProperty<ContextualSpacing>();
         if (contextualSpacing != null && (contextualSpacing.Val is null || contextualSpacing.Val))
             sb.Write(@"\contextualspace");
 
-        var keepLines = OpenXmlHelpers.GetEffectiveProperty<KeepLines>(paragraph);
+        var keepLines = paragraph.GetEffectiveProperty<KeepLines>();
         if (keepLines != null && (keepLines.Val is null || keepLines.Val))
             sb.Write(@"\keep");
 
-        var keepNext = OpenXmlHelpers.GetEffectiveProperty<KeepNext>(paragraph);
+        var keepNext = paragraph.GetEffectiveProperty<KeepNext>();
         if (keepNext != null && (keepNext.Val is null || keepNext.Val))
             sb.Write(@"\keepn");
 
-        ParagraphBorders? borders = OpenXmlHelpers.GetEffectiveProperty<ParagraphBorders>(paragraph);
-        if (borders != null)
+        if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
         {
-            if (borders?.TopBorder != null)
-            {
-                sb.Write(@"\brdrt");
-                ProcessBorder(borders.TopBorder, sb);
-            }
-            if (borders?.LeftBorder != null)
-            {
-                sb.Write(@"\brdrl");
-                ProcessBorder(borders.LeftBorder, sb);
-            }
-            if (borders?.BottomBorder != null)
-            {
-                sb.Write(@"\brdrb");
-                ProcessBorder(borders.BottomBorder, sb);
-            }
-            if (borders?.RightBorder != null)
-            {
-                sb.Write(@"\brdrr");
-                ProcessBorder(borders.RightBorder, sb);
-            }
-            if (borders?.BarBorder != null)
-            {
-                sb.Write(@"\brdrbar");
-                ProcessBorder(borders.BarBorder, sb);
-            }
-            if (borders?.BetweenBorder != null)
-            {
-                sb.Write(@"\brdrbtw");
-                ProcessBorder(borders.BetweenBorder, sb);
-            }
+            sb.Write(@"\brdrt");
+            ProcessBorder(topBorder, sb);
+        }
+        if (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder)
+        {
+            sb.Write(@"\brdrb");
+            ProcessBorder(bottomBorder, sb);
+        }
+        if (paragraph.GetEffectiveBorder<LeftBorder>() is LeftBorder leftBorder)
+        {
+            sb.Write(@"\brdrl");
+            ProcessBorder(leftBorder, sb);
+        }
+        if (paragraph.GetEffectiveBorder<RightBorder>() is RightBorder rightBorder)
+        {
+            sb.Write(@"\brdrr");
+            ProcessBorder(rightBorder, sb);
+        }
+        if (paragraph.GetEffectiveBorder<BarBorder>() is BarBorder barBorder)
+        {
+            sb.Write(@"\brdrbar");
+            ProcessBorder(barBorder, sb);
+        }
+        if (paragraph.GetEffectiveBorder<BetweenBorder>() is BetweenBorder betweenBorder)
+        {
+            sb.Write(@"\brdrbtw");
+            ProcessBorder(betweenBorder, sb);
         }
 
-        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph);
-        if (shading != null)
+        if (paragraph.GetEffectiveProperty<Shading>() is Shading shading)
         {
             ProcessShading(shading, sb, ShadingType.Paragraph);
         }
 
-        var textBoxTightWrap = OpenXmlHelpers.GetEffectiveProperty<TextBoxTightWrap>(paragraph);
+        var textBoxTightWrap = paragraph.GetEffectiveProperty<TextBoxTightWrap>();
         if (textBoxTightWrap?.Val != null)
         {
             if (textBoxTightWrap.Val == TextBoxTightWrapValues.AllLines)

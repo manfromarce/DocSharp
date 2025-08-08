@@ -44,23 +44,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (pos.LeftFromText != null)
             {
-                tableProperties.Write(@$"\tdfrmtxtLeft{pos.LeftFromText.Value}");
+                tableProperties.WriteWordWithValue("tdfrmtxtLeft", pos.LeftFromText.Value);
             }
             if (pos.TopFromText != null)
             {
-                tableProperties.Write(@$"\tdfrmtxtTop{pos.TopFromText.Value}");
+                tableProperties.WriteWordWithValue("tdfrmtxtTop", pos.TopFromText.Value);
             }
             if (pos.RightFromText != null)
             {
-                tableProperties.Write(@$"\tdfrmtxtRight{pos.RightFromText.Value}");
+                tableProperties.WriteWordWithValue("tdfrmtxtRight", pos.RightFromText.Value);
             }
             if (pos.BottomFromText != null)
             {
-                tableProperties.Write(@$"\tdfrmtxtBottom{pos.BottomFromText.Value}");
+                tableProperties.WriteWordWithValue("tdfrmtxtBottom", pos.BottomFromText.Value);
             }
             if (pos.TablePositionX != null)
             {
-                tableProperties.Write(@$"\tposx{pos.TablePositionX.Value}");
+                tableProperties.WriteWordWithValue("tposx", pos.TablePositionX.Value);
             }
             if (pos.TablePositionXAlignment != null)
             {
@@ -87,7 +87,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             if (pos.TablePositionY != null)
             {
-                tableProperties.Write(@$"\tposy{pos.TablePositionY.Value}");
+                tableProperties.WriteWordWithValue("tposy", pos.TablePositionY.Value);
             }
             if (pos.TablePositionYAlignment != null)
             {
@@ -120,7 +120,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (pos.HorizontalAnchor.Value == HorizontalAnchorValues.Text)
                 {
-                    tableProperties.Write(@"\tphcol"); // ?
+                    tableProperties.Write(@"\tphcol");
                 }
                 else if (pos.HorizontalAnchor.Value == HorizontalAnchorValues.Page)
                 {
@@ -259,18 +259,18 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     if (tableRowHeight.HeightType.Value == HeightRuleValues.AtLeast)
                     {
-                        sb.Write($"\\trrh{tableRowHeight.Val.Value}");
+                        sb.WriteWordWithValue("trrh", tableRowHeight.Val.Value);
                     }
                     else if (tableRowHeight.HeightType.Value == HeightRuleValues.Exact)
                     {
-                        sb.Write($"\\trrh-{tableRowHeight.Val.Value}");
+                        sb.Write($"\\trrh-{tableRowHeight.Val.Value.ToStringInvariant()}");
                     }
                 }
             }
             // Word processors can specify the value only, in this case assume height rule "at least"
             else if (tableRowHeight.Val != null && tableRowHeight.Val.HasValue)
             {
-                sb.Write($"\\trrh{tableRowHeight.Val.Value}");
+                sb.WriteWordWithValue("trrh", tableRowHeight.Val.Value);
             }
         }
         if (row.GetEffectiveProperty<TableHeader>().ToBool())
@@ -322,15 +322,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (ind.Type.Value == TableWidthUnitValues.Auto)
                 {
-                    sb.Write($"\\tblind{ind.Width.Value}\\tblindtype1");
+                    sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype1");
                 }
                 else if (ind.Type.Value == TableWidthUnitValues.Pct)
                 {
-                    sb.Write($"\\tblind{ind.Width.Value}\\tblindtype2");
+                    sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype2");
                 }
                 else if (ind.Type.Value == TableWidthUnitValues.Dxa)
                 {
-                    sb.Write($"\\tblind{ind.Width.Value}\\tblindtype3");
+                    sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype3");
                     // sb.Write($"\\trleft{ind.Width.Value}"); // Breaks something, not used
                 }
             }
@@ -348,15 +348,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write(@"\trftsWidth1"); // \trwWidth will be ignored; gives precedence to row defaults and autofit
 
             }
-            else if (width.Width != null && int.TryParse(width.Width.Value, out int tw))
+            else if (width.Width.ToLong() is long tw)
             {
                 if (width.Type.Value == TableWidthUnitValues.Pct)
                 {
-                    sb.Write($"\\trwWidth{tw}\\trftsWidth2");
+                    sb.Write($"\\trwWidth{tw.ToStringInvariant()}\\trftsWidth2");
                 }
                 else // twips
                 {
-                    sb.Write($"\\trwWidth{tw}\\trftsWidth3");
+                    sb.Write($"\\trwWidth{tw.ToStringInvariant()}\\trftsWidth3");
                 }
             }
         }
@@ -374,15 +374,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\trftsWidthB1"); // Ignores \trwWidthAN if present
             }
-            else if (widthBefore.Width != null && int.TryParse(widthBefore.Width.Value, out int wAfter))
+            else if (widthBefore.Width.ToLong() is long wBefore)
             {
                 if (widthBefore.Type.Value == TableWidthUnitValues.Pct)
                 {
-                    sb.Write($"\\trwWidthB{wAfter}\\trftsWidthB2");
+                    sb.Write($"\\trwWidthB{wBefore.ToStringInvariant()}\\trftsWidthB2");
                 }
                 else // twips
                 {
-                    sb.Write($"\\trwWidthB{wAfter}\\trftsWidthB3");
+                    sb.Write($"\\trwWidthB{wBefore.ToStringInvariant()}\\trftsWidthB3");
                 }
             }
         }
@@ -397,15 +397,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\trftsWidthA1"); // Ignores \trwWidthAN if present
             }
-            else if (widthAfter.Width != null && int.TryParse(widthAfter.Width.Value, out int wAfter))
+            else if (widthAfter.Width.ToLong() is long wAfter)
             {
                 if (widthAfter.Type.Value == TableWidthUnitValues.Pct)
                 {
-                    sb.Write($"\\trwWidthA{wAfter}\\trftsWidthA2");
+                    sb.Write($"\\trwWidthA{wAfter.ToStringInvariant()}\\trftsWidthA2");
                 }
                 else // twips
                 {
-                    sb.Write($"\\trwWidthA{wAfter}\\trftsWidthA3");
+                    sb.Write($"\\trwWidthA{wAfter.ToStringInvariant()}\\trftsWidthA3");
                 }
             }
         }
@@ -420,9 +420,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             else if (spacing.Width != null && spacing.Width.HasValue)
             {
-                if (spacing.Type.Value == TableWidthUnitValues.Dxa && long.TryParse(spacing.Width.Value, out cellSpacing))
+                if (spacing.Type.Value == TableWidthUnitValues.Dxa && spacing.Width.ToLong() is long cs)
                 {
-                    sb.Write($@"\trspdl{cellSpacing}\trspdt{cellSpacing}\trspdb{cellSpacing}\trspdr{cellSpacing}\trspdfl3\trspdft3\trspdfb3\trspdfr3");
+                    cellSpacing = cs;
+                    sb.Write($@"\trspdl{cs.ToStringInvariant()}\trspdt{cellSpacing.ToStringInvariant()}\trspdb{cellSpacing.ToStringInvariant()}\trspdr{cellSpacing.ToStringInvariant()}\trspdfl3\trspdft3\trspdfb3\trspdfr3");
                 }
                 else if (spacing.Type.Value == TableWidthUnitValues.Pct || spacing.Type.Value == TableWidthUnitValues.Auto)
                 {
@@ -484,9 +485,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\trpaddft0");
             }
-            else if (topMargin.Type.Value == TableWidthUnitValues.Dxa && topMargin.Width != null && int.TryParse(topMargin.Width, out int top))
+            else if (topMargin.Type.Value == TableWidthUnitValues.Dxa && topMargin.Width.ToLong() is long top)
             {
-                sb.Write($"\\trpaddt{top}\\trpaddft3");
+                sb.Write($"\\trpaddt{top.ToStringInvariant()}\\trpaddft3");
             }
             // RTF does not have other units for these elements.
         }
@@ -496,16 +497,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\trpaddfb0");
             }
-            else if (bottomMargin.Type.Value == TableWidthUnitValues.Dxa && bottomMargin.Width != null && int.TryParse(bottomMargin.Width, out int bottom))
+            else if (bottomMargin.Type.Value == TableWidthUnitValues.Dxa && bottomMargin.Width.ToLong() is long bottom)
             {
-                sb.Write($"\\trpaddb{bottom}\\trpaddfb3");
+                sb.Write($"\\trpaddb{bottom.ToStringInvariant()}\\trpaddfb3");
             }
         }
         // Left/right should have priority over start/end as they are more specific.
-        int leftM = 0;
-        int rightM = 0;
-        int leftMUnit = -1;
-        int rightMUnit = -1;
+        long leftM = 0;
+        long rightM = 0;
+        long leftMUnit = -1;
+        long rightMUnit = -1;
         if (startMargin?.Type != null)
         {
             if (startMargin.Type.Value == TableWidthUnitValues.Nil)
@@ -519,7 +520,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     leftMUnit = 0;
                 }
             }
-            else if (startMargin.Type.Value == TableWidthUnitValues.Dxa && startMargin.Width != null && int.TryParse(startMargin.Width, out int startM))
+            else if (startMargin.Type.Value == TableWidthUnitValues.Dxa && startMargin.Width.ToLong() is long startM)
             {
                 if (isRightToLeft)
                 {
@@ -546,7 +547,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     rightMUnit = 0;
                 }
             }
-            else if (endMargin.Type.Value == TableWidthUnitValues.Dxa && endMargin.Width != null && int.TryParse(endMargin.Width, out int endM))
+            else if (endMargin.Type.Value == TableWidthUnitValues.Dxa && endMargin.Width.ToLong() is long endM)
             {
                 if (isRightToLeft)
                 {
@@ -587,22 +588,22 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         // Write "nil" unit (or dxa) if explicitly set, otherwise ignore if value is not set or unsupported.
         if (leftMUnit >= 0)
         {
-            sb.Write($"\\trpaddfl{leftMUnit}");
+            sb.WriteWordWithValue("trpaddfl", leftMUnit);
         }
         if (leftMUnit > 0) // Ignore trpadd values if unit is "nil".
         {
-            sb.Write($"\\trpaddl{leftM}");
+            sb.WriteWordWithValue("trpaddl", leftM);
         }
         if (rightMUnit >= 0)
         {
-            sb.Write($"\\trpaddfr{rightMUnit}");
+            sb.WriteWordWithValue("trpaddfr", rightMUnit);
         }
         if (rightMUnit > 0)
         {
-            sb.Write($"\\trpaddr{rightM}");
+            sb.WriteWordWithValue("trpaddr", rightM);
         }
         var avg = (long)Math.Round((leftM + rightM) / 2m);
-        sb.Write($"\\trgaph{avg}"); // MS Word adds this value for compatibility with older RTF readers.
+        sb.WriteWordWithValue("trgaph", avg); // Word adds this value for compatibility with older RTF readers.
 
         long totalWidth = 0;
         int columnNumber = 1;
@@ -686,7 +687,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\clpadft0");
             }
-            else if (topMargin.Type.Value == TableWidthUnitValues.Dxa && topMargin.Width != null && int.TryParse(topMargin.Width, out int top))
+            else if (topMargin.Type.Value == TableWidthUnitValues.Dxa && topMargin.Width.ToLong() is long top)
             {
                 sb.Write($"\\clpadt{top.ToStringInvariant()}\\clpadft3");
             }
@@ -698,7 +699,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\clpadfb0");
             }
-            else if (bottomMargin.Type.Value == TableWidthUnitValues.Dxa && bottomMargin.Width != null && int.TryParse(bottomMargin.Width, out int bottom))
+            else if (bottomMargin.Type.Value == TableWidthUnitValues.Dxa && bottomMargin.Width.ToLong() is long bottom)
             {
                 sb.Write($"\\clpadb{bottom.ToStringInvariant()}\\clpadfb3");
             }
@@ -709,7 +710,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\clpadfl0");
             }
-            else if (twt1.Type.Value == TableWidthUnitValues.Dxa && twt1.Width != null && int.TryParse(twt1.Width, out int left))
+            else if (twt1.Type.Value == TableWidthUnitValues.Dxa && twt1.Width.ToLong() is long left)
             {
                 sb.Write($"\\clpadl{left.ToStringInvariant()}\\clpadfl3");
             }
@@ -731,9 +732,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\clpadfr0");
             }
-            else if (twt2.Type.Value == TableWidthUnitValues.Dxa && twt2.Width != null && int.TryParse(twt2.Width, out int right))
+            else if (twt2.Type.Value == TableWidthUnitValues.Dxa && twt2.Width.ToLong() is long right)
             {
-                sb.Write($"\\clpadr{right}\\clpadfr3");
+                sb.Write($"\\clpadr{right.ToStringInvariant()}\\clpadfr3");
             }
         }
         else if (rightMargin is TableWidthDxaNilType dxaNilType2 && dxaNilType2?.Type != null)
@@ -863,9 +864,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         var cellWidth = OpenXmlHelpers.GetEffectiveProperty<TableCellWidth>(cell);
         long width = 2000; // Default value (hopefully not used).
-        if (cellWidth?.Width != null && long.TryParse(cellWidth.Width.Value, out long widthValue))
+        if (cellWidth?.Width.ToLong() is long widthValue)
         {
-            width = widthValue;
+            width = widthValue; // TODO: if not found, try to retrieve from table grid
         }
         if (cellWidth?.Type != null)
         {
@@ -879,16 +880,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
             else if (cellWidth.Type.Value == TableWidthUnitValues.Pct)
             {
-                sb.Write($"\\clwWidth{width}\\clftsWidth2");
+                sb.Write($"\\clwWidth{width.ToStringInvariant()}\\clftsWidth2");
             }
             else if (cellWidth.Type.Value == TableWidthUnitValues.Dxa)
             {
-                sb.Write($"\\clwWidth{width}\\clftsWidth3");
+                sb.Write($"\\clwWidth{width.ToStringInvariant()}\\clftsWidth3");
             }
         }
 
         totalWidth += width - (cellSpacing * ((2 * gridSpan) - 2));
-        sb.Write(@"\cellx" + totalWidth);
+        sb.Write(@$"\cellx{totalWidth.ToStringInvariant()}");
     }
 
     internal override void ProcessTableCell(TableCell cell, RtfStringWriter sb)

@@ -127,22 +127,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write(@"}");
                 }
                 sb.Write(format);
-                sb.Write("\\picw");
-                sb.Write(properties.Width);
-                sb.Write("\\pich");
-                sb.Write(properties.Height);
-                sb.Write("\\picwgoal");
-                sb.Write(properties.WidthGoal);
-                sb.Write("\\pichgoal");
-                sb.Write(properties.HeightGoal);
-                sb.Write("\\piccropl");
-                sb.Write(properties.CropLeft);
-                sb.Write("\\piccropr");
-                sb.Write(properties.CropRight);
-                sb.Write("\\piccropt");
-                sb.Write(properties.CropTop);
-                sb.Write("\\piccropb");
-                sb.Write(properties.CropBottom);
+                sb.WriteWordWithValue("picw", properties.Width);
+                sb.WriteWordWithValue("pich", properties.Height);
+                sb.WriteWordWithValue("picwgoal", properties.WidthGoal);
+                sb.WriteWordWithValue("pichgoal", properties.HeightGoal);
+                sb.WriteWordWithValue("piccropl", properties.CropLeft);
+                sb.WriteWordWithValue("piccropr", properties.CropRight);
+                sb.WriteWordWithValue("piccropt", properties.CropTop);
+                sb.WriteWordWithValue("piccropb", properties.CropBottom);
                 sb.WriteLine();
                 if (format.StartsWith("\\wmetafile"))
                 {

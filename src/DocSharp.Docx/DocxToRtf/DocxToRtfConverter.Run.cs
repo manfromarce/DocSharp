@@ -48,18 +48,18 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\ltrch");
         }
 
-        var lang = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
+        var lang = run.GetEffectiveProperty<Languages>();
         if (!string.IsNullOrEmpty(lang?.Val?.Value))
         {
-            int code = RtfHelpers.GetLanguageCode(lang.Val.Value);
-            sb.Write(@"\lang" + code);
-            sb.Write(@"\langnp" + code);
+            int code = RtfHelpers.GetLanguageCode(lang!.Val!.Value!);
+            sb.WriteWordWithValue("lang", code);
+            sb.WriteWordWithValue("langnp", code);
         }
         if (!string.IsNullOrEmpty(lang?.Bidi?.Value))
         {
-            int code = RtfHelpers.GetLanguageCode(lang.Bidi.Value);
-            sb.Write(@"\langfe" + code);
-            sb.Write(@"\langfenp" + code);
+            int code = RtfHelpers.GetLanguageCode(lang!.Bidi!.Value!); // or EastAsia ?
+            sb.WriteWordWithValue("langfe", code);
+            sb.WriteWordWithValue("langfenp", code);
         }
 
         if (run.GetEffectiveProperty<NoProof>().ToBool())
@@ -68,11 +68,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
 
         // To be improved (Ascii value may not be present, although rare)
-        string? font = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run)?.Ascii?.Value;
+        string? font = run.GetEffectiveProperty<RunFonts>()?.Ascii?.Value;
         if (!string.IsNullOrEmpty(font))
         {
-            fonts.TryAddAndGetIndex(font, out int fontIndex);
-            sb.Write($"\\f{fontIndex}");
+            fonts.TryAddAndGetIndex(font!, out int fontIndex);
+            sb.WriteWordWithValue("f", fontIndex);
         }
         else
         {
@@ -80,12 +80,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\f0");
         }
 
-        string? color = OpenXmlHelpers.GetEffectiveProperty<Color>(run)?.Val;
+        string? color = run.GetEffectiveProperty<Color>()?.Val;
         if ((!string.IsNullOrEmpty(color)) &&
-             !color.Equals("auto", StringComparison.OrdinalIgnoreCase))
+             !color!.Equals("auto", StringComparison.OrdinalIgnoreCase))
         {
             colors.TryAddAndGetIndex(color, out int colorIndex);
-            sb.Write($"\\cf{colorIndex}");
+            sb.WriteWordWithValue("cf", colorIndex);
         }
         else
         {
@@ -94,45 +94,40 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\cf0");
         }
 
-        string? fontSize = OpenXmlHelpers.GetEffectiveProperty<FontSize>(run)?.Val;
-        // Font size is in half-points in both DOCX and RTF
-        if (int.TryParse(fontSize, out int fs))
+        if (run.GetEffectiveProperty<FontSize>()?.Val.ToLong() is long fontSize)
         {
-            sb.Write($"\\fs{fs}");
+            // Font size is in half-points in both DOCX and RTF
+            sb.WriteWordWithValue("fs", fontSize);
         }
         else
         {
-            sb.Write($"\\fs{DefaultSettings.FontSize * 2}"); // Font size is in half-points
+            sb.WriteWordWithValue("fs", DefaultSettings.FontSize * 2); // Font size is in half-points
         }
 
-        string? kerning = OpenXmlHelpers.GetEffectiveProperty<Kern>(run)?.Val;
-        if (int.TryParse(kerning, out int k))
+        if (run.GetEffectiveProperty<Kern>() is Kern kern && kern.Val != null)
         {
             // Kerning is in half-points in both Open XML and RTF.
-            sb.Write($"\\kerning{k}");
+            sb.WriteWordWithValue("kerning", kern.Val.Value);
         }
 
-        string? scaling = OpenXmlHelpers.GetEffectiveProperty<CharacterScale>(run)?.Val;
-        if (int.TryParse(scaling, out int scale))
+        if (run.GetEffectiveProperty<CharacterScale>() is CharacterScale scale && scale.Val != null)
         {
             // Character scaling is expressed as percentage (100, 200, ...) in both Open XML and RTF.
-            sb.Write($"\\charscalex{scale}");
+            sb.WriteWordWithValue("charscalex", scale.Val.Value);
         }
 
-        string? fitText = OpenXmlHelpers.GetEffectiveProperty<FitText>(run)?.Val;
-        if (int.TryParse(fitText, out int ft))
+        if (run.GetEffectiveProperty<FitText>() is FitText fitText && fitText.Val != null)
         {
             // FitText is in twips in both Open XML and RTF.
-            sb.Write($"\\fittext{ft}");
+            sb.WriteWordWithValue("fittext", fitText.Val);
         }
 
-        string? spacing = OpenXmlHelpers.GetEffectiveProperty<Spacing>(run)?.Val;
-        if (int.TryParse(spacing, out int sp))
+        if (run.GetEffectiveProperty<Spacing>() is Spacing spacing && spacing.Val != null)
         {
             // Character spacing is expressed in twips in Open XML;
             // in RTF it should also be specified in quarter-points for backward compatibility.
-            sb.Write($"\\expnd{sp * 5}");
-            sb.Write($"\\expndtw{sp}");
+            sb.WriteWordWithValue("expnd", spacing.Val * 5);
+            sb.WriteWordWithValue("expndtw", spacing.Val);
         }
 
         // Most formatting options such as bold are considered enabled if the element is present,
@@ -148,20 +143,19 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\i");
         }
 
-        var underline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run);
-        if (underline?.Val != null)
+        if (run.GetEffectiveProperty<Underline>() is Underline u && u.Val != null)
         {
-            string? ul = RtfUnderlineMapper.GetUnderlineType(underline.Val);
+            string? ul = RtfUnderlineMapper.GetUnderlineType(u.Val);
             if (!string.IsNullOrEmpty(ul))
             {
                 sb.Write(ul);
             }
 
-            if ((!string.IsNullOrEmpty(underline.Color?.Value)) &&
-                !underline.Color.Value.Equals("auto", StringComparison.OrdinalIgnoreCase))
+            if ((!string.IsNullOrEmpty(u.Color?.Value)) &&
+                !u.Color!.Value!.Equals("auto", StringComparison.OrdinalIgnoreCase))
             {
-                colors.TryAddAndGetIndex(underline.Color.Value, out int colorIndex);
-                sb.Write($"\\ulc{colorIndex}");
+                colors.TryAddAndGetIndex(u.Color.Value, out int colorIndex);
+                sb.WriteWordWithValue("ulc", colorIndex);
             }
         }
 
@@ -178,8 +172,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
-        if (highlight?.Val != null)
+        if (run.GetEffectiveProperty<Highlight>() is Highlight highlight && highlight.Val != null)
         {
             if (highlight.Val == HighlightColorValues.None)
             {
@@ -190,14 +183,13 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
                 if (!string.IsNullOrEmpty(hex))
                 {
-                    colors.TryAddAndGetIndex(hex, out int highlightIndex);
-                    sb.Write($"\\highlight{highlightIndex}");
+                    colors.TryAddAndGetIndex(hex!, out int highlightIndex);
+                    sb.WriteWordWithValue("highlight", highlightIndex);
                 }
             }
         }
 
-        var verticalTextAlignment = OpenXmlHelpers.GetEffectiveProperty<VerticalTextAlignment>(run);
-        if (verticalTextAlignment?.Val != null)
+        if (run.GetEffectiveProperty<VerticalTextAlignment>() is VerticalTextAlignment verticalTextAlignment && verticalTextAlignment?.Val != null)
         {
             if (verticalTextAlignment.Val == VerticalPositionValues.Subscript)
             {
@@ -214,22 +206,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else
         {
-            var position = OpenXmlHelpers.GetEffectiveProperty<Position>(run);
+            var position = run.GetEffectiveProperty<Position>();
             if (position?.Val != null && int.TryParse(position.Val.Value, out int pos))
             {
-                if (pos < 0)
-                {
-                    sb.Write($"\\dn{Math.Abs(pos)}");
-                }
-                else if (pos > 0)
-                {
-                    sb.Write($"\\up{pos}");
-                }
+                sb.WriteWordWithValue(pos < 0 ? "dn" : "up", Math.Abs(pos));
             }
         }
 
-        var em = OpenXmlHelpers.GetEffectiveProperty<Emphasis>(run);
-        if (em?.Val != null)
+        if (run.GetEffectiveProperty<Emphasis>() is Emphasis em && em?.Val != null)
         {
             if (em.Val == EmphasisMarkValues.None)
             {
@@ -278,7 +262,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         // Note: RTF does not support advanced shadow and outline effects introduced with Office 2010 (Shadow14, Outline14),
         // but only the legacy Shadow and Outline properties.
-        // so they are converted to the legacy font effect.
         if (run.GetEffectiveProperty<Shadow>().ToBool())
         {
             sb.Write(@"\shad");
@@ -294,16 +277,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\v");
         }
 
-        var border = OpenXmlHelpers.GetEffectiveProperty<Border>(run);
-        if (border != null)
+        if (run.GetEffectiveProperty<Border>() is Border border)
         {
             // Character border is the same for top, left, bottom and right.
             sb.Write(@"\chbrdr");
             ProcessBorder(border, sb);
         }
 
-        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(run);
-        if (shading != null)
+        if (run.GetEffectiveProperty<Shading>() is Shading shading)
         {
             ProcessShading(shading, sb, ShadingType.Character);
         }

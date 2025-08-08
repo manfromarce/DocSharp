@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocSharp.Writers;
+using DocSharp.Helpers;
 
 namespace DocSharp.Docx;
 
@@ -14,7 +15,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     {
         if (fp.Width?.Value != null && int.TryParse(fp.Width.Value, out int w))
         {
-            sb.Write($"\\absw{w}");
+            sb.WriteWordWithValue("absh", w);
         }
         if (fp.HeightType != null)
         {
@@ -26,11 +27,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (fp.HeightType.Value == HeightRuleValues.AtLeast)
                 {
-                    sb.Write($"\\absh{fp.Height.Value}");
+                    sb.WriteWordWithValue("absh", fp.Height.Value);
                 }
                 else
                 {
-                    sb.Write($"\\absh-{fp.Height.Value}");
+                    sb.Write($"\\absh-{fp.Height.Value.ToStringInvariant()}");
                 }
             }
         }
@@ -72,12 +73,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write("\\posxr");
             }           
         }
-        if (fp.X?.Value != null && int.TryParse(fp.X.Value, out int x))
+        if (fp.X.ToLong() is long x)
         {
             if (x > 0)
-                sb.Write($"\\posx{x}");
+                sb.WriteWordWithValue("posx", x);
             else
-                sb.Write($"\\posnegx{x}");
+                sb.WriteWordWithValue("posnegx", x);
         }
         if (fp.HorizontalSpace?.Value != null && int.TryParse(fp.HorizontalSpace?.Value, out int h))
         {
@@ -125,12 +126,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write("\\posyt");
             }
         }
-        if (fp.Y?.Value != null && int.TryParse(fp.Y.Value, out int y))
+        if (fp.Y.ToLong() is long y)
         {
             if (y > 0)
-                sb.Write($"\\posy{y}");
+                sb.WriteWordWithValue("posy", y);
             else
-                sb.Write($"\\posnegy{y}");
+                sb.WriteWordWithValue("posnegy", y);
         }
         if (fp.AnchorLock != null && ((!fp.AnchorLock.HasValue) || fp.AnchorLock.Value))
         {
@@ -180,7 +181,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         if (fp.Lines != null && fp.Lines.HasValue)
         {
-            sb.Write($"\\dropcapli{fp.Lines.Value}");
+            sb.WriteWordWithValue("dropcapli", fp.Lines.Value);
         }
     }
 }

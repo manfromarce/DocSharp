@@ -41,7 +41,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             tableRowHeight.Val != null && tableRowHeight.HeightType != null &&
             (tableRowHeight.HeightType.Value == HeightRuleValues.AtLeast || tableRowHeight.HeightType.Value == HeightRuleValues.Exact))
         {
-            rowStyles.Add($"height: {(tableRowHeight.Val.Value / 20.0).ToStringInvariant()}pt;"); // Convert twips to points
+            rowStyles.Add($"height: {(tableRowHeight.Val.Value / 20m).ToStringInvariant(2)}pt;"); // Convert twips to points
         }
 
         if (row.GetEffectiveProperty<CantSplit>().ToBool())
@@ -63,13 +63,13 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             if (ind.Type.Value == TableWidthUnitValues.Pct) // Fithies of percent
             {
-                double width = ind.Width.Value / 50.0; // Convert fifties of percent to percent
-                rowStyles.Add($"margin-left: {width.ToStringInvariant()}%;");
+                var width = ind.Width.Value / 50m; // Convert fifties of percent to percent
+                rowStyles.Add($"margin-left: {width.ToStringInvariant(2)}%;");
             }
             else if (ind.Type.Value == TableWidthUnitValues.Dxa) // Twips
             {
-                double width = ind.Width.Value / 20.0; // Convert twips to points
-                rowStyles.Add($"margin-left: {width.ToStringInvariant()}pt;");
+                var width = ind.Width.Value / 20m; // Convert twips to points
+                rowStyles.Add($"margin-left: {width.ToStringInvariant(2)}pt;");
             }
         }
 
@@ -337,26 +337,26 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
     internal void ProcessTableWidthType(TableWidthDxaNilType? width, ref List<string> styles, string cssAttribute)
     {
-        if (width?.Type != null && width.Width != null && double.TryParse(width.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out double w))
+        if (width?.Type != null && width.Width != null && decimal.TryParse(width.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal w))
         {
             if (width.Type.Value == TableWidthValues.Dxa) // twips
             {
-                styles.Add($"{cssAttribute}: {(w / 20.0).ToStringInvariant()}pt;");
+                styles.Add($"{cssAttribute}: {(w / 20m).ToStringInvariant(2)}pt;");
             }
         }
     }
 
     internal void ProcessTableWidthType(TableWidthType? width, ref List<string> styles, string cssAttribute)
     {
-        if (width?.Type != null && width.Width != null && double.TryParse(width.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out double w))
+        if (width?.Type != null && width.Width != null && decimal.TryParse(width.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal w))
         {
             if (width.Type.Value == TableWidthUnitValues.Pct)  // Fithies of percent
             {
-                styles.Add($"{cssAttribute}: {(w / 50.0).ToStringInvariant()}%;");
+                styles.Add($"{cssAttribute}: {(w / 50m).ToStringInvariant(2)}%;");
             }
             else if (width.Type.Value == TableWidthUnitValues.Dxa) // twips
             {
-                styles.Add($"{cssAttribute}: {(w / 20.0).ToStringInvariant()}pt;");
+                styles.Add($"{cssAttribute}: {(w / 20m).ToStringInvariant(2)}pt;");
             }
         }
     }

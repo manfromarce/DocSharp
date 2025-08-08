@@ -43,29 +43,29 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
                 if (tab.Val == TabStopValues.Bar)
                 {
-                    sb.Write($"\\tb{tab.Position.Value}");
+                    sb.Write($"\\tb{tab.Position.Value.ToStringInvariant()}");
                 }
                 else if (tab.Val == TabStopValues.Center)
                 {
-                    sb.Write($"\\tqc\\tx{tab.Position.Value}");
+                    sb.Write($"\\tqc\\tx{tab.Position.Value.ToStringInvariant()}");
                 }
                 else if (tab.Val == TabStopValues.Decimal)
                 {
-                    sb.Write($"\\tqdec\\tx{tab.Position.Value}");
+                    sb.Write($"\\tqdec\\tx{tab.Position.Value.ToStringInvariant()}");
                 }
                 else if (tab.Val == TabStopValues.Left ||
                          tab.Val == TabStopValues.Start)
                 {
-                    sb.Write($"\\tx{tab.Position.Value}");
+                    sb.Write($"\\tx{tab.Position.Value.ToStringInvariant()}");
                 }
                 else if (tab.Val == TabStopValues.Number)
                 {
-                    sb.Write($"\\tx{tab.Position.Value}");
+                    sb.Write($"\\tx{tab.Position.Value.ToStringInvariant()}");
                 }
                 else if (tab.Val == TabStopValues.Right ||
                          tab.Val == TabStopValues.End)
                 {
-                    sb.Write($"\\tqr\\tx{tab.Position.Value}");
+                    sb.Write($"\\tqr\\tx{tab.Position.Value.ToStringInvariant()}");
                 }
             }
         }
