@@ -169,7 +169,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
         // Preserve blank paragraphs as they create spacing in DOCX.
         sb.WriteStartElement("span");
-        sb.WriteAttributeString("style", "white-space: pre;");
+        sb.WriteAttributeString("style", "white-space: pre-wrap;");
         sb.WriteString(" ");
         sb.WriteEndElement("span");
 

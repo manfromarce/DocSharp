@@ -62,7 +62,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         // Build CSS style string
         var styles = new List<string>
         {
-            "white-space: pre;"
+            "white-space: pre-wrap;"
         };
 
         if (!string.IsNullOrEmpty(font) && !FontConverter.IsNonUnicodeFont(font!)) // some special fonts will be converted in ProcessText
