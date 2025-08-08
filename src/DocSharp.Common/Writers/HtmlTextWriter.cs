@@ -657,7 +657,7 @@ public sealed class HtmlTextWriter : XmlWriter
                     switch (text[i])
                     {
                         case '&': _writer.Write("&amp;"); break;
-                        case '\t': _writer.Write("&x2001;"); break;
+                        case '\t': _writer.Write("&#x2001;"); break;
                         case '\u00a0': _writer.Write("&nbsp;"); break;
                         case '\u2002': _writer.Write("&ensp;"); break;
                         case '\u2003': _writer.Write("&emsp;"); break;
