@@ -122,11 +122,11 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             // Value is in half-points
             if (pos > 0)
             {
-                styles.Add($"position: relative; top: {(pos / 2m).ToStringInvariant(2)}pt;");
+                styles.Add($"position: relative; bottom: {(pos / 2m).ToStringInvariant(2)}pt;");
             }
             else if (pos < 0)
             {
-                styles.Add($"position: relative; bottom: {(-pos / 2m).ToStringInvariant(2)}pt;");
+                styles.Add($"position: relative; top: {(-pos / 2m).ToStringInvariant(2)}pt;");
             }
         }
 
