@@ -15,6 +15,7 @@
   <Folder Name="/Solution items/">
     <File Path="../.editorconfig" />
     <File Path="../.gitignore" />
+    <File Path="../CHANGELOG.md" />
     <File Path="../documentation/Supported_features.md" />
     <File Path="../LICENSE" />
     <File Path="../LICENSE-Apache" />

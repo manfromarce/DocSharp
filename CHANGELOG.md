@@ -1,6 +1,14 @@
-## 0.11.0 - not published yet
+## 0.11.0
 
+- Preserve most settings.xml elements in DOCX to RTF converter; this also fixes inaccurate paragraph spacing in some cases
+- Improve paragraph borders, spacing and indentation handling in DOCX to RTF/HTML converters
+- Fix sections when no SectionProperties is present (e.g. document produced by WordPad)
+- Fix issues with multi-level lists in DOCX to HTML/TXT converters
+- Fix text not wrapping in DOCX to HTML converter
 - Enable Dependabot to automate dependency updates
+- Other improvements
+
+**Full Changelog**: https://github.com/manfromarce/DocSharp/compare/v0.10.0...v0.11.0
 
 ## 0.10.0 - 2025.08.04
 
