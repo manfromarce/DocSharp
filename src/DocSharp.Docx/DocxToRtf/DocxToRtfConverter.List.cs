@@ -132,9 +132,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         // Not supported in RTF, process levels in order instead
         //}
 
-        if (level.LevelRestart is LevelRestart restart)
+        if (level.LevelRestart is LevelRestart restart && restart.Val != null && restart.Val.Value == 0)
         {
-
+            // In DOCX this value allows to specify the (higher) level will will cause the current level to restart
+            // (by default the previous level) (see: https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.levelrestart?view=openxml-3.0.1).
+            // It seems RTF does not fully support this, but only "never restart" (which is specified by a value of 0 in DOCX).
+            sb.Write(@"\levelnorestart");
         }
 
         if (level.LevelPictureBulletId is LevelPictureBulletId pictureBulletId)
