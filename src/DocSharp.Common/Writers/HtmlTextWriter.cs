@@ -521,7 +521,7 @@ public sealed class HtmlTextWriter : XmlWriter
             RenderIndent();
 
         _writer.Write('<');
-        var name = localName;
+        var name = localName ?? "";
         if (_xmlDepth >= 0)
             _xmlDepth++;
         else if (localName == "svg"

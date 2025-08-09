@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -13,6 +14,23 @@ namespace DocSharp.Docx;
 
 public static class ListHelpers
 {
+    public static Level? GetListLevel(Numbering numberingPart, int levelIndex, int numId, int abstractNumId)
+    {
+        var num = numberingPart.Elements<NumberingInstance>()
+                                .FirstOrDefault(x => x.NumberID != null &&
+                                                     x.NumberID == numId);
+        var abstractNum = numberingPart.Elements<AbstractNum>()
+                        .FirstOrDefault(x => x.AbstractNumberId != null && 
+                                             x.AbstractNumberId == abstractNumId);
+        var level = abstractNum?.Elements<Level>().FirstOrDefault(x => x.LevelIndex != null &&
+                                                                       x.LevelIndex == levelIndex);
+        var levelOverride = num?.Elements<LevelOverride>().FirstOrDefault(x => x.LevelIndex != null &&
+                                                                               x.LevelIndex == levelIndex);
+
+        // Use LevelOverride if present
+        return levelOverride?.Level ?? level;
+    }
+
     public static Level? GetListLevel(NumberingProperties? numPr)
     {
         if (numPr == null)
@@ -35,9 +53,9 @@ public static class ListHelpers
                 var abstractNum = numberingPart.Elements<AbstractNum>()
                                 .FirstOrDefault(x => x.AbstractNumberId == abstractNumId);
                 var level = abstractNum?.Elements<Level>().FirstOrDefault(x => x.LevelIndex != null &&
-                                                                            x.LevelIndex == levelIndex);
+                                                                               x.LevelIndex == levelIndex);
                 var levelOverride = num?.Elements<LevelOverride>().FirstOrDefault(x => x.LevelIndex != null &&
-                                                                                    x.LevelIndex == levelIndex);
+                                                                                       x.LevelIndex == levelIndex);
 
                 // Use LevelOverride if present
                 return levelOverride?.Level ?? level;
@@ -46,96 +64,111 @@ public static class ListHelpers
         return null;
     }
 
-    public static string GetNumberString(string? levelText, EnumValue<NumberFormatValues> listType, int numberingId, int levelIndex, Dictionary<(int NumberingId, int LevelIndex), int> _listLevelCounters, CultureInfo? culture = null)
+    public static string GetNumberString(string? levelText, EnumValue<NumberFormatValues> listType, Dictionary<int, (int numId, int numberingId, int counter)> listLevelCounters, CultureInfo? culture = null)
     {
-        if (listType == NumberFormatValues.Bullet)
+        if (listType == NumberFormatValues.Bullet || string.IsNullOrEmpty(levelText))
         {
-            return "•";
+            return "•"; // // Bullet text and font is handled separately
         }
 
-        if (levelText != null)
+        string formattedText = levelText!;
+        // TODO: use the document language; InvariantCulture or CurrentCulture by default
+        culture ??= CultureInfo.InvariantCulture;
+
+        // Retrieve the max level requested by level text
+        int maxPlaceholder = 0;
+        foreach (Match match in Regex.Matches(levelText, @"%(\d+)"))
         {
-            string formattedText = levelText;
-            // TODO: use the document language
-            culture ??= CultureInfo.InvariantCulture;
-            // culture ??= CultureInfo.CurrentCulture;
-            foreach (var kvp in _listLevelCounters.Where(k => k.Key.NumberingId == numberingId))
+            if (match.Groups.Count > 1 &&
+                int.TryParse(match.Groups[1].Value, out int n) && n > maxPlaceholder)
+                maxPlaceholder = n;
+        }
+
+        // For each placeholder in the level text, search for the appropriate counter in the level hierarchy
+        for (int i = 1; i <= maxPlaceholder; i++)
+        {
+            int value = 1;
+            // Try to find the value for this level (note: levels use 0-based index, placeholders use 1-based index)
+            if (listLevelCounters.TryGetValue(i - 1, out (int numId, int abstractNumId, int counter) tuple))
             {
-                var placeholder = kvp.Key.LevelIndex + 1;
-                string value;
-                if (listType == NumberFormatValues.LowerLetter)
-                {
-                    value = ListHelpers.NumberToLetter(kvp.Value, false);
-                }
-                else if (listType == NumberFormatValues.UpperLetter)
-                {
-                    value = ListHelpers.NumberToLetter(kvp.Value, true);
-                }
-                else if (listType == NumberFormatValues.LowerRoman)
-                {
-                    value = ListHelpers.NumberToRomanLetter(kvp.Value, false);
-                }
-                else if (listType == NumberFormatValues.UpperRoman)
-                {
-                    value = ListHelpers.NumberToRomanLetter(kvp.Value, true);
-                }
-                else if (listType == NumberFormatValues.DecimalEnclosedCircle || 
-                         listType == NumberFormatValues.DecimalEnclosedCircleChinese)
-                {
-                    value = ListHelpers.NumberToCircledNumber(kvp.Value, true);
-                }
-                else if (listType == NumberFormatValues.Chicago)
-                {
-                    value = ListHelpers.NumberToChicago(kvp.Value);
-                }
-                else if (listType == NumberFormatValues.Hex)
-                {
-                    value = kvp.Value.ToString("X", CultureInfo.InvariantCulture); // Use invariant culture for hex format
-                }
-                else if (listType == NumberFormatValues.NumberInDash)
-                {
-                    value = $"- {kvp.Value.ToString(culture ?? CultureInfo.InvariantCulture)} -";
-                }
-                else if (listType == NumberFormatValues.DecimalEnclosedFullstop)
-                {
-                    value = $"{kvp.Value.ToString(culture ?? CultureInfo.InvariantCulture)}.";
-                }
-                else if (listType == NumberFormatValues.DecimalEnclosedParen)
-                {
-                    value = $"({kvp.Value.ToString(culture ?? CultureInfo.InvariantCulture)})";
-                }
-                else if (listType == NumberFormatValues.DecimalZero)
-                {
-                    value = kvp.Value.ToString("00");
-                }
-                // else if (listType == NumberFormatValues.Ordinal)
-                // {
-                // }
-                // else if (listType == NumberFormatValues.OrdinalText)
-                // {
-                // }
-                // else if (listType == NumberFormatValues.CardinalText)
-                // {
-                // }
-                else if (listType == NumberFormatValues.Bullet)
-                {
-                    value = "•";
-                }
-                else if (listType == NumberFormatValues.None)
-                {
-                    value = string.Empty;
-                }
-                else
-                {
-                    // Regular number
-                    value = kvp.Value.ToString(culture);
-                }
-                formattedText = formattedText.Replace($"%{placeholder}", value);
+                value = tuple.counter;
             }
-            return formattedText;
+
+            // Format the value depending on the list type
+            string replacement;
+            if (listType == NumberFormatValues.LowerLetter)
+            {
+                replacement = NumberToLetter(value, false);
+            }
+            else if (listType == NumberFormatValues.UpperLetter)
+            {
+                replacement = NumberToLetter(value, true);
+            }
+            else if (listType == NumberFormatValues.LowerRoman)
+            {
+                replacement = NumberToRomanLetter(value, false);
+            }
+            else if (listType == NumberFormatValues.UpperRoman)
+            {
+                replacement = NumberToRomanLetter(value, true);
+            }
+            else if (listType == NumberFormatValues.DecimalEnclosedCircle ||
+                        listType == NumberFormatValues.DecimalEnclosedCircleChinese)
+            {
+                replacement = NumberToCircledNumber(value, true);
+            }
+            else if (listType == NumberFormatValues.Chicago)
+            {
+                replacement = NumberToChicago(value);
+            }
+            else if (listType == NumberFormatValues.Hex)
+            {
+                replacement = value.ToString("X", CultureInfo.InvariantCulture); // Always use invariant culture for hex format
+            }
+            else if (listType == NumberFormatValues.NumberInDash)
+            {
+                replacement = $"- {value.ToString(culture)} -";
+            }
+            else if (listType == NumberFormatValues.DecimalEnclosedFullstop)
+            {
+                replacement = $"{value.ToString(culture)}.";
+            }
+            else if (listType == NumberFormatValues.DecimalEnclosedParen)
+            {
+                replacement = $"({value.ToString(culture)})";
+            }
+            else if (listType == NumberFormatValues.DecimalZero)
+            {
+                replacement = value.ToString("00");
+            }
+            // else if (listType == NumberFormatValues.Ordinal)
+            // {
+            // }
+            // else if (listType == NumberFormatValues.OrdinalText)
+            // {
+            // }
+            // else if (listType == NumberFormatValues.CardinalText)
+            // {
+            // }
+            else if (listType == NumberFormatValues.Bullet)
+            {
+                replacement = "•"; // Bullet text and font is handled separately
+            }
+            else if (listType == NumberFormatValues.None)
+            {
+                replacement = string.Empty;
+            }
+            else
+            {
+                // Regular number
+                replacement = value.ToString(culture);
+            }
+
+            // Replace placeholder with the formatted value
+            formattedText = formattedText.Replace($"%{i}", replacement);
         }
 
-        return _listLevelCounters[(numberingId, levelIndex)].ToString();
+        return formattedText;
     }
 
     public static string NumberToLetter(int number, bool uppercase)
