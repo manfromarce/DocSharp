@@ -1133,37 +1133,54 @@ namespace DocSharp.Binary.PresentationMLMapping
                 if (sndSo.OptionsByID.ContainsKey(ShapeOptions.PropertyId.metroBlob))
                 {
                     IZipReader reader = null;
-                    try
+                    var metroBlob = sndSo.OptionsByID[ShapeOptions.PropertyId.metroBlob];
+                    var code = metroBlob.opComplex;
+                    string xml = null;
+                    using (var ms = new MemoryStream())
                     {
-                        var metroBlob = sndSo.OptionsByID[ShapeOptions.PropertyId.metroBlob];
-                        var code = metroBlob.opComplex;
-                        string path = Path.GetTempFileName();
-                        var fs = new FileStream(path, FileMode.Create);
-                        fs.Write(code, 0, code.Length);
-                        fs.Close();
+                        ms.Write(code, 0, code.Length);
+                        ms.Position = 0;
+                        reader = ZipFactory.OpenArchive(ms);
+                        var stream = reader.GetEntry("drs/shapexml.xml");
+                        if (stream != null)
+                        {
+                            //var mems = new StreamReader(stream);
+                            using (var mems = new StreamReader(stream))
+                            {
+                                xml = mems.ReadToEnd();
+                            }
+                        }
+                    }
 
-                        reader = ZipFactory.OpenArchive(path);
-                        var mems = new StreamReader(reader.GetEntry("drs/shapexml.xml"));
-                        string xml = mems.ReadToEnd();
+                    if (xml != null)
+                    {
                         xml = Tools.Utils.replaceOutdatedNamespaces(xml);
                         //xml = xml.Substring(xml.IndexOf("<p:sp")); //remove xml declaration
 
-                        xml = xml.Substring(xml.IndexOf("<a:prstGeom"));
-                        if (xml.Length > 0)
+                        int prstGeomIndex1 = xml.IndexOf("<a:prstGeom");
+                        int prstGeomIndex2 = xml.IndexOf("</a:prstGeom>");
+                        if (prstGeomIndex1 > -1 && prstGeomIndex2 > -1)
                         {
-                            xml = xml.Substring(0, xml.IndexOf("</a:prstGeom>") + 13);
-                            prstGeom = xml;
+                            xml = xml.Substring(prstGeomIndex1, prstGeomIndex2 + 13 - prstGeomIndex1);
+                            if (xml.Length > 0)
+                            {
+                                prstGeom = xml;
+                            }
                         }
+                        else
+                            continueShape = true;
+
+                        //xml = xml.Substring(xml.IndexOf("<a:prstGeom"));
+                        //if (xml.Length > 0)
+                        //{
+                        //    xml = xml.Substring(0, xml.IndexOf("</a:prstGeom>") + 13);
+                        //    prstGeom = xml;
+                        //}
 
                         //_writer.WriteRaw(xml);
                         //continueShape = false;
-                        reader.Close();
                     }
-                    catch (Exception)
-                    {
-                        continueShape = true;
-                        if (reader != null) reader.Close();
-                    }
+                    reader?.Close();
                 }
             }
 

@@ -6,6 +6,7 @@ using System.Xml;
 using DocSharp.Binary.OpenXmlLib;
 using DocSharp.Binary.OfficeDrawing;
 using DocSharp.Binary.Tools;
+using System.Linq;
 
 namespace DocSharp.Binary.PresentationMLMapping
 {
@@ -330,10 +331,9 @@ namespace DocSharp.Binary.PresentationMLMapping
 
             if (run != null && run.FEOldTypefacePresent)
             {
-                try
+                var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
+                if (fonts.entities.ElementAtOrDefault((int)run.FEOldTypefaceIdx) is FontEntityAtom entity)
                 {
-                    var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<DocSharp.Binary.PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
-                    var entity = fonts.entities[(int)run.FEOldTypefaceIdx];
                     if (entity.TypeFace.IndexOf('\0') > 0)
                     {
                         this._writer.WriteStartElement("a", "ea", OpenXmlNamespaces.DrawingML);
@@ -347,20 +347,15 @@ namespace DocSharp.Binary.PresentationMLMapping
                         this._writer.WriteEndElement();
                     }
                 }
-                catch (Exception)
-                {
-                    //throw;
-                }
             }
             else
             {
-                try
+                var cr = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<TextMasterStyleAtom>().CRuns[0];
+                if (cr.FEOldTypefacePresent)
                 {
-                    var cr = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<TextMasterStyleAtom>().CRuns[0];
-                    if (cr.FEOldTypefacePresent)
+                    var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
+                    if (fonts.entities.ElementAtOrDefault((int)cr.FEOldTypefaceIdx) is FontEntityAtom entity)
                     {
-                        var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<DocSharp.Binary.PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
-                        var entity = fonts.entities[(int)cr.FEOldTypefaceIdx];
                         if (entity.TypeFace.IndexOf('\0') > 0)
                         {
                             this._writer.WriteStartElement("a", "ea", OpenXmlNamespaces.DrawingML);
@@ -375,20 +370,13 @@ namespace DocSharp.Binary.PresentationMLMapping
                         }
                     }
                 }
-                catch (Exception)
-                {
-                    //throw;
-                }
-
             }
 
             if (run != null && run.SymbolTypefacePresent)
             {
-
-                try
+                var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
+                if (fonts.entities.ElementAtOrDefault((int)run.SymbolTypefaceIdx) is FontEntityAtom entity)
                 {
-                    var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<DocSharp.Binary.PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
-                    var entity = fonts.entities[(int)run.SymbolTypefaceIdx];
                     if (entity.TypeFace.IndexOf('\0') > 0)
                     {
                         this._writer.WriteStartElement("a", "sym", OpenXmlNamespaces.DrawingML);
@@ -402,12 +390,6 @@ namespace DocSharp.Binary.PresentationMLMapping
                         this._writer.WriteEndElement();
                     }
                 }
-                catch (Exception)
-                {
-                    //throw;
-                }
-
-
             }
 
             if (mciics != null && mciics.Count > 0)

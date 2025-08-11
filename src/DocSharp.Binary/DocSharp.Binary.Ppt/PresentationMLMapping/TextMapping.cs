@@ -533,10 +533,8 @@ namespace DocSharp.Binary.PresentationMLMapping
                                                 break;
                                         }
                                     }
-                                                         
                                 }
                             }
-
 
                             this._writer.WriteStartElement("a", "r", OpenXmlNamespaces.DrawingML);
 

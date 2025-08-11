@@ -14,16 +14,10 @@ namespace DocSharp.Binary.PresentationMLMapping
         {
             var returnType = PresentationDocumentType.Presentation;
 
-            try
+            //ToDo: Find better way to detect macro type
+            if (ppt.VbaProject != null)
             {
-                //ToDo: Find better way to detect macro type
-                if (ppt.VbaProject != null)
-                {
-                    returnType = PresentationDocumentType.MacroEnabledPresentation;
-                }
-            }
-            catch (Exception)
-            {
+                returnType = PresentationDocumentType.MacroEnabledPresentation;
             }
 
             return returnType;

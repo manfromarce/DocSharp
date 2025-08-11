@@ -26,7 +26,7 @@ namespace DocSharp.Binary.PresentationMLMapping
                 
         public static XmlDocument GetDefaultDocument(string filename)
         {
-            var name = string.Format("{0}.Defaults.{1}.xml", typeof(Utils).Namespace, filename);
+            var name = string.Format("DocSharp.Binary.Ppt.PresentationMLMapping.Defaults.{0}.xml", filename);
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name) ??
                         Assembly.GetCallingAssembly().GetManifestResourceStream(name);
             if (stream == null)

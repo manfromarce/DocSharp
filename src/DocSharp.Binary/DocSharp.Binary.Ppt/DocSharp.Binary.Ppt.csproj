@@ -22,11 +22,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Ppt\PresentationMLMapping\Defaults\**\*.xml" />
+    <None Remove="PresentationMLMapping\Defaults\**\*.xml" />
   </ItemGroup>
   
   <ItemGroup>
-    <EmbeddedResource Include="Ppt\PresentationMLMapping\Defaults\**\*.xml" />
+    <EmbeddedResource Include="PresentationMLMapping\Defaults\**\*.xml" />
   </ItemGroup>
 
 </Project>

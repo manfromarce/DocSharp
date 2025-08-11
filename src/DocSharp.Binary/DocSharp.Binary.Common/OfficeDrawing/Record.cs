@@ -129,7 +129,7 @@ namespace DocSharp.Binary.OfficeDrawing
 
         public void VerifyReadToEnd()
         {
-            try
+            if (this.Reader.BaseStream.CanSeek)
             {
                 long streamPos = this.Reader.BaseStream.Position;
                 long streamLen = this.Reader.BaseStream.Length;
@@ -139,10 +139,6 @@ namespace DocSharp.Binary.OfficeDrawing
                     TraceLogger.DebugInternal("Record {3} didn't read to end: (stream position: {1} of {2})\n{0}",
                         this, streamPos, streamLen, this.GetIdentifier());
                 }
-            }
-            catch (Exception)
-            {
-
             }
         }
 

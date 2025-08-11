@@ -1,3 +1,8 @@
+## 0.12.0 - not published yet
+
+- Fix issue in PPT to PPTX converter
+- Improve performance in binary converters
+
 ## 0.11.0
 
 - Preserve most settings.xml elements in DOCX to RTF converter; this also fixes inaccurate paragraph spacing in some cases
