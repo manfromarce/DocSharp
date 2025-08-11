@@ -196,7 +196,8 @@ namespace DocSharp.Binary.DocFileFormat
             this.WordDocumentStream.Seek(fibFC, System.IO.SeekOrigin.Begin);
             this.FIB = new FileInformationBlock(new VirtualStreamReader(this.WordDocumentStream));
 
-            //check the file version
+            // To support older .doc files (Word 95, 6.0 or earlier), we would need to remove this block
+            // and change the logic in some parts if the pre-97 format is detected.
             if ((int)this.FIB.nFib != 0)
             {
                 if (this.FIB.nFib < FileInformationBlock.FibVersion.Fib1997Beta)

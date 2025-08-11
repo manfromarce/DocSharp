@@ -415,17 +415,10 @@ namespace DocSharp.Binary.PptFileFormat
 
         private void IdentifyVbaProjectObject()
         {
-            try
+            var vbaInfo = this.DocumentRecord.DocInfoListContainer.FirstChildWithType<VBAInfoContainer>();
+            if (vbaInfo != null)
             {
-                var vbaInfo = this.DocumentRecord.DocInfoListContainer.FirstChildWithType<VBAInfoContainer>();
-                if (vbaInfo != null)
-                {
-                    this.VbaProject = GetPersistObject<ExOleObjStgAtom>(vbaInfo.objStgDataRef);
-                }
-            }
-            catch (Exception)
-            {
-                
+                this.VbaProject = GetPersistObject<ExOleObjStgAtom>(vbaInfo.objStgDataRef);
             }
         }
 

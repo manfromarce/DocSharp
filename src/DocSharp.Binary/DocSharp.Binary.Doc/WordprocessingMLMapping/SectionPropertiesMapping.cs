@@ -13,7 +13,7 @@ namespace DocSharp.Binary.WordprocessingMLMapping
         private XmlElement _sectPr;
         private int _sectNr;
         private ConversionContext _ctx;
-       private SectionType _type = SectionType.nextPage;
+        private SectionType _type = SectionType.nextPage;
 
         private enum SectionType
         {

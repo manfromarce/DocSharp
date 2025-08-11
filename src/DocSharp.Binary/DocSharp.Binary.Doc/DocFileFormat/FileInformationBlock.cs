@@ -1,13 +1,23 @@
-﻿using DocSharp.Binary.StructuredStorage.Reader;
+using DocSharp.Binary.StructuredStorage.Reader;
 using DocSharp.Binary.Tools;
 
 namespace DocSharp.Binary.DocFileFormat
 {
+    // Credits:
+    // - [MS-DOC] official documentation
+    // - LibreOffice for pre-Office 97 versions (https://github.com/LibreOffice/core/blob/54a6abf4bd778b2308882ad8043fafa481ec4346/sw/source/filter/ww8/ww8scan.cxx#L5791)
+    // - https://en.wikipedia.org/wiki/Microsoft_Word#File_formats
+    // - https://en.wikipedia.org/wiki/Doc_(computing)
+    // - http://justsolve.archiveteam.org/wiki/DOC
     public class FileInformationBlock
     {
         public enum FibVersion
         {
-            Fib1997Beta = 0x00C0,
+            // To support Word 6.0-95 versions, we would need to uncomment these values
+            // and change the logic in some parts if the pre-97 format is detected.
+            //Fib6_0 = 0x0065,
+            //Fib1995 = 0x0069,            
+            Fib1997Beta = 0x006A, //Fib1997Beta = 0x00C0,
             Fib1997 = 0x00C1,
             Fib2000 = 0x00D9,
             Fib2002 = 0x0101,
@@ -492,6 +502,14 @@ namespace DocSharp.Binary.DocFileFormat
 
             this.cbRgFcLcb = reader.ReadUInt16();
 
+            // // To support older .doc files (Word 6.0-95 versions), we would need to uncomment these blocks
+            // and add the appropriate version-specific logic.
+            //if (this.nFib >= FibVersion.Fib6_0)
+            //{
+            //}
+            //if (this.nFib == FibVersion.Fib1995) // only one number
+            //{
+            //}
             if (this.nFib >= FibVersion.Fib1997Beta)
             {
                 //Read the FibRgFcLcb97

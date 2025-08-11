@@ -173,10 +173,18 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
             // initialize class members from stream
             this.version = reader.ReadUInt16();
 
+            // To support older .xls files (Excel 95 and earlier), we would need to remove this block
+            // and change the logic in some parts if the pre-97 format is detected.
             if (this.version != 0x0600)
             {
                 throw new ParseException("Could not convert the file because it was created by an unsupported application (Excel 95 or older).");
             }
+            // According to LibreOffice https://github.com/ExcelDataReader/ExcelDataReader and LibreOffice: 
+            // - 0x200 = BIFF 2
+            // - 0x300 = BIFF 3
+            // - 0x400 = BIFF 4
+            // - 0x500 = BIFF 5
+            // - 0x600 = BIFF 8
 
             this.docType = (DocumentType)reader.ReadUInt16();
             this.rupBuild = reader.ReadUInt16();
