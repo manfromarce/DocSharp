@@ -179,12 +179,13 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
             {
                 throw new ParseException("Could not convert the file because it was created by an unsupported application (Excel 95 or older).");
             }
-            // According to LibreOffice https://github.com/ExcelDataReader/ExcelDataReader and LibreOffice: 
-            // - 0x200 = BIFF 2
-            // - 0x300 = BIFF 3
-            // - 0x400 = BIFF 4
-            // - 0x500 = BIFF 5
-            // - 0x600 = BIFF 8
+            // - 0x200 = BIFF 2 (Excel 2.1)
+            // - 0x300 = BIFF 3 (Excel 3.0 for Windows)
+            // - 0x400 = BIFF 4 (Excel 4.0 for Windows)
+            // - 0x500 = BIFF 5 (Excel 5.0 for Windows / Excel for Windows 95)
+            // - 0x600 = BIFF 8 (Excel 97-2003)
+            // - Not relevant: BIFF 12 (Excel 2007-2010)
+            // (credits: [MS-XLS] documentation, LibreOffice, https://github.com/ExcelDataReader/ExcelDataReader)
 
             this.docType = (DocumentType)reader.ReadUInt16();
             this.rupBuild = reader.ReadUInt16();

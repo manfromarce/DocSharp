@@ -2,6 +2,7 @@
 
 - Fix issues in PPT to PPTX converter and improve performance
 - Fix issue with emojis (surrogate pairs chars) in DOC to DOCX converter
+- Hidden paragraphs are no longer exported in DOCX to HTML/Markdown/TXT conversion
 - 
 
 ## 0.11.0

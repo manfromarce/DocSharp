@@ -11,6 +11,7 @@ This is a list of file format specifications which may be useful for this projec
   + Open XML SDK documentation: <https://learn.microsoft.com/en-us/office/open-xml/open-xml-sdk>
 - Office binary formats
   + Shared: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-OSHARED/%5bMS-OSHARED%5d.pdf>
+  + Compound file format: <https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-CFB/%5bMS-CFB%5d.pdf>
   + DOC: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-DOC/%5bMS-DOC%5d.pdf>
   + XLS: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-XLS/%5bMS-XLS%5d.pdf>
   + XLSB: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-XLSB/%5bMS-XLSB%5d.pdf>
@@ -20,6 +21,9 @@ This is a list of file format specifications which may be useful for this projec
   + Forms: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-OFORMS/%5bMS-OFORMS%5d.pdf>
   + VBA: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-OVBA/%5bMS-OVBA%5d.pdf>
   + XLDM (spreadsheet data model): <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-XLDM/%5bMS-XLDM%5d.pdf>
+  + Object Linking and Embedding (OLE) Data Structures: <https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-OLEDS/%5bMS-OLEDS%5d.pdf>
+  + Object Linking and Embedding (OLE) Property Set Data Structures: <https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-OLEPS/%5bMS-OLEPS%5d.pdf>
+  + Windows data types: <https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-DTYP/%5bMS-DTYP%5d.pdf>
 - ODF (Open Document Format)
   + ODF 1.1: <http://docs.oasis-open.org/office/v1.1/OpenDocument-v1.1.html>
   + ODF 1.2: <http://docs.oasis-open.org/office/v1.2/>
