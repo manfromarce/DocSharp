@@ -45,7 +45,10 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 else if (effectiveLevel?.StartNumberingValue?.Val != null)
                     start = effectiveLevel.StartNumberingValue.Val.Value;
                 var levelText = effectiveLevel?.LevelText?.Val;
-                var listType = effectiveLevel?.NumberingFormat?.Val ?? NumberFormatValues.Decimal; // if not specified it should be assumed decimal (regular numbered list)
+                var numberingFormat = effectiveLevel?.NumberingFormat ?? effectiveLevel?.Descendants<NumberingFormat>().FirstOrDefault();
+                // The numbering format might be specified in an <mc:Choice> or <mc:Fallback> element
+
+                var listType = numberingFormat?.Val ?? NumberFormatValues.Decimal; // if not specified it should be assumed decimal (regular numbered list)
                                                                                                    // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.NumberingFormat?view=openxml-3.0.1)
                 var runPr = effectiveLevel?.NumberingSymbolRunProperties;
 
@@ -115,7 +118,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                         else
                         {
                             // For numbered lists, get the number text depending on the list format and level counters.
-                            listText = ListHelpers.GetNumberString(levelText, listType, _listLevelCounters);
+                            listText = ListHelpers.GetNumberString(levelText, numberingFormat, _listLevelCounters);
                         }
 
                         // Add the suffix

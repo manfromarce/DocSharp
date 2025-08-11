@@ -3,7 +3,9 @@
 - Fix issues in PPT to PPTX converter and improve performance
 - Fix issue with emojis (surrogate pairs chars) in DOC to DOCX converter
 - Hidden paragraphs are no longer exported in DOCX to HTML/Markdown/TXT conversion
-- 
+- Support for inset, outset, groove and ridge border styles in DOCX to HTML converter
+- Try to preserve text fill effect as font color in DOCX to RTF converter
+- Preserve "leading zeros" format in numbered lists in DOCX to HTML/TXT converter
 
 ## 0.11.0
 

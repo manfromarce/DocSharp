@@ -477,7 +477,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 switch (numberingFormat.Format.Value)
                 {
-                    // These are few standard formats created by Microsoft Word
+                    // These are few standard formats created by Microsoft Word (same meaning as DecimalZero)
                     case "01, 02, 03, ...":
                         sb.Write(@"\levelnfc22");
                         break;

@@ -64,8 +64,9 @@ public static class ListHelpers
         return null;
     }
 
-    public static string GetNumberString(string? levelText, EnumValue<NumberFormatValues> listType, Dictionary<int, (int numId, int numberingId, int counter)> listLevelCounters, CultureInfo? culture = null)
+    public static string GetNumberString(string? levelText, NumberingFormat? numberingFormat, Dictionary<int, (int numId, int numberingId, int counter)> listLevelCounters, CultureInfo? culture = null)
     {
+        var listType = numberingFormat?.Val ?? NumberFormatValues.Decimal; // if not specified it should be assumed decimal (regular numbered list)
         if (listType == NumberFormatValues.Bullet || string.IsNullOrEmpty(levelText))
         {
             return "•"; // // Bullet text and font is handled separately
@@ -140,6 +141,29 @@ public static class ListHelpers
             else if (listType == NumberFormatValues.DecimalZero)
             {
                 replacement = value.ToString("00");
+            }
+            else if (listType == NumberFormatValues.Custom &&
+                     numberingFormat?.Format?.Value != null)
+            {
+                switch (numberingFormat.Format.Value)
+                {
+                    // These are few standard formats created by Microsoft Word
+                    case "01, 02, 03, ...":
+                        replacement = value.ToString("00");
+                        break;
+                    case "001, 002, 003, ...":
+                        replacement = value.ToString("000");
+                        break;
+                    case "0001, 0002, 0003, ...":
+                        replacement = value.ToString("0000");
+                        break;
+                    case "00001, 00002, 00003, ...":
+                        replacement = value.ToString("00000");
+                        break;
+                    default:
+                        replacement = value.ToString(culture);
+                        break;
+                }
             }
             // else if (listType == NumberFormatValues.Ordinal)
             // {
