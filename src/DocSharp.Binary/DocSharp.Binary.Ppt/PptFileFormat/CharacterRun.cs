@@ -105,7 +105,6 @@ namespace DocSharp.Binary.PptFileFormat
             }
             catch (EndOfStreamException e)
             {
-                string s = e.ToString();
                 //ignore
             }
                

@@ -13,34 +13,29 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
         public static SpreadsheetDocumentType DetectOutputType(XlsDocument xls)
         {
             var returnType = SpreadsheetDocumentType.Workbook;
-            try
+
+            //ToDo: Find better way to detect macro type
+            if (xls.Storage.FullNameOfAllEntries.Contains("\\_VBA_PROJECT_CUR"))
             {
-                //ToDo: Find better way to detect macro type
-                if (xls.Storage.FullNameOfAllEntries.Contains("\\_VBA_PROJECT_CUR"))
+                if (xls.WorkBookData.Template)
                 {
-                    if (xls.WorkBookData.Template)
-                    {
-                        returnType = SpreadsheetDocumentType.MacroEnabledTemplate;
-                    }
-                    else
-                    {
-                        returnType = SpreadsheetDocumentType.MacroEnabledWorkbook;
-                    }
+                    returnType = SpreadsheetDocumentType.MacroEnabledTemplate;
                 }
                 else
                 {
-                    if (xls.WorkBookData.Template)
-                    {
-                        returnType = SpreadsheetDocumentType.Template;
-                    }
-                    else
-                    {
-                        returnType = SpreadsheetDocumentType.Workbook;
-                    }
+                    returnType = SpreadsheetDocumentType.MacroEnabledWorkbook;
                 }
             }
-            catch (Exception)
+            else
             {
+                if (xls.WorkBookData.Template)
+                {
+                    returnType = SpreadsheetDocumentType.Template;
+                }
+                else
+                {
+                    returnType = SpreadsheetDocumentType.Workbook;
+                }
             }
 
             return returnType;

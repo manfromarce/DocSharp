@@ -118,8 +118,7 @@ namespace DocSharp.Binary.DocFileFormat
                 }
                 catch(Exception)
                 {
-                    goon = false;
-                    
+                    goon = false;                    
                 }
             }
         }

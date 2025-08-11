@@ -79,8 +79,7 @@ namespace DocSharp.Binary.PptFileFormat
                 catch (Exception)
                 {
                     //ignore
-                }
-                
+                }              
             }
         }
     }

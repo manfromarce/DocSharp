@@ -211,7 +211,6 @@ namespace DocSharp.Binary.PptFileFormat
             }
             catch (Exception e)
             {
-                string s = e.ToString();
             }
             //if (this.TabStopsPresent)
             //{

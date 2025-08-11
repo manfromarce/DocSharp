@@ -326,7 +326,6 @@ namespace DocSharp.Binary.PresentationMLMapping
                 //        {
                 //            //throw;
                 //        }
-
             }
 
             if (run != null && run.FEOldTypefacePresent)

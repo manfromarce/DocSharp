@@ -4,6 +4,7 @@ using DocSharp.Binary.CommonTranslatorLib;
 using System.Xml;
 using DocSharp.Binary.DocFileFormat;
 using DocSharp.Binary.OpenXmlLib;
+using System.Linq;
 
 namespace DocSharp.Binary.WordprocessingMLMapping
 {
@@ -386,20 +387,12 @@ namespace DocSharp.Binary.WordprocessingMLMapping
             bool goOn = true;
             while (goOn)
             {
-                try
+                if (styleSheet.Styles.ElementAtOrDefault(istd) is StyleSheetDescription ssd && ssd.chpx != null)
                 {
-                    var baseChpx = styleSheet.Styles[istd].chpx;
-                    if (baseChpx != null)
-                    {
-                        hierarchy.Add(baseChpx);
-                        istd = (int)styleSheet.Styles[istd].istdBase;
-                    }
-                    else
-                    {
-                        goOn = false;
-                    }
+                    hierarchy.Add(ssd.chpx);
+                    istd = (int)ssd.istdBase;
                 }
-                catch (Exception)
+                else
                 {
                     goOn = false;
                 }

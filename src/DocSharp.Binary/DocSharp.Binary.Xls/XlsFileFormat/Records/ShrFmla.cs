@@ -71,7 +71,6 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
                 this.Reader.BaseStream.Seek(oldStreamPosition, System.IO.SeekOrigin.Begin);
                 this.Reader.BaseStream.Seek(this.cce, System.IO.SeekOrigin.Current);
                 TraceLogger.Error(ex.StackTrace); 
-
             }
 
             // assert that the correct number of bytes has been read from the stream

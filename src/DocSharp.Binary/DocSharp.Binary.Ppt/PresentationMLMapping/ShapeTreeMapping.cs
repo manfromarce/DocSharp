@@ -221,8 +221,7 @@ namespace DocSharp.Binary.PresentationMLMapping
             catch (Exception)
             {                
                 throw;
-            }
-           
+            }           
         }
 
         public void ApplyTable(GroupContainer group, uint TABLEFLAGS)
@@ -417,7 +416,6 @@ namespace DocSharp.Binary.PresentationMLMapping
                             }
 
                         }
-
                         catch (Exception)
                         {
                             //ignore
@@ -2944,7 +2942,6 @@ namespace DocSharp.Binary.PresentationMLMapping
                                             }
 
                                         }
-
                                         catch (Exception)
                                         {
                                             //ignore

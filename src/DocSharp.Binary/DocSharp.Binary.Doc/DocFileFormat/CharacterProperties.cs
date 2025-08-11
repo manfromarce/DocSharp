@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DocSharp.Binary.Tools;
 
 namespace DocSharp.Binary.DocFileFormat
@@ -243,20 +244,12 @@ namespace DocSharp.Binary.DocFileFormat
             bool goOn = true;
             while (goOn)
             {
-                try
+                if (styleSheet.Styles.ElementAtOrDefault(istd) is StyleSheetDescription ssd && ssd.chpx != null)
                 {
-                    var baseChpx = styleSheet.Styles[istd].chpx;
-                    if (baseChpx != null)
-                    {
-                        hierarchy.Add(baseChpx);
-                        istd = (int)styleSheet.Styles[istd].istdBase;
-                    }
-                    else
-                    {
-                        goOn = false;
-                    }
+                    hierarchy.Add(ssd.chpx);
+                    istd = (int)ssd.istdBase;
                 }
-                catch (Exception)
+                else
                 {
                     goOn = false;
                 }

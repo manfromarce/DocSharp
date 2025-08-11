@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using DocSharp.Binary.StructuredStorage.Reader;
@@ -31,8 +31,6 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg
 
             long oldStreamPosition = this.Reader.BaseStream.Position;
 
-
-
             try
             {
                 this.ptgStack = ExcelHelperClass.getFormulaStack(this.Reader, (ushort)cce);
@@ -43,9 +41,6 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Ptg
                 this.Reader.BaseStream.Seek(cce, System.IO.SeekOrigin.Current);
                 TraceLogger.Error(ex.StackTrace);
             }
-
-
-
         }
     }
 }

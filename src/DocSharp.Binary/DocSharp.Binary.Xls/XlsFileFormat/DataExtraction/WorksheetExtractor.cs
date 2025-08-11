@@ -203,7 +203,7 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat
                                 try
                                 {
                                     var hlink = new HLink(this.StreamReader, bh.id, bh.length);
-                                this.bsd.addHyperLinkData(hlink);
+                                    this.bsd.addHyperLinkData(hlink);
                                 }
                                 catch (Exception ex)
                                 {
