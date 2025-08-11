@@ -32,6 +32,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         var fontStretch = OpenXmlHelpers.GetEffectiveProperty<Spacing>(run);
         var fontScaling = OpenXmlHelpers.GetEffectiveProperty<CharacterScale>(run);
         var kerning = OpenXmlHelpers.GetEffectiveProperty<Kern>(run);
+        var hidden = OpenXmlHelpers.GetEffectiveProperty<Vanish>(run);
 
         // These are legacy effects and can be easily emulated in CSS.
         var shadow = OpenXmlHelpers.GetEffectiveProperty<Shadow>(run);
@@ -64,6 +65,11 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             "white-space: pre-wrap;"
         };
+
+        if (hidden.ToBool())
+        {
+            styles.Add("display: none;");
+        }
 
         if (!string.IsNullOrEmpty(font) && !FontConverter.IsNonUnicodeFont(font!)) // some special fonts will be converted in ProcessText
         {

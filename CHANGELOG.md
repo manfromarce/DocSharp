@@ -6,6 +6,7 @@
 - Support for inset, outset, groove and ridge border styles in DOCX to HTML converter
 - Try to preserve text fill effect as font color in DOCX to RTF converter
 - Preserve "leading zeros" format in numbered lists in DOCX to HTML/TXT converter
+- 
 
 ## 0.11.0
 

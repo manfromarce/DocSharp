@@ -44,9 +44,12 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     internal override void ProcessRun(Run run, TxtStringWriter sb)
     {
-        foreach (var element in run.Elements())
+        if (!run.GetEffectiveProperty<Vanish>().ToBool())
         {
-            base.ProcessRunElement(element, sb);
+            foreach (var element in run.Elements())
+            {
+                base.ProcessRunElement(element, sb);
+            }
         }
     }
 

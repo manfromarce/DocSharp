@@ -208,6 +208,11 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
 
     internal override void ProcessRun(Run run, MarkdownStringWriter sb)
     {
+        if (run.GetEffectiveProperty<Vanish>().ToBool())
+        {
+            return;
+        }
+        
         var text = run.GetFirstChild<Text>();
         bool hasText = text != null && !string.IsNullOrEmpty(text.InnerText);
         if (hasText && text!.InnerText.All(char.IsWhiteSpace))
