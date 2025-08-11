@@ -59,7 +59,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 return;
             cssAttribute = "border-inline-end";
         }
-        else if (border is Border) // Used for characters borders
+        else if (border is Border) // Used for characters borders (same for top, left, bottom and right)
         {
             cssAttribute = "border";
         }

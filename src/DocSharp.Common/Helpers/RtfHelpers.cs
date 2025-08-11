@@ -72,6 +72,15 @@ public static class RtfHelpers
         }
     }
 
+    public static bool IsValidColor(string hexColor, bool allowAutoColor = false)
+    {
+        if (hexColor == null || hexColor.Length == 0)
+            return false;
+        if (hexColor.Equals("auto", StringComparison.OrdinalIgnoreCase))
+            return allowAutoColor;
+        return !string.IsNullOrEmpty(ConvertToRtfColor(hexColor));
+    }
+
     public static string? ConvertToRtfColor(string hexColor)
     {
         hexColor = hexColor.TrimStart('#').ToLower();

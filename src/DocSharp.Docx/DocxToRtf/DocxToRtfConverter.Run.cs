@@ -9,6 +9,7 @@ using DocSharp.Helpers;
 using DocSharp.Docx.Rtf;
 using DocumentFormat.OpenXml;
 using DocSharp.Writers;
+using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
 namespace DocSharp.Docx;
 
@@ -80,20 +81,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.Write(@"\f0");
         }
 
-        string? color = run.GetEffectiveProperty<Color>()?.Val;
-        if ((!string.IsNullOrEmpty(color)) &&
-             !color!.Equals("auto", StringComparison.OrdinalIgnoreCase))
-        {
-            colors.TryAddAndGetIndex(color, out int colorIndex);
-            sb.WriteWordWithValue("cf", colorIndex);
-        }
-        else
-        {
-            // If no color is specified, \cf0 is automatically handled by word processors.
-            // Note: for this reason the color table uses 1-based index, while the font table should contain the f0 font.
-            sb.Write(@"\cf0");
-        }
-
         if (run.GetEffectiveProperty<FontSize>()?.Val.ToLong() is long fontSize)
         {
             // Font size is in half-points in both DOCX and RTF
@@ -102,6 +89,57 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         else
         {
             sb.WriteWordWithValue("fs", DefaultSettings.FontSize * 2); // Font size is in half-points
+        }
+
+        string? color = run.GetEffectiveProperty<Color>()?.Val;
+        var fill14 = run.GetEffectiveProperty<W14.FillTextEffect>();
+        if (fill14?.Elements<W14.SolidColorFillProperties>().FirstOrDefault() is W14.SolidColorFillProperties solidFill &&
+            ColorHelpers.GetColor(solidFill) is string fillColor && 
+            RtfHelpers.IsValidColor(fillColor))
+        {
+            // Not supported in RTF, convert to regular font color
+            colors.TryAddAndGetIndex(fillColor, out int colorIndex);
+            sb.WriteWordWithValue("cf", colorIndex);
+        }
+        else if (fill14?.Elements<W14.GradientFillProperties>().FirstOrDefault() is W14.GradientFillProperties gradientFill &&
+                 gradientFill.GradientStopList?.Elements<W14.GradientStop>().FirstOrDefault() is W14.GradientStop firstGradientStop && 
+                 ColorHelpers.GetColor(firstGradientStop) is string gradientColor && 
+                 RtfHelpers.IsValidColor(gradientColor))
+        {
+            // Not supported in RTF, extract the first color from the gradient
+            colors.TryAddAndGetIndex(gradientColor, out int colorIndex);
+            sb.WriteWordWithValue("cf", colorIndex);
+        }
+        else if (color != null && RtfHelpers.IsValidColor(color)) // Give priority to the fill effect (if present)
+        {
+            colors.TryAddAndGetIndex(color, out int colorIndex2);
+            sb.WriteWordWithValue("cf", colorIndex2);
+        }
+        else
+        {
+            // If no color is specified, \cf0 is automatically handled by word processors.
+            // Note: for this reason the color table uses 1-based index, while the font table should contain the f0 font.
+            sb.Write(@"\cf0");
+        }
+
+        // Note: RTF does not support advanced effects introduced with Office 2010
+        // (w14:shadow, w14:textOutline, w14:glow ...),
+        // but only the legacy Shadow, Outline, Emboss, Imprint font properties.
+        if (run.GetEffectiveProperty<Shadow>().ToBool())
+        {
+            sb.Write(@"\shad");
+        }
+        if (run.GetEffectiveProperty<Outline>().ToBool())
+        {
+            sb.Write(@"\outl");
+        }
+        if (run.GetEffectiveProperty<Emboss>().ToBool())
+        {
+            sb.Write(@"\embo");
+        }
+        if (run.GetEffectiveProperty<Imprint>().ToBool())
+        {
+            sb.Write(@"\impr");
         }
 
         if (run.GetEffectiveProperty<Kern>() is Kern kern && kern.Val != null)
@@ -248,28 +286,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 sb.Write(@"\caps");
             }
-        }
-
-        if (run.GetEffectiveProperty<Emboss>().ToBool())
-        {
-            sb.Write(@"\embo");
-        }
-
-        if (run.GetEffectiveProperty<Imprint>().ToBool())
-        {
-            sb.Write(@"\impr");
-        }
-
-        // Note: RTF does not support advanced shadow and outline effects introduced with Office 2010 (Shadow14, Outline14),
-        // but only the legacy Shadow and Outline properties.
-        if (run.GetEffectiveProperty<Shadow>().ToBool())
-        {
-            sb.Write(@"\shad");
-        }
-
-        if (run.GetEffectiveProperty<Outline>().ToBool())
-        {
-            sb.Write(@"\outl");
         }
 
         if (run.GetEffectiveProperty<Vanish>().ToBool())

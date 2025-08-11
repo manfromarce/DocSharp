@@ -303,8 +303,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             }
             styles.Add($"-webkit-text-stroke: {width.ToStringInvariant(2)}pt {outlineColor};");
         }
-        else
-        if (outline != null)
+        else if (outline != null)
         {
             // Generic outline effect (not supported by all browsers)
             styles.Add("-webkit-text-stroke: 1px black;");

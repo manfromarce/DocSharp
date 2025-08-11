@@ -20,7 +20,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         int rowCount = rows.Count();
         sb.WriteStartElement("table");
         sb.WriteAttributeString("style", "border-collapse: collapse; border-spacing: 0;");
-        //sb.Append("<table>");
         foreach (var row in rows)
         {
             ProcessTableRow(row, sb, rowNumber, rowCount);
