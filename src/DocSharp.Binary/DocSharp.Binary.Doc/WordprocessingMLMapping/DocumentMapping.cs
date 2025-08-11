@@ -969,7 +969,32 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                 }
                 else if ((int)c > 31 && (int)c != 0xFFFF)
                 {
-                    this._writer.WriteChars(new char[] { c }, 0, 1);
+                    if (char.IsSurrogate(c))
+                    {
+                        // If the character is a high surrogate, check the next one.
+                        if (char.IsHighSurrogate(c))
+                        {
+                            // Make sure there is a next character.
+                            if (i + 1 < chars.Count && char.IsLowSurrogate(chars[i + 1]))
+                            {
+                                // Write both surrogate characters
+                                this._writer.WriteChars(new char[] { c, chars[i + 1] }, 0, 2);
+                                i++; // Skip the low character
+                            }
+                            else
+                            {
+                                // Skip if there is no low character.
+                            }
+                        }
+                        else
+                        {
+                            // Skip the low character.
+                        }
+                    }
+                    else
+                    {
+                        this._writer.WriteChars(new char[] { c }, 0, 1);
+                    }
                 }
 
                 cp++;

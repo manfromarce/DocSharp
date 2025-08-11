@@ -1,7 +1,8 @@
 ## 0.12.0 - not published yet
 
-- Fix issue in PPT to PPTX converter
-- Improve performance in binary converters
+- Fix issues in PPT to PPTX converter and improve performance
+- Fix issue with emojis (surrogate pairs chars) in DOC to DOCX converter
+- 
 
 ## 0.11.0
 
