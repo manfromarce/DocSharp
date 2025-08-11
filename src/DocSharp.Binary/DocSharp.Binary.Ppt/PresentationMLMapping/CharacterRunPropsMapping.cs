@@ -224,19 +224,22 @@ namespace DocSharp.Binary.PresentationMLMapping
                 this._writer.WriteStartElement("a", "latin", OpenXmlNamespaces.DrawingML);
                 try
                 {
-                    var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<DocSharp.Binary.PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
-                    var entity = fonts.entities[(int)run.TypefaceIdx];
-                    if (entity.TypeFace.IndexOf('\0') > 0)
+                    var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>()?.FirstChildWithType<FontCollection>();
+                    if (fonts != null)
                     {
-                        this._writer.WriteAttributeString("typeface", entity.TypeFace.Substring(0, entity.TypeFace.IndexOf('\0')));
-                        lastTypeface = entity.TypeFace.Substring(0, entity.TypeFace.IndexOf('\0'));
+                        var entity = fonts.entities[(int)run.TypefaceIdx];
+                        if (entity.TypeFace.IndexOf('\0') > 0)
+                        {
+                            this._writer.WriteAttributeString("typeface", entity.TypeFace.Substring(0, entity.TypeFace.IndexOf('\0')));
+                            lastTypeface = entity.TypeFace.Substring(0, entity.TypeFace.IndexOf('\0'));
+                        }
+                        else
+                        {
+                            this._writer.WriteAttributeString("typeface", entity.TypeFace);
+                            lastTypeface = entity.TypeFace;
+                        }
+                        //_writer.WriteAttributeString("charset", "0");
                     }
-                    else
-                    {
-                        this._writer.WriteAttributeString("typeface", entity.TypeFace);
-                        lastTypeface = entity.TypeFace;
-                    }
-                    //_writer.WriteAttributeString("charset", "0");
                 }
                 catch (Exception)
                 {
@@ -330,8 +333,8 @@ namespace DocSharp.Binary.PresentationMLMapping
 
             if (run != null && run.FEOldTypefacePresent)
             {
-                var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
-                if (fonts.entities.ElementAtOrDefault((int)run.FEOldTypefaceIdx) is FontEntityAtom entity)
+                var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>()?.FirstChildWithType<FontCollection>();
+                if (fonts?.entities.ElementAtOrDefault((int)run.FEOldTypefaceIdx) is FontEntityAtom entity)
                 {
                     if (entity.TypeFace.IndexOf('\0') > 0)
                     {
@@ -352,8 +355,8 @@ namespace DocSharp.Binary.PresentationMLMapping
                 var cr = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<TextMasterStyleAtom>().CRuns[0];
                 if (cr.FEOldTypefacePresent)
                 {
-                    var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
-                    if (fonts.entities.ElementAtOrDefault((int)cr.FEOldTypefaceIdx) is FontEntityAtom entity)
+                    var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>()?.FirstChildWithType<FontCollection>();
+                    if (fonts?.entities.ElementAtOrDefault((int)cr.FEOldTypefaceIdx) is FontEntityAtom entity)
                     {
                         if (entity.TypeFace.IndexOf('\0') > 0)
                         {
@@ -373,8 +376,8 @@ namespace DocSharp.Binary.PresentationMLMapping
 
             if (run != null && run.SymbolTypefacePresent)
             {
-                var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>().FirstChildWithType<FontCollection>();
-                if (fonts.entities.ElementAtOrDefault((int)run.SymbolTypefaceIdx) is FontEntityAtom entity)
+                var fonts = this._ctx.Ppt.DocumentRecord.FirstChildWithType<PptFileFormat.Environment>()?.FirstChildWithType<FontCollection>();
+                if (fonts?.entities.ElementAtOrDefault((int)run.SymbolTypefaceIdx) is FontEntityAtom entity)
                 {
                     if (entity.TypeFace.IndexOf('\0') > 0)
                     {

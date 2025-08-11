@@ -59,16 +59,7 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
                     outExt = ".xlsx";
                     break;
             }
-
-            string inExt = Path.GetExtension(choosenFilename);
-            if (inExt != null)
-            {
-                return choosenFilename.Replace(inExt, outExt);
-            }
-            else
-            {
-                return choosenFilename + outExt;
-            }
+            return Path.ChangeExtension(choosenFilename, outExt);
         }
 
         public static void Convert(XlsDocument xls, SpreadsheetDocument spreadsheetDocument)

@@ -108,6 +108,13 @@ public class DocxToMarkdownConverter : DocxToTextConverterBase<MarkdownStringWri
             return;
         }
 
+        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
+           (h.Val is null || h.Val))
+        {
+            // Skip hidden paragraphs (sometimes used by word processors to increase numbering in list items)
+            return;
+        }
+
         EnsureSpace(sb); // Add a blank line before the paragraph
 
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);

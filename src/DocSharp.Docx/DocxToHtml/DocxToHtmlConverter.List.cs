@@ -13,7 +13,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
     private readonly Dictionary<int, (int numId, int abstractNumId, int counter)> _listLevelCounters = new();
 
-    internal void ProcessListItem(NumberingProperties numPr, HtmlTextWriter sb)
+    internal void ProcessListItem(NumberingProperties numPr, HtmlTextWriter sb, bool isHidden = false)
     {
         // Note: we don't produce real HTML lists (<ul> / <ol>) because they are very limited compared to DOCX,
         // and preserving the original list format would be complicated. 
@@ -104,42 +104,45 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                         }
                     }
 
-                    string listText;
-                    if (listType == NumberFormatValues.Bullet)
+                    if (!isHidden)
                     {
-                        // For bulleted lists, level text can be returned as-is.
-                        listText = levelText?.Value != null ? levelText.Value : "•";
-                    }
-                    else
-                    {
-                        // For numbered lists, get the number text depending on the list format and level counters.
-                        listText = ListHelpers.GetNumberString(levelText, listType, _listLevelCounters);
-                    }
-
-                    // Add the suffix
-                    var levelSuffix = effectiveLevel.LevelSuffix?.Val;
-                    if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
-                    {
-                        listText += "\u2001"; // quad space (&#x2001;)
-                    }
-                    else if (levelSuffix.Value == LevelSuffixValues.Space)
-                    {
-                        listText += '\u00A0'; // non-breaking space (&emsp;)
-                    }
-
-                    if (runPr != null)
-                    {
-                        // Process formatting for the number/bullet
-                        var rPr = new RunProperties();
-                        foreach (var runProperty in runPr)
+                        string listText;
+                        if (listType == NumberFormatValues.Bullet)
                         {
-                            rPr.AppendChild(runProperty.CloneNode(true));
+                            // For bulleted lists, level text can be returned as-is.
+                            listText = levelText?.Value != null ? levelText.Value : "•";
                         }
-                        ProcessRun(new Run(rPr, new Text(listText)), sb);
-                    }
-                    else
-                    {
-                        ProcessRun(new Run(new Text(listText)), sb);
+                        else
+                        {
+                            // For numbered lists, get the number text depending on the list format and level counters.
+                            listText = ListHelpers.GetNumberString(levelText, listType, _listLevelCounters);
+                        }
+
+                        // Add the suffix
+                        var levelSuffix = effectiveLevel.LevelSuffix?.Val;
+                        if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
+                        {
+                            listText += "\u2001"; // quad space (&#x2001;)
+                        }
+                        else if (levelSuffix.Value == LevelSuffixValues.Space)
+                        {
+                            listText += '\u00A0'; // non-breaking space (&emsp;)
+                        }
+
+                        if (runPr != null)
+                        {
+                            // Process formatting for the number/bullet
+                            var rPr = new RunProperties();
+                            foreach (var runProperty in runPr)
+                            {
+                                rPr.AppendChild(runProperty.CloneNode(true));
+                            }
+                            ProcessRun(new Run(rPr, new Text(listText)), sb);
+                        }
+                        else
+                        {
+                            ProcessRun(new Run(new Text(listText)), sb);
+                        }
                     }
                 }
             }

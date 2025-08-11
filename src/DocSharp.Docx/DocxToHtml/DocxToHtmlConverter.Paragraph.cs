@@ -14,6 +14,22 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
     internal override void ProcessParagraph(Paragraph paragraph, HtmlTextWriter sb)
     {
+        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        
+        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
+            (h.Val is null || h.Val))
+        {
+            // Special handling of paragraphs with the vanish attribute 
+            // (can be used by word processors to increment the list item numbers).
+            // In this case, just increment the counter in the levels dictionary and
+            // don't write the paragraph.
+            if (numberingProperties != null)
+            {
+                ProcessListItem(numberingProperties, sb, isHidden: true);
+            }
+            return;
+        }
+
         var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph)?.Val?.Value;
         var indent = OpenXmlHelpers.GetEffectiveIndent(paragraph);
         var spacing = OpenXmlHelpers.GetEffectiveSpacing(paragraph);
@@ -23,7 +39,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         var widowControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
         var direction = OpenXmlHelpers.GetEffectiveProperty<TextDirection>(paragraph);
         // var frameProperties = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph); // TODO
-        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
 
         // Build CSS style string
         var styles = new List<string>();

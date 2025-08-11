@@ -237,9 +237,24 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     internal override void ProcessParagraph(Paragraph paragraph, TxtStringWriter sb)
     {
+        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        
+        if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
+            (h.Val is null || h.Val))
+        {
+            // Special handling of paragraphs with the vanish attribute 
+            // (can be used by word processors to increment the list item numbers).
+            // In this case, just increment the counter in the levels dictionary and
+            // don't write the paragraph.
+            if (numberingProperties != null)
+            {
+                ProcessListItem(numberingProperties, sb, isHidden: true);
+            }
+            return;
+        }
+
         EnsureSpace(sb); // Add a blank line before the paragraph
 
-        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
         if (numberingProperties != null)
         {
             ProcessListItem(numberingProperties, sb);
@@ -249,7 +264,7 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
 
     private readonly Dictionary<int, (int numId, int abstractNumId, int counter)> _listLevelCounters = new();
 
-    internal void ProcessListItem(NumberingProperties numPr, TxtStringWriter sb)
+    internal void ProcessListItem(NumberingProperties numPr, TxtStringWriter sb, bool isHidden = false)
     {
         var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
         if (numberingPart != null && numPr.NumberingId?.Val != null)
@@ -338,43 +353,47 @@ public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
                         }
                     }
 
-                    // Add indentation
-                    for (int i = 1; i <= levelIndex; i++)
+                    if (!isHidden)
                     {
-                        sb.Write("    ");
-                    }
-
-                    if (listType == NumberFormatValues.Bullet)
-                    {
-                        // For bulleted lists, convert the level text to Unicode if necessary.
-                        if (levelText?.Value != null)
+                        // Add indentation
+                        for (int i = 1; i <= levelIndex; i++)
                         {
-                            string font = runPr?.RunFonts?.Ascii?.Value ?? string.Empty;
-                            sb.WriteText(levelText.Value, font);
+                            sb.Write("    ");
+                        }
+
+                        if (listType == NumberFormatValues.Bullet)
+                        {
+                            // For bulleted lists, convert the level text to Unicode if necessary.
+                            if (levelText?.Value != null)
+                            {
+                                string font = runPr?.RunFonts?.Ascii?.Value ?? string.Empty;
+                                sb.WriteText(levelText.Value, font);
+                            }
+                            else
+                            {
+                                sb.Write('•');
+                            }
                         }
                         else
                         {
-                            sb.Write('•');
+                            // For numbered lists, get the number text depending on the list format and level counters.
+                            string numberString = ListHelpers.GetNumberString(levelText, listType, _listLevelCounters);
+                            sb.Write(numberString);
+                        }
+
+                        // Add the suffix
+                        var levelSuffix = effectiveLevel.LevelSuffix?.Val;
+                        if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
+                        {
+                            //sb.Write('\t');
+                            sb.Write("  ");
+                        }
+                        else if (levelSuffix.Value == LevelSuffixValues.Space)
+                        {
+                            sb.Write(' ');
                         }
                     }
-                    else
-                    {
-                        // For numbered lists, get the number text depending on the list format and level counters.
-                        string numberString = ListHelpers.GetNumberString(levelText, listType, _listLevelCounters);
-                        sb.Write(numberString);
-                    }
 
-                    // Add the suffix
-                    var levelSuffix = effectiveLevel.LevelSuffix?.Val;
-                    if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
-                    {
-                        //sb.Write('\t');
-                        sb.Write("  ");
-                    }
-                    else if (levelSuffix.Value == LevelSuffixValues.Space)
-                    {
-                        sb.Write(' ');
-                    }
                 }
             }
         }

@@ -70,14 +70,17 @@ namespace DocSharp.Binary.PresentationMLMapping
         public void Apply(DrawingContainer drawingContainer)
         {
             var group = drawingContainer.FirstChildWithType<GroupContainer>();
-            IEnumerator<Record> iter = group.Children.GetEnumerator();
-            iter.MoveNext();
+            if (group != null)
+            {
+                IEnumerator<Record> iter = group.Children.GetEnumerator();
+                iter.MoveNext();
 
-            var header = iter.Current as ShapeContainer;
-            WriteGroupShapeProperties(header);
+                var header = iter.Current as ShapeContainer;
+                WriteGroupShapeProperties(header);
 
-            while (iter.MoveNext())
-                DynamicApply(iter.Current);
+                while (iter.MoveNext())
+                    DynamicApply(iter.Current);
+            }
         }
 
         //used to give each group a unique identifyer
