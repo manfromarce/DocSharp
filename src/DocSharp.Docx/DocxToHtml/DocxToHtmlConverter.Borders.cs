@@ -85,6 +85,22 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             {
                 borderStyle = "double"; // Triple is not supported in CSS
             }
+            else if (border.Val.Value == BorderValues.Outset)
+            {
+                borderStyle = "outset";
+            }
+            else if (border.Val.Value == BorderValues.Inset)
+            {
+                borderStyle = "inset";
+            }
+            else if (border.Val.Value == BorderValues.ThreeDEmboss)
+            {
+                borderStyle = "ridge";
+            }
+            else if (border.Val.Value == BorderValues.ThreeDEngrave)
+            {
+                borderStyle = "groove";
+            }
             else if (border.Val.Value == BorderValues.None || border.Val.Value == BorderValues.Nil)
             {
                 borderStyle = "none";
@@ -93,7 +109,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             {
                 borderStyle = "solid"; // Default value
             }
-            // Other possible CSS values are only: groove, ridge, inset, outset
         }
 
         string borderWidth = "1px";

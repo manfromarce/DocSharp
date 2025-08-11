@@ -182,7 +182,7 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
             // - 0x200 = BIFF 2 (Excel 2.1)
             // - 0x300 = BIFF 3 (Excel 3.0 for Windows)
             // - 0x400 = BIFF 4 (Excel 4.0 for Windows)
-            // - 0x500 = BIFF 5 (Excel 5.0 for Windows / Excel for Windows 95)
+            // - 0x500 = BIFF 5 (Excel 5.0 for Windows / Excel 7.0 for Windows 95)
             // - 0x600 = BIFF 8 (Excel 97-2003)
             // - Not relevant: BIFF 12 (Excel 2007-2010)
             // (credits: [MS-XLS] documentation, LibreOffice, https://github.com/ExcelDataReader/ExcelDataReader)
