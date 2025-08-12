@@ -104,17 +104,19 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             }
             else
             {
-                if (spacing.Before?.Value != null && double.TryParse(spacing.Before.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double beforeSpacing))
+                decimal beforeValue = 0;
+                decimal afterValue = 0;
+                if (spacing.Before?.Value != null && decimal.TryParse(spacing.Before.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal beforeSpacing))
                 {
-                    double beforeValue = beforeSpacing / 20.0; // Convert twips to points
-                    styles.Add($"margin-top: {beforeValue.ToStringInvariant()}pt;");
+                    beforeValue = beforeSpacing / 20m; // Convert twips to points
                 }
+                styles.Add($"margin-top: {beforeValue.ToStringInvariant(2)}pt;");
 
-                if (spacing.After?.Value != null && double.TryParse(spacing.After.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double afterSpacing))
+                if (spacing.After?.Value != null && decimal.TryParse(spacing.After.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal afterSpacing))
                 {
-                    double afterValue = afterSpacing / 20.0; // Convert twips to points
-                    styles.Add($"margin-bottom: {afterValue.ToStringInvariant()}pt;");
+                    afterValue = afterSpacing / 20m; // Convert twips to points
                 }
+                styles.Add($"margin-bottom: {afterValue.ToStringInvariant(2)}pt;");
             }
 
             // TODO: BeforeLines, AfterLines, BeforeAutoSpacing, AfterAutoSpacing
@@ -137,20 +139,19 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 styles.Add("vertical-align: baseline;");
         }
 
-        // CSS properties: direction, unicode-bidi, text-orientation, writing-mode
-
         if (direction?.Val != null)
         {
             ProcessTextDirection(direction.Val.Value, ref styles);
         }
 
-        if (widowControl != null || keepLines != null)
+        if (widowControl.ToBool() || keepLines.ToBool())
         {
             // Avoid breaks inside the paragraph
             styles.Add("break-inside: avoid;");
         }
-        if (keepNext != null)
+        if (keepNext.ToBool())
         {
+            // Avoid breaks between this paragraph and the next one
             styles.Add("break-after: avoid;");
         }
 

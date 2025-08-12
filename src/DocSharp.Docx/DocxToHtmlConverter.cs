@@ -124,6 +124,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
     private void ProcessTextDirection(TextDirectionValues value, ref List<string> styles)
     {
+        // Possible CSS properties: direction, unicode-bidi, text-orientation, writing-mode
         if (value == TextDirectionValues.LefToRightTopToBottom ||
             value == TextDirectionValues.LeftToRightTopToBottom2010)
         {
