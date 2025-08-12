@@ -12,7 +12,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
-    internal void ProcessBorder(BorderType? border, ref List<string> styles, bool isTableCell, bool isLastRow = false, bool isLastColumn = false)
+    internal void ProcessBorder(BorderType? border, ref List<string> styles, bool isTableCell, bool isLastRow = false, bool isLastColumn = false, bool isVertical = false)
     {
         if (border == null)
         {
@@ -39,16 +39,18 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         }
         else if (border is BarBorder) // paragraph border between facing pages
         {
-            //cssAttribute = "border-right";
-            cssAttribute = "border-inline-end";
+            cssAttribute = isVertical ? "border-right" : "border-inline-end";
+            // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
         }
         else if (border is StartBorder)
         {
-            cssAttribute = "border-inline-start";
+            cssAttribute = isVertical ? "border-left" : "border-inline-start";
+            // If the cell has vertical orientation, inline-start is considered the top border (incorrect)
         }
         else if (border is EndBorder)
         {
-            cssAttribute = "border-inline-end";
+            cssAttribute = isVertical ? "border-right" : "border-inline-end";
+            // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
         }
         else if (border is InsideHorizontalBorder) // for tables
         {
@@ -60,7 +62,8 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             if (isLastColumn)
                 return;
-            cssAttribute = "border-inline-end";
+            cssAttribute = isVertical ? "border-right" : "border-inline-end"; 
+            // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
         }
         else if (border is Border) // Used for characters borders (same for top, left, bottom and right)
         {

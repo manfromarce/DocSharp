@@ -168,10 +168,40 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             }
         }
 
-        var direction = cell.TableCellProperties?.TextDirection;
+        if (cell.GetEffectiveProperty<NoWrap>().ToBool() || cell.GetEffectiveProperty<TableCellFitText>().ToBool())
+        {
+            cellStyles.Add("white-space: nowrap;");
+            cellStyles.Add("overflow: hidden;");
+            cellStyles.Add("text-overflow: ellipsis;");
+            // TODO: for TableCellFitText adjust letter spacing and font size to fit container
+        }
+        else
+        {
+            cellStyles.Add("word-wrap: break-word;");
+            cellStyles.Add("overflow-wrap: break-word;");
+            cellStyles.Add("word-break: break-all;");
+            // Otherwise vertical text will *not* wrap in multiple lines if it doesn't fit the row height
+        }
+
+        bool isVertical = false;
+        var direction = cell.GetEffectiveProperty<TextDirection>();
         if (direction?.Val != null)
         {
-            ProcessTextDirection(direction.Val.Value, ref cellStyles);
+            ProcessTextDirection(direction.Val.Value, ref cellStyles, out isVertical);
+        }
+        var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TableCellVerticalAlignment>(cell);
+        if (verticalAlignment?.Val != null)
+        {
+            if (verticalAlignment.Val == TableVerticalAlignmentValues.Top)
+                cellStyles.Add("vertical-align: top;");
+            else if (verticalAlignment.Val == TableVerticalAlignmentValues.Center)
+                cellStyles.Add("vertical-align: middle;");
+            else if (verticalAlignment.Val == TableVerticalAlignmentValues.Bottom)
+                cellStyles.Add("vertical-align: bottom;");
+        }
+        else
+        {
+            cellStyles.Add("vertical-align: top;");
         }
 
         var margin = OpenXmlHelpers.GetEffectiveProperty<TableCellMargin>(cell);
@@ -208,33 +238,43 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 RemoveStyleIfPresent(ref cellStyles, "padding-inline-end");
                 ProcessTableWidthType(margin?.EndMargin, ref cellStyles, "padding-inline-end");
             }
-        }
-
-        if (cell.GetEffectiveProperty<TableCellFitText>().ToBool())
-        {
-            cellStyles.Add("white-space: nowrap;");
-            cellStyles.Add("overflow: hidden;");
-            cellStyles.Add("text-overflow: ellipsis;");
-            // TODO: adjust letter spacing to fit container
-        }
+        }        
 
         var cellWidth = OpenXmlHelpers.GetEffectiveProperty<TableCellWidth>(cell);
-        ProcessTableWidthType(cellWidth, ref cellStyles, "width");
+        ProcessTableWidthType(cellWidth, ref cellStyles, "width"); 
+        
+        // For vertical text, it seems row height is not applied if not specified for cells too.
+        var height = cell.GetFirstAncestor<TableRow>()?.GetEffectiveProperty<TableRowHeight>();
+        if (height != null &&
+            height.Val != null &&
+            (height.HeightType == null || // if HeightType is not specified but a value is present, assume it means "Exact"
+             height.HeightType.Value == HeightRuleValues.AtLeast ||
+             height.HeightType.Value == HeightRuleValues.Exact))
+            // if HeightType is "Auto" instead, the row should automatically resize to fit the content
+        {
+            string property;
+            if (height.HeightType != null && height.HeightType.Value == HeightRuleValues.AtLeast)
+                property = "min-height";
+            else
+                property = "height";
+
+            cellStyles.Add($"{property}: {(height.Val.Value / 20m).ToStringInvariant(2)}pt;"); // Convert twips to points
+        }
 
         BorderType? topBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Top, rowNumber, columnNumber, rowCount, columnCount);
-        ProcessBorder(topBorder, ref cellStyles, true);
+        ProcessBorder(topBorder, ref cellStyles, true, isVertical: isVertical);
         BorderType? bottomBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Bottom, rowNumber, columnNumber, rowCount, columnCount);
-        ProcessBorder(bottomBorder, ref cellStyles, true);
+        ProcessBorder(bottomBorder, ref cellStyles, true, isVertical: isVertical);
         BorderType? leftBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Left, rowNumber, columnNumber, rowCount, columnCount);
-        ProcessBorder(leftBorder, ref cellStyles, true);
+        ProcessBorder(leftBorder, ref cellStyles, true, isVertical: isVertical);
         BorderType? rightBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Right, rowNumber, columnNumber, rowCount, columnCount);
-        ProcessBorder(rightBorder, ref cellStyles, true);
+        ProcessBorder(rightBorder, ref cellStyles, true, isVertical: isVertical);
         if (leftBorder == null && rightBorder == null) // Left and right should have priority over start and end as they are more specific
         {
             BorderType? startBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Start, rowNumber, columnNumber, rowCount, columnCount);
-            ProcessBorder(startBorder, ref cellStyles, true);
+            ProcessBorder(startBorder, ref cellStyles, true, isVertical: isVertical);
             BorderType? endBorder = cell.GetEffectiveBorder(Primitives.BorderValue.End, rowNumber, columnNumber, rowCount, columnCount);
-            ProcessBorder(endBorder, ref cellStyles, true);
+            ProcessBorder(endBorder, ref cellStyles, true, isVertical: isVertical);
         }
 
         ProcessShading(OpenXmlHelpers.GetEffectiveProperty<Shading>(cell), ref cellStyles);

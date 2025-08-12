@@ -92,7 +92,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             styles.Add($"letter-spacing: {letterSpacing.ToStringInvariant(2)}pt;");
         }
 
-        // CharacterScale
+        // Characters scale
         if (fontScaling?.Val != null)
         {
             //double scale = fontScaling.Val / 100.0; // Convert percent to decimal
@@ -102,6 +102,11 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             //styles.Add($"transform: scaleX({scale.ToStringInvariant()});");
             styles.Add($"font-stretch: {fontScaling.Val.Value.ToStringInvariant()}%;");
         }
+
+        //if (run.GetEffectiveProperty<FitText>() is FitText fitText && fitText.Val != null)
+        //{
+        //    var fitTextInPoints = fitText.Val.Value / 20m;
+        //}
 
         // Kern (font-kerning)
         if (kerning != null)

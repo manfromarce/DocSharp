@@ -37,11 +37,15 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         var keepLines = OpenXmlHelpers.GetEffectiveProperty<KeepLines>(paragraph);
         var keepNext = OpenXmlHelpers.GetEffectiveProperty<KeepNext>(paragraph);
         var widowControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
-        var direction = OpenXmlHelpers.GetEffectiveProperty<TextDirection>(paragraph);
         // var frameProperties = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph); // TODO
 
         // Build CSS style string
         var styles = new List<string>();
+
+        //    var direction = paragraph.GetEffectiveProperty<TextDirection>() ?? 
+        //                    cell.GetEffectiveProperty<TextDirection>();
+        //    // Direction is not applied to regular paragraphs in DOCX but only in table cells and text boxes
+       
         if (alignment != null)
         {
             if (alignment == JustificationValues.Left || alignment == JustificationValues.Start)
@@ -54,6 +58,22 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 styles.Add("text-align: justify;");
             else if (alignment == JustificationValues.Distribute)
                 styles.Add("text-align: justify;");
+        }
+
+        if (verticalAlignment?.Val != null)
+        {
+            if (verticalAlignment.Val == VerticalTextAlignmentValues.Top || verticalAlignment.Val == VerticalTextAlignmentValues.Auto)
+                styles.Add("vertical-align: top;");
+            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Center)
+                styles.Add("vertical-align: middle;");
+            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Bottom)
+                styles.Add("vertical-align: bottom;");
+            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Baseline)
+                styles.Add("vertical-align: baseline;");
+        }
+        else
+        {
+            styles.Add("vertical-align: top;");
         }
 
         if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
@@ -127,23 +147,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             ProcessIndentation(indent, ref styles);
         }
 
-        if (verticalAlignment?.Val != null)
-        {
-            if (verticalAlignment.Val == VerticalTextAlignmentValues.Top || verticalAlignment.Val == VerticalTextAlignmentValues.Auto)
-                styles.Add("vertical-align: top;");
-            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Center)
-                styles.Add("vertical-align: middle;");
-            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Bottom)
-                styles.Add("vertical-align: bottom;");
-            else if (verticalAlignment.Val == VerticalTextAlignmentValues.Baseline)
-                styles.Add("vertical-align: baseline;");
-        }
-
-        if (direction?.Val != null)
-        {
-            ProcessTextDirection(direction.Val.Value, ref styles);
-        }
-
         if (widowControl.ToBool() || keepLines.ToBool())
         {
             // Avoid breaks inside the paragraph
@@ -160,7 +163,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             // By default text breaks in new lines at the word level.
             // If WordWrap is set to off the document allows to break at character level.
             styles.Add("word-break: break-all;");
+            styles.Add("word-wrap: break-word;");
         }
+
         if (paragraph.GetEffectiveProperty<SuppressAutoHyphens>().ToBool())
         {
             styles.Add(@"hyphens: none;");

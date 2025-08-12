@@ -5,10 +5,12 @@
 - Hidden paragraphs are no longer exported in DOCX to HTML/Markdown/TXT conversion
 - Hidden runs are no longer exported in DOCX to Markdown/TXT conversion and are hidden in DOCX to HTML
 - Support for inset, outset, groove and ridge border styles in DOCX to HTML converter
+- Support for 3D and dash-dot stripe border styles in DOCX to RTF converter
 - Try to preserve text fill effect as font color in DOCX to RTF converter
 - Preserve "leading zeros" format in numbered lists in DOCX to HTML/TXT converter
 - Fix paragraph spacing and automatic cell height for default tables in DOCX to HTML converter
-- Fix row height in DOCX to HTML converter
+- Fix row height not detected in some cases in DOCX to HTML converter
+- Fix issues with vertical text in table cells in DOCX to RTF/HTML converter
 
 **Full Changelog**: https://github.com/manfromarce/DocSharp/compare/v0.11.0...v0.12.0
 

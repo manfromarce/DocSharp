@@ -122,41 +122,44 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         sb.WriteEndElement("p");
     }
 
-    private void ProcessTextDirection(TextDirectionValues value, ref List<string> styles)
+    private void ProcessTextDirection(TextDirectionValues textDirection, ref List<string> styles, out bool isVertical)
     {
         // Possible CSS properties: direction, unicode-bidi, text-orientation, writing-mode
-        if (value == TextDirectionValues.LefToRightTopToBottom ||
-            value == TextDirectionValues.LeftToRightTopToBottom2010)
+
+        isVertical = false;
+        if (textDirection == TextDirectionValues.LefToRightTopToBottom ||
+           textDirection == TextDirectionValues.LeftToRightTopToBottom2010 ||
+           textDirection == TextDirectionValues.LefttoRightTopToBottomRotated ||
+           textDirection == TextDirectionValues.LeftToRightTopToBottomRotated2010)
         {
-            // Horizontal text, left to right (default)
+            // Horizontal text, left to right
+            // (there seems to be no difference in DOCX between LefToRightTopToBottom and LefttoRightTopToBottomRotated)
             styles.Add("writing-mode: horizontal-tb;");
-        }
-        if (value == TextDirectionValues.TopToBottomRightToLeft ||
-            value == TextDirectionValues.TopToBottomRightToLeft2010)
+        }        
+        if (textDirection == TextDirectionValues.TopToBottomLeftToRightRotated ||
+            textDirection == TextDirectionValues.TopToBottomLeftToRightRotated2010)
         {
-            // Horizontal text, right to left
-        }
-        if (value == TextDirectionValues.BottomToTopLeftToRight ||
-            value == TextDirectionValues.BottomToTopLeftToRight2010)
-        {
-            // Horizontal text, bottom to top
-        }
-        if (value == TextDirectionValues.LefttoRightTopToBottomRotated ||
-            value == TextDirectionValues.LeftToRightTopToBottomRotated2010 ||
-            value == TextDirectionValues.TopToBottomLeftToRightRotated ||
-            value == TextDirectionValues.TopToBottomLeftToRightRotated2010)
-        {
-            // Vertical text
+            // Vertical text (rotated letters), top to bottom, left to right
             styles.Add("writing-mode: vertical-lr;");
-            styles.Add("text-orientation: upright;");
+            isVertical = true;
         }
-        if (value == TextDirectionValues.TopToBottomRightToLeftRotated ||
-            value == TextDirectionValues.TopToBottomRightToLeftRotated2010)
+        if (textDirection == TextDirectionValues.TopToBottomRightToLeft ||
+            textDirection == TextDirectionValues.TopToBottomRightToLeft2010 ||
+            textDirection == TextDirectionValues.TopToBottomRightToLeftRotated ||
+            textDirection == TextDirectionValues.TopToBottomRightToLeftRotated2010)
         {
-            // Vertical text
-            styles.Add("writing-mode: vertical-rl;");
-            styles.Add("text-orientation: upright;");
+            // Vertical text (rotated letters), top to bottom, right to left
+            // (there seems to be no difference in DOCX between TopToBottomRightToLeft and TopToBottomRightToLeftRotated)
+            styles.Add("writing-mode: sideways-rl;"); // or vertical-rl
+            isVertical = true;
         }
+        if (textDirection == TextDirectionValues.BottomToTopLeftToRight ||
+            textDirection == TextDirectionValues.BottomToTopLeftToRight2010)
+        {
+            // Vertical text (rotated letters), bottom to top, left to right
+            styles.Add("writing-mode: sideways-lr;");
+            isVertical = true;
+        }        
     }
 
     internal override void ProcessContentPart(ContentPart contentPart, HtmlTextWriter writer)

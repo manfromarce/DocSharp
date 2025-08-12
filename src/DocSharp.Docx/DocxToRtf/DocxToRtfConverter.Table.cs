@@ -646,34 +646,38 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
                 direction.Val == TextDirectionValues.LeftToRightTopToBottom2010)
             {
-                // Horizontal text, left to right (default)
+                // Horizontal text, left to right, top to bottom (default)
                 sb.Write(@"\cltxlrtb");
+            }
+            if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
+                direction.Val == TextDirectionValues.LeftToRightTopToBottomRotated2010)
+            {
+                // Vertical text, left to right, top to bottom (seems the same as the default, maybe depends on the font or context)
+                sb.Write(@"\cltxlrtbv");
             }
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeft2010)
             {
-                // Horizontal text, right to left
+                // Vertical text, top to bottom, right to left
                 sb.Write(@"\cltxtbrl");
-            }
-            if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
-                direction.Val == TextDirectionValues.BottomToTopLeftToRight2010)
-            {
-                // Horizontal text, bottom to top
-                sb.Write(@"\cltxbtlr");
-            }
-            if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
-                direction.Val == TextDirectionValues.LeftToRightTopToBottomRotated2010 ||
-                direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated ||
-                direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated2010)
-            {
-                // Vertical text
-                sb.Write(@"\cltxlrtbv");
             }
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
             {
-                // Vertical text
+                // Vertical text, bottom to top, right to left (seems the same as the default, maybe depends on the font or context)
                 sb.Write(@"\cltxtbrlv");
+            }
+            if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
+                direction.Val == TextDirectionValues.BottomToTopLeftToRight2010)
+            {
+                // Vertical text, bottom to top, left to right
+                sb.Write(@"\cltxbtlr");
+            }
+            if (direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated ||
+                direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated2010)
+            {
+                // Not supported in RTF, fallback to BottomToTopLeftToRight
+                sb.Write(@"\cltxbtlr");
             }
         }
 
