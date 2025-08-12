@@ -81,7 +81,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                     if (spacing.Line?.Value != null && double.TryParse(spacing.Line.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double lineSpacing))
                     {
                         double spacingValue = lineSpacing / 20.0; // Convert twips to points
-                        styles.Add($"line-height: {spacingValue.ToStringInvariant()}pt;");
+                        styles.Add($"line-height: {spacingValue.ToStringInvariant(2)}pt;");
                     }
                 }
                 else if (spacing.LineRule.Value == LineSpacingRuleValues.Auto)
@@ -91,7 +91,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                     if (spacing.Line?.Value != null && double.TryParse(spacing.Line.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out double lineSpacing))
                     {
                         double spacingValue = (lineSpacing / 240.0) * 100; // Convert to percentage (e.g. 115% for 1.15 lines)
-                        styles.Add($"line-height: {spacingValue.ToStringInvariant()}%;");
+                        styles.Add($"line-height: {spacingValue.ToStringInvariant(2)}%;");
                     }
                 }
             }

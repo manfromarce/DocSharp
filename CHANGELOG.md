@@ -3,10 +3,14 @@
 - Fix issues in PPT to PPTX converter and improve performance
 - Fix issue with emojis (surrogate pairs chars) in DOC to DOCX converter
 - Hidden paragraphs are no longer exported in DOCX to HTML/Markdown/TXT conversion
+- Hidden runs are no longer exported in DOCX to Markdown/TXT conversion and are hidden in DOCX to HTML
 - Support for inset, outset, groove and ridge border styles in DOCX to HTML converter
 - Try to preserve text fill effect as font color in DOCX to RTF converter
 - Preserve "leading zeros" format in numbered lists in DOCX to HTML/TXT converter
-- 
+- Fix paragraph spacing and automatic cell height for default tables in DOCX to HTML converter
+- Fix row height in DOCX to HTML converter
+
+**Full Changelog**: https://github.com/manfromarce/DocSharp/compare/v0.11.0...v0.12.0
 
 ## 0.11.0
 

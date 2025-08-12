@@ -33,14 +33,21 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         var rowStyles = new List<string>();
         var defaultCellStyles = new List<string>();
 
-        var rowProperties = row.TableRowProperties;
-
         // These properties are specific to single rows.
         if (row.GetEffectiveProperty<TableRowHeight>() is TableRowHeight tableRowHeight &&
-            tableRowHeight.Val != null && tableRowHeight.HeightType != null &&
-            (tableRowHeight.HeightType.Value == HeightRuleValues.AtLeast || tableRowHeight.HeightType.Value == HeightRuleValues.Exact))
+            tableRowHeight.Val != null && 
+            (tableRowHeight.HeightType == null || // if HeightType is not specified but a value is present, assume it means "Exact"
+             tableRowHeight.HeightType.Value == HeightRuleValues.AtLeast ||
+             tableRowHeight.HeightType.Value == HeightRuleValues.Exact)) 
+             // if HeightType is "Auto" instead, the row should automatically resize to fit the content
         {
-            rowStyles.Add($"height: {(tableRowHeight.Val.Value / 20m).ToStringInvariant(2)}pt;"); // Convert twips to points
+            string property;
+            if (tableRowHeight.HeightType != null && tableRowHeight.HeightType.Value == HeightRuleValues.AtLeast)
+                property = "min-height";
+            else
+                property = "height";
+
+            rowStyles.Add($"{property}: {(tableRowHeight.Val.Value / 20m).ToStringInvariant(2)}pt;"); // Convert twips to points
         }
 
         if (row.GetEffectiveProperty<CantSplit>().ToBool())
@@ -201,17 +208,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 RemoveStyleIfPresent(ref cellStyles, "padding-inline-end");
                 ProcessTableWidthType(margin?.EndMargin, ref cellStyles, "padding-inline-end");
             }
-        }
-
-        var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TableCellVerticalAlignment>(cell);
-        if (verticalAlignment?.Val != null)
-        {
-            if (verticalAlignment.Val == TableVerticalAlignmentValues.Top)
-                cellStyles.Add("vertical-align: top;");
-            else if (verticalAlignment.Val == TableVerticalAlignmentValues.Center)
-                cellStyles.Add("vertical-align: middle;");
-            else if (verticalAlignment.Val == TableVerticalAlignmentValues.Bottom)
-                cellStyles.Add("vertical-align: bottom;");
         }
 
         if (cell.GetEffectiveProperty<TableCellFitText>().ToBool())
