@@ -241,10 +241,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             ProcessBorder(endBorder, ref cellStyles, true);
         }
 
-        //var topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, rowNumber, columnNumber, rowCount, columnCount);
-        //var topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, rowNumber, columnNumber, rowCount, columnCount);
-        // Not supported in CSS
-
         ProcessShading(OpenXmlHelpers.GetEffectiveProperty<Shading>(cell), ref cellStyles);
 
         return true;
@@ -324,6 +320,12 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             sb.WriteAttributeString("style", string.Join(" ", styles));
         }
+        
+        //BorderType? topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, 1, 1, 1, 1);
+        //ProcessDiagonalBorder(topLeftToBottomRight, sb);
+        //BorderType? topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, 1, 1, 1, 1);
+        //ProcessDiagonalBorder(topRightToBottomLeft, sb);
+        // Diagonal borders are not supported in CSS; they could be created using inline SVG or other workarounds.
 
         // Process cell content
         foreach (var element in cell.Elements())

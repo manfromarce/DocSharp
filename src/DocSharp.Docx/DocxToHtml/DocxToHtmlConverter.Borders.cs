@@ -23,6 +23,8 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             cssAttribute = "border-right";
         }
+        // TODO: top and bottom borders should create a box around paragraphs with the same borders;
+        // currently they are treated like the "Between" border.
         else if (border is TopBorder)
         {
             cssAttribute = "border-top";
@@ -31,13 +33,14 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             cssAttribute = "border-bottom";
         }
-        else if (border is BarBorder)
-        {
-            cssAttribute = "border-right";
-        }
-        else if (border is BetweenBorder)
+        else if (border is BetweenBorder) // horizontal border between identical paragraphs
         {
             cssAttribute = "border-bottom";
+        }
+        else if (border is BarBorder) // paragraph border between facing pages
+        {
+            //cssAttribute = "border-right";
+            cssAttribute = "border-inline-end";
         }
         else if (border is StartBorder)
         {
@@ -47,13 +50,13 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             cssAttribute = "border-inline-end";
         }
-        else if (border is InsideHorizontalBorder)
+        else if (border is InsideHorizontalBorder) // for tables
         {
             if (isLastRow)
                 return;
             cssAttribute = "border-bottom";
         }
-        else if (border is InsideVerticalBorder)
+        else if (border is InsideVerticalBorder) // for tables
         {
             if (isLastColumn)
                 return;
@@ -116,27 +119,35 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             // Open XML uses 1/8 points for border width
             double sizeInPoints = border.Size.Value / 8.0;
-            borderWidth = $"{sizeInPoints.ToStringInvariant()}pt";
+            borderWidth = $"{sizeInPoints.ToStringInvariant(2)}pt";
         }
 
-        string borderColor = "000000";
-        if (border.Color?.Value != null && !string.IsNullOrWhiteSpace(border.Color?.Value) && border.Color!.Value.Length == 6)
+        string borderColor = "#000000";
+        if (border.Color?.Value != null && ColorHelpers.IsValidHexColor(border.Color.Value))
         {
             borderColor = border.Color.Value;
         }
-        if (border.Shadow != null && ((!border.Shadow.HasValue) || border.Shadow.Value))
+        if (!borderColor.StartsWith('#'))
         {
-            //borderStyle = "inset";
-            borderStyle = "outset";
+            borderColor = "#" + borderColor;
         }
-        if (border.Frame != null && ((!border.Frame.HasValue) || border.Frame.Value))
-        {
-            borderStyle = "ridge";
-        }
+
+        // TODO: box-shadow
+        //if (border.Shadow != null && ((!border.Shadow.HasValue) || border.Shadow.Value))
+        //{
+        //    if (border is RightBorder || border is EndBorder)
+        //    {
+        //    }
+        //    if (border is BottomBorder)
+        //    {
+        //    }
+        //}
+        //if (border.Frame != null && ((!border.Frame.HasValue) || border.Frame.Value))
+        //{
+        //}
 
         //if (isTableCell && border.Space != null && border.Space.Value > 0)
 
-        styles.Add($"{cssAttribute}: {borderWidth} {borderStyle} #{borderColor};");
+        styles.Add($"{cssAttribute}: {borderWidth} {borderStyle} {borderColor};");
     }
-
 }

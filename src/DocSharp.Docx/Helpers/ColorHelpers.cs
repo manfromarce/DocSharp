@@ -182,4 +182,11 @@ public static class ColorHelpers
         return hex;
     }
 
+    internal static bool IsValidHexColor(string value)
+    {
+        value = value.Trim('#');
+        return (!string.IsNullOrEmpty(value)) &&
+               value.Length == 6 &&
+               long.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out long res);
+    }
 }

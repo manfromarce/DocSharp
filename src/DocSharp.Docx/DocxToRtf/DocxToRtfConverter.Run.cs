@@ -95,7 +95,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         var fill14 = run.GetEffectiveProperty<W14.FillTextEffect>();
         if (fill14?.Elements<W14.SolidColorFillProperties>().FirstOrDefault() is W14.SolidColorFillProperties solidFill &&
             ColorHelpers.GetColor(solidFill) is string fillColor && 
-            RtfHelpers.IsValidColor(fillColor))
+            ColorHelpers.IsValidHexColor(fillColor))
         {
             // Not supported in RTF, convert to regular font color
             colors.TryAddAndGetIndex(fillColor, out int colorIndex);
@@ -103,14 +103,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else if (fill14?.Elements<W14.GradientFillProperties>().FirstOrDefault() is W14.GradientFillProperties gradientFill &&
                  gradientFill.GradientStopList?.Elements<W14.GradientStop>().FirstOrDefault() is W14.GradientStop firstGradientStop && 
-                 ColorHelpers.GetColor(firstGradientStop) is string gradientColor && 
-                 RtfHelpers.IsValidColor(gradientColor))
+                 ColorHelpers.GetColor(firstGradientStop) is string gradientColor &&
+                 ColorHelpers.IsValidHexColor(gradientColor))
         {
             // Not supported in RTF, extract the first color from the gradient
             colors.TryAddAndGetIndex(gradientColor, out int colorIndex);
             sb.WriteWordWithValue("cf", colorIndex);
         }
-        else if (color != null && RtfHelpers.IsValidColor(color)) // Give priority to the fill effect (if present)
+        else if (color != null && ColorHelpers.IsValidHexColor(color)) // Give priority to the fill effect (if present)
         {
             colors.TryAddAndGetIndex(color, out int colorIndex2);
             sb.WriteWordWithValue("cf", colorIndex2);
