@@ -55,6 +55,12 @@ internal static class RtfBorderMapper
             return @"\brdrtnthtnmg";
         else if (borderValue == BorderValues.ThinThickThinLargeGap)
             return @"\brdrtnthtnlg";
+        else if (borderValue == BorderValues.ThreeDEmboss)
+            return @"\brdremboss";
+        else if (borderValue == BorderValues.ThreeDEngrave)
+            return @"\brdrengrave";
+        else if (borderValue == BorderValues.DashDotStroked)
+            return @"\brdrdashdotstr";
         else if (borderValue == BorderValues.Nil)
             // return @"\brdrnil"; 
             // In DOCX nil means no border.
