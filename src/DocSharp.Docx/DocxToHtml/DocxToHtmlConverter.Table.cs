@@ -26,6 +26,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         if (layout?.Type != null && layout.Type.Value == TableLayoutValues.Fixed) // otherwise AutoFit
         {
             tableStyles.Add("table-layout: fixed;");
+            ProcessTableWidthType(table.GetEffectiveProperty<TableWidth>(), ref tableStyles, "width");
         }
         else
         {
@@ -79,6 +80,10 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             tableStyles.Add($"border-spacing: 0;");
         }
 
+        tableStyles.Add("box-sizing: border-box;"); 
+        // In DOCX the internal cell margin is computed in the cell width,
+        // while in HTML by default it's not, causing cells to become larger if border-box is not specified.
+
         if (tableStyles.Count > 0)
         {
             sb.WriteAttributeString("style", string.Join(" ", tableStyles));
@@ -96,7 +101,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     {
         var rowStyles = new List<string>();
         var defaultCellStyles = new List<string>();
-        bool isLastRow = rowNumber == rowCount;
         
         // These properties are specific to single rows.
         if (row.GetEffectiveProperty<TableRowHeight>() is TableRowHeight tableRowHeight &&
@@ -162,6 +166,11 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         // - ProcessTableWidthType will exit if a null margin is passed.
 
         sb.WriteStartElement("tr");
+
+        rowStyles.Add("box-sizing: border-box;");
+        // In DOCX the internal cell margin is computed in the cell width,
+        // while in HTML by default it's not, causing cells to become larger if border-box is not specified.
+
         if (rowStyles.Count > 0)
         {
             sb.WriteAttributeString("style", string.Join(" ", rowStyles));
@@ -174,6 +183,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         {
             var cellStyles = new List<string>();
             cellStyles.AddRange(defaultCellStyles);
+            cellStyles.Add("box-sizing: border-box;");
+            // In DOCX the internal cell margin is computed in the cell width,
+            // while in HTML by default it's not, causing cells to become larger if border-box is not specified.
 
             var result = ProcessTableCellProperties(cell, ref cellStyles, rowNumber, columnNumber, rowCount, columnCount, out int rowSpan, out int columnSpan);
             if (!result)
