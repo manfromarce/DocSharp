@@ -1,4 +1,4 @@
-## 0.12.0 - not published yet
+## 0.12.0
 
 - Fix issues in PPT to PPTX converter and improve performance
 - Fix issue with emojis (surrogate pairs chars) in DOC to DOCX converter
