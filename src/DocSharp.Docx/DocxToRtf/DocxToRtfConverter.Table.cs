@@ -823,12 +823,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         // The GetEffectiveBorder function deals with various complexities in retrieving borders
         // (e.g. start / end / insideHorizontal / insideVertical are considered depending on the case).
-        BorderType? topBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Top, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
-        BorderType? bottomBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Bottom, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
-        BorderType? leftBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Left, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
-        BorderType? rightBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Right, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
-        var topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);
-        var topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, rowNumber, columnNumber, rowCount, columnCount, isRightToLeft);               
+        BorderType? topBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Top, isRightToLeft);
+        BorderType? bottomBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Bottom, isRightToLeft);
+        BorderType? leftBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Left, isRightToLeft);
+        BorderType? rightBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Right, isRightToLeft);
+        var topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, isRightToLeft);
+        var topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, isRightToLeft);               
         if (topBorder != null)
         {
             sb.Write(@"\clbrdrt");

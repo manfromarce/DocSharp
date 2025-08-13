@@ -165,23 +165,23 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
         else if (border is InsideHorizontalBorder)
         {
-            if (effectiveBorderType == Primitives.BorderValue.Top && !isFirstRow)
+            if (effectiveBorderType == Primitives.BorderValue.Top)
                 return "border-top";
-            else if (effectiveBorderType == Primitives.BorderValue.Bottom && !isLastRow)
+            else if (effectiveBorderType == Primitives.BorderValue.Bottom)
                 return "border-bottom";
             else
                 return null;
         }
         else if (border is InsideVerticalBorder)
         {
-            if (effectiveBorderType == Primitives.BorderValue.Start && !isFirstColumn)
+            if (effectiveBorderType == Primitives.BorderValue.Start)
                 return isVertical ? "border-left" : "border-inline-start";
-            else if (effectiveBorderType == Primitives.BorderValue.End && !isLastColumn)
+            else if (effectiveBorderType == Primitives.BorderValue.End)
                 return isVertical ? "border-right" : "border-inline-end";
             // If the cell has vertical orientation, inline-start and inline-end are considered the top/bottom borders (incorrect)
-            else if (effectiveBorderType == Primitives.BorderValue.Left && !isFirstColumn)
+            else if (effectiveBorderType == Primitives.BorderValue.Left)
                 return "border-left";
-            else if (effectiveBorderType == Primitives.BorderValue.End && !isLastColumn)
+            else if (effectiveBorderType == Primitives.BorderValue.End)
                 return "border-right";
             else
                 return null;

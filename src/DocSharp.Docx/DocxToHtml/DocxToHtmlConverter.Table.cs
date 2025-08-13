@@ -43,7 +43,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             ProcessBorder(rightBorder, MapTableBorderAttribute(rightBorder), ref tableStyles);
         if (table.GetEffectiveBorder<StartBorder>() is StartBorder startBorder)
             ProcessBorder(startBorder, MapTableBorderAttribute(startBorder), ref tableStyles);
-        if (table.GetEffectiveBorder<StartBorder>() is StartBorder endBorder)
+        if (table.GetEffectiveBorder<EndBorder>() is EndBorder endBorder)
             ProcessBorder(endBorder, MapTableBorderAttribute(endBorder), ref tableStyles);
         // Notes:
         // - InsideHorizontalBorder and InsideVerticalBorder are *not* relevant in this case,
@@ -366,7 +366,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
         // Some of these are mapped to the same property in HTML,
         // so avoid writing duplicated attributes by removing the existing ones in the correct priority order.
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Start, rowNumber, columnNumber, rowCount, columnCount) is BorderType startBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Start) is BorderType startBorder)
         {
             string? attribute = MapTableCellBorderAttribute(startBorder, Primitives.BorderValue.Start, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -375,7 +375,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 ProcessBorder(startBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.End, rowNumber, columnNumber, rowCount, columnCount) is BorderType endBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.End) is BorderType endBorder)
         {
             string? attribute = MapTableCellBorderAttribute(endBorder, Primitives.BorderValue.End, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -384,7 +384,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 ProcessBorder(endBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Top, rowNumber, columnNumber, rowCount, columnCount) is BorderType topBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Top) is BorderType topBorder)
         {
             string? attribute = MapTableCellBorderAttribute(topBorder, Primitives.BorderValue.Top, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -393,7 +393,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 ProcessBorder(topBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Bottom, rowNumber, columnNumber, rowCount, columnCount) is BorderType bottomBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Bottom) is BorderType bottomBorder)
         {
             string? attribute = MapTableCellBorderAttribute(bottomBorder, Primitives.BorderValue.Bottom, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -402,7 +402,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 ProcessBorder(bottomBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Left, rowNumber, columnNumber, rowCount, columnCount) is BorderType leftBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Left) is BorderType leftBorder)
         {
             string? attribute = MapTableCellBorderAttribute(leftBorder, Primitives.BorderValue.Left, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -411,7 +411,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 ProcessBorder(leftBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Right, rowNumber, columnNumber, rowCount, columnCount) is BorderType rightBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Right) is BorderType rightBorder)
         {
             string? attribute = MapTableCellBorderAttribute(rightBorder, Primitives.BorderValue.Right, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)

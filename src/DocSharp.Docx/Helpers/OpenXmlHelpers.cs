@@ -904,13 +904,12 @@ public static class OpenXmlHelpers
 
     // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
     public static BorderType? GetEffectiveBorder(this TableCell cell, Primitives.BorderValue borderValue,
-                                                 int rowNumber, int columnNumber, int rowCount, int columnCount, bool isRightToLeft = false,
-                                                 Styles? stylesPart = null)
+                                                 bool isRightToLeft = false, Styles? stylesPart = null)
     {
-        bool isFirstRow = rowNumber == 1;
-        bool isFirstColumn = columnNumber == 1;
-        bool isLastRow = rowNumber == rowCount;
-        bool isLastColumn = columnNumber == columnCount;
+        //bool isFirstRow = rowNumber == 1;
+        //bool isFirstColumn = columnNumber == 1;
+        //bool isLastRow = rowNumber == rowCount;
+        //bool isLastColumn = columnNumber == columnCount;
 
         var targetTypesCell = new List<Type>();
         var targetTypesTable = new List<Type>();
@@ -919,58 +918,28 @@ public static class OpenXmlHelpers
             case Primitives.BorderValue.Left:
                 targetTypesCell.Add(typeof(LeftBorder));
                 targetTypesCell.Add(isRightToLeft ? typeof(EndBorder) : typeof(StartBorder));
-                if (isFirstColumn)
-                {
-                    targetTypesTable.Add(typeof(LeftBorder));
-                    targetTypesTable.Add(isRightToLeft ? typeof(EndBorder) : typeof(StartBorder));
-                }
-                else
-                {
-                    targetTypesTable.Add(typeof(InsideVerticalBorder));
-                }
+                targetTypesTable.Add(typeof(InsideVerticalBorder));
                 break;
             case Primitives.BorderValue.Start:
                 targetTypesCell.Add(typeof(StartBorder));
-                if (isFirstColumn)
-                {
-                    targetTypesTable.Add(typeof(StartBorder));
-                }
-                else
-                {
-                    targetTypesTable.Add(typeof(InsideVerticalBorder));
-                }
+                targetTypesTable.Add(typeof(InsideVerticalBorder));
                 break;
             case Primitives.BorderValue.Right:
                 targetTypesCell.Add(typeof(RightBorder));
                 targetTypesCell.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
-                if (isLastColumn)
-                {
-                    targetTypesTable.Add(typeof(RightBorder));
-                    targetTypesTable.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
-                }
-                else
-                {
-                    targetTypesTable.Add(typeof(InsideVerticalBorder));
-                }
+                targetTypesTable.Add(typeof(InsideVerticalBorder));
                 break;
             case Primitives.BorderValue.End:
                 targetTypesCell.Add(typeof(EndBorder));
-                if (isLastColumn)
-                {
-                    targetTypesTable.Add(typeof(EndBorder));
-                }
-                else
-                {
-                    targetTypesTable.Add(typeof(InsideVerticalBorder));
-                }
+                targetTypesTable.Add(typeof(InsideVerticalBorder));
                 break;
             case Primitives.BorderValue.Top:
                 targetTypesCell.Add(typeof(TopBorder));
-                targetTypesTable.Add(isFirstRow ? typeof(TopBorder) : typeof(InsideHorizontalBorder));
+                targetTypesTable.Add(typeof(InsideHorizontalBorder));
                 break;
             case Primitives.BorderValue.Bottom:
                 targetTypesCell.Add(typeof(BottomBorder));
-                targetTypesTable.Add(isLastRow ? typeof(BottomBorder) : typeof(InsideHorizontalBorder));
+                targetTypesTable.Add(typeof(InsideHorizontalBorder));
                 break;
             case Primitives.BorderValue.TopLeftToBottomRightDiagonal:
                 targetTypesCell.Add(typeof(TopLeftToBottomRightCellBorder));
