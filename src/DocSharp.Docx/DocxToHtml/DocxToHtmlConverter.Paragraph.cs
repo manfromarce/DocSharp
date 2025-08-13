@@ -205,21 +205,21 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     {
         if (indent.LeftChars != null)
         {
-            styles.Add($"padding-left: {indent.LeftChars.Value.ToStringInvariant()}ch;");
+            styles.Add($"margin-left: {indent.LeftChars.Value.ToStringInvariant()}ch;");
         }
         else if (indent.Left.ToLong() is long left)
         {
             // Convert twips to points
-            styles.Add($"padding-left: {(left / 20m).ToStringInvariant(2)}pt;");
+            styles.Add($"margin-left: {(left / 20m).ToStringInvariant(2)}pt;");
         }
 
         if (indent.RightChars != null)
         {
-            styles.Add($"padding-right: {indent.RightChars.Value.ToStringInvariant()}ch;");
+            styles.Add($"margin-right: {indent.RightChars.Value.ToStringInvariant()}ch;");
         }
         else if (indent.Right.ToLong() is long right)
         {
-            styles.Add($"padding-right: {(right / 20m).ToStringInvariant(2)}pt;");
+            styles.Add($"margin-right: {(right / 20m).ToStringInvariant(2)}pt;");
         }
 
         // TODO: start / end indent

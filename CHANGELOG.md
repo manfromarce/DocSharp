@@ -1,6 +1,7 @@
 ## 0.12.1 - not published yet
 
 - Support table cell spacing in DOCX to HTML converter and improve tables logic
+- Support paragraph borders spacing (distance from text) in DOCX to HTML converter
 
 ## 0.12.0 - 2025.08.12
 

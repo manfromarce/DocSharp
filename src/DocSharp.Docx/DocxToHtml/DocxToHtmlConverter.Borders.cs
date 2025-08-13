@@ -98,7 +98,15 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         //{
         //}
 
-        //if (border.Space != null && border.Space.Value > 0) // for paragraphs only
+        if (border.Space != null && border.Space.Value > 0) // for paragraphs only
+        {
+            string? paddingAttribute = MapParagraphBorderToPadding(border);
+            if (paddingAttribute != null)
+            {
+                styles.Add($"{paddingAttribute}: {border.Space.Value.ToStringInvariant()}pt;");
+                // Convert twips to points
+            }
+        }
 
         styles.Add($"{cssAttribute}: {borderWidth} {borderStyle} {borderColor};");
     }
@@ -120,6 +128,28 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             return "border-bottom";
         else if (border is BarBorder) // paragraph border between facing pages
             return isVertical ? "border-right" : "border-inline-end";
+        // If the paragraph has vertical orientation, inline-end is considered the bottom border (incorrect)
+        else
+            return null;
+    }
+
+    internal string? MapParagraphBorderToPadding(BorderType border, bool isVertical = false)
+    {
+        // Only border types that can be found in ParagraphBorders are processed here.
+        if (border is LeftBorder)
+            return "padding-left";
+        else if (border is RightBorder)
+            return "padding-right";
+        // TODO: top and bottom borders should create a box around paragraphs with the same borders;
+        // currently they are treated like the "Between" border.
+        else if (border is TopBorder)
+            return "padding-top";
+        else if (border is BottomBorder)
+            return "padding-bottom";
+        else if (border is BetweenBorder) // horizontal border between identical paragraphs
+            return "padding-bottom";
+        else if (border is BarBorder) // paragraph border between facing pages
+            return isVertical ? "padding-right" : "padding-inline-end";
         // If the paragraph has vertical orientation, inline-end is considered the bottom border (incorrect)
         else
             return null;
