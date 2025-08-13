@@ -1,4 +1,4 @@
-## 0.12.1 - 2025.08.14
+## 0.12.1 - not published yet
 
 - Support table cell spacing in DOCX to HTML converter and improve tables logic
 
