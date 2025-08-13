@@ -929,6 +929,17 @@ public static class OpenXmlHelpers
                     targetTypesTable.Add(typeof(InsideVerticalBorder));
                 }
                 break;
+            case Primitives.BorderValue.Start:
+                targetTypesCell.Add(typeof(StartBorder));
+                if (isFirstColumn)
+                {
+                    targetTypesTable.Add(typeof(StartBorder));
+                }
+                else
+                {
+                    targetTypesTable.Add(typeof(InsideVerticalBorder));
+                }
+                break;
             case Primitives.BorderValue.Right:
                 targetTypesCell.Add(typeof(RightBorder));
                 targetTypesCell.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
@@ -936,17 +947,6 @@ public static class OpenXmlHelpers
                 {
                     targetTypesTable.Add(typeof(RightBorder));
                     targetTypesTable.Add(isRightToLeft ? typeof(StartBorder) : typeof(EndBorder));
-                }
-                else
-                {
-                    targetTypesTable.Add(typeof(InsideVerticalBorder));
-                }
-                break;
-            case Primitives.BorderValue.Start:
-                targetTypesCell.Add(typeof(StartBorder));
-                if (isLastColumn)
-                {
-                    targetTypesTable.Add(typeof(StartBorder));
                 }
                 else
                 {
@@ -1053,7 +1053,7 @@ public static class OpenXmlHelpers
         return null;
     }
 
-    // Helper function to get a border (top, bottom, left, start, diagonal...) from cell/table/row properties or style.
+    // Helper function to get a border (top, bottom, left, start, diagonal...) from table/row properties or style.
     public static T? GetEffectiveBorder<T>(this TableRow row, Styles? stylesPart = null) where T : BorderType
     {
         // Check row properties
@@ -1097,6 +1097,54 @@ public static class OpenXmlHelpers
             // Check regular table style
             propertyValue = tableStyle.StyleTableProperties?.TableBorders?.GetFirstChild<T>();
             // (row properties do not contain borders according to Open XML spec)
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            tableStyle = stylesPart.GetBaseStyle(tableStyle);
+        }
+        return null;
+    }
+
+    // Helper function to get a border (top, bottom, left, start, ...) from row properties or style.
+    public static T? GetEffectiveBorder<T>(this Table table, Styles? stylesPart = null) where T : BorderType
+    {
+        T? propertyValue = null;
+
+        // Check table properties
+        var tableProperties = table.GetFirstChild<TableProperties>();
+        propertyValue = tableProperties?.TableBorders?.GetFirstChild<T>();
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        stylesPart ??= GetStylesPart(table);
+
+        // Check table style
+        var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+        var conditionalFormattingFlags = table.GetCombinedConditionalFormattingFlags();
+        while (tableStyle != null)
+        {
+            // Check conditional formatting, if any
+            var conditionalStyles = GetConditionalFormattingStyles(tableStyle, conditionalFormattingFlags);
+            if (conditionalStyles != null)
+            {
+                foreach (var conditionalStyle in conditionalStyles)
+                {
+                    propertyValue = conditionalStyle?.TableStyleConditionalFormattingTableProperties?.TableBorders?.GetFirstChild<T>();
+
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check regular table style
+            propertyValue = tableStyle.StyleTableProperties?.TableBorders?.GetFirstChild<T>();
             if (propertyValue != null)
             {
                 return propertyValue;

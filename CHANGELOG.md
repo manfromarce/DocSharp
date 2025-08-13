@@ -1,4 +1,8 @@
-## 0.12.0
+## 0.12.1 - 2025.08.14
+
+- Support table cell spacing in DOCX to HTML converter and improve tables logic
+
+## 0.12.0 - 2025.08.12
 
 - Fix issues in PPT to PPTX converter and improve performance
 - Fix issue with emojis (surrogate pairs chars) in DOC to DOCX converter

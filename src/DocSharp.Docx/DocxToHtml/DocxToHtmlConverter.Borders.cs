@@ -12,62 +12,11 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 {
-    internal void ProcessBorder(BorderType? border, ref List<string> styles, bool isTableCell, bool isLastRow = false, bool isLastColumn = false, bool isVertical = false)
+    internal void ProcessBorder(BorderType? border, string? cssAttribute, ref List<string> styles)
     {
-        if (border == null)
+        if (border == null || cssAttribute == null)
         {
             return;
-        }
-        string cssAttribute = "border-left";
-        if (border is RightBorder)
-        {
-            cssAttribute = "border-right";
-        }
-        // TODO: top and bottom borders should create a box around paragraphs with the same borders;
-        // currently they are treated like the "Between" border.
-        else if (border is TopBorder)
-        {
-            cssAttribute = "border-top";
-        }
-        else if (border is BottomBorder)
-        {
-            cssAttribute = "border-bottom";
-        }
-        else if (border is BetweenBorder) // horizontal border between identical paragraphs
-        {
-            cssAttribute = "border-bottom";
-        }
-        else if (border is BarBorder) // paragraph border between facing pages
-        {
-            cssAttribute = isVertical ? "border-right" : "border-inline-end";
-            // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
-        }
-        else if (border is StartBorder)
-        {
-            cssAttribute = isVertical ? "border-left" : "border-inline-start";
-            // If the cell has vertical orientation, inline-start is considered the top border (incorrect)
-        }
-        else if (border is EndBorder)
-        {
-            cssAttribute = isVertical ? "border-right" : "border-inline-end";
-            // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
-        }
-        else if (border is InsideHorizontalBorder) // for tables
-        {
-            if (isLastRow)
-                return;
-            cssAttribute = "border-bottom";
-        }
-        else if (border is InsideVerticalBorder) // for tables
-        {
-            if (isLastColumn)
-                return;
-            cssAttribute = isVertical ? "border-right" : "border-inline-end"; 
-            // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
-        }
-        else if (border is Border) // Used for characters borders (same for top, left, bottom and right)
-        {
-            cssAttribute = "border";
         }
 
         string borderStyle = "solid";
@@ -149,8 +98,95 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         //{
         //}
 
-        //if (isTableCell && border.Space != null && border.Space.Value > 0)
+        //if (border.Space != null && border.Space.Value > 0) // for paragraphs only
 
         styles.Add($"{cssAttribute}: {borderWidth} {borderStyle} {borderColor};");
+    }
+
+    internal string? MapParagraphBorderAttribute(BorderType border, bool isVertical = false)
+    {
+        // Only border types that can be found in ParagraphBorders are processed here.
+        if (border is LeftBorder)
+            return "border-left";
+        else if (border is RightBorder)
+            return "border-right";
+        // TODO: top and bottom borders should create a box around paragraphs with the same borders;
+        // currently they are treated like the "Between" border.
+        else if (border is TopBorder)
+            return "border-top";
+        else if (border is BottomBorder)
+            return "border-bottom";
+        else if (border is BetweenBorder) // horizontal border between identical paragraphs
+            return "border-bottom";
+        else if (border is BarBorder) // paragraph border between facing pages
+            return isVertical ? "border-right" : "border-inline-end";
+        // If the paragraph has vertical orientation, inline-end is considered the bottom border (incorrect)
+        else
+            return null;
+    }
+
+    internal string? MapTableBorderAttribute(BorderType border)
+    {
+        // Only border types that can be found in TableBorders are processed here.
+        if (border is LeftBorder)
+            return "border-left";
+        else if (border is RightBorder)
+            return "border-right";
+        else if (border is TopBorder)
+            return "border-top";
+        else if (border is BottomBorder)
+            return "border-bottom";
+        else if (border is StartBorder)
+            return "border-inline-start";
+        else if (border is EndBorder)
+            return "border-inline-end";
+        else
+            return null;
+        // Note: InsideHorizontalBorder and InsideVerticalBorder don't have a CSS equivalent,
+        // so they are detected when processing table cells instead.
+    }
+
+    internal string? MapTableCellBorderAttribute(BorderType border, Primitives.BorderValue effectiveBorderType, bool isVertical, bool isFirstRow, bool isFirstColumn, bool isLastRow, bool isLastColumn)
+    {
+        // Only border types that are relevant to table cells are processed here.
+        if (border is LeftBorder)
+            return "border-left";
+        else if (border is RightBorder)
+            return "border-right";
+        else if (border is TopBorder)
+            return "border-top";
+        else if (border is BottomBorder)
+            return "border-bottom";
+        else if (border is StartBorder)
+            return isVertical ? "border-left" : "border-inline-start";
+            // If the cell has vertical orientation, inline-start is considered the top border (incorrect)
+        else if (border is EndBorder)
+            return isVertical ? "border-right" : "border-inline-end";
+            // If the cell has vertical orientation, inline-end is considered the bottom border (incorrect)
+        else if (border is InsideHorizontalBorder)
+        {
+            if (effectiveBorderType == Primitives.BorderValue.Top && !isFirstRow)
+                return "border-top";
+            else if (effectiveBorderType == Primitives.BorderValue.Bottom && !isLastRow)
+                return "border-bottom";
+            else
+                return null;
+        }
+        else if (border is InsideVerticalBorder)
+        {
+            if (effectiveBorderType == Primitives.BorderValue.Start && !isFirstColumn)
+                return isVertical ? "border-left" : "border-inline-start";
+            else if (effectiveBorderType == Primitives.BorderValue.End && !isLastColumn)
+                return isVertical ? "border-right" : "border-inline-end";
+            // If the cell has vertical orientation, inline-start and inline-end are considered the top/bottom borders (incorrect)
+            else if (effectiveBorderType == Primitives.BorderValue.Left && !isFirstColumn)
+                return "border-left";
+            else if (effectiveBorderType == Primitives.BorderValue.End && !isLastColumn)
+                return "border-right";
+            else
+                return null;
+        }
+        else 
+            return null;
     }
 }

@@ -250,7 +250,8 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
         if (border?.Val != null)
         {
-            ProcessBorder(border, ref styles, false);
+            ProcessBorder(border, "border", ref styles); 
+            // Use "border" because character border is the same for all sides (top, left, bottom, right) in DOCX.
         }
 
         if (shadow14 != null)

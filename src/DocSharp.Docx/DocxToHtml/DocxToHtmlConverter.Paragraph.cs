@@ -77,17 +77,21 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
         }
 
         if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
-            ProcessBorder(topBorder, ref styles, false);
+            ProcessBorder(topBorder, MapParagraphBorderAttribute(topBorder), ref styles);
+        
         if (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder)
-            ProcessBorder(bottomBorder, ref styles, false);
+            ProcessBorder(bottomBorder, MapParagraphBorderAttribute(bottomBorder), ref styles);
+        // In the current implementation both BottomBorder and BetweenBorder are mapped to border-bottom in HTML,
+        // so avoid writing duplicate attributes.
+        else if (paragraph.GetEffectiveBorder<BetweenBorder>() is BetweenBorder betweenBorder)
+            ProcessBorder(betweenBorder, MapParagraphBorderAttribute(betweenBorder), ref styles);
+
         if (paragraph.GetEffectiveBorder<LeftBorder>() is LeftBorder leftBorder)
-            ProcessBorder(leftBorder, ref styles, false);
+            ProcessBorder(leftBorder, MapParagraphBorderAttribute(leftBorder), ref styles);
         if (paragraph.GetEffectiveBorder<RightBorder>() is RightBorder rightBorder)
-            ProcessBorder(rightBorder, ref styles, false);
+            ProcessBorder(rightBorder, MapParagraphBorderAttribute(rightBorder), ref styles);
         if (paragraph.GetEffectiveBorder<BarBorder>() is BarBorder barBorder)
-            ProcessBorder(barBorder, ref styles, false);
-        if (paragraph.GetEffectiveBorder<BetweenBorder>() is BetweenBorder betweenBorder)
-            ProcessBorder(betweenBorder, ref styles, false);
+            ProcessBorder(barBorder, MapParagraphBorderAttribute(barBorder), ref styles);
 
         ProcessShading(OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph), ref styles);
 
