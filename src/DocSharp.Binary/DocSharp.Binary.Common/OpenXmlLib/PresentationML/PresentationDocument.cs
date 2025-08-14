@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace DocSharp.Binary.OpenXmlLib.PresentationML
 {
     public class PresentationDocument : OpenXmlPackage
@@ -7,6 +9,17 @@ namespace DocSharp.Binary.OpenXmlLib.PresentationML
 
         protected PresentationDocument(string fileName, PresentationDocumentType type)
             : base(fileName)
+        {
+            Initialize(type);
+        }
+        
+        protected PresentationDocument(Stream stream, PresentationDocumentType type)
+            : base(stream)
+        {
+            Initialize(type);
+        }
+
+        private void Initialize(PresentationDocumentType type)
         {
             switch (type)
             {
@@ -36,6 +49,13 @@ namespace DocSharp.Binary.OpenXmlLib.PresentationML
         public static PresentationDocument Create(string fileName, PresentationDocumentType type)
         {
             var presentation = new PresentationDocument(fileName, type);
+
+            return presentation;
+        }
+        
+        public static PresentationDocument Create(Stream stream, PresentationDocumentType type)
+        {
+            var presentation = new PresentationDocument(stream, type);
 
             return presentation;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DocSharp.Binary.OpenXmlLib
 {
@@ -7,6 +8,7 @@ namespace DocSharp.Binary.OpenXmlLib
     {
         #region Protected members
         protected string _fileName;
+        protected Stream _stream;
 
         protected Dictionary<string, string> _defaultTypes = new Dictionary<string, string>();
         protected Dictionary<string, string> _partOverrides = new Dictionary<string, string>();
@@ -19,12 +21,24 @@ namespace DocSharp.Binary.OpenXmlLib
         protected int _oleCounter;
 
         protected bool _isClosed = false;
-        #endregion        
-
+        #endregion
+        
+        protected OpenXmlPackage(Stream stream)
+        {
+            this._stream = stream;
+            
+            Initialize();
+        }
+        
         protected OpenXmlPackage(string fileName)
         {
             this._fileName = fileName;
-
+            
+            Initialize();
+        }
+        
+        private void Initialize()
+        {
             this._defaultTypes.Add("rels", OpenXmlContentTypes.Relationships);
             this._defaultTypes.Add("xml", OpenXmlContentTypes.Xml);
             this._defaultTypes.Add("bin", OpenXmlContentTypes.OleObject);
@@ -50,7 +64,10 @@ namespace DocSharp.Binary.OpenXmlLib
 
             // Serialize the package on closing
             var writer = new OpenXmlWriter();
-            writer.Open(this.FileName);
+            
+            if(_stream is not null)
+                writer.Open(_stream);
+            else writer.Open(_fileName);
 
             this.WritePackage(writer);
 

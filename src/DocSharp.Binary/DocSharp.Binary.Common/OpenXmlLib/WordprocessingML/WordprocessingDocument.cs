@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace DocSharp.Binary.OpenXmlLib.WordprocessingML
 {
     public class WordprocessingDocument : OpenXmlPackage
@@ -6,8 +8,17 @@ namespace DocSharp.Binary.OpenXmlLib.WordprocessingML
         protected CustomXmlPropertiesPart _customFilePropertiesPart;
         protected MainDocumentPart _mainDocumentPart;
 
-        protected WordprocessingDocument(string fileName, WordprocessingDocumentType type)
-            : base(fileName)
+        protected WordprocessingDocument(string fileName, WordprocessingDocumentType type) : base(fileName)
+        {
+            Initialize(type);
+        }
+        
+        protected WordprocessingDocument(Stream stream, WordprocessingDocumentType type) : base(stream)
+        {
+            Initialize(type);
+        }
+
+        private void Initialize(WordprocessingDocumentType type)
         {
             switch (type)
             {
@@ -32,6 +43,13 @@ namespace DocSharp.Binary.OpenXmlLib.WordprocessingML
         public static WordprocessingDocument Create(string fileName, WordprocessingDocumentType type)
         {
             var doc = new WordprocessingDocument(fileName, type);
+            
+            return doc;
+        }
+        
+        public static WordprocessingDocument Create(Stream stream, WordprocessingDocumentType type)
+        {
+            var doc = new WordprocessingDocument(stream, type);
             
             return doc;
         }
