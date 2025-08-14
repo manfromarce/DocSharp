@@ -80,9 +80,27 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             tableStyles.Add($"border-spacing: 0;");
         }
 
-        tableStyles.Add("box-sizing: border-box;"); 
+        tableStyles.Add("box-sizing: border-box;");
         // In DOCX the internal cell margin is computed in the cell width,
         // while in HTML by default it's not, causing cells to become larger if border-box is not specified.
+
+        var ind = table.GetEffectiveProperty<TableIndentation>();
+        if (ind?.Type != null && ind?.Width != null)
+        {
+            if (ind.Type.Value == TableWidthUnitValues.Pct) // Fithies of percent
+            {
+                var width = ind.Width.Value / 50m; // Convert fifties of percent to percent
+                tableStyles.Add($"margin-left: {width.ToStringInvariant(2)}%;");
+            }
+            else if (ind.Type.Value == TableWidthUnitValues.Dxa) // Twips
+            {
+                var width = ind.Width.Value / 20m; // Convert twips to points
+                tableStyles.Add($"margin-left: {width.ToStringInvariant(2)}pt;");
+            }
+        }
+
+        //var tj = row.GetEffectiveProperty<TableJustification>();
+        // TODO
 
         if (tableStyles.Count > 0)
         {
@@ -133,20 +151,24 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             ProcessTableWidthType(row.GetEffectiveProperty<TableWidth>(), ref rowStyles, "width");
         }
 
-        var ind = row.GetEffectiveProperty<TableIndentation>();
-        if (ind?.Type != null && ind?.Width != null)
-        {
-            if (ind.Type.Value == TableWidthUnitValues.Pct) // Fithies of percent
-            {
-                var width = ind.Width.Value / 50m; // Convert fifties of percent to percent
-                rowStyles.Add($"margin-left: {width.ToStringInvariant(2)}%;");
-            }
-            else if (ind.Type.Value == TableWidthUnitValues.Dxa) // Twips
-            {
-                var width = ind.Width.Value / 20m; // Convert twips to points
-                rowStyles.Add($"margin-left: {width.ToStringInvariant(2)}pt;");
-            }
-        }
+        //var ind = row.GetEffectiveProperty<TableIndentation>();
+        // Not supported for individual rows in HTML
+        //if (ind?.Type != null && ind?.Width != null)
+        //{
+        //    if (ind.Type.Value == TableWidthUnitValues.Pct) // Fithies of percent
+        //    {
+        //        var width = ind.Width.Value / 50m; // Convert fifties of percent to percent
+        //        rowStyles.Add($"margin-left: {width.ToStringInvariant(2)}%;");
+        //    }
+        //    else if (ind.Type.Value == TableWidthUnitValues.Dxa) // Twips
+        //    {
+        //        var width = ind.Width.Value / 20m; // Convert twips to points
+        //        rowStyles.Add($"margin-left: {width.ToStringInvariant(2)}pt;");
+        //    }
+        //}
+
+        //var tj = row.GetEffectiveProperty<TableJustification>();
+        // Not supported for individual rows in HTML
 
         ProcessTableWidthType(row.GetEffectiveProperty<WidthBeforeTableRow>(), ref rowStyles, "margin-top");
         ProcessTableWidthType(row.GetEffectiveProperty<WidthAfterTableRow>(), ref rowStyles, "margin-bottom");

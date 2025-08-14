@@ -1,6 +1,8 @@
 ## 0.13.0 - not published yet
 
-- Support table cell spacing in DOCX to HTML converter and improve tables logic
+- Support table cell spacing in DOCX to HTML converter
+- Preserve table left indentation correctly in DOCX to HTML converter
+- Fix issues with margins and borders, and improve overall tables logic in DOCX to RTF/HTML converter
 - Support paragraph borders spacing (distance from text) in DOCX to HTML converter
 - Recognize and convert color names (e.g. "red") in DOCX to RTF/HTML converter
 - Other bug fixes
