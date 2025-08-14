@@ -255,7 +255,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                  What are the first two values?
                  */
                 if (!string.IsNullOrEmpty(shadeColors))
-                    sb.WriteShapeProperty("fillShadeColors", "");
+                    sb.WriteShapeProperty("fillShadeColors", shadeColors);
             }
 
             var type = fill.Type.Value;

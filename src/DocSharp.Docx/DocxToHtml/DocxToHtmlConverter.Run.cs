@@ -197,9 +197,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             {
                 styles.Add($"text-decoration-thickness: {underlineThickness}%;"); // "auto" seems to be almost equal to 10% of font size
             }
-            if ((!string.IsNullOrEmpty(underline.Color?.Value)) && underline.Color!.Value!.Length == 6)
+            if (ColorHelpers.EnsureHexColor(underline.Color?.Value) is string underlineColor)
             {
-                styles.Add($"text-decoration-color: #{underline.Color.Value}");
+                styles.Add($"text-decoration-color: #{underlineColor};");
             }
         }
 
@@ -243,7 +243,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             }
         }
         else if (OpenXmlHelpers.GetEffectiveProperty<Shading>(run) is Shading shading && 
-            shading.Fill?.Value is string fill && fill.Length == 6)
+                 ColorHelpers.EnsureHexColor(shading.Fill?.Value) is string fill)
         {
             styles.Add($"background-color: #{fill};");
         }
@@ -313,7 +313,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             {
                 outlineColor = "transparent";
             }
-            styles.Add($"-webkit-text-stroke: {width.ToStringInvariant(2)}pt {outlineColor};");
+
+            if (!string.IsNullOrEmpty(outlineColor))
+                styles.Add($"-webkit-text-stroke: {width.ToStringInvariant(2)}pt {outlineColor};");
         }
         else if (outline != null)
         {
@@ -334,16 +336,18 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
                 // Extract the first color from the gradient
                 fillColor = ColorHelpers.GetColor(firstGradientStop, fillColor);
             }
-            else if (fill14.Elements<W14.NoFillEmpty>().FirstOrDefault() is W14.NoFillEmpty noFill)
+            else if (fill14.Elements<W14.NoFillEmpty>().FirstOrDefault() is W14.NoFillEmpty)
             {
                 fillColor = "transparent";
             }
-            styles.Add($"-webkit-text-fill-color: {fillColor};");
+
+            if (!string.IsNullOrEmpty(fillColor))
+                styles.Add($"-webkit-text-fill-color: {fillColor};");
         }
         // Fill effect has priority over color
-        else if (!string.IsNullOrEmpty(color) && color!.Length == 6)
+        else if (ColorHelpers.EnsureHexColor(color) is string hexColor)
         {
-            styles.Add($"color: #{color};");
+            styles.Add($"color: #{hexColor};");
         }
 
         // Add HTML span with styles

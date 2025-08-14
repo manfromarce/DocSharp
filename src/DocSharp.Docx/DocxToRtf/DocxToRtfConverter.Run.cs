@@ -95,7 +95,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         var fill14 = run.GetEffectiveProperty<W14.FillTextEffect>();
         if (fill14?.Elements<W14.SolidColorFillProperties>().FirstOrDefault() is W14.SolidColorFillProperties solidFill &&
             ColorHelpers.GetColor(solidFill) is string fillColor && 
-            ColorHelpers.IsValidHexColor(fillColor))
+            !string.IsNullOrEmpty(fillColor))
         {
             // Not supported in RTF, convert to regular font color
             colors.TryAddAndGetIndex(fillColor, out int colorIndex);
@@ -104,15 +104,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         else if (fill14?.Elements<W14.GradientFillProperties>().FirstOrDefault() is W14.GradientFillProperties gradientFill &&
                  gradientFill.GradientStopList?.Elements<W14.GradientStop>().FirstOrDefault() is W14.GradientStop firstGradientStop && 
                  ColorHelpers.GetColor(firstGradientStop) is string gradientColor &&
-                 ColorHelpers.IsValidHexColor(gradientColor))
+                 !string.IsNullOrEmpty(gradientColor))
         {
             // Not supported in RTF, extract the first color from the gradient
             colors.TryAddAndGetIndex(gradientColor, out int colorIndex);
             sb.WriteWordWithValue("cf", colorIndex);
         }
-        else if (color != null && ColorHelpers.IsValidHexColor(color)) // Give priority to the fill effect (if present)
+        else if (color != null && ColorHelpers.EnsureHexColor(color) is string fontColor) 
+            // Give priority to the fill effect (if present)
         {
-            colors.TryAddAndGetIndex(color, out int colorIndex2);
+            colors.TryAddAndGetIndex(fontColor, out int colorIndex2);
             sb.WriteWordWithValue("cf", colorIndex2);
         }
         else
@@ -189,10 +190,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.Write(ul);
             }
 
-            if ((!string.IsNullOrEmpty(u.Color?.Value)) &&
-                !u.Color!.Value!.Equals("auto", StringComparison.OrdinalIgnoreCase))
+            if (ColorHelpers.EnsureHexColor(u.Color?.Value) is string underlineColor)
             {
-                colors.TryAddAndGetIndex(u.Color.Value, out int colorIndex);
+                colors.TryAddAndGetIndex(underlineColor, out int colorIndex);
                 sb.WriteWordWithValue("ulc", colorIndex);
             }
         }

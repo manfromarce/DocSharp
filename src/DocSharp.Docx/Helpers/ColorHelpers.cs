@@ -182,11 +182,35 @@ public static class ColorHelpers
         return hex;
     }
 
+    internal static string? EnsureHexColor(string? value)
+    {
+        if (value == null)
+            return null;
+
+        if (string.IsNullOrWhiteSpace(value) || value.Equals("auto", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        value = value.Trim('#');
+
+        if (long.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _))
+        {
+            if (value.Length == 6)
+                return value;
+            else if (value.Length == 3)
+                return $"{value[0]}{value[0]}{value[1]}{value[1]}{value[2]}{value[2]}";
+            else
+                return null;
+        }
+
+        var color = System.Drawing.Color.FromName(value); // or System.Drawing.ColorTranslator.FromHtml(hex);
+        if (!color.IsEmpty)
+            return $"{color.R:X2}{color.G:X2}{color.B:X2}";
+
+        return null;
+    }
+
     internal static bool IsValidHexColor(string value)
     {
-        value = value.Trim('#');
-        return (!string.IsNullOrEmpty(value)) &&
-               value.Length == 6 &&
-               long.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out long res);
+        return EnsureHexColor(value) != null;
     }
 }

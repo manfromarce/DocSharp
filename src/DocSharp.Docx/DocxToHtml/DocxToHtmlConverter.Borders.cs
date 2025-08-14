@@ -74,15 +74,11 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             borderWidth = $"{sizeInPoints.ToStringInvariant(2)}pt";
         }
 
-        string borderColor = "#000000";
-        if (border.Color?.Value != null && ColorHelpers.IsValidHexColor(border.Color.Value))
-        {
-            borderColor = border.Color.Value;
-        }
-        if (!borderColor.StartsWith('#'))
-        {
-            borderColor = "#" + borderColor;
-        }
+        string borderColor;
+        if (border.Color?.Value != null)
+            borderColor = ColorHelpers.EnsureHexColor(border.Color.Value) ?? "000000";
+        else
+            borderColor = "000000";
 
         // TODO: box-shadow
         //if (border.Shadow != null && ((!border.Shadow.HasValue) || border.Shadow.Value))
@@ -103,12 +99,12 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             string? paddingAttribute = MapParagraphBorderToPadding(border);
             if (paddingAttribute != null)
             {
+                // Border spacing is expressed in points (not twips) in DOCX.
                 styles.Add($"{paddingAttribute}: {border.Space.Value.ToStringInvariant()}pt;");
-                // Convert twips to points
             }
         }
 
-        styles.Add($"{cssAttribute}: {borderWidth} {borderStyle} {borderColor};");
+        styles.Add($"{cssAttribute}: {borderWidth} {borderStyle} #{borderColor};");
     }
 
     internal string? MapParagraphBorderAttribute(BorderType border, bool isVertical = false)

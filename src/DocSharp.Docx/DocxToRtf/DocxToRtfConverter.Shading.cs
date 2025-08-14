@@ -235,50 +235,36 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
 
             // If shading is not a solid color, check the second/foreground solor
-            if (shading.Val != ShadingPatternValues.Clear && shading.Color != null &&
-                !string.IsNullOrEmpty(shading.Color.Value))
+            if (shading.Val != ShadingPatternValues.Clear && 
+                ColorHelpers.EnsureHexColor(shading.Color?.Value) is string shadingFg)
             {
-                if (shading.Color.Value.Equals("auto", StringComparison.OrdinalIgnoreCase))
+                colors.TryAddAndGetIndex(shadingFg, out int colorIndex);
+                switch (shadingType)
                 {
-                    // Interpreted as black or default document background color
+                    case ShadingType.Character:
+                        sb.Write("\\chcfpat");
+                        break;
+                    case ShadingType.Paragraph:
+                        sb.Write("\\cfpat");
+                        break;
+                    case ShadingType.TableCell:
+                        sb.Write("\\clcfpat");
+                        break;
+                    case ShadingType.TableRow:
+                        sb.Write("\\trcfpat");
+                        break;
                 }
-                else
-                {
-                    colors.TryAddAndGetIndex(shading.Color.Value, out int colorIndex);
-                    switch (shadingType)
-                    {
-                        case ShadingType.Character:
-                            sb.Write("\\chcfpat");
-                            break;
-                        case ShadingType.Paragraph:
-                            sb.Write("\\cfpat");
-                            break;
-                        case ShadingType.TableCell:
-                            sb.Write("\\clcfpat");
-                            break;
-                        case ShadingType.TableRow:
-                            sb.Write("\\trcfpat");
-                            break;
-                    }
-                    sb.Write(colorIndex);
-                }
+                sb.Write(colorIndex);
             }
 
             // Check the main background color
-            if (shading.Fill != null && !string.IsNullOrEmpty(shading.Fill.Value))
+            if (ColorHelpers.EnsureHexColor(shading.Fill?.Value) is string shadingBg)
             {
-                if (shading.Fill.Value.Equals("auto", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Interpreted as transparent (no background)
-                }
-                else
-                {
-                    colors.TryAddAndGetIndex(shading.Fill.Value, out int colorIndex);
-                    sb.Write(shadingType == ShadingType.Character ? "\\chcbpat" :
-                             (shadingType == ShadingType.Paragraph ? "\\cbpat" :
-                             (shadingType == ShadingType.TableRow ? "\\trcbpat" :  "\\clcbpat")));
-                    sb.Write(colorIndex);
-                }
+                colors.TryAddAndGetIndex(shadingBg, out int colorIndex);
+                sb.Write(shadingType == ShadingType.Character ? "\\chcbpat" :
+                            (shadingType == ShadingType.Paragraph ? "\\cbpat" :
+                            (shadingType == ShadingType.TableRow ? "\\trcbpat" :  "\\clcbpat")));
+                sb.Write(colorIndex);                
             }
         }
     }

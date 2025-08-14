@@ -104,10 +104,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
     internal override void ProcessDocumentBackground(DocumentBackground background, HtmlTextWriter sb)
     {
-        if (background.Color != null)
+        if (ColorHelpers.EnsureHexColor(background.Color?.Value) is string color)
         {
-            string color = $"#{background.Color.Value}";
-            sb.WriteElementString("style", $"body {{ background-color: {color}; }}");
+            sb.WriteElementString("style", $"body {{ background-color: #{color}; }}");
         }
         //else if (background.Background != null)
         //{
@@ -371,7 +370,7 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
 
     internal void ProcessShading(Shading? shading, ref List<string> styles)
     {
-        if (shading != null && shading.Fill?.Value is string fill && fill.Length == 6)
+        if (ColorHelpers.EnsureHexColor(shading?.Fill?.Value) is string fill)
         {
             styles.Add($"background-color: #{fill};");
             // Not supported: foreground (pattern)
