@@ -487,6 +487,11 @@ public static class OpenXmlHelpers
         // Check default paragraph style for the current document
         MergeAttributes(res, stylesPart.GetDefaultParagraphStyle()?.SpacingBetweenLines, attributes);
 
+        var resAttributes = res.GetAttributes();
+        var lineRuleAttribute = resAttributes.FirstOrDefault(x => x.LocalName.Equals("lineRule", StringComparison.OrdinalIgnoreCase));
+        if(string.IsNullOrWhiteSpace(lineRuleAttribute.Value))
+            res.RemoveAttribute(lineRuleAttribute.LocalName, lineRuleAttribute.NamespaceUri);
+
         return res;
     }
 
