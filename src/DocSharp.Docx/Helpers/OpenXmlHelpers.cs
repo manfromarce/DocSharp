@@ -333,6 +333,7 @@ public static class OpenXmlHelpers
                 {
                     // Important: attributes are only set if not already present, to preserve the correct priority (e.g. paragraph properties -> style -> base style -> ...)
                     if (attributeNames.Contains(attr.LocalName, StringComparer.OrdinalIgnoreCase) &&
+                        !string.IsNullOrEmpty(attr.Value) &&
                         attrsTarget.FirstOrDefault(a => a.LocalName.Equals(attr.LocalName, StringComparison.OrdinalIgnoreCase)).Value == null)
                         target.SetAttribute(attr);
                 }
