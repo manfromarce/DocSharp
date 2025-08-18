@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
 {
     /// <summary>
@@ -8,12 +10,19 @@ namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
         protected WorkbookPart workBookPart;
         protected SpreadsheetDocumentType _documentType;
 
-        /// <summary>
-        /// Ctor 
-        /// </summary>
-        /// <param name="fileName">Filename of the file which should be written</param>
         protected SpreadsheetDocument(string fileName, SpreadsheetDocumentType type)
             : base(fileName)
+        {
+            Initialize(type);
+        }
+        
+        protected SpreadsheetDocument(Stream stream, SpreadsheetDocumentType type)
+            : base(stream)
+        {
+            Initialize(type);
+        }
+
+        private void Initialize(SpreadsheetDocumentType type)
         {
             switch (type)
             {
@@ -30,6 +39,7 @@ namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
                     this.workBookPart = new WorkbookPart(this, SpreadsheetMLContentTypes.Workbook);
                     break;
             }
+            
             this._documentType = type;
             this.AddPart(this.workBookPart);
         }
@@ -43,6 +53,18 @@ namespace DocSharp.Binary.OpenXmlLib.SpreadsheetML
         {
             var spreadsheet = new SpreadsheetDocument(fileName, type);
             return spreadsheet;
+        }
+        
+        /// <summary>
+        /// creates a new excel document
+        /// </summary>
+        /// <param name="stream">Stream which should be written</param>
+        /// <returns>The object itself</returns>
+        public static SpreadsheetDocument Create(Stream stream, SpreadsheetDocumentType type)
+        {
+            var doc = new SpreadsheetDocument(stream, type);
+            
+            return doc;
         }
 
         public SpreadsheetDocumentType DocumentType
