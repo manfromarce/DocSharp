@@ -221,7 +221,9 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                             lineRule.Value = "exact";
                         else if(!lspd.fMultLinespace && lspd.dyaLine > 0)
                             lineRule.Value = "atLeast";
-                        //no line rule means auto
+                        else
+                            //no line rule means auto
+                            lineRule.Value = "auto";
                         spacing.Attributes.Append(lineRule);
                         break;
 
