@@ -219,7 +219,7 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                         var lineRule = this._nodeFactory.CreateAttribute("w", "lineRule", OpenXmlNamespaces.WordprocessingML);
                         if(!lspd.fMultLinespace && lspd.dyaLine < 0)
                             lineRule.Value = "exact";
-                        else if(!lspd.fMultLinespace && lspd.dyaLine > 0)
+                        else if(!lspd.fMultLinespace && lspd.dyaLine >= 0)
                             lineRule.Value = "atLeast";
                         else
                             //no line rule means auto
