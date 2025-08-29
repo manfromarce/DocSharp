@@ -5,6 +5,9 @@
 - Fix issues with margins and borders, and improve overall tables logic in DOCX to RTF/HTML converter
 - Support paragraph borders spacing (distance from text) in DOCX to HTML converter
 - Recognize and convert color names (e.g. "red") in DOCX to RTF/HTML converter
+- Stream support for binary converters (DOC to DOCX, XLS to XLSX, PPT to PPTX)
+- Fix issue with line spacing in DOC to DOCX and DOCX to HTML conversion
+- Fix issues with table left indentation in DOCX to RTF converter
 - Other bug fixes
 
 ## 0.12.0 - 2025.08.12

@@ -19,23 +19,26 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         var tableProperties = new RtfStringWriter();
 
-        // var grid = table.GetFirstChild<TableGrid>();
-        // if (grid != null)
-        // {
-        //     // \gridtbl (not emitted by Word)
-        //     foreach (var gridColumn in grid.Elements<GridColumn>())
-        //     {
-        //         // \gcwN (not emitted by Word)
-        //     }
-        // }
-
+        // In RTF, table properties are usually specified for single rows.
+        // However, if spacing between cells is present, table row shading is not applied there,
+        // unlike table shading.
+        // This is a limitation of RTF and also occurs when converting DOCX to RTF using Word.
+        // So we just process table cell shading in ProcessTableCellProperties, since there is no difference
+        // (it will retrieve table shading if cell shading is not specified).
         // var shading = table.GetEffectiveProperty<Shading>();
         // if (shading != null)
         // {
-        //     // In RTF, table properties are usually specified for single rows.
-        //     // However, unfortunately table row shading is not applied to spacing between cells, unlike table shading.
-        //     // So we just process shading for table cells (it will get the table shading if it is not specified for the cell).
         //     ProcessShading(shading, sb, ShadingType.TableRow);
+        // }
+
+        // var grid = table.GetFirstChild<TableGrid>();
+        // if (grid != null)
+        // {
+        //     // \gridtbl (not emitted by Word, disabled for now)
+        //     foreach (var gridColumn in grid.Elements<GridColumn>())
+        //     {
+        //         // \gcwN (not emitted by Word, disabled for now)
+        //     }
         // }
 
         // Positioned Wrapped Tables (the following properties must be the same for all rows in the table)
@@ -316,22 +319,22 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             if (ind.Type.Value == TableWidthUnitValues.Nil)
             {
-                sb.Write(@"\tblindtype0");
+                sb.Write(@"\tblindtype2");
             }
             else if (ind.Width != null)
             {
                 if (ind.Type.Value == TableWidthUnitValues.Auto)
                 {
-                    sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype1");
-                }
-                else if (ind.Type.Value == TableWidthUnitValues.Pct)
-                {
-                    sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype2");
+                    sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype0");
                 }
                 else if (ind.Type.Value == TableWidthUnitValues.Dxa)
                 {
+                    sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype1");
+                    //sb.Write($"\\trleft{ind.Width.Value.ToStringInvariant()}"); // Not necessary
+                }
+                else if (ind.Type.Value == TableWidthUnitValues.Pct)
+                {
                     sb.Write($"\\tblind{ind.Width.Value.ToStringInvariant()}\\tblindtype3");
-                    // sb.Write($"\\trleft{ind.Width.Value}"); // Breaks something, not used
                 }
             }
         }
