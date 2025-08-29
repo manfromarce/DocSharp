@@ -1,4 +1,4 @@
-## 0.13.0 - not published yet
+## 0.13.0 - 2025.08.30
 
 - Support table cell spacing in DOCX to HTML converter
 - Preserve table left indentation correctly in DOCX to HTML converter
