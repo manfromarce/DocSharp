@@ -1,3 +1,7 @@
+## 0.13.1 - 2025.08.31
+
+- Fixed issue with stream support for binary converters (DOC to DOCX, XLS to XLSX, PPT to PPTX)
+
 ## 0.13.0 - 2025.08.30
 
 - Support table cell spacing in DOCX to HTML converter
