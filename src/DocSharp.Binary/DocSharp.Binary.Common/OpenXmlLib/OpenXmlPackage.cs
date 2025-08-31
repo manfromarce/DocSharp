@@ -52,10 +52,9 @@ namespace DocSharp.Binary.OpenXmlLib
             this.Close();
         }
 
-
         public virtual void Close()
         {
-            // .NET will call dispose for each locally scoped variable set to this instance which will duplicate the package parts 
+            // .NET will call dispose for each locally scoped variable set to this instance which will duplicate the package parts. 
             // This check ensures we only write the package once.
             if (_isClosed)
             {
@@ -64,10 +63,11 @@ namespace DocSharp.Binary.OpenXmlLib
 
             // Serialize the package on closing
             var writer = new OpenXmlWriter();
-            
-            if(_stream is not null)
+
+            if (_stream is not null)
                 writer.Open(_stream);
-            else writer.Open(_fileName);
+            else
+                writer.Open(_fileName);
 
             this.WritePackage(writer);
 

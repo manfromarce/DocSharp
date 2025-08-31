@@ -83,64 +83,62 @@ namespace DocSharp.Binary.WordprocessingMLMapping
         public static void Convert(WordDocument doc, WordprocessingDocument docx)
         {
             var context = new ConversionContext(doc);
-            using (docx)
+            
+            //Setup the writer
+            var xws = new XmlWriterSettings();
+            xws.OmitXmlDeclaration = false;
+            xws.CloseOutput = true;
+            xws.Encoding = Encoding.UTF8;
+            xws.ConformanceLevel = ConformanceLevel.Document;
+
+            //Setup the context
+            context.WriterSettings = xws;
+            context.Docx = docx;
+
+            //convert the macros
+            if (docx.DocumentType == WordprocessingDocumentType.MacroEnabledDocument ||
+                docx.DocumentType == WordprocessingDocumentType.MacroEnabledTemplate)
             {
-                //Setup the writer
-                var xws = new XmlWriterSettings();
-                xws.OmitXmlDeclaration = false;
-                xws.CloseOutput = true;
-                xws.Encoding = Encoding.UTF8;
-                xws.ConformanceLevel = ConformanceLevel.Document;
+                doc.Convert(new MacroBinaryMapping(context));
+                doc.Convert(new MacroDataMapping(context));
+            }
 
-                //Setup the context
-                context.WriterSettings = xws;
-                context.Docx = docx;
+            //convert the command table
+            doc.CommandTable.Convert(new CommandTableMapping(context));
 
-                //convert the macros
-                if (docx.DocumentType == WordprocessingDocumentType.MacroEnabledDocument ||
-                    docx.DocumentType == WordprocessingDocumentType.MacroEnabledTemplate)
-                {
-                    doc.Convert(new MacroBinaryMapping(context));
-                    doc.Convert(new MacroDataMapping(context));
-                }
+            //Write styles.xml
+            doc.Styles.Convert(new StyleSheetMapping(context, doc, docx.MainDocumentPart.StyleDefinitionsPart));
 
-                //convert the command table
-                doc.CommandTable.Convert(new CommandTableMapping(context));
+            //Write numbering.xml
+            doc.ListTable.Convert(new NumberingMapping(context, doc));
 
-                //Write styles.xml
-                doc.Styles.Convert(new StyleSheetMapping(context, doc, docx.MainDocumentPart.StyleDefinitionsPart));
+            //Write fontTable.xml
+            doc.FontTable.Convert(new FontTableMapping(context, docx.MainDocumentPart.FontTablePart));
 
-                //Write numbering.xml
-                doc.ListTable.Convert(new NumberingMapping(context, doc));
+            //write document.xml and the header and footers
+            doc.Convert(new MainDocumentMapping(context, context.Docx.MainDocumentPart));
 
-                //Write fontTable.xml
-                doc.FontTable.Convert(new FontTableMapping(context, docx.MainDocumentPart.FontTablePart));
+            //write the footnotes
+            doc.Convert(new FootnotesMapping(context));
 
-                //write document.xml and the header and footers
-                doc.Convert(new MainDocumentMapping(context, context.Docx.MainDocumentPart));
+            //write the endnotes
+            doc.Convert(new EndnotesMapping(context));
 
-                //write the footnotes
-                doc.Convert(new FootnotesMapping(context));
+            //write the comments
+            doc.Convert(new CommentsMapping(context));
 
-                //write the endnotes
-                doc.Convert(new EndnotesMapping(context));
+            //write settings.xml at last because of the rsid list
+            doc.DocumentProperties.Convert(new SettingsMapping(context, docx.MainDocumentPart.SettingsPart));
 
-                //write the comments
-                doc.Convert(new CommentsMapping(context));
+            //convert the glossary subdocument
+            if (doc.Glossary != null)
+            {
+                doc.Glossary.Convert(new GlossaryMapping(context, context.Docx.MainDocumentPart.GlossaryPart));
+                doc.Glossary.FontTable.Convert(new FontTableMapping(context, docx.MainDocumentPart.GlossaryPart.FontTablePart));
+                //doc.Glossary.Styles.Convert(new StyleSheetMapping(context, doc.Glossary, docx.MainDocumentPart.GlossaryPart.StyleDefinitionsPart));
 
                 //write settings.xml at last because of the rsid list
-                doc.DocumentProperties.Convert(new SettingsMapping(context, docx.MainDocumentPart.SettingsPart));
-
-                //convert the glossary subdocument
-                if (doc.Glossary != null)
-                {
-                    doc.Glossary.Convert(new GlossaryMapping(context, context.Docx.MainDocumentPart.GlossaryPart));
-                    doc.Glossary.FontTable.Convert(new FontTableMapping(context, docx.MainDocumentPart.GlossaryPart.FontTablePart));
-                    //doc.Glossary.Styles.Convert(new StyleSheetMapping(context, doc.Glossary, docx.MainDocumentPart.GlossaryPart.StyleDefinitionsPart));
-
-                    //write settings.xml at last because of the rsid list
-                    doc.Glossary.DocumentProperties.Convert(new SettingsMapping(context, docx.MainDocumentPart.GlossaryPart.SettingsPart));
-                }
+                doc.Glossary.DocumentProperties.Convert(new SettingsMapping(context, docx.MainDocumentPart.GlossaryPart.SettingsPart));
             }
         }
     }

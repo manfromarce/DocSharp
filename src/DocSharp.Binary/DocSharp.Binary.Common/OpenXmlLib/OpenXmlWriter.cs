@@ -50,7 +50,8 @@ namespace DocSharp.Binary.OpenXmlLib
         public void Open(Stream output)
         {
             this.Close();
-            this.outputArchive = new ZipArchive(output, ZipArchiveMode.Create);
+            // If an external stream is used, closing the archive should not dispose it.
+            this.outputArchive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
         }
 
         public void Close()

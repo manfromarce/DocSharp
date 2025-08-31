@@ -61,30 +61,28 @@ namespace DocSharp.Binary.PresentationMLMapping
 
         public static void Convert(PowerpointDocument ppt, PresentationDocument pptx)
         {
-            using (pptx)
+            // Setup the writer
+            var xws = new XmlWriterSettings();
+            xws.OmitXmlDeclaration = false;
+            xws.CloseOutput = true;
+            xws.Encoding = Encoding.UTF8;
+            xws.ConformanceLevel = ConformanceLevel.Document;
+
+            // Setup the context
+            var context = new ConversionContext(ppt)
             {
-                // Setup the writer
-                var xws = new XmlWriterSettings();
-                xws.OmitXmlDeclaration = false;
-                xws.CloseOutput = true;
-                xws.Encoding = Encoding.UTF8;
-                xws.ConformanceLevel = ConformanceLevel.Document;
+                WriterSettings = xws,
+                Pptx = pptx
+            };
 
-                // Setup the context
-                var context = new ConversionContext(ppt);
-                context.WriterSettings = xws;
-                context.Pptx = pptx;
+            // Write presentation.xml
+            ppt.Convert(new PresentationPartMapping(context));
 
-                // Write presentation.xml
-                ppt.Convert(new PresentationPartMapping(context));
+            //AppMapping app = new AppMapping(pptx.AddAppPropertiesPart(), xws);
+            //app.Apply(null);
 
-                //AppMapping app = new AppMapping(pptx.AddAppPropertiesPart(), xws);
-                //app.Apply(null);
-
-                //CoreMapping core = new CoreMapping(pptx.AddCoreFilePropertiesPart(), xws);
-                //core.Apply(null);
-
-            }
+            //CoreMapping core = new CoreMapping(pptx.AddCoreFilePropertiesPart(), xws);
+            //core.Apply(null);
         }
     }
 }

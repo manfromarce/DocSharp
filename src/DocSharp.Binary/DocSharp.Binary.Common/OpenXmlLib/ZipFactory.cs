@@ -35,7 +35,8 @@ namespace DocSharp.Binary.OpenXmlLib
 
             public ZipReader(Stream stream)
             {
-                this.zipArchive = new ZipArchive(stream, ZipArchiveMode.Read);
+                // If an external stream is used, closing the archive should not dispose it.
+                this.zipArchive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
             }
 
             public void Close() {
