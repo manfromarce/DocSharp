@@ -108,6 +108,9 @@ namespace DocSharp.Binary.SpreadsheetMLMapping
             {
                 xls.Convert(new MacroBinaryMapping(xlsContext));
             }
+
+            // TODO: write core/app properties (author, title, ...)
+
         }
     }
 }

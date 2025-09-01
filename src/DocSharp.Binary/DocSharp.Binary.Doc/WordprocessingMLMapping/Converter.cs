@@ -127,6 +127,8 @@ namespace DocSharp.Binary.WordprocessingMLMapping
             //write the comments
             doc.Convert(new CommentsMapping(context));
 
+            // TODO: write core/app properties (author, title, ...)
+
             //write settings.xml at last because of the rsid list
             doc.DocumentProperties.Convert(new SettingsMapping(context, docx.MainDocumentPart.SettingsPart));
 

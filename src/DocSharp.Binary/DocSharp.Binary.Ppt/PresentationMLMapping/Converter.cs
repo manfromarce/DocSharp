@@ -78,6 +78,8 @@ namespace DocSharp.Binary.PresentationMLMapping
             // Write presentation.xml
             ppt.Convert(new PresentationPartMapping(context));
 
+            // TODO: write core/app properties (author, title, ...)
+
             //AppMapping app = new AppMapping(pptx.AddAppPropertiesPart(), xws);
             //app.Apply(null);
 
