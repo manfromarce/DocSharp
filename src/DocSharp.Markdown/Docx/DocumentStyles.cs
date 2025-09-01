@@ -23,7 +23,9 @@ public class DocumentStyles
         ["CodeInline"] = "CodeInline", 
 
         ["DefinitionTerm"] = "DefinitionTerm", 
-        ["DefinitionItem"] = "DefinitionItem", 
+        ["DefinitionItem"] = "DefinitionItem",
+
+        ["Table"] = "MDTable"
     };
 
     public Dictionary<int, string?> Headings { get; } = new()

@@ -1,3 +1,8 @@
+## 0.14.0 - not released yet
+
+- Improvements for binary to Open XML converters
+- Add "MD Table" style in Markdown to DOCX renderer; this can be used to customize table appearance (like other styles)
+
 ## 0.13.1 - 2025.08.31
 
 - Fixed issue with stream support for binary converters (DOC to DOCX, XLS to XLSX, PPT to PPTX)
