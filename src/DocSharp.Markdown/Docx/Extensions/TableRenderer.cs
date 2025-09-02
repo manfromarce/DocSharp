@@ -27,6 +27,12 @@ public class TableRenderer : DocxObjectRenderer<Markdig.Extensions.Tables.Table>
                 var tableCell = new TableCell();
                 tableRow.Append(tableCell);
                 renderer.Cursor.GoInto(tableCell);
+                if (cell.Count == 0)
+                {
+                    // Empty cells may cause Word to consider the document as corrupted, 
+                    // so we add an empty paragraph.
+                    cell.Add(new Markdig.Syntax.ParagraphBlock());
+                }
                 renderer.WriteChildren(cell);
             }
         }
