@@ -446,9 +446,9 @@ public static class OpenXmlHelpers
     {
         var res = new SpacingBetweenLines();
         var attributes = new List<string> { "before", "beforeLines",
-                                        "after", "afterLines",
-                                        "beforeAutoSpacing", "afterAutoSpacing",
-                                        "line", "lineRule" };
+                                            "after", "afterLines",
+                                            "beforeAutoSpacing", "afterAutoSpacing",
+                                            "line", "lineRule" };
 
         MergeAttributes(res, paragraph.ParagraphProperties?.SpacingBetweenLines, attributes);
 
@@ -630,8 +630,7 @@ public static class OpenXmlHelpers
         }
 
         // Check run style
-        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character) ??
-                       stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Paragraph);
+        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character);
         while (runStyle != null)
         {
             propertyValue = runStyle.StyleRunProperties?.GetFirstChild<T>();
@@ -645,14 +644,30 @@ public static class OpenXmlHelpers
         }
 
         // Check paragraph style
-        var paragraphProperties = run.GetFirstAncestor<Paragraph>()?.ParagraphProperties;
+        var paragraphProperties = paragraph?.ParagraphProperties;
         var paragraphStyle = stylesPart.GetStyleFromId(paragraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
         while (paragraphStyle != null)
         {
+            // Check paragraph style run properties
             propertyValue = paragraphStyle.StyleRunProperties?.GetFirstChild<T>();
             if (propertyValue != null)
             {
                 return propertyValue;
+            }
+
+            // Check linked style, if any
+            var linkedStyleId = paragraphStyle.LinkedStyle?.Val;
+            if (linkedStyleId != null)
+            {
+                var linkedStyle = stylesPart.GetStyleFromId(linkedStyleId, StyleValues.Character);
+                if (linkedStyle != null)
+                {
+                    propertyValue = linkedStyle.StyleRunProperties?.GetFirstChild<T>();
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
             }
 
             // Check styles from which the current style inherits

@@ -7,6 +7,7 @@
 - Improvements to styles and lists handling when appending Markdown to an existing DOCX document (issue #12)
 - Heading styles used in Markdown to DOCX converter now inherit from default Word heading styles, so that collapsing/expanding is available.
 - Fix: SVG images are now preserved in Markdown to DOCX renderer
+- Improve styles logic in DOCX to RTF/HTML/MD converters
 
 ## 0.13.1 - 2025.08.31
 
