@@ -38,7 +38,7 @@ public class DocxDocumentRenderer : RendererBase
     internal Stack<RunProperties> TextFormat { get; } = new();
 
     internal Stack<string> TextStyle { get; } = new();
-    
+
     internal Stack<ListInfo> ActiveList { get; } = new();
 
     public DocxDocumentRenderer(WordprocessingDocument document, DocumentStyles styles)

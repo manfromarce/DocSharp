@@ -37,9 +37,11 @@ public abstract class DocxObjectRenderer<T> : MarkdownObjectRenderer<DocxDocumen
     
     public void WriteLeafInline(DocxDocumentRenderer renderer, LeafBlock leafBlock)
     {
-        if (leafBlock is null) throw new ArgumentException($"Leaf block is empty");
-        var inline = (Inline) leafBlock.Inline!;
-
+        if (leafBlock is null || leafBlock.Inline is null)
+            return;
+            //throw new ArgumentException($"Leaf block is empty");
+        
+        var inline = (Inline)leafBlock.Inline;
         while (inline != null)
         {
             renderer.Write(inline);

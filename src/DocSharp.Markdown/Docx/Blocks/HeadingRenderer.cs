@@ -13,7 +13,8 @@ public class HeadingRenderer : LeafBlockParagraphRendererBase<HeadingBlock>
 {
     protected override void WriteObject(DocxDocumentRenderer renderer, HeadingBlock obj)
     {
-        var styleId = renderer.Styles.Headings.GetValueOrDefault(obj.Level, renderer.Styles.MarkdownStyles["UndefinedHeading"]);
+        int level = Math.Min(Math.Max(obj.Level, 1), 6);
+        var styleId = renderer.Styles.MarkdownStyles.GetValueOrDefault($"Heading{level}", "MDHeading1");
         
         string? bookmarkName = null;
         if (obj.Inline?.FindDescendants<LiteralInline>().FirstOrDefault() is LiteralInline literal)

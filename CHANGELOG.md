@@ -2,6 +2,9 @@
 
 - Improvements for binary to Open XML converters
 - Add "MD Table" style in Markdown to DOCX renderer; this can be used to customize table appearance (like other styles)
+- Fix: empty table cells sometimes caused the document to become corrupted in Markdown to DOCX converter
+- Fix: don't reset numbering in the target document when appending Markdown to an existing DOCX document (issue #12)
+- Improvements to styles and lists handling when appending Markdown to an existing DOCX document (issue #12)
 
 ## 0.13.1 - 2025.08.31
 

@@ -6,41 +6,35 @@ public class DocumentStyles
 {
     public Dictionary<string, string> MarkdownStyles = new()
     {
-        ["UndefinedHeading"] = "MDHeading5", 
-        ["UnknownFormatting"] = "MDNormal",
+        ["UnknownFormatting"] = "MDParagraph",
         
-        ["Paragraph"] = "MDParagraphTextBody", 
-        ["CodeBlock"] = "MDPreformattedText", 
-        ["Quote"] = "MDQuotations", 
+        ["Paragraph"] = "MDParagraph", 
+        ["Quote"] = "MDQuote", 
+        ["CodeBlock"] = "MDCodeBlock", 
+
+        ["CodeInline"] = "MDCodeInline", 
+        ["Hyperlink"] = "MDHyperlink", 
+
         ["HorizontalLine"] = "MDHorizontalLine", 
 
-        ["ListOrdered"] = "MDListNumber", 
-        ["ListOrderedItem"] = "MDListNumberItem", 
-        ["ListBullet"] = "MDListBullet", 
-        ["ListBulletItem"] = "MDListBulletItem", 
+        ["ListBulletItem"] = "MDBulletedListItem", 
+        ["ListOrderedItem"] = "MDOrderedListItem", 
 
-        ["Hyperlink"] = "MDHyperlink", 
-        ["CodeInline"] = "CodeInline", 
+        ["DefinitionTerm"] = "MDDefinitionTerm", 
+        ["DefinitionItem"] = "MDDefinitionItem",
 
-        ["DefinitionTerm"] = "DefinitionTerm", 
-        ["DefinitionItem"] = "DefinitionItem",
+        ["Table"] = "MDTable",
 
-        ["Table"] = "MDTable"
-    };
-
-    public Dictionary<int, string?> Headings { get; } = new()
-    {
-        [0] = "Title",
-        [1] = "MDHeading1",
-        [2] = "MDHeading2",
-        [3] = "MDHeading3",
-        [4] = "MDHeading4",
-        [5] = "MDHeading5",
-        [6] = "MDHeading6",
+        ["Heading1"] = "MDHeading1",
+        ["Heading2"] = "MDHeading2",
+        ["Heading3"] = "MDHeading3",
+        ["Heading4"] = "MDHeading4",
+        ["Heading5"] = "MDHeading5",
+        ["Heading6"] = "MDHeading6"
     };
 
     public bool Contains(string styleName)
     {
-        return MarkdownStyles.ContainsValue(styleName) || Headings.ContainsValue(styleName);
+        return MarkdownStyles.ContainsValue(styleName);
     }
 }
