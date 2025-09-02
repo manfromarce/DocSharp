@@ -19,6 +19,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 using System.Xml.XPath;
 
 namespace DocSharp.IO;
@@ -179,10 +180,16 @@ public static class ImageHeader
                 case ImageFormat.Avif: // supported by web browsers
                 case ImageFormat.Heif: // supported by Safari
                     return DecodeAvifOrHeif(reader);
+                //case ImageFormat.Jxl: // supported by Firefox and Safari
+                //    return DecodeJxl(reader);
                 case ImageFormat.Jxr: return DecodeJxr(reader); // supported by IE 11
                 case ImageFormat.Tiff: return DecodeTiff(reader); // supported in DOCX and Safari
                 case ImageFormat.Jpeg2000: return DecodeJpeg2000(reader); // supported in DOCX and previous Safari versions
                 case ImageFormat.Emf: return DecodeEmf(reader); // supported in DOCX and RTF
+                //case ImageFormat.Pcx: // supported in DOCX
+                //    return DecodePcx(reader);
+                //case ImageFormat.Pict: // supported in RTF
+                //    return DecodePict(reader);
                 case ImageFormat.Wmf: return DecodeWmf(reader); // supported in DOCX and RTF
                 // Note: WMF size is in inches, all the others are in pixels.
                 
@@ -664,34 +671,42 @@ public static class ImageHeader
     {
         try
         {
-            var nav = new XPathDocument(stream).CreateNavigator();
-            // use local-name() to ignore any xml namespace
-            nav = nav.SelectSingleNode("/*[local-name() = 'svg']");
-            if (nav is not null)
+            using (var xmlReader = XmlReader.Create(stream, new XmlReaderSettings() 
+                                                            { 
+                                                                CloseInput = false 
+                                                            }))
             {
-                var width = Unit.Parse(nav.GetAttribute("width", string.Empty), UnitMetric.Pixel);
-                var height = Unit.Parse(nav.GetAttribute("height", string.Empty), UnitMetric.Pixel);
-                if (width.IsValid && width.Type.IsValid() && height.IsValid && height.Type.IsValid())
-                    return new Size(width.ValueInPx, height.ValueInPx);
-
-                // If width or height are not found or use unsupported units (%, auto, unitless),
-                // try to get the viewBox
-                var viewBox = nav.GetAttribute("viewBox", string.Empty);
-                if (!string.IsNullOrWhiteSpace(viewBox))
+                var doc = new XPathDocument(xmlReader);
+                var nav = doc.CreateNavigator();
+            
+                // use local-name() to ignore any xml namespace
+                nav = nav.SelectSingleNode("/*[local-name() = 'svg']");
+                if (nav is not null)
                 {
-                    var rectParts = viewBox.Split([' ', ',', ';'], StringSplitOptions.RemoveEmptyEntries);
-                    if (rectParts.Length == 4)
-                    {
-                        width = Unit.Parse(rectParts[2], UnitMetric.Pixel);
-                        height = Unit.Parse(rectParts[3], UnitMetric.Pixel);
+                    var width = Unit.Parse(nav.GetAttribute("width", string.Empty), UnitMetric.Pixel);
+                    var height = Unit.Parse(nav.GetAttribute("height", string.Empty), UnitMetric.Pixel);
+                    if (width.IsValid && width.Type.IsValid() && height.IsValid && height.Type.IsValid())
                         return new Size(width.ValueInPx, height.ValueInPx);
-                    }
-                }
 
-                // If viewBox is not found assume unsupported units as pixels 
-                // (at least aspect ratio is preserved, better than returning 0).
-                if (width.IsValid && height.IsValid)
-                    return new Size(width.ValueInPx, height.ValueInPx);
+                    // If width or height are not found or use unsupported units (%, auto, unitless),
+                    // try to get the viewBox
+                    var viewBox = nav.GetAttribute("viewBox", string.Empty);
+                    if (!string.IsNullOrWhiteSpace(viewBox))
+                    {
+                        var rectParts = viewBox.Split([' ', ',', ';'], StringSplitOptions.RemoveEmptyEntries);
+                        if (rectParts.Length == 4)
+                        {
+                            width = Unit.Parse(rectParts[2], UnitMetric.Pixel);
+                            height = Unit.Parse(rectParts[3], UnitMetric.Pixel);
+                            return new Size(width.ValueInPx, height.ValueInPx);
+                        }
+                    }
+
+                    // If viewBox is not found assume unsupported units as pixels 
+                    // (at least aspect ratio is preserved, better than returning 0).
+                    if (width.IsValid && height.IsValid)
+                        return new Size(width.ValueInPx, height.ValueInPx);
+                }
             }
         }
         catch (SystemException)
