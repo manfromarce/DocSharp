@@ -308,7 +308,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 if (fill.Method.Value == V.FillMethodValues.Any)
                 {
-                    // Do't write fillShadeType
+                    // Don't write fillShadeType
                 }
                 else if (fill.Method.Value == V.FillMethodValues.Linear)
                 {

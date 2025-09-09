@@ -9,14 +9,22 @@ using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using Wp14 = DocumentFormat.OpenXml.Office2010.Word.Drawing;
 using Pictures = DocumentFormat.OpenXml.Drawing.Pictures;
+using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 using DocSharp.Writers;
 using System.Globalization;
 using DocSharp.Helpers;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
+    internal override bool IsSupportedGraphicData(GraphicData graphicData)
+    {
+        return graphicData.GetFirstChild<Pictures.Picture>() != null ||
+               graphicData.GetFirstChild<Wps.WordprocessingShape>() != null;
+    }
+
     internal override void ProcessDrawing(Drawing drawing, RtfStringWriter sb)
     {
         ProcessDrawing(drawing, sb, false);
@@ -85,9 +93,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                     // Write position properties
                     ProcessDrawingAnchor(drawing.Anchor, sb);
+                    sb.WriteShapeProperty("shapeType", "75"); // Picture
 
                     // Write generic shape properties 
-                    // (process after anchor so that all standard control words such as \shpleft have been written
+                    // (process after inline so that all standard control words such as \shpleft have been written
                     // before writing {\sp ...} groups)
                     sb.Write(shapeProperties);
 
@@ -108,9 +117,815 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
             }
         }
+        else if (drawing.Descendants<A.GraphicData>().FirstOrDefault() is A.GraphicData graphicData &&
+                 graphicData.FirstChild is Wps.WordprocessingShape wpShape)
+        {
+            // Open shape destination
+            sb.Write(@"{\shp{\*\shpinst");
+
+            var rootPart = OpenXmlHelpers.GetRootPart(drawing);
+            if (rootPart is MainDocumentPart)
+                sb.Write(@"\shpfhdr0");
+
+            Wp.DocProperties? docProperties = null;
+            Wp.NonVisualGraphicFrameDrawingProperties? nonVisualGraphicFrameDrawingPr = null;
+            Wp.Extent? shapeExtent = null;
+            Wp.EffectExtent? effectExtent = null;
+
+            if (drawing.Inline != null)
+            {
+                // Inline shape
+                docProperties = drawing.Inline.DocProperties;
+                nonVisualGraphicFrameDrawingPr = drawing.Inline.NonVisualGraphicFrameDrawingProperties;
+                shapeExtent = drawing.Inline.Extent;
+                effectExtent = drawing.Inline.EffectExtent;
+                ProcessDrawingInline(drawing.Inline, sb);
+            }
+            else if (drawing.Anchor != null)
+            {
+                // Floating/anchored shape
+                docProperties = drawing.Anchor.GetFirstChild<Wp.DocProperties>();
+                nonVisualGraphicFrameDrawingPr = drawing.Anchor.GetFirstChild<Wp.NonVisualGraphicFrameDrawingProperties>();
+                shapeExtent = drawing.Anchor.Extent;
+                effectExtent = drawing.Anchor.EffectExtent;
+                ProcessDrawingAnchor(drawing.Anchor, sb);
+            }
+
+            ProcessNonVisualDrawingProperties(wpShape.NonVisualDrawingProperties, sb);
+            //var nonVisualShapeProperties = wpShape.GetFirstChild<Wps.NonVisualDrawingShapeProperties>();
+            var connectorProperties = wpShape.GetFirstChild<Wps.NonVisualConnectorProperties>();
+            var shapeStyle = wpShape.GetFirstChild<Wps.ShapeStyle>();
+            ProcessShapeProperties(wpShape.GetFirstChild<Wps.ShapeProperties>(), shapeStyle, sb);
+            //var officeArtExtensionList = wpShape.GetFirstChild<Wps.OfficeArtExtensionList>();
+            //var linkedTextBox = wpShape.GetFirstChild<Wps.LinkedTextBox>();
+            ProcessTextBodyProperties(wpShape.GetFirstChild<Wps.TextBodyProperties>(), sb);
+
+            sb.WriteLine(); // Separate shape properties from text box content (if present) and shape result
+
+            ProcessTextBox(wpShape.GetFirstChild<Wps.TextBoxInfo2>(), sb); // Process text box content (if present)
+
+            // Close shape instruction group and open shape result group
+            sb.Write(@"}{\shprslt ");
+
+            // TODO: write fallback for RTF reader that don't support shapes.
+            // Microsoft Word writes a Word 95/6.0 drawing object {\*\do ...}.
+
+            sb.WriteLine("}}"); // Close shape result group and shape destination
+        }
         else
         {
-            // TODO: process other types of GraphicData (shape, VML, chart, diagram)
+            // TODO: process other types of GraphicData (chart, diagram, VML)
+        }
+    }
+
+    internal void ProcessNonVisualDrawingProperties(Wps.NonVisualDrawingProperties? nonVisualDrawingProperties, RtfStringWriter sb)
+    {
+        // Used for associating an hyperlink to the shape.
+        // TODO
+    }
+
+    internal void ProcessTextBodyProperties(Wps.TextBodyProperties? textBodyProperties, RtfStringWriter sb)
+    {
+        if (textBodyProperties == null)
+            return;
+
+        if (textBodyProperties.Anchor != null)
+        {
+            bool anchorCenter = textBodyProperties.AnchorCenter != null && textBodyProperties.AnchorCenter.HasValue && textBodyProperties.AnchorCenter.Value;
+            /*
+             * 0 = top, 1 = middle, 2 = bottom, 
+             * 3 = top centered, 4 = middle centered, 5 = bottom centered
+             */
+            if (textBodyProperties.Anchor == A.TextAnchoringTypeValues.Top)
+            {
+                sb.WriteShapeProperty("anchorText", anchorCenter ? "3" : "0");
+            }
+            else if (textBodyProperties.Anchor == A.TextAnchoringTypeValues.Center)
+            {
+                sb.WriteShapeProperty("anchorText", anchorCenter ? "4" : "1");
+            }
+            else if (textBodyProperties.Anchor == A.TextAnchoringTypeValues.Bottom)
+            {
+                sb.WriteShapeProperty("anchorText", anchorCenter ? "5" : "2");
+            }
+        }
+
+        if (textBodyProperties.Rotation != null)
+        {
+        }
+        sb.WriteShapeProperty("fRotateText", textBodyProperties.UpRight == null || !textBodyProperties.UpRight.HasValue || !textBodyProperties.UpRight.Value);
+        // If UpRight is true, it means **don't** rotate text with shape, 
+        // so we set "fRotateText" to 1 in RTF in the opposite case. 
+        // However, it seems rotating text with shape is not supported for RTF (at least in Word).
+
+        if (textBodyProperties.GetFirstChild<A.NoAutoFit>() != null)
+        {
+            sb.WriteShapeProperty("fFitShapeToText", "0");
+            sb.WriteShapeProperty("fFitShapeToText", "0");
+        }
+        if (textBodyProperties.GetFirstChild<A.NormalAutoFit>() != null) // fit text to shape
+        {
+            sb.WriteShapeProperty("fFitTextToShape", "1");
+            sb.WriteShapeProperty("fFitShapeToText", "0");
+            //sb.WriteShapeProperty("scaleText", "1"); // is this needed?
+        }
+        if (textBodyProperties.GetFirstChild<A.ShapeAutoFit>() != null) // fit shape to text
+        {
+            sb.WriteShapeProperty("fFitShapeToText", "1");
+            sb.WriteShapeProperty("fFitTextToShape", "0");
+        }
+
+        if (textBodyProperties.Wrap != null)
+        {
+            if (textBodyProperties.Wrap.Value == A.TextWrappingValues.None)
+            {
+                sb.WriteShapeProperty("fFitTextToShape", "2"); // Do not wrap text
+            }
+            else if (textBodyProperties.Wrap.Value == A.TextWrappingValues.Square)
+            {
+                sb.WriteShapeProperty("fFitTextToShape", "0"); // Default (wrap text at shape margins)
+            }
+        }
+
+        if (textBodyProperties.ColumnCount != null)
+        {
+            sb.WriteShapeProperty("ccol", textBodyProperties.ColumnCount.Value);
+        }
+        if (textBodyProperties.ColumnSpacing != null)
+        {
+            sb.WriteShapeProperty("dzColMargin", textBodyProperties.ColumnSpacing.Value);
+        }
+        if (textBodyProperties.RightToLeftColumns != null)
+        {
+        }
+
+        if (textBodyProperties.CompatibleLineSpacing != null)
+        {
+        }
+        if (textBodyProperties.UseParagraphSpacing != null)
+        {
+        }
+
+        if (textBodyProperties.LeftInset != null)
+        {
+            sb.WriteShapeProperty("dxTextLeft", textBodyProperties.LeftInset.Value);
+        }
+        if (textBodyProperties.RightInset != null)
+        {
+            sb.WriteShapeProperty("dxTextRight", textBodyProperties.RightInset.Value);
+        }
+        if (textBodyProperties.TopInset != null)
+        {
+            sb.WriteShapeProperty("dyTextTop", textBodyProperties.TopInset.Value);
+        }
+        if (textBodyProperties.BottomInset != null)
+        {
+            sb.WriteShapeProperty("dyTextBottom", textBodyProperties.BottomInset.Value);
+        }        
+
+        if (textBodyProperties.Vertical != null)
+        {
+            if (textBodyProperties.Vertical.Value == A.TextVerticalValues.Horizontal)
+            {
+                sb.WriteShapeProperty("txflTextFlow", "0");
+            }
+            else if (textBodyProperties.Vertical.Value == A.TextVerticalValues.Vertical)
+            {
+                sb.WriteShapeProperty("txflTextFlow", "3");
+            }
+            else if (textBodyProperties.Vertical.Value == A.TextVerticalValues.Vertical270)
+            {
+                sb.WriteShapeProperty("txflTextFlow", "2");
+            }
+            else if (textBodyProperties.Vertical.Value == A.TextVerticalValues.EastAsianVetical)
+            {
+                sb.WriteShapeProperty("txflTextFlow", "1");
+            }
+            else if (textBodyProperties.Vertical.Value == A.TextVerticalValues.MongolianVertical)
+            {
+                sb.WriteShapeProperty("txflTextFlow", "5");
+            }
+            else if (textBodyProperties.Vertical.Value == A.TextVerticalValues.WordArtLeftToRight)
+            {
+                sb.WriteShapeProperty("txflTextFlow", "5");
+            }
+            else if (textBodyProperties.Vertical.Value == A.TextVerticalValues.WordArtVertical)
+            {
+                sb.WriteShapeProperty("txflTextFlow", "5");
+            }
+        }
+        if (textBodyProperties.VerticalOverflow != null)
+        {
+            if (textBodyProperties.VerticalOverflow.Value == A.TextVerticalOverflowValues.Clip)
+            {
+            }
+            else if (textBodyProperties.VerticalOverflow.Value == A.TextVerticalOverflowValues.Ellipsis)
+            {
+            }
+            else if (textBodyProperties.VerticalOverflow.Value == A.TextVerticalOverflowValues.Overflow)
+            {
+            }
+        }
+        if (textBodyProperties.HorizontalOverflow != null)
+        {
+            if (textBodyProperties.HorizontalOverflow.Value == A.TextHorizontalOverflowValues.Clip)
+            {
+            }
+            else if (textBodyProperties.HorizontalOverflow.Value == A.TextHorizontalOverflowValues.Overflow)
+            {
+            }
+        }
+
+        if (textBodyProperties.FromWordArt != null)
+        {
+        }
+        if (textBodyProperties.PresetTextWarp != null)
+        {
+            if (textBodyProperties.PresetTextWarp.Preset != null)
+            {
+                if (textBodyProperties.PresetTextWarp.Preset.Value == A.TextShapeValues.TextNoShape)
+                {
+
+                }
+            }
+        }
+
+        if (textBodyProperties.GetFirstChild<A.Scene3DType>() != null)
+        {
+
+        }
+        if (textBodyProperties.GetFirstChild<A.Shape3DType>() != null)
+        {
+
+        }
+        if (textBodyProperties.GetFirstChild<A.FlatText>() != null)
+        {
+
+        }
+
+        if (textBodyProperties.ForceAntiAlias != null)
+        {
+        }
+    }
+
+    internal void ProcessTextBox(Wps.TextBoxInfo2? textBoxInfo, RtfStringWriter sb)
+    {
+        if (textBoxInfo == null) 
+            return;
+
+        if (textBoxInfo.TextBoxContent is TextBoxContent content && content.HasChildren)
+        {
+            sb.Write("{\\shptxt ");
+            foreach (var element in content.Elements())
+            {
+                base.ProcessBodyElement(element, sb);
+            }
+            sb.Write("}");
+        }
+    }
+
+    internal void ProcessShapeProperties(Wps.ShapeProperties? shapePr, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
+    {
+        if (shapePr == null)
+            return;
+
+        ProcessGeometry(shapePr, sb);
+        ProcessTransform2D(shapePr.Transform2D, sb);
+        ProcessOutline(shapePr.GetFirstChild<A.Outline>(), shapeStyle, sb);
+        ProcessFill(shapePr, shapeStyle, sb);
+
+        if (shapePr.BlackWhiteMode != null)
+        { 
+        }
+
+        ProcessEffects(shapePr, sb);
+    }
+
+    internal void ProcessOutline(A.Outline? outline, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
+    {
+        if (outline?.GetFirstChild<A.NoFill>() != null)
+        {
+            sb.WriteShapeProperty("fLine", "0");
+        }
+        else if (outline?.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
+        {
+            sb.WriteShapeProperty("fLine", "1");
+            sb.WriteShapeProperty("lineType", "0");
+
+            // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
+            string color = ColorHelpers.GetColor(solidFill, "#000000");
+            sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
+        }
+        else if (outline?.GetFirstChild<A.GradientFill>() != null)
+        {
+            // Not available in RTF, fallback to solid black line
+            sb.WriteShapeProperty("fLine", "1");
+            sb.WriteShapeProperty("lineType", "0");
+            sb.WriteShapeProperty("lineColor", "0"); // black
+        }
+        else if (outline?.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
+        {
+            sb.WriteShapeProperty("fLine", "1");
+            sb.WriteShapeProperty("lineType", "1");
+            //sb.WriteShapeProperty("lineFillShape", "1");
+
+            // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
+            if (patternFill.ForegroundColor != null)
+            {
+                string color = ColorHelpers.GetColor(patternFill.ForegroundColor, "#000000");
+                sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
+            }
+            else
+            {
+                sb.WriteShapeProperty("lineColor", "0");
+            }
+
+            // Only write the second pattern color if found
+            if (patternFill.BackgroundColor != null)
+            {
+                string color = ColorHelpers.GetColor(patternFill.BackgroundColor, "");
+                var rtfColor = ColorHelpers.HexToBgr(color);
+                if (rtfColor != null && rtfColor.HasValue)
+                    sb.WriteShapeProperty("lineBackColor", rtfColor.Value);
+            }
+
+            //if (patternFill.Preset != null)
+            //{
+            //}
+            // Specifying the preset is not possible in RTF.
+            // Instead, we should check if a fallback VML <w:pict> element has been written by the word processor
+            // before processing the DrawingML shape;
+            // in that case the pattern fill is specified as an embedded picture in VML
+            // and we can translate to RTF directly.
+        }
+        else
+        {
+            // No outline found, try to find style
+            if (shapeStyle?.LineReference != null)
+            {
+                // Solid line associated to style
+
+                sb.WriteShapeProperty("fLine", "1");
+                sb.WriteShapeProperty("lineType", "0");
+
+                // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
+                string color = ColorHelpers.GetColor(shapeStyle.LineReference, "#000000");
+                sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
+                return;
+            }
+            else
+            {
+                return; // TODO: specify no line / default line instead?
+            }
+        }
+
+        if (outline.Width != null)
+        {
+            sb.WriteShapeProperty("lineWidth", outline.Width.Value); // EMUs (default is 9,525 = 0.75pt) 
+        }
+        if (outline.Alignment != null)
+        {
+            if (outline.Alignment == A.PenAlignmentValues.Center)
+            {
+            }
+            else if (outline.Alignment == A.PenAlignmentValues.Insert)
+            {
+            }
+        }
+        
+        if (outline.CompoundLineType != null)
+        {
+            if (outline.CompoundLineType == A.CompoundLineValues.Single)
+            {
+                sb.WriteShapeProperty("lineStyle", "0");
+            }
+            else if (outline.CompoundLineType == A.CompoundLineValues.Double)
+            {
+                sb.WriteShapeProperty("lineStyle", "1");
+            }
+            else if (outline.CompoundLineType == A.CompoundLineValues.ThickThin)
+            {
+                sb.WriteShapeProperty("lineStyle", "2");
+            }
+            else if (outline.CompoundLineType == A.CompoundLineValues.ThinThick)
+            {
+                sb.WriteShapeProperty("lineStyle", "3");
+            }
+            else if (outline.CompoundLineType == A.CompoundLineValues.Triple)
+            {
+                sb.WriteShapeProperty("lineStyle", "4");
+            }
+        }
+
+        if (outline.GetFirstChild<A.PresetDash>() is A.PresetDash presetDash && presetDash.Val != null)
+        {
+            if (presetDash.Val == A.PresetLineDashValues.Solid)
+                sb.WriteShapeProperty("lineDashing", "0");
+            else if (presetDash.Val == A.PresetLineDashValues.SystemDash)
+                sb.WriteShapeProperty("lineDashing", "1");
+            else if (presetDash.Val == A.PresetLineDashValues.SystemDot)
+                sb.WriteShapeProperty("lineDashing", "2");
+            else if (presetDash.Val == A.PresetLineDashValues.SystemDashDot)
+                sb.WriteShapeProperty("lineDashing", "3");
+            else if (presetDash.Val == A.PresetLineDashValues.SystemDashDotDot)
+                sb.WriteShapeProperty("lineDashing", "4");
+            else if (presetDash.Val == A.PresetLineDashValues.Dot)
+                sb.WriteShapeProperty("lineDashing", "5");
+            else if (presetDash.Val == A.PresetLineDashValues.Dash)
+                sb.WriteShapeProperty("lineDashing", "6");
+            else if (presetDash.Val == A.PresetLineDashValues.LargeDash)
+                sb.WriteShapeProperty("lineDashing", "7");
+            else if (presetDash.Val == A.PresetLineDashValues.DashDot)
+                sb.WriteShapeProperty("lineDashing", "8");
+            else if (presetDash.Val == A.PresetLineDashValues.LargeDashDot)
+                sb.WriteShapeProperty("lineDashing", "9");
+            else if (presetDash.Val == A.PresetLineDashValues.LargeDashDotDot)
+                sb.WriteShapeProperty("lineDashing", "10");
+        }
+        else if (outline.GetFirstChild<A.CustomDash>() is A.CustomDash customDash && customDash.HasChildren)
+        {
+            foreach (var dashStop in customDash.Elements<A.DashStop>())
+            {
+
+            }
+        }
+
+        if (outline.GetFirstChild<A.HeadEnd>() is A.HeadEnd headEnd)
+        {
+            if (headEnd.Type != null)
+            {
+                if (headEnd.Type.Value == A.LineEndValues.None)
+                    sb.WriteShapeProperty("lineStartArrowhead", "0");
+                else if (headEnd.Type.Value == A.LineEndValues.Triangle)
+                    sb.WriteShapeProperty("lineStartArrowhead", "1");
+                else if (headEnd.Type.Value == A.LineEndValues.Stealth)
+                    sb.WriteShapeProperty("lineStartArrowhead", "2");
+                else if (headEnd.Type.Value == A.LineEndValues.Diamond)
+                    sb.WriteShapeProperty("lineStartArrowhead", "3");
+                else if (headEnd.Type.Value == A.LineEndValues.Oval)
+                    sb.WriteShapeProperty("lineStartArrowhead", "4");
+                else if (headEnd.Type.Value == A.LineEndValues.Arrow)
+                    sb.WriteShapeProperty("lineStartArrowhead", "5");
+                // Chevron and Double chevron (6 and 7) are not available in DOCX.
+            }
+            if (headEnd.Width != null)
+            {
+                if (headEnd.Width.Value == A.LineEndWidthValues.Small)
+                    sb.WriteShapeProperty("lineStartArrowWidth", "0");
+                else if (headEnd.Width.Value == A.LineEndWidthValues.Medium)
+                    sb.WriteShapeProperty("lineStartArrowWidth", "1");
+                else if (headEnd.Width.Value == A.LineEndWidthValues.Large)
+                    sb.WriteShapeProperty("lineStartArrowWidth", "2");
+            }
+            if (headEnd.Length != null)
+            {
+                if (headEnd.Length.Value == A.LineEndLengthValues.Small)
+                    sb.WriteShapeProperty("lineStartArrowLength", "0");
+                else if (headEnd.Length.Value == A.LineEndLengthValues.Medium)
+                    sb.WriteShapeProperty("lineStartArrowLength", "1");
+                else if (headEnd.Length.Value == A.LineEndLengthValues.Large)
+                    sb.WriteShapeProperty("lineStartArrowLength", "2");
+            }
+        }
+        if (outline.GetFirstChild<A.TailEnd>() is A.TailEnd tailEnd)
+        {
+            if (tailEnd.Type != null)
+            {
+                if (tailEnd.Type.Value == A.LineEndValues.None)
+                    sb.WriteShapeProperty("lineEndArrowhead", "0");
+                else if (tailEnd.Type.Value == A.LineEndValues.Triangle)
+                    sb.WriteShapeProperty("lineEndArrowhead", "1");
+                else if (tailEnd.Type.Value == A.LineEndValues.Stealth)
+                    sb.WriteShapeProperty("lineEndArrowhead", "2");
+                else if (tailEnd.Type.Value == A.LineEndValues.Diamond)
+                    sb.WriteShapeProperty("lineEndArrowhead", "3");
+                else if (tailEnd.Type.Value == A.LineEndValues.Oval)
+                    sb.WriteShapeProperty("lineEndArrowhead", "4");
+                else if (tailEnd.Type.Value == A.LineEndValues.Arrow)
+                    sb.WriteShapeProperty("lineEndArrowhead", "5");
+                // Chevron and Double chevron (6 and 7) are not available in DOCX.
+            }
+            if (tailEnd.Width != null)
+            {
+                if (tailEnd.Width.Value == A.LineEndWidthValues.Small)
+                    sb.WriteShapeProperty("lineEndArrowWidth", "0");
+                else if (tailEnd.Width.Value == A.LineEndWidthValues.Medium)
+                    sb.WriteShapeProperty("lineEndArrowWidth", "1");
+                else if (tailEnd.Width.Value == A.LineEndWidthValues.Large)
+                    sb.WriteShapeProperty("lineEndArrowWidth", "2");
+            }
+            if (tailEnd.Length != null)
+            {
+                if (tailEnd.Length.Value == A.LineEndLengthValues.Small)
+                    sb.WriteShapeProperty("lineEndArrowLength", "0");
+                else if (tailEnd.Length.Value == A.LineEndLengthValues.Medium)
+                    sb.WriteShapeProperty("lineEndArrowLength", "1");
+                else if (tailEnd.Length.Value == A.LineEndLengthValues.Large)
+                    sb.WriteShapeProperty("lineEndArrowLength", "2");
+            }
+        }
+
+        if (outline.CapType != null)
+        {
+            if (outline.CapType == A.LineCapValues.Round)
+            {
+                sb.WriteShapeProperty("lineEndCapStyle", "0");
+            }
+            else if (outline.CapType == A.LineCapValues.Square)
+            {
+                sb.WriteShapeProperty("lineEndCapStyle", "1");
+            }
+            else if (outline.CapType == A.LineCapValues.Flat)
+            {
+                sb.WriteShapeProperty("lineEndCapStyle", "2");
+            }
+        }
+
+        if (outline.GetFirstChild<A.LineJoinBevel>() != null)
+        {
+            sb.WriteShapeProperty("lineJoinStyle", "0");
+        }
+        else if (outline.GetFirstChild<A.Miter>() is A.Miter miter)
+        {
+            sb.WriteShapeProperty("lineJoinStyle", "1");
+            if (miter.Limit != null)
+                sb.WriteShapeProperty("lineMiterLimit", miter.Limit.Value); // Default is 524,288
+        }
+        else if (outline.GetFirstChild<A.Round>() != null)
+        {
+            sb.WriteShapeProperty("lineJoinStyle", "2");
+        }
+    }
+
+    internal void ProcessFill(Wps.ShapeProperties shapePr, Wps.ShapeStyle? shapeStyle,RtfStringWriter sb)
+    {
+        if (shapePr.GetFirstChild<A.NoFill>() != null)
+        {
+            sb.WriteShapeProperty("fFilled", "0");
+        }
+        else if (shapePr.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
+        {
+            sb.WriteShapeProperty("fFilled", "1");
+            sb.WriteShapeProperty("fillType", "0"); // solid
+
+            // Check if a valid color (PresetColor, SchemeColor, ...) is found
+            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(solidFill, ""));
+            if (color != null)
+                sb.WriteShapeProperty("fillColor", color.Value);
+
+            // TODO: rather than using GetColor for both this and VML Background,
+            // create an overload (or separate method GetColor2) because: 
+            // - VML background only supports SchemeColor or RgbColorModelHex
+            // - fill supports alpha via "fillOpacity" and "fillBackOpacity", so don't call ApplyAlpha()
+            // - advanced color types may be supported via fillColorExt, fillBackColorExtCMY and similar
+            // (however it seems Word does not write these, probably using fillColor and fillBackColor has better
+            // compatibility with RTF readers)
+        }
+        else if (shapePr.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
+        {
+            sb.WriteShapeProperty("fFilled", "1");
+            sb.WriteShapeProperty("fillType", "1"); // pattern
+
+            // Check if a valid color (PresetColor, SchemeColor, ...) is found
+            if (patternFill.ForegroundColor != null)
+            {
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(patternFill.ForegroundColor, ""));
+                if (color != null)
+                    sb.WriteShapeProperty("fillColor", color.Value);
+            } // TODO: write white / transparent if not found ?
+
+            if (patternFill.BackgroundColor != null)
+            {
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(patternFill.BackgroundColor, ""));
+                if (color != null)
+                    sb.WriteShapeProperty("fillBackColor", color.Value);
+            } // TODO: write white / black if not found ?
+
+            //if (patternFill.Preset != null)
+            //{
+            //}
+            // Specifying the preset is not possible in RTF.
+            // Instead, we should check if a fallback VML <w:pict> element has been written by the word processor
+            // before processing the DrawingML shape;
+            // in that case the pattern fill is specified as an embedded picture in VML
+            // and we can translate to RTF directly.
+        }
+        else if (shapePr.GetFirstChild<A.GradientFill>() is A.GradientFill gradientFill)
+        {
+            bool isGradient = true;
+            sb.WriteShapeProperty("fFilled", "1");
+            if (gradientFill.GetFirstChild<A.LinearGradientFill>() is A.LinearGradientFill linearGradientFill)
+            {
+                sb.WriteShapeProperty("fillType", "7"); // gradient that uses angle
+                if (linearGradientFill.Angle != null)
+                {
+
+                }
+            }
+            else if (gradientFill.GetFirstChild<A.PathGradientFill>() is A.PathGradientFill pathGradientFill)
+            {
+                if (pathGradientFill.Path != null && pathGradientFill.Path == A.PathShadeValues.Rectangle)
+                {
+                    sb.WriteShapeProperty("fillType", "5"); // gradient that follows a rectangle
+                }
+                else if (pathGradientFill.Path != null && pathGradientFill.Path == A.PathShadeValues.Shape)
+                {
+                    sb.WriteShapeProperty("fillType", "6"); // gradient that follows a shape
+                }
+                else if (pathGradientFill.Path != null && pathGradientFill.Path == A.PathShadeValues.Circle)
+                {
+                    sb.WriteShapeProperty("fillType", "6"); // gradient that follows a shape
+                }
+                else
+                {
+                    // Unrecognized, fallback to solid fill
+                    sb.WriteShapeProperty("fillType", "0");
+                    isGradient = false;
+                }
+            }
+            else
+            {
+                // Unrecognized, fallback to solid fill
+                sb.WriteShapeProperty("fillType", "0");
+                isGradient = false;
+            }
+
+
+            if (gradientFill.GradientStopList != null)
+            {
+
+            }
+            if (gradientFill.RotateWithShape != null && gradientFill.RotateWithShape.HasValue && gradientFill.RotateWithShape.Value)
+            {
+
+            }
+            if (gradientFill.GetFirstChild<A.TileRectangle>() is A.TileRectangle tileRectangle)
+            {
+
+            }
+            if (gradientFill.Flip != null)
+            {
+
+            }
+        }
+        else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill) // texture or picture
+        {
+            sb.WriteShapeProperty("fFilled", "1");
+            sb.WriteShapeProperty("fillType", "3"); // 2 or 3
+        }
+        else if (shapePr.GetFirstChild<A.GroupFill>() != null)
+        {
+            sb.WriteShapeProperty("fFilled", "1"); 
+            sb.WriteShapeProperty("fillType", "9"); // use background fill (?)
+        }
+        else
+        {
+            // No fill found, try to find style
+            if (shapeStyle?.FillReference != null)
+            {
+                // Solid fill associated to style
+
+                sb.WriteShapeProperty("fLine", "1");
+                sb.WriteShapeProperty("lineType", "0");
+
+                // Try to find color (PresetColor, SchemeColor, ...)
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(shapeStyle.FillReference, ""));
+                if (color != null)
+                    sb.WriteShapeProperty("lineColor", color.Value);
+                return;
+            }
+            else
+            {
+                return; // TODO: specify no fill / white / transparent instead?
+            }
+        }
+    }
+
+    internal void ProcessEffects(Wps.ShapeProperties shapePr, RtfStringWriter sb)
+    {
+        if (shapePr.GetFirstChild<A.EffectDag>() != null)
+        {
+        }
+        if (shapePr.GetFirstChild<A.EffectList>() != null)
+        {
+        }
+        if (shapePr.GetFirstChild<A.Scene3DType>() != null)
+        {
+        }
+        if (shapePr.GetFirstChild<A.Shape3DType>() != null)
+        {
+        }
+    }
+
+    internal void ProcessGeometry(Wps.ShapeProperties shapePr, RtfStringWriter sb)
+    {
+        if (shapePr.GetFirstChild<A.PresetGeometry>() is A.PresetGeometry presetGeometry &&
+                    presetGeometry.Preset != null)
+        {
+            int shapeType = RtfShapeTypeMapper.GetShapeType(presetGeometry.Preset);
+            // TODO: manual adjustments are needed for some shapes
+            sb.WriteShapeProperty("shapeType", shapeType);
+            if (presetGeometry.GetFirstChild<A.AdjustValueList>() is A.AdjustValueList presetGeomAdjustList)
+            {
+                ProcessAdjustValueList(presetGeomAdjustList, sb);
+            }
+        }
+        else if (shapePr.GetFirstChild<A.CustomGeometry>() is A.CustomGeometry customGeometry)
+        {
+            sb.WriteShapeProperty("shapeType", 0); // Freeform / not AutoShape
+            if (customGeometry.AdjustValueList != null)
+            {
+                ProcessAdjustValueList(customGeometry.AdjustValueList, sb);
+            }
+            if (customGeometry.PathList != null)
+            {
+                ProcessPathList(customGeometry.PathList, sb);
+            }
+
+            if (customGeometry.AdjustHandleList != null)
+            {
+                ProcessAdjustHandleList(customGeometry.AdjustHandleList, sb);
+            }
+            if (customGeometry.ShapeGuideList != null)
+            {
+                ProcessShapeGuideList(customGeometry.ShapeGuideList, sb);
+            }
+
+            if (customGeometry.ConnectionSiteList != null)
+            {
+                ProcessConnectionSiteList(customGeometry.ConnectionSiteList, sb);
+            }
+
+            if (customGeometry.Rectangle != null)
+            {
+                // pInscribe
+            }
+        }
+        else
+        {
+            sb.WriteShapeProperty("shapeType", 1); // Default to rectangle
+        }
+    }
+
+    internal void ProcessShapeGuideList(A.ShapeGuideList shapeGuideList, RtfStringWriter sb)
+    {
+        //if (shapeGuideList.Elements<A.ShapeGuide>().Count() == 0)
+        //    return;
+
+        //foreach (var shapeGuide in shapeGuideList.Elements<A.ShapeGuide>())
+        //{
+
+        //}
+
+        // pGuides could be used, but Word only writes it for VML shapes.
+    }
+
+    internal void ProcessAdjustHandleList(A.AdjustHandleList adjustHandleList, RtfStringWriter sb)
+    {
+        //if (!adjustHandleList.Elements().Any())
+        //    return;
+
+        // pAdjustHandles could be used, but Word only writes it for VML shapes.
+    }
+
+    internal void ProcessConnectionSiteList(A.ConnectionSiteList connectionSiteList, RtfStringWriter sb)
+    {
+        if (!connectionSiteList.Elements<A.ConnectionSite>().Any())
+            return;
+        foreach (var connectionSite in connectionSiteList.Elements<A.ConnectionSite>())
+        {
+            // pConnectionSites, pConnectionSitesDir
+        }
+    }
+
+    internal void ProcessAdjustValueList(A.AdjustValueList adjustValueList, RtfStringWriter sb)
+    {
+        if (!adjustValueList.Elements<A.ShapeGuide>().Any())
+            return;
+        foreach (var shapeGuide in adjustValueList.Elements<A.ShapeGuide>())
+        {
+            string name = shapeGuide.Name?.Value ?? string.Empty;
+            string formula = shapeGuide.Formula?.Value ?? string.Empty;
+            //sb.WriteWordWithValue("adjustValue", "");
+            /*
+             * In RTF adjustValue, adjust2Value, adjust3Value, ... (up to 10) are available.
+             * These alter the geometry, but interpretation varies with the shape type.
+             * 
+             * <a:gd name="adj" fmla="val 50000"/> 
+             * --> 
+             * {\sp{\sn adjustValue}{\sv 10800}}
+             */
+        }
+    }
+
+    internal void ProcessPathList(A.PathList pathList, RtfStringWriter sb)
+    {
+        if (!pathList.Elements<A.Path>().Any())
+            return;
+        // pVerticies + pSegmentInfo or shapePath
+        foreach (var path in pathList.Elements<A.Path>())
+        {
+
         }
     }
 
@@ -120,19 +935,87 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
             return;
         }
-        shapePropertiesBuilder.WriteShapeProperty("fFlipH", picProp.Transform2D?.HorizontalFlip != null && picProp.Transform2D.HorizontalFlip.Value);
-        shapePropertiesBuilder.WriteShapeProperty("fFlipV", picProp.Transform2D?.VerticalFlip != null && picProp.Transform2D.VerticalFlip.Value);
+
+        ProcessTransform2D(picProp.Transform2D, shapePropertiesBuilder);
+
+        // TODO: others
+    }
+
+    internal void ProcessTransform2D(A.Transform2D? transform2D, RtfStringWriter sb)
+    {
+        if (transform2D == null)
+            return;
+
+        sb.WriteShapeProperty("fFlipH", transform2D.HorizontalFlip != null && transform2D.HorizontalFlip.Value);
+        sb.WriteShapeProperty("fFlipV", transform2D.VerticalFlip != null && transform2D.VerticalFlip.Value);
+        
         /*
-        The standard states that the rot attribute specifies the clockwise rotation in 1/64000ths of a degree. (This is also used in RTF and VML).
-        In Office and the schema, the rot attribute specifies the clockwise rotation in 1/60000ths of a degree
+         The standard states that the rot attribute specifies the clockwise rotation in 1/64000ths of a degree. (This is also used in RTF and VML).
+         In Office and the schema, the rot attribute specifies the clockwise rotation in 1/60000ths of a degree
         */
-        if (picProp.Transform2D?.Rotation != null)
+        if (transform2D.Rotation != null)
         {
             // Convert 1/60000 of degree to 1/64000 of degree.
-            shapePropertiesBuilder.WriteShapeProperty("rotation", (long)Math.Round(picProp.Transform2D.Rotation.Value * 16.0m / 15.0m));
+            sb.WriteShapeProperty("rotation", (long)Math.Round(transform2D.Rotation.Value * 16.0m / 15.0m));
         }
-        //if (picProp.Transform2D.Offset != null)
+
+        //if (transform2D.Offset != null)
         // Not supported in RTF
+
+        //if (transform2D.Extents != null)
+        // TODO
+        // (this is usually the same as Anchor/Inline extents, but might be different in some cases)
+        // (should be geoTop, geoLeft, geoRight, geoBottom)
+    }
+
+    internal void ProcessDrawingInline(Wp.Inline inline, RtfStringWriter sb)
+    {
+        var distT = inline.DistanceFromTop;
+        var distB = inline.DistanceFromBottom;
+        var distL = inline.DistanceFromLeft;
+        var distR = inline.DistanceFromRight;
+        var extent = inline.Extent;
+        // var effectExtent = inline.EffectExtent;
+
+        sb.WriteWordWithValue("shpleft", 0);
+        sb.WriteWordWithValue("shptop", 0);
+        decimal extentXtwips = 0;
+        decimal extentYtwips = 0;
+        if (extent != null)
+        {
+            if (extent.Cx != null)
+            {
+                extentXtwips = extent.Cx.Value / 635.0m;
+            }
+            if (extent.Cy != null)
+            {
+                extentYtwips = extent.Cy.Value / 635.0m;
+            }
+        }
+        sb.WriteWordWithValue("shpright", extentXtwips);
+        sb.WriteWordWithValue("shpbottom", extentYtwips);
+
+        sb.WriteLine();
+
+        sb.WriteShapeProperty("fUseShapeAnchor", false);
+        sb.WriteShapeProperty("fPseudoInline", true);
+
+        if (distT != null)
+        {
+            sb.WriteShapeProperty("dyWrapDistTop", distT.Value);
+        }
+        if (distB != null)
+        {
+            sb.WriteShapeProperty("dyWrapDistBottom", distB.Value);
+        }
+        if (distL != null)
+        {
+            sb.WriteShapeProperty("dxWrapDistLeft", distL.Value);
+        }
+        if (distR != null)
+        {
+            sb.WriteShapeProperty("dxWrapDistRight", distR.Value);
+        }
     }
 
     internal void ProcessDrawingAnchor(Wp.Anchor anchor, RtfStringWriter sb)
@@ -149,14 +1032,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         var hidden = anchor.Hidden;
         Wp.WrapPolygon? polygon = null;
 
-        //bool useSimplePos = anchor.SimplePos != null && anchor.SimplePos.Value; 
+        //bool useSimplePos = inline.SimplePos != null && inline.SimplePos.Value; 
         // Does not seem to be relevant for images, only for shapes.
 
         var positionH = anchor.HorizontalPosition;
         var positionV = anchor.VerticalPosition;
 
         var extent = anchor.Extent;
-        // var effectExtent = anchor.EffectExtent;
+        // var effectExtent = inline.EffectExtent;
         var sizeRelH = anchor.GetFirstChild<Wp14.RelativeWidth>();
         var sizeRelV = anchor.GetFirstChild<Wp14.RelativeHeight>();
 
@@ -247,7 +1130,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         //if (useSimplePos) // Unclear how simple position should be used in RTF
         //{
-        //    if (anchor.SimplePosition is Wp.SimplePosition sp && sp.X != null && sp.Y != null)
+        //    if (inline.SimplePosition is Wp.SimplePosition sp && sp.X != null && sp.Y != null)
         //    {
         //        long xTwips = sp.X / 635;
         //        long yTwips = sp.Y / 635;
@@ -349,11 +1232,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         sb.WriteLine();
 
-        sb.WriteShapeProperty("shapeType", "75");
         sb.WriteShapeProperty("fHidden", hidden != null && hidden.Value);
         sb.WriteShapeProperty("fBehindDocument", behind != null && behind.Value);
         sb.WriteShapeProperty("fAllowOverlap", allowOverlap != null && allowOverlap.Value);
         sb.WriteShapeProperty("fLayoutInCell", layoutInCell != null && layoutInCell.Value);
+        sb.WriteShapeProperty("fUseShapeAnchor", true);
 
         //if (!useSimplePos)
         //{
