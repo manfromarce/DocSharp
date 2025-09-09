@@ -47,8 +47,8 @@
 [1]: Wrap layouts and floating images are preserved in RTF, as well as few basic transforms (crop, flip, rotate).  
 Other converters support inline images only, without transforms/effects.  
 RTF supports JPEG, PNG, WMF and EMF formats; web browsers support JPEG, PNG, GIF, SVG and partially BMP and ICO.  
-Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the ImageConverter on a custom converter which returns PNG bytes.  
-For Markdown, the ImagesOutputFolder has to be set to an existing directory, otherwise images are ignored.  
+Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.SystemDrawing packages or setting the `ImageConverter` on a custom converter which returns PNG bytes.  
+For Markdown, the `ImagesOutputFolder` has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
 
 [2]: Very limited support for number format and indentation in Markdown and TXT.  
@@ -95,21 +95,21 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 
 | Feature       | ➡️ DOCX | ➡️ RTF |
 | ------------- | :-----: | :-----: |
-| Emphasis, bold, strikethrough | ✅ | ✅ |
+| Emphasis (bold/italic), strikethrough | ✅ | ✅ |
 | Paragraphs | ✅ | ✅ |
 | Headings | ✅ | ✅ |
 | Emojis | ✅ | ✅ |
-| Inline code blocks [15] | ✅ | ✅ |
-| Fenced code blocks [15] | ✅ | ✅ |
+| Inline code blocks [16] | ✅ | ✅ |
+| Fenced code blocks [16] | ✅ | ✅ |
 | Syntax highlight for code blocks | ❌ | ❌ |
-| Quote blocks [15] | ✅ | ✅ |
+| Quote blocks [16] | ✅ | ✅ |
 | Lists [15] | ✅ | ✅ |
 | Task lists | ✅ | ✅ |
 | Breaks | ✅ | ✅ |
-| Pictures [16] | ✅ | ✅ |
+| Pictures [17] | ✅ | ✅ |
 | Links | ✅ | ✅ |
 | Bookmarks on headings | ✅ | ✅ |
-| HTML inline tags | 🟡 | ❌ |
+| HTML inline tags | 🟡[18] | ❌ |
 | HTML entities | ✅ | ✅ |
 | Raw HTML blocks | ❌ | ❌ |
 | Tables | ✅ | ✅ |
@@ -118,9 +118,11 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 | Definition lists | ❌ | ❌ |
 | Figures | ❌ | ❌ |
 
-[15]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
+[16]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
 
-[16]: WebP, AVIF and JXL images are not supported in DOCX and RTF, and GIF is also not supported in RTF.  
-JPEG and PNG have the broadest support. To convert other images, you can use the DocSharp.ImageSharp or DocSharp.SystemDrawing package or set the ImageConverter property on a custom converter which returns PNG bytes.  
-The ImagesBaseUri property has to be set in order to support relative URLs, otherwise only images referenced with absolute URLs are processed (see the wiki or sample app for examples).  
+[17]: WebP, AVIF and JXL images are not supported in DOCX and RTF, and GIF is also not supported in RTF.  
+JPEG and PNG have the broadest support. To convert other images, you can use the DocSharp.ImageSharp or DocSharp.SystemDrawing package or set the `ImageConverter` property on a custom converter which returns PNG bytes.  
+The `ImagesBaseUri` property has to be set in order to support relative URLs, otherwise only images referenced with absolute URLs are processed (see the wiki or sample app for examples).  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
+
+[18]: Only these basic tags are supported: `u`, `i`, `b`, `em`, `strong`, `sub`, `sup`, `mark`, `s`, `strike`, `del`, `ins`
