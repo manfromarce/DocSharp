@@ -1,4 +1,8 @@
-## 0.14.0 - not released yet
+## 0.14.0 - Not released yet
+
+- Initial support for shapes, lines and text boxes in DOCX to RTF converter.
+
+## 0.14.0 - 2025.09.03
 
 - Improvements for binary to Open XML converters
 - Add "MD Table" style in Markdown to DOCX renderer; this can be used to customize table appearance (like other styles)

@@ -13,13 +13,12 @@ using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 using DocSharp.Writers;
 using System.Globalization;
 using DocSharp.Helpers;
-using DocumentFormat.OpenXml.Drawing;
 
 namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal override bool IsSupportedGraphicData(GraphicData graphicData)
+    internal override bool IsSupportedGraphicData(A.GraphicData graphicData)
     {
         return graphicData.GetFirstChild<Pictures.Picture>() != null ||
                graphicData.GetFirstChild<Wps.WordprocessingShape>() != null;
@@ -413,7 +412,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.WriteShapeProperty("lineType", "0");
 
             // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
-            string color = ColorHelpers.GetColor(solidFill, "#000000");
+            string color = ColorHelpers.GetColor2(solidFill, "#000000");
             sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
         }
         else if (outline?.GetFirstChild<A.GradientFill>() != null)
@@ -432,7 +431,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
             if (patternFill.ForegroundColor != null)
             {
-                string color = ColorHelpers.GetColor(patternFill.ForegroundColor, "#000000");
+                string color = ColorHelpers.GetColor2(patternFill.ForegroundColor, "#000000");
                 sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
             }
             else
@@ -443,7 +442,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // Only write the second pattern color if found
             if (patternFill.BackgroundColor != null)
             {
-                string color = ColorHelpers.GetColor(patternFill.BackgroundColor, "");
+                string color = ColorHelpers.GetColor2(patternFill.BackgroundColor, "");
                 var rtfColor = ColorHelpers.HexToBgr(color);
                 if (rtfColor != null && rtfColor.HasValue)
                     sb.WriteShapeProperty("lineBackColor", rtfColor.Value);
@@ -469,7 +468,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.WriteShapeProperty("lineType", "0");
 
                 // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
-                string color = ColorHelpers.GetColor(shapeStyle.LineReference, "#000000");
+                string color = ColorHelpers.GetColor2(shapeStyle.LineReference, "#000000");
                 sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
                 return;
             }
@@ -669,7 +668,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.WriteShapeProperty("fillType", "0"); // solid
 
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
-            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(solidFill, ""));
+            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, ""));
             if (color != null)
                 sb.WriteShapeProperty("fillColor", color.Value);
 
@@ -689,14 +688,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
             if (patternFill.ForegroundColor != null)
             {
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(patternFill.ForegroundColor, ""));
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, ""));
                 if (color != null)
                     sb.WriteShapeProperty("fillColor", color.Value);
             } // TODO: write white / transparent if not found ?
 
             if (patternFill.BackgroundColor != null)
             {
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(patternFill.BackgroundColor, ""));
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.BackgroundColor, ""));
                 if (color != null)
                     sb.WriteShapeProperty("fillBackColor", color.Value);
             } // TODO: write white / black if not found ?
@@ -789,7 +788,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.WriteShapeProperty("lineType", "0");
 
                 // Try to find color (PresetColor, SchemeColor, ...)
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor(shapeStyle.FillReference, ""));
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(shapeStyle.FillReference, ""));
                 if (color != null)
                     sb.WriteShapeProperty("lineColor", color.Value);
                 return;

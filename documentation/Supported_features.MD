@@ -23,10 +23,11 @@
 | Ruby | ❌ | ✅ | ❌ | ❌ |
 | Modern text effects and WordArt | -[11] | 🟡[9] | ❌ | 🟡 [10] |
 | Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[9] | ❌ | - |
-| Modern shapes, text boxes and image/shape effects (DrawingML) | ❌ | ❌ | ❌ | 🟡 [10] |
-| Legacy shapes, text boxes, effects and WordArt (VML) | ❌ | ❌ | ❌ | 🟡 [10] |
-| Charts | ❌ | ❌ | ❌ | - |
-| Diagrams | ❌ | ❌ | ❌ | - |
+| Modern shapes, text boxes and image/shape effects (DrawingML) | ⏳[14] | ❌ | ❌ | 🟡 [10] |
+| Legacy shapes, text boxes, effects and WordArt (VML) | ⏳[14] | ❌ | ❌ | 🟡 [10] |
+| SmartArt diagrams | ⏳[14] | ❌ | ❌ | - |
+| Lagacy diagrams | ⏳[14] | ❌ | ❌ | - |
+| Charts | -[15] | ❌ | ❌ | - |
 | Math | ✅ | 🟡 | ✅ | ❌ |
 | Ink [6] | 🟡 | 🟡 | 🟡 | - |
 | Signature line [6] | 🟡 | 🟡 | 🟡 | - |
@@ -80,7 +81,15 @@ floating objects are ignored to prevent layout issues.
 [12]: Most background types are supported in DOCX to RTF conversion, including solid colors, gradients, patterns, textures and pictures.  
 Only watermarks are not supported because they require full VML support in order to translate text paths.
 
-[13]: Only solid background is supported.
+[13]: Only solid background is supported in HTML.
+
+[14]: Support for drawings is still incomplete:  
+- **Supported**: DrawingML shapes / lines / arrows (created by modern Word versions, unless in compatibility mode), text content, solid fill, line color, line style (dashed, dotted, double, cap, ...), line thickness
+- **Not supported**: VML (Word 2007 or compatibility mode), manual adjustments (corners / points adjustments and similar), freehand curve/polygon, some advanced text layout options, pattern / gradient / texture / picture fill, gradient/pattern for line, effects, 3D effects, WordArt text warp transforms, diagrams, shape groups
+
+[15]: "Real" charts are not available in the RTF specification, so MS Word converts them to images or OLE objects.  
+This operation is complex and currently considered out-of-scope for this library.  
+However, some charts may already be OLE objects (Excel/MS Graph object; usually happens if the document was originally a Word 2007 DOCX, or a DOC/RTF converted to DOCX keeping compatibility mode), and these are supported. 
 
 ## Markdown renderers
 
