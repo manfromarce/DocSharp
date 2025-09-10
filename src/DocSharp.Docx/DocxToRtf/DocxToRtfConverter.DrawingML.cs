@@ -16,6 +16,8 @@ using Dgm = DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocSharp.Writers;
 using System.Globalization;
 using DocSharp.Helpers;
+using System.IO;
+using DocSharp.IO;
 
 namespace DocSharp.Docx;
 
@@ -172,6 +174,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             //var officeArtExtensionList = wpShape.GetFirstChild<Wps.OfficeArtExtensionList>();
             //var linkedTextBox = wpShape.GetFirstChild<Wps.LinkedTextBox>();
             ProcessTextBodyProperties(wpShape.GetFirstChild<Wps.TextBodyProperties>(), sb);
+
+            if (shapeStyle?.FontReference != null) 
+                // This is the only element in ShapeStyle that has not been considered yet.
+            {
+            }
 
             sb.WriteLine(); // Separate shape properties from text box content (if present) and shape result
 
@@ -429,7 +436,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         { 
         }
 
-        ProcessEffects(shapePr, sb);
+        ProcessEffects(shapePr, shapeStyle, sb);
     }
 
     internal void ProcessOutline(A.Outline? outline, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
@@ -498,6 +505,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                 sb.WriteShapeProperty("fLine", "1");
                 sb.WriteShapeProperty("lineType", "0");
+
+                if (shapeStyle.LineReference.Index != null)
+                {
+                }
 
                 // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
                 string color = ColorHelpers.GetColor2(shapeStyle.LineReference, "#000000");
@@ -688,7 +699,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
     }
 
-    internal void ProcessFill(Wps.ShapeProperties shapePr, Wps.ShapeStyle? shapeStyle,RtfStringWriter sb)
+    internal void ProcessFill(Wps.ShapeProperties shapePr, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
     {
         if (shapePr.GetFirstChild<A.NoFill>() != null)
         {
@@ -839,29 +850,73 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill) // texture or picture
         {
-            sb.WriteShapeProperty("fFilled", "1");
-            sb.WriteShapeProperty("fillType", "3"); // 2 or 3
+            sb.WriteShapeProperty("fFilled", "1");            
+
+            if (blipFill.GetFirstChild<A.Tile>() is A.Tile tile)
+            {
+                sb.WriteShapeProperty("fillType", "2"); // Texture
+
+                // Word ignores these when converting to RTF, 
+                // and fillOriginX and fillOriginY do not seem to behave as expected.
+                //if (tile.Alignment != null) { }
+                //if (tile.Flip != null) { }
+                //if (tile.HorizontalOffset != null) 
+                //{
+                //    sb.WriteShapeProperty("fillOriginX", tile.HorizontalOffset.Value);
+                //}
+                //if (tile.VerticalOffset != null) 
+                //{ 
+                //    sb.WriteShapeProperty("fillOriginY", tile.VerticalOffset.Value);
+                //}
+                //if (tile.HorizontalRatio != null) 
+                //{ 
+                //    sb.WriteShapeProperty("fillShapeOriginX", tile.HorizontalRatio.Value);
+                //}
+                //if (tile.VerticalRatio != null) 
+                //{ 
+                //    sb.WriteShapeProperty("fillShapeOriginY", tile.VerticalRatio.Value);
+                //}
+            }
+            else
+            {
+                sb.WriteShapeProperty("fillType", "3"); // Picture
+            }
+
+            if (blipFill.GetFirstChild<A.SourceRectangle>() is A.SourceRectangle sourceRect)
+            {
+                if (sourceRect.Left != null)
+                    sb.WriteShapeProperty("fillRectLeft", (long)Math.Round(sourceRect.Left.Value / 1.5258m));
+                // Convert 100000 --> 65536
+                if (sourceRect.Top != null)
+                    sb.WriteShapeProperty("fillRectTop", (long)Math.Round(sourceRect.Top.Value / 1.5258m));
+                if (sourceRect.Right != null)
+                    sb.WriteShapeProperty("fillRectRight", (long)Math.Round(sourceRect.Right.Value / 1.5258m));
+                if (sourceRect.Bottom != null)
+                    sb.WriteShapeProperty("fillRectBottom", (long)Math.Round(sourceRect.Bottom.Value / 1.5258m));
+            }
+            if (blipFill.GetFirstChild<A.Stretch>() is A.Stretch stretch && 
+                stretch.FillRectangle is A.FillRectangle fillRect)
+            {
+                if (fillRect.Left != null)
+                    sb.WriteShapeProperty("fillToLeft", (long)Math.Round(fillRect.Left.Value / 1.5258m));
+                // Convert 100000 --> 65536
+                if (fillRect.Top != null)
+                    sb.WriteShapeProperty("fillToTop", (long)Math.Round(fillRect.Top.Value / 1.5258m));
+                if (fillRect.Right != null)
+                    sb.WriteShapeProperty("fillToRight", (long)Math.Round(fillRect.Right.Value / 1.5258m));
+                if (fillRect.Bottom != null)
+                    sb.WriteShapeProperty("fillToBottom", (long)Math.Round(fillRect.Bottom.Value / 1.5258m));
+            }
 
             sb.WriteShapeProperty("pictureGray", "0");
             sb.WriteShapeProperty("pictureBiLevel", "0");
             //sb.WriteShapeProperty("fRecolorFillAsPicture", "1");
 
-            if (blipFill.GetFirstChild<A.SourceRectangle>() is A.SourceRectangle sourceRectangle)
+            if (blipFill.GetFirstChild<A.Blip>() is A.Blip blip &&
+                blip.Embed?.Value != null && OpenXmlHelpers.GetRootPart(blip) is OpenXmlPart rootPart)
+            // Textures, pictures and patterns are associated to an embedded image file
             {
-
-            }
-            if (blipFill.GetFirstChild<A.Stretch>() is A.Stretch stretch && 
-                stretch.FillRectangle is A.FillRectangle fillRect)
-            {
-
-            }
-            if (blipFill.GetFirstChild<A.Tile>() is A.Tile tile)
-            {
-
-            }
-            if (blipFill.GetFirstChild<A.Blip>() is A.Blip blip && blip.Embed?.Value != null)
-            {
-                //sb.WriteShapeProperty("fillBlip", pict);
+                ProcessPictureFill(blip.Embed.Value, rootPart, sb);
             }
         }
         else if (shapePr.GetFirstChild<A.GroupFill>() != null)
@@ -879,6 +934,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.WriteShapeProperty("fLine", "1");
                 sb.WriteShapeProperty("lineType", "0");
 
+                if (shapeStyle.FillReference.Index != null)
+                {
+                }
+
                 // Try to find color (PresetColor, SchemeColor, ...)
                 int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(shapeStyle.FillReference, ""));
                 if (color != null)
@@ -892,7 +951,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
     }
 
-    internal void ProcessEffects(Wps.ShapeProperties shapePr, RtfStringWriter sb)
+    internal void ProcessEffects(Wps.ShapeProperties shapePr, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
     {
         if (shapePr.GetFirstChild<A.EffectDag>() != null)
         {
@@ -904,6 +963,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
         }
         if (shapePr.GetFirstChild<A.Shape3DType>() != null)
+        {
+        }
+
+        if (shapeStyle?.EffectReference != null)
         {
         }
     }

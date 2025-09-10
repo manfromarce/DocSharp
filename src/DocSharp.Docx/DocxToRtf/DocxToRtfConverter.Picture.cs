@@ -159,4 +159,65 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
     }
+
+    
+    internal void ProcessPictureFill(string rId, OpenXmlPart rootPart, RtfStringWriter sb)
+    {
+        // This function is used for picture fill in ProcessDrawing and ProcessBackground.
+        var pictWriter = new RtfStringWriter();
+
+        // Get dimensions from the image file
+        long imageWidth = 0;
+        long imageHeight = 0;
+        if (rootPart?.GetPartById(rId) is ImagePart imagePart)
+        {
+            var stream = new MemoryStream();
+            using (var originalStream = imagePart.GetStream(FileMode.Open, FileAccess.Read))
+            {
+                // In this case we need seeking support,
+                // and the ZipWrappingStream provided by Open XML does not have it.
+                originalStream.CopyTo(stream);
+            }
+
+            using (stream)
+            {
+                var imageDimensions = ImageHeader.GetDimensions(stream, imagePart.ContentType);
+                imageWidth = imageDimensions.Width;
+                imageHeight = imageDimensions.Height;
+            }
+            if (imageWidth > 0 && imageHeight > 0)
+            {
+                // Wmf is a special case because dimensions are calculated in inches (rather than pixels)
+                if (ImageFormatExtensions.FromMimeType(imagePart.ContentType) == ImageFormat.Wmf)
+                {
+                    imageWidth *= 1440;
+                    imageHeight *= 1440;
+                }
+                else
+                {
+                    // Convert pixels to twips
+                    imageWidth = imageWidth * 1440 / 96; // TODO: use the image DPI instead
+                    imageHeight = imageHeight * 1440 / 96;
+                }
+
+                var properties = new PictureProperties()
+                {
+                    CropBottom = 0,
+                    CropRight = 0,
+                    CropLeft = 0,
+                    CropTop = 0,
+                    WidthGoal = imageWidth,
+                    HeightGoal = imageHeight,
+                    // Note: picw and pich always seem to be about
+                    // picwgoal (or pichgoal) * 1.76 for every background image.
+                    // I don't know how this value is calculated.
+                    Width = (long)Math.Round(imageWidth * 1.76),
+                    Height = (long)Math.Round(imageHeight * 1.76),
+                };
+                ProcessImagePart(rootPart, rId, properties, pictWriter);
+                if (!pictWriter.IsEmpty)
+                    sb.WriteShapeProperty("fillBlip", pictWriter.ToString());
+            }
+        }
+    }
 }

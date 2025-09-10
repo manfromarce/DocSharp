@@ -15,6 +15,14 @@ public sealed class RtfStringWriter : BaseStringWriter
         NewLine = "\r\n"; // Use CrLf by default for RTF.
     }
 
+    public bool IsEmpty
+    {
+        get
+        {
+            return sb.Length == 0;
+        }
+    }
+
     public void Write(RtfStringWriter writer)
     {
         Write(writer.ToString());
