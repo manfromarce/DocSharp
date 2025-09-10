@@ -26,7 +26,7 @@
 | Modern shapes, text boxes and image/shape effects (DrawingML) | ⏳[14] | ❌ | ❌ | 🟡 [10] |
 | Legacy shapes, text boxes, effects and WordArt (VML) | ⏳[14] | ❌ | ❌ | 🟡 [10] |
 | SmartArt diagrams | ⏳[14] | ❌ | ❌ | - |
-| Lagacy diagrams | ⏳[14] | ❌ | ❌ | - |
+| Legacy diagrams | ⏳[14] | ❌ | ❌ | - |
 | Charts | -[15] | ❌ | ❌ | - |
 | Math | ✅ | 🟡 | ✅ | ❌ |
 | Ink [6] | 🟡 | 🟡 | 🟡 | - |
@@ -117,6 +117,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 | Math (LaTex blocks) | ❌ | ❌ |
 | Definition lists | ❌ | ❌ |
 | Figures | ❌ | ❌ |
+| Diagrams (Mermaid) | ❌ | ❌ |
 
 [16]: Known issue: code blocks, lists and quotes may not use the correct style when nested inside another quote block.  
 
