@@ -5,11 +5,14 @@ using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
-using Wp14 = DocumentFormat.OpenXml.Office2010.Word.Drawing;
+using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using Pictures = DocumentFormat.OpenXml.Drawing.Pictures;
+using Wp14 = DocumentFormat.OpenXml.Office2010.Word.Drawing;
 using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
+using Wpc = DocumentFormat.OpenXml.Office2010.Word.DrawingCanvas;
+using Wpg = DocumentFormat.OpenXml.Office2010.Word.DrawingGroup;
+using Dgm = DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocSharp.Writers;
 using System.Globalization;
 using DocSharp.Helpers;
@@ -31,11 +34,23 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessDrawing(Drawing drawing, RtfStringWriter sb, bool ignoreWrapLayouts)
     {
-        var properties = new PictureProperties();
+        // The expected structure is:
+        // Drawing -> Inline or Anchor -> Graphic -> GraphicData -> Picture/WordprocessingShape/...
+
+        // Check if the structure is valid before proceeding.
+        if (drawing.Inline == null && drawing.Anchor == null)
+            return;
+        var graphicData = drawing.Descendants<A.GraphicData>().FirstOrDefault();
+        if (graphicData == null)
+            return; 
+
         var extent = drawing.Descendants<Wp.Extent>().FirstOrDefault();
-        var pic = drawing.Descendants<Pictures.Picture>().FirstOrDefault();
-        if (pic != null && extent?.Cx != null && extent?.Cy != null)
+        
+        if (graphicData.GetFirstChild<Pictures.Picture>() is Pictures.Picture pic && 
+            extent?.Cx != null && extent?.Cy != null)
         {
+            var properties = new PictureProperties();
+
             // Convert EMUs to twips
             long w = (long)Math.Round(extent.Cx.Value / 635m);
             long h = (long)Math.Round(extent.Cy.Value / 635m);
@@ -116,8 +131,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
             }
         }
-        else if (drawing.Descendants<A.GraphicData>().FirstOrDefault() is A.GraphicData graphicData &&
-                 graphicData.FirstChild is Wps.WordprocessingShape wpShape)
+        else if (graphicData.GetFirstChild<Wps.WordprocessingShape>() is Wps.WordprocessingShape wpShape)
         {
             // Open shape destination
             sb.Write(@"{\shp{\*\shpinst");
@@ -171,9 +185,27 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
             sb.WriteLine("}}"); // Close shape result group and shape destination
         }
+        else if (graphicData.GetFirstChild<Wpc.WordprocessingCanvas>() is Wpc.WordprocessingCanvas canvas)
+        {
+            // TODO: process drawing canvas
+        }
+        else if (graphicData.GetFirstChild<Wpg.WordprocessingGroup>() is Wpg.WordprocessingGroup group)
+        {
+            // TODO: process group
+        }
+        else if (graphicData.GetFirstChild<Dgm.RelationshipIds>() is Dgm.RelationshipIds relIds)
+        {
+            // TODO: process SmartArt diagram
+        }
         else
         {
-            // TODO: process other types of GraphicData (chart, diagram, VML)
+            // TODO: process other types of GraphicData if needed.
+            // 
+            // Currently:
+            // - VML elements are ignored because in all tested documents they are in a <w:pict> element, 
+            // not <w:drawing>.
+            // - Charts are ignored because they are not supported in RTF and would need to be converted
+            // to images or OLE objects (complex task, currently considered out-of-scope for this library)
         }
     }
 
@@ -671,14 +703,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, ""));
             if (color != null)
                 sb.WriteShapeProperty("fillColor", color.Value);
-
-            // TODO: rather than using GetColor for both this and VML Background,
-            // create an overload (or separate method GetColor2) because: 
-            // - VML background only supports SchemeColor or RgbColorModelHex
-            // - fill supports alpha via "fillOpacity" and "fillBackOpacity", so don't call ApplyAlpha()
-            // - advanced color types may be supported via fillColorExt, fillBackColorExtCMY and similar
-            // (however it seems Word does not write these, probably using fillColor and fillBackColor has better
-            // compatibility with RTF readers)
         }
         else if (shapePr.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
         {
@@ -718,7 +742,12 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 sb.WriteShapeProperty("fillType", "7"); // gradient that uses angle
                 if (linearGradientFill.Angle != null)
                 {
-
+                    // Convert 1/60000ths of degree (Open XML) to 1/65536ths of degree (RTF).
+                    long angle = (long)Math.Round(linearGradientFill.Angle.Value * 65536m / 60000m); 
+                    sb.WriteShapeProperty("fillAngle", angle);
+                }
+                if (linearGradientFill.Scaled != null && linearGradientFill.Scaled.HasValue)
+                {
                 }
             }
             else if (gradientFill.GetFirstChild<A.PathGradientFill>() is A.PathGradientFill pathGradientFill)
@@ -733,13 +762,26 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
                 else if (pathGradientFill.Path != null && pathGradientFill.Path == A.PathShadeValues.Circle)
                 {
-                    sb.WriteShapeProperty("fillType", "6"); // gradient that follows a shape
+                    // Radial gradiant (circle) is not available in RTF, Word fallbacks to shape (6).
+                    sb.WriteShapeProperty("fillType", "6");
                 }
                 else
                 {
                     // Unrecognized, fallback to solid fill
                     sb.WriteShapeProperty("fillType", "0");
                     isGradient = false;
+                }
+                if (isGradient && gradientFill.GetFirstChild<A.FillToRectangle>() is A.FillToRectangle fillToRect)
+                {
+                    if (fillToRect.Left != null)
+                        sb.WriteShapeProperty("fillToLeft", (long)Math.Round(fillToRect.Left.Value / 1.5258m));
+                        // Convert 100000 --> 65536
+                    if (fillToRect.Top != null)
+                        sb.WriteShapeProperty("fillToTop", (long)Math.Round(fillToRect.Top.Value / 1.5258m));
+                    if (fillToRect.Right != null)
+                        sb.WriteShapeProperty("fillToRight", (long)Math.Round(fillToRect.Right.Value / 1.5258m));
+                    if (fillToRect.Bottom != null)
+                        sb.WriteShapeProperty("fillToBottom", (long)Math.Round(fillToRect.Bottom.Value / 1.5258m));
                 }
             }
             else
@@ -749,28 +791,78 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 isGradient = false;
             }
 
-
-            if (gradientFill.GradientStopList != null)
+            if (gradientFill.GradientStopList != null && gradientFill.GradientStopList.HasChildren)
             {
-
+                var first = gradientFill.GradientStopList.GetFirstChild<A.GradientStop>();
+                if (first != null)
+                {
+                    int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(first, ""));
+                    if (color != null && color.HasValue)
+                        sb.WriteShapeProperty("fillColor", color.Value);
+                    if (isGradient)
+                    {
+                        string fillShadeColors = string.Empty;
+                        int count = 0;
+                        foreach (var gradientStop in gradientFill.GradientStopList.Elements<A.GradientStop>())
+                        {
+                            int? gradientStopColor = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(gradientStop, ""));
+                            if (gradientStop.Position != null && 
+                                gradientStopColor != null && gradientStopColor.HasValue)
+                            {
+                                // In OpenXML position goes from 0 to 100000, while in RTF from 0 to 65536
+                                int pos = (int)Math.Round(gradientStop.Position / 1.5258m); 
+                                fillShadeColors += $"({gradientStopColor.Value},{pos});";
+                                ++count;
+                            }
+                        }
+                        //int numbers = (count * 2) + 2; // number of elements in the array including count and numbers itself
+                        int numbers = (count * 2); // number of elements in the array
+                        fillShadeColors = $"{numbers};{count};{fillShadeColors.TrimEnd(';')}";
+                        if (!string.IsNullOrEmpty(fillShadeColors))
+                            sb.WriteShapeProperty("fillShadeColors", fillShadeColors);
+                    }
+                }
             }
-            if (gradientFill.RotateWithShape != null && gradientFill.RotateWithShape.HasValue && gradientFill.RotateWithShape.Value)
+            if (isGradient)
             {
-
-            }
-            if (gradientFill.GetFirstChild<A.TileRectangle>() is A.TileRectangle tileRectangle)
-            {
-
-            }
-            if (gradientFill.Flip != null)
-            {
-
+                sb.WriteShapeProperty("fillFocus", 100);
+                if (gradientFill.RotateWithShape != null && gradientFill.RotateWithShape.HasValue && gradientFill.RotateWithShape.Value)
+                {
+                }
+                if (gradientFill.GetFirstChild<A.TileRectangle>() is A.TileRectangle tileRectangle)
+                {
+                }
+                if (gradientFill.Flip != null)
+                {
+                }
             }
         }
         else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill) // texture or picture
         {
             sb.WriteShapeProperty("fFilled", "1");
             sb.WriteShapeProperty("fillType", "3"); // 2 or 3
+
+            sb.WriteShapeProperty("pictureGray", "0");
+            sb.WriteShapeProperty("pictureBiLevel", "0");
+            //sb.WriteShapeProperty("fRecolorFillAsPicture", "1");
+
+            if (blipFill.GetFirstChild<A.SourceRectangle>() is A.SourceRectangle sourceRectangle)
+            {
+
+            }
+            if (blipFill.GetFirstChild<A.Stretch>() is A.Stretch stretch && 
+                stretch.FillRectangle is A.FillRectangle fillRect)
+            {
+
+            }
+            if (blipFill.GetFirstChild<A.Tile>() is A.Tile tile)
+            {
+
+            }
+            if (blipFill.GetFirstChild<A.Blip>() is A.Blip blip && blip.Embed?.Value != null)
+            {
+                //sb.WriteShapeProperty("fillBlip", pict);
+            }
         }
         else if (shapePr.GetFirstChild<A.GroupFill>() != null)
         {
