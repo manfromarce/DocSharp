@@ -427,10 +427,93 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         if (shapePr == null)
             return;
 
+#if DEBUG
+        var shapeType = shapePr.GetFirstChild<A.PresetGeometry>()?.Preset;
+#endif
+
         ProcessGeometry(shapePr, sb);
         ProcessTransform2D(shapePr.Transform2D, sb);
-        ProcessOutline(shapePr.GetFirstChild<A.Outline>(), shapeStyle, sb);
-        ProcessFill(shapePr, shapeStyle, sb);
+
+        // Outline contained directly in the ShapeProperties has priority over style, 
+        // but if outline is present and a property is not defined we need to search for it in the style too.
+        if (shapeStyle?.LineReference != null && shapeStyle.LineReference.Index != null)
+        {
+            // Note: the color contained in shapeStyle.LineReference directly is the second style
+            // and is only relevant if the index points to phColor style, 
+            // for other styles we should get the outline properties from the theme instead.
+            uint index = shapeStyle.LineReference.Index.Value;
+            if (shapePr.GetThemePart()?.ThemeElements?.FormatScheme?.LineStyleList is A.LineStyleList lineStyleList &&
+                lineStyleList.ChildElements.Count >= index)
+            {
+                OpenXmlElement? style = lineStyleList.Elements().ToArray()[index - 1];
+                if (style is A.Outline styleOutline)
+                {
+                    ProcessOutline(shapePr.GetFirstChild<A.Outline>(), styleOutline, sb, shapeStyle.LineReference);
+                }
+            }
+        }
+        else
+        {
+            ProcessOutline(shapePr.GetFirstChild<A.Outline>(), null, sb);
+        }
+
+        // Try to find fill
+        if (shapePr.GetFirstChild<A.NoFill>() is A.NoFill noFill)
+            ProcessFill(noFill, sb);
+        else if (shapePr.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
+            ProcessFill(solidFill, sb);
+        else if (shapePr.GetFirstChild<A.GradientFill>() is A.GradientFill gradientFill)
+            ProcessFill(gradientFill, sb);
+        else if (shapePr.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
+            ProcessFill(patternFill, sb);
+        else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill)
+            ProcessFill(blipFill, sb);
+        else if (shapePr.GetFirstChild<A.GroupFill>() is A.GroupFill groupFill)
+            ProcessFill(groupFill, sb);
+        else
+        {
+            // No fill found, try to find style
+            if (shapeStyle?.FillReference != null && shapeStyle.FillReference.Index != null)
+            {
+                // Note: the color contained in shapeStyle.FillReference directly is the second style
+                // and is only relevant if the index points to phColor style, 
+                // for other styles we should get the outline properties from the theme instead.
+
+                uint index = shapeStyle.FillReference.Index.Value;
+
+                // - 0 or 1000 = no fill
+                // - 1 to 999 = index within fillStyleLst
+                // - 1001 or greater = index within bgFillStyleLst 
+                // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.FillReference?view=openxml-3.0.1)
+                if (index == 0 || index == 1000)
+                {
+                    sb.WriteShapeProperty("fFilled", "0");
+                }
+                else if (shapePr.GetThemePart()?.ThemeElements?.FormatScheme is A.FormatScheme formatScheme)
+                {
+                    OpenXmlElement? style = null;
+                    if (index >= 1 && index <= 999 && formatScheme.FillStyleList != null &&
+                        formatScheme.FillStyleList.ChildElements.Count >= index)
+                    {
+                        style = formatScheme.FillStyleList.Elements().ToArray()[index - 1];
+                    }
+                    else if (index >= 1001 && formatScheme.BackgroundFillStyleList != null &&
+                        formatScheme.BackgroundFillStyleList.ChildElements.Count >= (index - 1000))
+                    {
+                        // 1001 is the first, 1002 is the second, ...
+                        style = formatScheme.BackgroundFillStyleList.Elements().ToArray()[index - 1001];
+                    }
+                    if (style != null)
+                    {
+                        ProcessFill(style, sb, shapeStyle.FillReference);
+                    }
+                }
+            }
+            else
+            {
+                // TODO: specify no fill / white / transparent?
+            }
+        }
 
         if (shapePr.BlackWhiteMode != null)
         { 
@@ -439,160 +522,99 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         ProcessEffects(shapePr, shapeStyle, sb);
     }
 
-    internal void ProcessOutline(A.Outline? outline, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
+    internal static void ProcessLineDashValue(A.PresetDash presetDash, RtfStringWriter sb)
     {
-        if (outline?.GetFirstChild<A.NoFill>() != null)
+        if (presetDash.Val == null)
+            return;
+
+        if (presetDash.Val == A.PresetLineDashValues.Solid)
+            sb.WriteShapeProperty("lineDashing", "0");
+        else if (presetDash.Val == A.PresetLineDashValues.SystemDash)
+            sb.WriteShapeProperty("lineDashing", "1");
+        else if (presetDash.Val == A.PresetLineDashValues.SystemDot)
+            sb.WriteShapeProperty("lineDashing", "2");
+        else if (presetDash.Val == A.PresetLineDashValues.SystemDashDot)
+            sb.WriteShapeProperty("lineDashing", "3");
+        else if (presetDash.Val == A.PresetLineDashValues.SystemDashDotDot)
+            sb.WriteShapeProperty("lineDashing", "4");
+        else if (presetDash.Val == A.PresetLineDashValues.Dot)
+            sb.WriteShapeProperty("lineDashing", "5");
+        else if (presetDash.Val == A.PresetLineDashValues.Dash)
+            sb.WriteShapeProperty("lineDashing", "6");
+        else if (presetDash.Val == A.PresetLineDashValues.LargeDash)
+            sb.WriteShapeProperty("lineDashing", "7");
+        else if (presetDash.Val == A.PresetLineDashValues.DashDot)
+            sb.WriteShapeProperty("lineDashing", "8");
+        else if (presetDash.Val == A.PresetLineDashValues.LargeDashDot)
+            sb.WriteShapeProperty("lineDashing", "9");
+        else if (presetDash.Val == A.PresetLineDashValues.LargeDashDotDot)
+            sb.WriteShapeProperty("lineDashing", "10");
+    }
+
+    internal static void ProcessLineDashValue(A.CustomDash customDash, RtfStringWriter sb)
+    {
+        foreach (var dashStop in customDash.Elements<A.DashStop>())
         {
-            sb.WriteShapeProperty("fLine", "0");
+
         }
-        else if (outline?.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
-        {
-            sb.WriteShapeProperty("fLine", "1");
-            sb.WriteShapeProperty("lineType", "0");
+    }
 
-            // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
-            string color = ColorHelpers.GetColor2(solidFill, "#000000");
-            sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
-        }
-        else if (outline?.GetFirstChild<A.GradientFill>() != null)
-        {
-            // Not available in RTF, fallback to solid black line
-            sb.WriteShapeProperty("fLine", "1");
-            sb.WriteShapeProperty("lineType", "0");
-            sb.WriteShapeProperty("lineColor", "0"); // black
-        }
-        else if (outline?.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
-        {
-            sb.WriteShapeProperty("fLine", "1");
-            sb.WriteShapeProperty("lineType", "1");
-            //sb.WriteShapeProperty("lineFillShape", "1");
+    internal void ProcessOutline(A.Outline? outline, A.Outline? styleOutline, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
+    {
+        if ((outline?.GetFirstChild<A.NoFill>() ?? (styleOutline?.GetFirstChild<A.NoFill>())) is A.NoFill noFill)
+            ProcessOutlineFill(noFill, sb, secondStyle);
+        if ((outline?.GetFirstChild<A.SolidFill>() ?? (styleOutline?.GetFirstChild<A.SolidFill>())) is A.SolidFill solidFill)
+            ProcessOutlineFill(solidFill, sb, secondStyle);
+        if ((outline?.GetFirstChild<A.GradientFill>() ?? (styleOutline?.GetFirstChild<A.GradientFill>())) is A.GradientFill gradientFill)
+            ProcessOutlineFill(gradientFill, sb, secondStyle);
+        if ((outline?.GetFirstChild<A.PatternFill>() ?? (styleOutline?.GetFirstChild<A.PatternFill>())) is A.PatternFill patternFill)
+            ProcessOutlineFill(patternFill, sb, secondStyle);
 
-            // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
-            if (patternFill.ForegroundColor != null)
-            {
-                string color = ColorHelpers.GetColor2(patternFill.ForegroundColor, "#000000");
-                sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
-            }
-            else
-            {
-                sb.WriteShapeProperty("lineColor", "0");
-            }
-
-            // Only write the second pattern color if found
-            if (patternFill.BackgroundColor != null)
-            {
-                string color = ColorHelpers.GetColor2(patternFill.BackgroundColor, "");
-                var rtfColor = ColorHelpers.HexToBgr(color);
-                if (rtfColor != null && rtfColor.HasValue)
-                    sb.WriteShapeProperty("lineBackColor", rtfColor.Value);
-            }
-
-            //if (patternFill.Preset != null)
-            //{
-            //}
-            // Specifying the preset is not possible in RTF.
-            // Instead, we should check if a fallback VML <w:pict> element has been written by the word processor
-            // before processing the DrawingML shape;
-            // in that case the pattern fill is specified as an embedded picture in VML
-            // and we can translate to RTF directly.
-        }
-        else
-        {
-            // No outline found, try to find style
-            if (shapeStyle?.LineReference != null)
-            {
-                // Solid line associated to style
-
-                sb.WriteShapeProperty("fLine", "1");
-                sb.WriteShapeProperty("lineType", "0");
-
-                if (shapeStyle.LineReference.Index != null)
-                {
-                }
-
-                // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
-                string color = ColorHelpers.GetColor2(shapeStyle.LineReference, "#000000");
-                sb.WriteShapeProperty("lineColor", ColorHelpers.HexToBgr(color) ?? 0);
-                return;
-            }
-            else
-            {
-                return; // TODO: specify no line / default line instead?
-            }
-        }
-
-        if (outline.Width != null)
-        {
-            sb.WriteShapeProperty("lineWidth", outline.Width.Value); // EMUs (default is 9,525 = 0.75pt) 
-        }
-        if (outline.Alignment != null)
-        {
-            if (outline.Alignment == A.PenAlignmentValues.Center)
-            {
-            }
-            else if (outline.Alignment == A.PenAlignmentValues.Insert)
-            {
-            }
-        }
+        if ((outline?.Width ?? styleOutline?.Width) is Int32Value width)
+            sb.WriteShapeProperty("lineWidth", width.Value); // EMUs (default is 9,525 = 0.75pt) 
         
-        if (outline.CompoundLineType != null)
+        if ((outline?.Alignment ?? styleOutline?.Alignment) is EnumValue<A.PenAlignmentValues> alignment)
         {
-            if (outline.CompoundLineType == A.CompoundLineValues.Single)
+            if (alignment == A.PenAlignmentValues.Center)
             {
+            }
+            else if (alignment == A.PenAlignmentValues.Insert)
+            {
+            }
+        }
+
+        if ((outline?.CompoundLineType ?? styleOutline?.CompoundLineType) is EnumValue<A.CompoundLineValues> compoundLineType)
+        {
+            if (compoundLineType == A.CompoundLineValues.Single)
                 sb.WriteShapeProperty("lineStyle", "0");
-            }
-            else if (outline.CompoundLineType == A.CompoundLineValues.Double)
-            {
+            else if (compoundLineType == A.CompoundLineValues.Double)
                 sb.WriteShapeProperty("lineStyle", "1");
-            }
-            else if (outline.CompoundLineType == A.CompoundLineValues.ThickThin)
-            {
+            else if (compoundLineType == A.CompoundLineValues.ThickThin)
                 sb.WriteShapeProperty("lineStyle", "2");
-            }
-            else if (outline.CompoundLineType == A.CompoundLineValues.ThinThick)
-            {
+            else if (compoundLineType == A.CompoundLineValues.ThinThick)
                 sb.WriteShapeProperty("lineStyle", "3");
-            }
-            else if (outline.CompoundLineType == A.CompoundLineValues.Triple)
-            {
+            else if (compoundLineType == A.CompoundLineValues.Triple)
                 sb.WriteShapeProperty("lineStyle", "4");
-            }
         }
 
-        if (outline.GetFirstChild<A.PresetDash>() is A.PresetDash presetDash && presetDash.Val != null)
+        if (outline?.GetFirstChild<A.PresetDash>() is A.PresetDash presetDash)
         {
-            if (presetDash.Val == A.PresetLineDashValues.Solid)
-                sb.WriteShapeProperty("lineDashing", "0");
-            else if (presetDash.Val == A.PresetLineDashValues.SystemDash)
-                sb.WriteShapeProperty("lineDashing", "1");
-            else if (presetDash.Val == A.PresetLineDashValues.SystemDot)
-                sb.WriteShapeProperty("lineDashing", "2");
-            else if (presetDash.Val == A.PresetLineDashValues.SystemDashDot)
-                sb.WriteShapeProperty("lineDashing", "3");
-            else if (presetDash.Val == A.PresetLineDashValues.SystemDashDotDot)
-                sb.WriteShapeProperty("lineDashing", "4");
-            else if (presetDash.Val == A.PresetLineDashValues.Dot)
-                sb.WriteShapeProperty("lineDashing", "5");
-            else if (presetDash.Val == A.PresetLineDashValues.Dash)
-                sb.WriteShapeProperty("lineDashing", "6");
-            else if (presetDash.Val == A.PresetLineDashValues.LargeDash)
-                sb.WriteShapeProperty("lineDashing", "7");
-            else if (presetDash.Val == A.PresetLineDashValues.DashDot)
-                sb.WriteShapeProperty("lineDashing", "8");
-            else if (presetDash.Val == A.PresetLineDashValues.LargeDashDot)
-                sb.WriteShapeProperty("lineDashing", "9");
-            else if (presetDash.Val == A.PresetLineDashValues.LargeDashDotDot)
-                sb.WriteShapeProperty("lineDashing", "10");
+            ProcessLineDashValue(presetDash, sb);
         }
-        else if (outline.GetFirstChild<A.CustomDash>() is A.CustomDash customDash && customDash.HasChildren)
+        else if (outline?.GetFirstChild<A.CustomDash>() is A.CustomDash customDash && customDash.HasChildren)
         {
-            foreach (var dashStop in customDash.Elements<A.DashStop>())
-            {
-
-            }
+            ProcessLineDashValue(customDash, sb);
+        }
+        else if (styleOutline?.GetFirstChild<A.PresetDash>() is A.PresetDash stylePresetDash && stylePresetDash.Val != null)
+        {
+            ProcessLineDashValue(stylePresetDash, sb);
+        }
+        else if (styleOutline?.GetFirstChild<A.CustomDash>() is A.CustomDash styleCustomDash && styleCustomDash.HasChildren)
+        {
+            ProcessLineDashValue(styleCustomDash, sb);
         }
 
-        if (outline.GetFirstChild<A.HeadEnd>() is A.HeadEnd headEnd)
+        if ((outline?.GetFirstChild<A.HeadEnd>() ?? styleOutline?.GetFirstChild<A.HeadEnd>()) is A.HeadEnd headEnd)
         {
             if (headEnd.Type != null)
             {
@@ -629,7 +651,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.WriteShapeProperty("lineStartArrowLength", "2");
             }
         }
-        if (outline.GetFirstChild<A.TailEnd>() is A.TailEnd tailEnd)
+
+        if ((outline?.GetFirstChild<A.TailEnd>() ?? styleOutline?.GetFirstChild<A.TailEnd>()) is A.TailEnd tailEnd)
         {
             if (tailEnd.Type != null)
             {
@@ -667,55 +690,132 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             }
         }
 
-        if (outline.CapType != null)
+        if ((outline?.CapType ?? styleOutline?.CapType) is EnumValue<A.LineCapValues> lineCapType)
         {
-            if (outline.CapType == A.LineCapValues.Round)
-            {
+            if (lineCapType == A.LineCapValues.Round)
                 sb.WriteShapeProperty("lineEndCapStyle", "0");
-            }
-            else if (outline.CapType == A.LineCapValues.Square)
-            {
+            else if (lineCapType == A.LineCapValues.Square)
                 sb.WriteShapeProperty("lineEndCapStyle", "1");
-            }
-            else if (outline.CapType == A.LineCapValues.Flat)
-            {
+            else if (lineCapType == A.LineCapValues.Flat)
                 sb.WriteShapeProperty("lineEndCapStyle", "2");
-            }
         }
 
-        if (outline.GetFirstChild<A.LineJoinBevel>() != null)
-        {
+        if (outline?.GetFirstChild<A.LineJoinBevel>() != null)
             sb.WriteShapeProperty("lineJoinStyle", "0");
-        }
-        else if (outline.GetFirstChild<A.Miter>() is A.Miter miter)
+        else if (outline?.GetFirstChild<A.Miter>() is A.Miter miter)
         {
             sb.WriteShapeProperty("lineJoinStyle", "1");
             if (miter.Limit != null)
                 sb.WriteShapeProperty("lineMiterLimit", miter.Limit.Value); // Default is 524,288
         }
-        else if (outline.GetFirstChild<A.Round>() != null)
-        {
+        else if (outline?.GetFirstChild<A.Round>() != null)
             sb.WriteShapeProperty("lineJoinStyle", "2");
+        else if (styleOutline?.GetFirstChild<A.LineJoinBevel>() != null)
+            sb.WriteShapeProperty("lineJoinStyle", "0");
+        else if (styleOutline?.GetFirstChild<A.Miter>() is A.Miter styleMiter)
+        {
+            sb.WriteShapeProperty("lineJoinStyle", "1");
+            if (styleMiter.Limit != null)
+                sb.WriteShapeProperty("lineMiterLimit", styleMiter.Limit.Value);
+        }
+        else if (styleOutline?.GetFirstChild<A.Round>() != null)
+            sb.WriteShapeProperty("lineJoinStyle", "2");
+    }
+
+    internal void ProcessOutlineFill(OpenXmlElement? outlineFill, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
+    {
+        if (outlineFill is A.NoFill)
+        {
+            sb.WriteShapeProperty("fLine", "0");
+        }
+        else if (outlineFill is A.SolidFill solidFill)
+        {
+            sb.WriteShapeProperty("fLine", "1");
+            sb.WriteShapeProperty("lineType", "0"); // solid
+
+            // Check if a valid color (PresetColor, SchemeColor, ...) is found
+            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, out string schemeColorName, ""));
+            if (color != null)
+                sb.WriteShapeProperty("lineColor", color.Value);
+            else if (secondStyle != null && 
+                     schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
+                     ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
+                // phClr = use color of the style (https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/78c007c1-aba8-442f-9876-f767580b54c4)
+                sb.WriteShapeProperty("lineColor", secondColor);
+        }
+        else if (outlineFill is A.GradientFill gradientFill)
+        {
+            // Not available in RTF for outline, fallback to solid black line (same behavior as Microsoft Word)
+            sb.WriteShapeProperty("fLine", "1");
+            sb.WriteShapeProperty("lineType", "0");
+            sb.WriteShapeProperty("lineColor", "0"); // 0 = black
+        }
+        else if (outlineFill is A.PatternFill patternFill)
+        {
+            sb.WriteShapeProperty("fLine", "1");
+            sb.WriteShapeProperty("lineType", "1");
+            //sb.WriteShapeProperty("lineFillShape", "1");
+
+            // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
+            if (patternFill.ForegroundColor != null)
+            {
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, out string schemeColorName, ""));
+                if (color != null)
+                    sb.WriteShapeProperty("lineColor", color.Value);
+                else if (secondStyle != null &&
+                    schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
+                    ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
+                    sb.WriteShapeProperty("lineColor", secondColor);
+                else
+                    sb.WriteShapeProperty("lineColor", "0"); // black
+            }
+            else
+            {
+                sb.WriteShapeProperty("lineColor", "0");
+            }
+
+            // Only write the second pattern color if found
+            if (patternFill.BackgroundColor != null)
+            {
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.BackgroundColor, out _, ""));
+                if (color != null)
+                    sb.WriteShapeProperty("lineBackColor", color.Value);
+                // TODO: write white / black if not found ?
+            }
+
+            //if (patternFill.Preset != null)
+            //{
+            //}
+            // Specifying the preset is not possible in RTF.
+            // Instead, we should check if a fallback VML <w:pict> element has been written by the word processor
+            // before processing the DrawingML shape;
+            // in that case the pattern fill is specified as an embedded picture in VML
+            // and we can translate to RTF directly.
         }
     }
 
-    internal void ProcessFill(Wps.ShapeProperties shapePr, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
+    internal void ProcessFill(OpenXmlElement? fill, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
     {
-        if (shapePr.GetFirstChild<A.NoFill>() != null)
+        if (fill is A.NoFill)
         {
             sb.WriteShapeProperty("fFilled", "0");
         }
-        else if (shapePr.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
+        else if (fill is A.SolidFill solidFill)
         {
             sb.WriteShapeProperty("fFilled", "1");
             sb.WriteShapeProperty("fillType", "0"); // solid
 
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
-            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, ""));
+            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, out string schemeColorName, ""));
             if (color != null)
                 sb.WriteShapeProperty("fillColor", color.Value);
+            else if (secondStyle != null &&
+                    schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
+                    ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
+                // phClr = use color of the style (https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/78c007c1-aba8-442f-9876-f767580b54c4)
+                sb.WriteShapeProperty("fillColor", secondColor);
         }
-        else if (shapePr.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
+        else if (fill is A.PatternFill patternFill)
         {
             sb.WriteShapeProperty("fFilled", "1");
             sb.WriteShapeProperty("fillType", "1"); // pattern
@@ -723,14 +823,18 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
             if (patternFill.ForegroundColor != null)
             {
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, ""));
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, out string schemeColorName, ""));
                 if (color != null)
                     sb.WriteShapeProperty("fillColor", color.Value);
+                else if (secondStyle != null &&
+                         schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
+                         ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
+                    sb.WriteShapeProperty("fillColor", secondColor);
             } // TODO: write white / transparent if not found ?
 
             if (patternFill.BackgroundColor != null)
             {
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.BackgroundColor, ""));
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.BackgroundColor, out _, ""));
                 if (color != null)
                     sb.WriteShapeProperty("fillBackColor", color.Value);
             } // TODO: write white / black if not found ?
@@ -744,7 +848,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // in that case the pattern fill is specified as an embedded picture in VML
             // and we can translate to RTF directly.
         }
-        else if (shapePr.GetFirstChild<A.GradientFill>() is A.GradientFill gradientFill)
+        else if (fill is A.GradientFill gradientFill)
         {
             bool isGradient = true;
             sb.WriteShapeProperty("fFilled", "1");
@@ -754,7 +858,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (linearGradientFill.Angle != null)
                 {
                     // Convert 1/60000ths of degree (Open XML) to 1/65536ths of degree (RTF).
-                    long angle = (long)Math.Round(linearGradientFill.Angle.Value * 65536m / 60000m); 
+                    long angle = (long)Math.Round(linearGradientFill.Angle.Value * 65536m / 60000m);
                     sb.WriteShapeProperty("fillAngle", angle);
                 }
                 if (linearGradientFill.Scaled != null && linearGradientFill.Scaled.HasValue)
@@ -786,7 +890,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     if (fillToRect.Left != null)
                         sb.WriteShapeProperty("fillToLeft", (long)Math.Round(fillToRect.Left.Value / 1.5258m));
-                        // Convert 100000 --> 65536
+                    // Convert 100000 --> 65536
                     if (fillToRect.Top != null)
                         sb.WriteShapeProperty("fillToTop", (long)Math.Round(fillToRect.Top.Value / 1.5258m));
                     if (fillToRect.Right != null)
@@ -807,21 +911,30 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 var first = gradientFill.GradientStopList.GetFirstChild<A.GradientStop>();
                 if (first != null)
                 {
-                    int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(first, ""));
+                    // Write first color as regular fill color
+                    // (for compatibility with RTF readers that don't support gradients)
+                    int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(first, out string schemeColorName, ""));
                     if (color != null && color.HasValue)
                         sb.WriteShapeProperty("fillColor", color.Value);
+                    else if (secondStyle != null &&
+                             schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
+                             ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
+                        sb.WriteShapeProperty("fillColor", secondColor);
+
                     if (isGradient)
                     {
                         string fillShadeColors = string.Empty;
                         int count = 0;
                         foreach (var gradientStop in gradientFill.GradientStopList.Elements<A.GradientStop>())
                         {
-                            int? gradientStopColor = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(gradientStop, ""));
-                            if (gradientStop.Position != null && 
+                            int? gradientStopColor = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(gradientStop, out _, ""));
+                            if (gradientStop.Position != null &&
                                 gradientStopColor != null && gradientStopColor.HasValue)
+                                // TODO: for the first gradient stop, should we use the color found before in secondStyle 
+                                // if schemeColorName == phClr ?
                             {
                                 // In OpenXML position goes from 0 to 100000, while in RTF from 0 to 65536
-                                int pos = (int)Math.Round(gradientStop.Position / 1.5258m); 
+                                int pos = (int)Math.Round(gradientStop.Position / 1.5258m);
                                 fillShadeColors += $"({gradientStopColor.Value},{pos});";
                                 ++count;
                             }
@@ -848,9 +961,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 }
             }
         }
-        else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill) // texture or picture
+        else if (fill is A.BlipFill blipFill) // texture or picture
         {
-            sb.WriteShapeProperty("fFilled", "1");            
+            sb.WriteShapeProperty("fFilled", "1");
 
             if (blipFill.GetFirstChild<A.Tile>() is A.Tile tile)
             {
@@ -894,7 +1007,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (sourceRect.Bottom != null)
                     sb.WriteShapeProperty("fillRectBottom", (long)Math.Round(sourceRect.Bottom.Value / 1.5258m));
             }
-            if (blipFill.GetFirstChild<A.Stretch>() is A.Stretch stretch && 
+            if (blipFill.GetFirstChild<A.Stretch>() is A.Stretch stretch &&
                 stretch.FillRectangle is A.FillRectangle fillRect)
             {
                 if (fillRect.Left != null)
@@ -919,35 +1032,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 ProcessPictureFill(blip.Embed.Value, rootPart, sb);
             }
         }
-        else if (shapePr.GetFirstChild<A.GroupFill>() != null)
+        else if (fill is A.GroupFill)
         {
-            sb.WriteShapeProperty("fFilled", "1"); 
-            sb.WriteShapeProperty("fillType", "9"); // use background fill (?)
-        }
-        else
-        {
-            // No fill found, try to find style
-            if (shapeStyle?.FillReference != null)
-            {
-                // Solid fill associated to style
-
-                sb.WriteShapeProperty("fLine", "1");
-                sb.WriteShapeProperty("lineType", "0");
-
-                if (shapeStyle.FillReference.Index != null)
-                {
-                }
-
-                // Try to find color (PresetColor, SchemeColor, ...)
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(shapeStyle.FillReference, ""));
-                if (color != null)
-                    sb.WriteShapeProperty("lineColor", color.Value);
-                return;
-            }
-            else
-            {
-                return; // TODO: specify no fill / white / transparent instead?
-            }
+            sb.WriteShapeProperty("fFilled", "1");
+            sb.WriteShapeProperty("fillType", "9"); // use background fill
         }
     }
 

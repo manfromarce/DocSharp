@@ -128,20 +128,21 @@ public static class ColorHelpers
     {
         if (element.GetFirstChild<RgbColorModelHex>() is RgbColorModelHex rgbColor)
         {
-            return ConvertRgbColorToHex(rgbColor);
+            return ConvertRgbColorToHex(rgbColor, defaultValue);
         }
         else if (element.GetFirstChild<SchemeColor>() is SchemeColor schemeColor)
         {
-            return ConvertSchemeColorToHex(schemeColor);
+            return ConvertSchemeColorToHex(schemeColor, defaultValue);
         }
         return defaultValue;
     }
 
-    public static string GetColor2(OpenXmlElement element, string defaultValue = "")
+    public static string GetColor2(OpenXmlElement element, out string schemeColorName, string defaultValue = "")
     {
+        schemeColorName = string.Empty;
         if (element.GetFirstChild<A.RgbColorModelHex>() is A.RgbColorModelHex rgbColor)
         {
-            return ConvertRgbColorToHex(rgbColor);
+            return ConvertRgbColorToHex(rgbColor, defaultValue);
         }
         else if (element.GetFirstChild<A.RgbColorModelPercentage>() is A.RgbColorModelPercentage rgbColorModelPercentage)
         {
@@ -149,63 +150,28 @@ public static class ColorHelpers
         }
         else if (element.GetFirstChild<A.SchemeColor>() is A.SchemeColor schemeColor)
         {
-            return ConvertSchemeColorToHex(schemeColor);
+            if (schemeColor.Val != null)
+                // return the scheme color name too
+                schemeColorName = schemeColor.Val.ToString() ?? string.Empty;
+
+            return ConvertSchemeColorToHex(schemeColor, defaultValue);
             // TODO: if not found / not valid, try to search other color types here
         }
         else if (element.GetFirstChild<A.HslColor>() is A.HslColor hslColor)
         {
-            return ConvertHslColorToHex(hslColor);
+            return ConvertHslColorToHex(hslColor, defaultValue);
         }
         else if (element.GetFirstChild<A.PresetColor>() is A.PresetColor presetColor)
         {
-            return ConvertPresetColorToHex(presetColor);
+            return ConvertPresetColorToHex(presetColor, defaultValue);
         }
         else if (element.GetFirstChild<A.SystemColor>() is A.SystemColor systemColor)
         {
-            return ConvertSystemColorToHex(systemColor);
+            return ConvertSystemColorToHex(systemColor, defaultValue);
         }
         return defaultValue;
     }
-
-    private static string ConvertSchemeColorToHex(string? schemeColor, MainDocumentPart mainPart, string defaultColor = "#000000")
-    {
-        if (schemeColor == null) return defaultColor;
-
-        var themePart = mainPart.ThemePart;
-        if (themePart == null) return defaultColor;
-
-        var colorScheme = themePart.Theme?.ThemeElements?.ColorScheme;
-        if (colorScheme == null) return defaultColor;
-
-        foreach (var color in colorScheme.Elements())
-        {
-            if (color.LocalName.Equals(schemeColor, StringComparison.OrdinalIgnoreCase))
-            {
-                if (color.GetFirstChild<A.RgbColorModelHex>() is A.RgbColorModelHex rgbColor)
-                {
-                    return ConvertRgbColorToHex(rgbColor);
-                }
-                else if (color.GetFirstChild<A.RgbColorModelPercentage>() is A.RgbColorModelPercentage rgbColorModelPercentage)
-                {
-                    return ConvertRgbColorPercentageToHex(rgbColorModelPercentage);
-                }
-                else if (color.GetFirstChild<A.HslColor>() is A.HslColor hslColor)
-                {
-                    return ConvertHslColorToHex(hslColor);
-                }
-                else if (color.GetFirstChild<A.PresetColor>() is A.PresetColor presetColor)
-                {
-                    return ConvertPresetColorToHex(presetColor);
-                }
-                else if (color.GetFirstChild<A.SystemColor>() is A.SystemColor systemColor)
-                {
-                    return ConvertSystemColorToHex(systemColor);
-                }
-            }
-        }
-        return defaultColor;
-    }
-
+   
     public static string ConvertRgbColorToHex(A.RgbColorModelHex rgbColorModelHex, string defaultColor = "#000000")
     {
         string? hex = rgbColorModelHex.Val;
@@ -319,6 +285,52 @@ public static class ColorHelpers
             return ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, defaultColor);
         else
             return defaultColor;
+    }
+
+    private static string ConvertSchemeColorToHex(string? schemeColor, MainDocumentPart mainPart, string defaultColor = "#000000")
+    {
+        if (schemeColor == null) return defaultColor;
+
+        var colorScheme = mainPart.ThemePart?.Theme?.ThemeElements?.ColorScheme;
+        if (colorScheme == null) return defaultColor;
+
+        foreach (var color in colorScheme.Elements())
+        {
+            // Note: ColorScheme can only contain:
+            // Dark1Color (dk1), Light1Color (lt1), 
+            // Dark2Color (dk2), Light2Color (lt2), 
+            // Accent1Color (accent1), Accent2Color (accent2), 
+            // Accent3Color (accent3), Accent4Color (accent4)
+            // Accent5Color (accent5), Accent6Color (accent6)
+            // Hyperlink (hlink), FollowedHyperlinkColor (folHlink);
+            // 
+            // while the following can also be specified in SchemeColor but need special handling: 
+            // Background1 (bg1), Background2 (bg2), Text1 (tx1), Text2 (tx2), PhColor (phClr)
+            if (color.LocalName.Equals(schemeColor, StringComparison.OrdinalIgnoreCase))
+            {
+                if (color.GetFirstChild<A.RgbColorModelHex>() is A.RgbColorModelHex rgbColor)
+                {
+                    return ConvertRgbColorToHex(rgbColor, defaultColor);
+                }
+                else if (color.GetFirstChild<A.RgbColorModelPercentage>() is A.RgbColorModelPercentage rgbColorModelPercentage)
+                {
+                    return ConvertRgbColorPercentageToHex(rgbColorModelPercentage, defaultColor);
+                }
+                else if (color.GetFirstChild<A.HslColor>() is A.HslColor hslColor)
+                {
+                    return ConvertHslColorToHex(hslColor, defaultColor);
+                }
+                else if (color.GetFirstChild<A.PresetColor>() is A.PresetColor presetColor)
+                {
+                    return ConvertPresetColorToHex(presetColor, defaultColor);
+                }
+                else if (color.GetFirstChild<A.SystemColor>() is A.SystemColor systemColor)
+                {
+                    return ConvertSystemColorToHex(systemColor, defaultColor);
+                }
+            }
+        }
+        return defaultColor;
     }
 
     public static string ConvertPresetColorToHex(A.PresetColor presetColor, string defaultColor = "#000000")

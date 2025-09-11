@@ -134,6 +134,15 @@ public static class OpenXmlHelpers
         return GetMainDocumentPart(element)?.NumberingDefinitionsPart?.Numbering;
     }
 
+    /// <summary>
+    /// Helper function to retrieve Theme part from an Open XML element.
+    /// </summary>
+    /// <returns></returns>
+    public static DocumentFormat.OpenXml.Drawing.Theme? GetThemePart(this OpenXmlElement element)
+    {
+        return GetMainDocumentPart(element)?.ThemePart?.Theme;
+    }
+
     internal static ConditionalFormattingFlags GetFlags(this ConditionalFormatStyle? cfs)
     {
         if (cfs == null) return ConditionalFormattingFlags.None;
