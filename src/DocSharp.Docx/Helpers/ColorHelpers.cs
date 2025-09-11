@@ -171,6 +171,142 @@ public static class ColorHelpers
         }
         return defaultValue;
     }
+
+    private static string ApplyAdjustments(string hex, OpenXmlElement parentColor, out int alphaVal)
+    {
+        alphaVal = 0; // Don't change alpha by default
+        if (hex.Length == 6) // input string should have length of 6 to be able to add the alpha channel
+        {
+            if (parentColor.Elements<Alpha>().FirstOrDefault() is Alpha alpha && alpha.Val != null)
+            {
+                // Apply alpha value to hex color
+
+                // Percentage is multiplied by 1000 in Open XML, convert to 0-255 range
+                alphaVal = (int)((alpha.Val.Value / 100000m) * 255m);
+                // Clamp between 0 and 255
+                alphaVal = Math.Max(0, Math.Min(255, alphaVal));
+
+                // Alpha is the transparency value (80% = 20% opacity), so we need to invert it
+                alphaVal = 255 - alphaVal;
+                return hex;
+            }
+            else if (parentColor.Elements<A.Alpha>().FirstOrDefault() is A.Alpha alphaPct && alphaPct.Val != null)
+            {
+            }
+            else if (parentColor.Elements<A.AlphaModulation>().FirstOrDefault() is A.AlphaModulation alphaMod && alphaMod.Val != null)
+            {
+            }
+            else if (parentColor.Elements<A.AlphaOffset>().FirstOrDefault() is A.AlphaOffset alphaOffset && alphaOffset.Val != null)
+            {
+            }
+        }
+
+        else if (parentColor.Elements<A.Shade>().FirstOrDefault() is A.Shade shade && shade.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Luminance>().FirstOrDefault() is A.Luminance lum && lum.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.LuminanceOffset>().FirstOrDefault() is A.LuminanceOffset lumOffset && lumOffset.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.LuminanceModulation>().FirstOrDefault() is A.LuminanceModulation lumMod && lumMod.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Hue>().FirstOrDefault() is A.Hue hue && hue.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.HueOffset>().FirstOrDefault() is A.HueOffset hueOffset && hueOffset.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.HueModulation>().FirstOrDefault() is A.HueModulation hueMod && hueMod.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Saturation>().FirstOrDefault() is A.Saturation sat && sat.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.SaturationOffset>().FirstOrDefault() is A.SaturationOffset satOffset && satOffset.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.SaturationModulation>().FirstOrDefault() is A.SaturationModulation satMod && satMod.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Tint>().FirstOrDefault() is A.Tint tint && tint.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Red>().FirstOrDefault() is A.Red red && red.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.RedOffset>().FirstOrDefault() is A.RedOffset redOffset && redOffset.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.RedModulation>().FirstOrDefault() is A.RedModulation redMod && redMod.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Green>().FirstOrDefault() is A.Green green && green.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.GreenOffset>().FirstOrDefault() is A.GreenOffset greenOffset && greenOffset.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.GreenModulation>().FirstOrDefault() is A.GreenModulation greenMod && greenMod.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Blue>().FirstOrDefault() is A.Blue blue && blue.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.BlueOffset>().FirstOrDefault() is A.BlueOffset blueOffset && blueOffset.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.BlueModulation>().FirstOrDefault() is A.BlueModulation blueMod && blueMod.Val != null)
+        {
+
+        }
+        else if (parentColor.Elements<A.Inverse>().FirstOrDefault() is A.Inverse inverse)
+        {
+            // Specifies that the output color is the grayscale of the input color.
+        }
+        else if (parentColor.Elements<A.Gray>().FirstOrDefault() is A.Gray gray)
+        {
+            // Specifies that the output color is the inverse of the input color.
+
+        }
+        else if (parentColor.Elements<A.Gamma>().FirstOrDefault() is A.Gamma gamma)
+        {
+            // Specifies that the output color is the sRGB gamma shift of the input color.
+        }
+        else if (parentColor.Elements<A.InverseGamma>().FirstOrDefault() is A.InverseGamma inverseGamma)
+        {
+            // Specifies that the output color is the inverse sRGB gamma shift of the input color.
+        }
+        else if (parentColor.Elements<A.Complement>().FirstOrDefault() is A.Complement complement)
+        {
+            // Specifies that the output color is the complement of the input color.
+            // Two colors are complementary if, when mixed they produce a shade of grey.
+            // For instance, the complement of red which is (255, 0, 0) is cyan which is (0, 255, 255).
+        }
+
+        return hex;
+    }
    
     public static string ConvertRgbColorToHex(A.RgbColorModelHex rgbColorModelHex, string defaultColor = "#000000")
     {
@@ -180,8 +316,8 @@ public static class ColorHelpers
             // TODO: the color might be defined from red + green + blue or hue + saturation + luminance
             return defaultColor;
         }
-        string hexWithAlpha = ApplyAlpha(rgbColorModelHex, hex);
-        return $"#{hexWithAlpha}";
+        string finalColor = ApplyAdjustments(hex, rgbColorModelHex, out int alpha);
+        return $"#{finalColor}";
     }
 
     public static string ConvertRgbColorToHex(RgbColorModelHex rgbColorModelHex, string defaultColor = "#000000")
@@ -191,8 +327,8 @@ public static class ColorHelpers
         {
             return defaultColor;
         }
-        string hexWithAlpha = ApplyAlpha(rgbColorModelHex, hex);
-        return $"#{hexWithAlpha}";
+        string finalColor = ApplyAdjustments(hex, rgbColorModelHex, out int alpha);
+        return $"#{finalColor}";
     }
 
     public static string ConvertRgbColorPercentageToHex(A.RgbColorModelPercentage rgbColorModelPercentage, string defaultColor = "#000000")
@@ -211,8 +347,10 @@ public static class ColorHelpers
             int b = (int)Math.Round(255m * bPercentage / 100m);
 
             // TODO: apply alpha and other transformations (if present)
-            
-            return $"#{r:X2}{g:X2}{b:X2}";
+
+            string hex = $"#{r:X2}{g:X2}{b:X2}";
+            string finalColor = ApplyAdjustments(hex, rgbColorModelPercentage, out int alpha);
+            return $"#{finalColor}";
         }
         return defaultColor;
     }
@@ -226,7 +364,9 @@ public static class ColorHelpers
             int hue = Math.Max(Math.Min((int)Math.Round(hslColor.HueValue.Value / 60000m), 360), 0);
             int sat = Math.Max(Math.Min(hslColor.SatValue.Value, 100), 0);
             int lum = Math.Max(Math.Min(hslColor.LumValue.Value, 100), 0);
-            return HslToHex(hue, sat, lum);
+            string hex = HslToHex(hue, sat, lum);
+            string finalColor = ApplyAdjustments(hex, hslColor, out int alpha);
+            return $"#{finalColor}";
         }
         return defaultColor;
     }
@@ -274,7 +414,11 @@ public static class ColorHelpers
     public static string ConvertSchemeColorToHex(SchemeColor schemeColor, string defaultColor = "#000000")
     {
         if (schemeColor.Val != null && schemeColor.GetMainDocumentPart() is MainDocumentPart mainPart)
-            return ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, defaultColor);
+        {
+            string hex = ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, defaultColor);
+            string finalColor = ApplyAdjustments(hex!, schemeColor, out int alpha);
+            return $"#{finalColor}";
+        }
         else 
             return defaultColor;
     }
@@ -282,7 +426,11 @@ public static class ColorHelpers
     public static string ConvertSchemeColorToHex(A.SchemeColor schemeColor, string defaultColor = "#000000")
     {
         if (schemeColor.Val != null && schemeColor.GetMainDocumentPart() is MainDocumentPart mainPart)
-            return ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, defaultColor);
+        {
+            string hex = ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, defaultColor);
+            string finalColor = ApplyAdjustments(hex!, schemeColor, out int alpha);
+            return $"#{finalColor}";
+        }
         else
             return defaultColor;
     }
@@ -337,11 +485,12 @@ public static class ColorHelpers
     {
         if (presetColor.Val != null)
         {
-            var color = System.Drawing.Color.FromName(presetColor.Val.Value.ToString());
-            if (color.IsKnownColor)
-                return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
-            else
-                return ConvertNamedColorToHex(presetColor.Val.Value.ToString()) ?? defaultColor;
+            string? hex = ConvertNamedColorToHex(presetColor.Val.Value.ToString());
+            if (!string.IsNullOrEmpty(hex))
+            {
+                string finalColor = ApplyAdjustments(hex!, presetColor, out int alpha);
+                return $"#{finalColor}";
+            }
         }
         return defaultColor;
     }
@@ -466,92 +615,75 @@ public static class ColorHelpers
     {
         if (systemColor.Val != null)
         {
+            string hex = string.Empty;
             if (systemColor.Val.Value == A.SystemColorValues.ActiveBorder)
-                return System.Drawing.SystemColors.ActiveBorder.ToHexString();
+                hex = System.Drawing.SystemColors.ActiveBorder.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ActiveCaption)
-                return System.Drawing.SystemColors.ActiveCaption.ToHexString();
+                hex = System.Drawing.SystemColors.ActiveCaption.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ApplicationWorkspace)
-                return System.Drawing.SystemColors.AppWorkspace.ToHexString();
+                hex = System.Drawing.SystemColors.AppWorkspace.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.Background)
-                return defaultColor;
+                hex = defaultColor;
             else if (systemColor.Val.Value == A.SystemColorValues.ButtonFace)
-                return System.Drawing.SystemColors.ButtonFace.ToHexString();
+                hex = System.Drawing.SystemColors.ButtonFace.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ButtonHighlight)
-                return System.Drawing.SystemColors.ButtonHighlight.ToHexString();
+                hex = System.Drawing.SystemColors.ButtonHighlight.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ButtonShadow)
-                return System.Drawing.SystemColors.ButtonShadow.ToHexString();
+                hex = System.Drawing.SystemColors.ButtonShadow.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ButtonText)
-                return System.Drawing.SystemColors.ControlText.ToHexString(); // ?
+                hex = System.Drawing.SystemColors.ControlText.ToHexString(); // ?
             else if (systemColor.Val.Value == A.SystemColorValues.CaptionText)
-                return System.Drawing.SystemColors.ActiveCaptionText.ToHexString(); // ?
+                hex = System.Drawing.SystemColors.ActiveCaptionText.ToHexString(); // ?
             else if (systemColor.Val.Value == A.SystemColorValues.GradientActiveCaption)
-                return System.Drawing.SystemColors.GradientActiveCaption.ToHexString();
+                hex = System.Drawing.SystemColors.GradientActiveCaption.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.GradientInactiveCaption)
-                return System.Drawing.SystemColors.GradientInactiveCaption.ToHexString();
+                hex = System.Drawing.SystemColors.GradientInactiveCaption.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.GrayText)
-                return System.Drawing.SystemColors.GrayText.ToHexString();
+                hex = System.Drawing.SystemColors.GrayText.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.Highlight)
-                return System.Drawing.SystemColors.Highlight.ToHexString();
+                hex = System.Drawing.SystemColors.Highlight.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.HighlightText)
-                return System.Drawing.SystemColors.HighlightText.ToHexString();
+                hex = System.Drawing.SystemColors.HighlightText.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.HotLight)
-                return System.Drawing.SystemColors.HotTrack.ToHexString(); // ?
+                hex = System.Drawing.SystemColors.HotTrack.ToHexString(); // ?
             else if (systemColor.Val.Value == A.SystemColorValues.InactiveBorder)
-                return System.Drawing.SystemColors.InactiveBorder.ToHexString();
+                hex = System.Drawing.SystemColors.InactiveBorder.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.InactiveCaption)
-                return System.Drawing.SystemColors.InactiveCaption.ToHexString();
+                hex = System.Drawing.SystemColors.InactiveCaption.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.InactiveCaptionText)
-                return System.Drawing.SystemColors.InactiveCaptionText.ToHexString();
+                hex = System.Drawing.SystemColors.InactiveCaptionText.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.InfoBack)
-                return System.Drawing.SystemColors.Info.ToHexString(); // ?
+                hex = System.Drawing.SystemColors.Info.ToHexString(); // ?
             else if (systemColor.Val.Value == A.SystemColorValues.InfoText)
-                return System.Drawing.SystemColors.InfoText.ToHexString();
+                hex = System.Drawing.SystemColors.InfoText.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.Menu)
-                return System.Drawing.SystemColors.Menu.ToHexString();
+                hex = System.Drawing.SystemColors.Menu.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.MenuBar)
-                return System.Drawing.SystemColors.MenuBar.ToHexString();
+                hex = System.Drawing.SystemColors.MenuBar.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.MenuHighlight)
-                return System.Drawing.SystemColors.MenuHighlight.ToHexString();
+                hex = System.Drawing.SystemColors.MenuHighlight.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.MenuText)
-                return System.Drawing.SystemColors.MenuText.ToHexString();
+                hex = System.Drawing.SystemColors.MenuText.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ScrollBar)
-                return System.Drawing.SystemColors.ScrollBar.ToHexString();
+                hex = System.Drawing.SystemColors.ScrollBar.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ThreeDDarkShadow)
-                return System.Drawing.SystemColors.ControlDark.ToHexString();
+                hex = System.Drawing.SystemColors.ControlDark.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ThreeDLight)
-                return System.Drawing.SystemColors.ControlLight.ToHexString();
+                hex = System.Drawing.SystemColors.ControlLight.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.Window)
-                return System.Drawing.SystemColors.Window.ToHexString();
+                hex = System.Drawing.SystemColors.Window.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.WindowFrame)
-                return System.Drawing.SystemColors.WindowFrame.ToHexString();
+                hex = System.Drawing.SystemColors.WindowFrame.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.WindowText)
-                return System.Drawing.SystemColors.WindowText.ToHexString();
+                hex = System.Drawing.SystemColors.WindowText.ToHexString();
+            
+            if (!string.IsNullOrEmpty(hex))
+            {
+                string finalColor = ApplyAdjustments(hex, systemColor, out int alpha);
+                return $"#{finalColor}";
+            }
         }
         return defaultColor;
-    }
-
-    internal static string ApplyAlpha(OpenXmlElement element, string hex)
-    {
-        if (element.Elements<Alpha>().FirstOrDefault() is Alpha alpha && alpha.Val != null)
-        {
-            // Apply alpha value to hex color
-
-            // Percentage is multiplied by 1000 in Open XML, convert to 0-255 range
-            int alphaValue = (int)((alpha.Val.Value / 100000.0) * 255);
-            // Clamp between 0 and 255
-            alphaValue = Math.Max(0, Math.Min(255, alphaValue));
-
-            // Alpha is the transparency value (80% = 20% opacity), so we need to invert it
-            alphaValue = 255 - alphaValue;
-
-            string alphaHex = alphaValue.ToString("X2");
-            if (alphaHex.Length == 1)
-            {
-                alphaHex = "0" + alphaHex;
-            }
-            return hex + alphaHex;
-        }
-        return hex;
     }
 
     internal static string? EnsureHexColor(string? value)
