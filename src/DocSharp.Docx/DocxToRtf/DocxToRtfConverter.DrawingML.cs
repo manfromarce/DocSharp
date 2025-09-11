@@ -724,6 +724,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessOutlineFill(OpenXmlElement? outlineFill, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
     {
+        string secondColor = secondStyle != null ? ColorHelpers.GetColor2(secondStyle, out _, "") : "";
         if (outlineFill is A.NoFill)
         {
             sb.WriteShapeProperty("fLine", "0");
@@ -734,14 +735,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.WriteShapeProperty("lineType", "0"); // solid
 
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
-            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, out string schemeColorName, ""));
+            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, out string schemeColorName, secondColor));
             if (color != null)
                 sb.WriteShapeProperty("lineColor", color.Value);
-            else if (secondStyle != null && 
-                     schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
-                     ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
-                // phClr = use color of the style (https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/78c007c1-aba8-442f-9876-f767580b54c4)
-                sb.WriteShapeProperty("lineColor", secondColor);
         }
         else if (outlineFill is A.GradientFill gradientFill)
         {
@@ -759,13 +755,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // Default to 0 (black) if no valid color is found (PresetColor, SchemeColor, ...)
             if (patternFill.ForegroundColor != null)
             {
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, out string schemeColorName, ""));
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, out string schemeColorName, secondColor));
                 if (color != null)
-                    sb.WriteShapeProperty("lineColor", color.Value);
-                else if (secondStyle != null &&
-                    schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
-                    ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
-                    sb.WriteShapeProperty("lineColor", secondColor);
+                    sb.WriteShapeProperty("lineColor", color.Value);                
                 else
                     sb.WriteShapeProperty("lineColor", "0"); // black
             }
@@ -796,6 +788,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessFill(OpenXmlElement? fill, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
     {
+        string secondColor = secondStyle != null ? ColorHelpers.GetColor2(secondStyle, out _, "") : "";
         if (fill is A.NoFill)
         {
             sb.WriteShapeProperty("fFilled", "0");
@@ -806,14 +799,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.WriteShapeProperty("fillType", "0"); // solid
 
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
-            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, out string schemeColorName, ""));
+            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, out string schemeColorName, secondColor));
             if (color != null)
                 sb.WriteShapeProperty("fillColor", color.Value);
-            else if (secondStyle != null &&
-                    schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
-                    ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
-                // phClr = use color of the style (https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/78c007c1-aba8-442f-9876-f767580b54c4)
-                sb.WriteShapeProperty("fillColor", secondColor);
         }
         else if (fill is A.PatternFill patternFill)
         {
@@ -823,13 +811,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
             if (patternFill.ForegroundColor != null)
             {
-                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, out string schemeColorName, ""));
+                int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(patternFill.ForegroundColor, out string schemeColorName, secondColor));
                 if (color != null)
                     sb.WriteShapeProperty("fillColor", color.Value);
-                else if (secondStyle != null &&
-                         schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
-                         ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
-                    sb.WriteShapeProperty("fillColor", secondColor);
             } // TODO: write white / transparent if not found ?
 
             if (patternFill.BackgroundColor != null)
@@ -913,13 +897,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 {
                     // Write first color as regular fill color
                     // (for compatibility with RTF readers that don't support gradients)
-                    int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(first, out string schemeColorName, ""));
+                    int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(first, out string schemeColorName, secondColor));
                     if (color != null && color.HasValue)
                         sb.WriteShapeProperty("fillColor", color.Value);
-                    else if (secondStyle != null &&
-                             schemeColorName.Equals("phClr", StringComparison.OrdinalIgnoreCase) &&
-                             ColorHelpers.HexToBgr(ColorHelpers.GetColor2(secondStyle, out _, "")) is int secondColor)
-                        sb.WriteShapeProperty("fillColor", secondColor);
 
                     if (isGradient)
                     {

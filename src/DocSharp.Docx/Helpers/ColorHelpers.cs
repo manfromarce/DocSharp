@@ -18,6 +18,34 @@ public static class ColorHelpers
         return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
     }
 
+    public static string RgbToHex(int r, int g, int b)
+    {
+        return $"#{r:X2}{g:X2}{b:X2}";
+    }
+
+    public static (byte R, byte G, byte B) HexToRgb(string hex)
+    {
+        hex = hex.TrimStart('#');
+        if (hex != null && long.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _))
+        {
+            if (hex.Length == 6)
+            {
+                byte r = Convert.ToByte(hex.Substring(0, 2), 16);
+                byte g = Convert.ToByte(hex.Substring(2, 2), 16);
+                byte b = Convert.ToByte(hex.Substring(4, 2), 16);
+                return (r, g, b);
+            }
+            else if (hex.Length == 6)
+            {
+                byte r = Convert.ToByte(hex.Substring(0, 1) + hex.Substring(0, 1), 16);
+                byte g = Convert.ToByte(hex.Substring(1, 1) + hex.Substring(1, 1), 16);
+                byte b = Convert.ToByte(hex.Substring(2, 1) + hex.Substring(2, 1), 16);
+                return (r, g, b);
+            }
+        }
+        return (0, 0, 0);
+    }
+
     public static string BgrToHex(int bgr)
     {
         int b = (bgr >> 16) & 0xFF;
@@ -124,25 +152,25 @@ public static class ColorHelpers
         return color?.Value != null ? HexToBgr(color.Value, baseColor) : null;
     }
 
-    public static string GetColor(OpenXmlElement element, string defaultValue = "")
+    public static string GetColor(OpenXmlElement element)
     {
         if (element.GetFirstChild<RgbColorModelHex>() is RgbColorModelHex rgbColor)
         {
-            return ConvertRgbColorToHex(rgbColor, defaultValue);
+            return ConvertRgbColorToHex(rgbColor);
         }
         else if (element.GetFirstChild<SchemeColor>() is SchemeColor schemeColor)
         {
-            return ConvertSchemeColorToHex(schemeColor, defaultValue);
+            return ConvertSchemeColorToHex(schemeColor, "");
         }
-        return defaultValue;
+        return string.Empty;
     }
 
-    public static string GetColor2(OpenXmlElement element, out string schemeColorName, string defaultValue = "")
+    public static string GetColor2(OpenXmlElement element, out string schemeColorName, string secondColor = "")
     {
         schemeColorName = string.Empty;
         if (element.GetFirstChild<A.RgbColorModelHex>() is A.RgbColorModelHex rgbColor)
         {
-            return ConvertRgbColorToHex(rgbColor, defaultValue);
+            return ConvertRgbColorToHex(rgbColor);
         }
         else if (element.GetFirstChild<A.RgbColorModelPercentage>() is A.RgbColorModelPercentage rgbColorModelPercentage)
         {
@@ -154,184 +182,256 @@ public static class ColorHelpers
                 // return the scheme color name too
                 schemeColorName = schemeColor.Val.ToString() ?? string.Empty;
 
-            return ConvertSchemeColorToHex(schemeColor, defaultValue);
+            return ConvertSchemeColorToHex(schemeColor, secondColor);
             // TODO: if not found / not valid, try to search other color types here
         }
         else if (element.GetFirstChild<A.HslColor>() is A.HslColor hslColor)
         {
-            return ConvertHslColorToHex(hslColor, defaultValue);
+            return ConvertHslColorToHex(hslColor);
         }
         else if (element.GetFirstChild<A.PresetColor>() is A.PresetColor presetColor)
         {
-            return ConvertPresetColorToHex(presetColor, defaultValue);
+            return ConvertPresetColorToHex(presetColor);
         }
         else if (element.GetFirstChild<A.SystemColor>() is A.SystemColor systemColor)
         {
-            return ConvertSystemColorToHex(systemColor, defaultValue);
+            return ConvertSystemColorToHex(systemColor);
         }
-        return defaultValue;
+        return "";
     }
 
-    private static string ApplyAdjustments(string hex, OpenXmlElement parentColor, out int alphaVal)
+    private static string ApplyAdjustments(string hex, OpenXmlElement parentColor, out int opacity)
     {
-        alphaVal = 0; // Don't change alpha by default
-        if (hex.Length == 6) // input string should have length of 6 to be able to add the alpha channel
-        {
-            if (parentColor.Elements<Alpha>().FirstOrDefault() is Alpha alpha && alpha.Val != null)
-            {
-                // Apply alpha value to hex color
+        opacity = 0; // Don't change alpha by default
 
-                // Percentage is multiplied by 1000 in Open XML, convert to 0-255 range
-                alphaVal = (int)((alpha.Val.Value / 100000m) * 255m);
+        hex = EnsureHexColor(hex) ?? "";
+        if (string.IsNullOrEmpty(hex)) // Something wrong in the input string
+            return string.Empty;
+
+        (int r, int g, int b) = HexToRgb(hex);
+
+        foreach (var element in parentColor.Elements())
+        {
+            // PositiveFixedPercentageType
+            if (element is Alpha || element is A.Alpha)
+            {
+                Int32Value? val = (element as Alpha)?.Val ?? (element as A.Alpha)?.Val;
+                if (val != null)
+                {
+                    // Percentage is multiplied by 1000 in Open XML, convert to 0-255 range
+                    opacity = (int)Math.Round((val.Value / 100000m) * 255m);
+                    // Clamp between 0 and 255
+                    opacity = Math.Max(0, Math.Min(255, opacity));
+                }
+            }
+            else if (element is Shade || element is A.Shade)
+            {
+                Int32Value? val = (element as Shade)?.Val ?? (element as A.Shade)?.Val;
+                if (val != null)
+                {
+                    // Specifies a darker version of the input color: 
+                    // 15000 = 15% of the input color combined with 85% black
+                    decimal pct = Math.Max(Math.Min(Math.Round(val / 1000m), 100), 0);
+                    r = (int)Math.Round(r * pct / 100m);
+                    g = (int)Math.Round(g * pct / 100m);
+                    b = (int)Math.Round(b * pct / 100m);
+                }
+            }
+            else if (element is Tint || element is A.Tint)
+            {
+                Int32Value? val = (element as Tint)?.Val ?? (element as A.Tint)?.Val;
+                if (val != null)
+                {
+                    // Specifies a lighter version of the input color: 
+                    // 15000 = 15% of the input color combined with 85% white
+                    decimal pct = Math.Max(Math.Min(Math.Round(val / 1000m), 100), 0);
+                    r = (int)(r * (pct / 100m) + (255 * (100 - pct) / 100m));
+                    g = (int)(g * (pct / 100m) + (255 * (100 - pct) / 100m));
+                    b = (int)(b * (pct / 100m) + (255 * (100 - pct) / 100m));
+                }
+            }
+            // ----
+
+            // PositivePercentageType
+            else if (element is A.AlphaModulation alphaMod && alphaMod.Val != null)
+            {
+                // Specifies a more or less opaque version of the input color.
+                // 200000 = 200% = twice as opaque as before
+                // 50000 = 50% = half as opaque as before
+
+                // Percentage is multiplied by 1000 in Open XML
+                int pct = (int)Math.Round(alphaMod.Val.Value / 1000m);
+
+                // Calculate new opacity base
+                opacity = opacity * pct / 100;
+
                 // Clamp between 0 and 255
-                alphaVal = Math.Max(0, Math.Min(255, alphaVal));
-
-                // Alpha is the transparency value (80% = 20% opacity), so we need to invert it
-                alphaVal = 255 - alphaVal;
-                return hex;
+                opacity = Math.Max(0, Math.Min(255, opacity));
             }
-            else if (parentColor.Elements<A.Alpha>().FirstOrDefault() is A.Alpha alphaPct && alphaPct.Val != null)
+            else if (element is A.HueModulation hueMod && hueMod.Val != null)
             {
             }
-            else if (parentColor.Elements<A.AlphaModulation>().FirstOrDefault() is A.AlphaModulation alphaMod && alphaMod.Val != null)
+            // ----
+
+            // PercentageType
+            else if (element is A.Red red && red.Val != null)
+            {
+                // Set red to the specified value (100000 = 100% = 255)
+                r = Math.Max(0, Math.Min(red.Val.Value * 255 / 100000, 255));
+            }
+            else if (element is A.RedOffset redOffset && redOffset.Val != null)
             {
             }
-            else if (parentColor.Elements<A.AlphaOffset>().FirstOrDefault() is A.AlphaOffset alphaOffset && alphaOffset.Val != null)
+            else if (element is A.RedModulation redMod && redMod.Val != null)
+            {
+                // 200000 = 200% = double the red component
+                // 50000 = 50% = reduces red component by half
+                r = Math.Max(0, Math.Min(r * redMod.Val.Value / 100000, 255));
+            }
+            else if (element is A.Green green && green.Val != null)
+            {
+                // Set green to the specified value (100000 = 100% = 255)
+                g = Math.Max(0, Math.Min(green.Val.Value * 255 / 100000, 255));
+            }
+            else if (element is A.GreenOffset greenOffset && greenOffset.Val != null)
             {
             }
+            else if (element is A.GreenModulation greenMod && greenMod.Val != null)
+            {
+                // 200000 = 200% = double the green component
+                // 50000 = 50% = reduces green component by half
+                g = Math.Max(0, Math.Min(g * greenMod.Val.Value / 100000, 255));
+            }
+            else if (element is A.Blue blue && blue.Val != null)
+            {
+                // Set blue to the specified value (100000 = 100% = 255)
+                b = Math.Max(0, Math.Min(blue.Val.Value * 255 / 100000, 255));
+            }
+            else if (element is A.BlueOffset blueOffset && blueOffset.Val != null)
+            {
+            }
+            else if (element is A.BlueModulation blueMod && blueMod.Val != null)
+            {
+                // 200000 = 200% = double the green component
+                // 50000 = 50% = reduces green component by half
+                b = Math.Max(0, Math.Min(b * blueMod.Val.Value / 100000, 255));
+            }
+            else if (element is A.Saturation sat && sat.Val != null)
+            {
+            }
+            else if (element is A.SaturationOffset satOffset && satOffset.Val != null)
+            {
+            }
+            else if (element is A.SaturationModulation satMod && satMod.Val != null)
+            {
+            }
+            else if (element is A.Luminance lum && lum.Val != null)
+            {
+            }
+            else if (element is A.LuminanceOffset lumOffset && lumOffset.Val != null)
+            {
+            }
+            else if (element is A.LuminanceModulation lumMod && lumMod.Val != null)
+            {
+            }
+            else if (element is Saturation)
+            {
+            }
+            else if (element is SaturationOffset)
+            {
+            }
+            else if (element is SaturationModulation)
+            {
+            }
+            else if (element is Luminance)
+            {
+            }
+            else if (element is LuminanceOffset)
+            {
+            }
+            else if (element is LuminanceModulation)
+            {
+            }
+            // ----
+
+            // OpenXmlLeafElement with integer value
+            else if (element is A.AlphaOffset alphaOffset && alphaOffset.Val != null)
+            {
+            }
+            else if (element is A.Hue hue && hue.Val != null)
+            {
+            }
+            else if (element is A.HueOffset hueOffset && hueOffset.Val != null)
+            {
+            }
+            else if (element is HueModulation)
+            {
+            }
+            // ----
+
+            // OpenXmlLeafElement - consider true if present
+            else if (element is A.Inverse inverse)
+            {
+                // Specifies that the output color is the inverse of the input color.
+                r = 255 - r;
+                g = 255 - g;
+                b = 255 - b;
+            }
+            else if (element is A.Gray gray)
+            {
+                // Specifies that the output color is the grayscale of the input color.
+                r = (int)Math.Round(r * 0.299m);
+                g = (int)Math.Round(g * 0.587m);
+                b = (int)Math.Round(b * 0.114m);
+            }
+            else if (element is A.Gamma gamma)
+            {
+                // Specifies that the output color is the sRGB gamma shift of the input color.
+            }
+            else if (element is A.InverseGamma inverseGamma)
+            {
+                // Specifies that the output color is the inverse sRGB gamma shift of the input color.
+            }
+            else if (element is A.Complement complement)
+            {
+                // Specifies that the output color is the complement of the input color.
+                // Two colors are complementary if, when mixed they produce a shade of grey.
+                // For instance, the complement of red which is (255, 0, 0) is cyan which is (0, 255, 255).
+                r = 255 - r;
+                g = 255 - g;
+                b = 255 - b;
+            }
+            // OpenXmlLeafElement - consider true if present
         }
 
-        else if (parentColor.Elements<A.Shade>().FirstOrDefault() is A.Shade shade && shade.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Luminance>().FirstOrDefault() is A.Luminance lum && lum.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.LuminanceOffset>().FirstOrDefault() is A.LuminanceOffset lumOffset && lumOffset.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.LuminanceModulation>().FirstOrDefault() is A.LuminanceModulation lumMod && lumMod.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Hue>().FirstOrDefault() is A.Hue hue && hue.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.HueOffset>().FirstOrDefault() is A.HueOffset hueOffset && hueOffset.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.HueModulation>().FirstOrDefault() is A.HueModulation hueMod && hueMod.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Saturation>().FirstOrDefault() is A.Saturation sat && sat.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.SaturationOffset>().FirstOrDefault() is A.SaturationOffset satOffset && satOffset.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.SaturationModulation>().FirstOrDefault() is A.SaturationModulation satMod && satMod.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Tint>().FirstOrDefault() is A.Tint tint && tint.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Red>().FirstOrDefault() is A.Red red && red.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.RedOffset>().FirstOrDefault() is A.RedOffset redOffset && redOffset.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.RedModulation>().FirstOrDefault() is A.RedModulation redMod && redMod.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Green>().FirstOrDefault() is A.Green green && green.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.GreenOffset>().FirstOrDefault() is A.GreenOffset greenOffset && greenOffset.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.GreenModulation>().FirstOrDefault() is A.GreenModulation greenMod && greenMod.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Blue>().FirstOrDefault() is A.Blue blue && blue.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.BlueOffset>().FirstOrDefault() is A.BlueOffset blueOffset && blueOffset.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.BlueModulation>().FirstOrDefault() is A.BlueModulation blueMod && blueMod.Val != null)
-        {
-
-        }
-        else if (parentColor.Elements<A.Inverse>().FirstOrDefault() is A.Inverse inverse)
-        {
-            // Specifies that the output color is the grayscale of the input color.
-        }
-        else if (parentColor.Elements<A.Gray>().FirstOrDefault() is A.Gray gray)
-        {
-            // Specifies that the output color is the inverse of the input color.
-
-        }
-        else if (parentColor.Elements<A.Gamma>().FirstOrDefault() is A.Gamma gamma)
-        {
-            // Specifies that the output color is the sRGB gamma shift of the input color.
-        }
-        else if (parentColor.Elements<A.InverseGamma>().FirstOrDefault() is A.InverseGamma inverseGamma)
-        {
-            // Specifies that the output color is the inverse sRGB gamma shift of the input color.
-        }
-        else if (parentColor.Elements<A.Complement>().FirstOrDefault() is A.Complement complement)
-        {
-            // Specifies that the output color is the complement of the input color.
-            // Two colors are complementary if, when mixed they produce a shade of grey.
-            // For instance, the complement of red which is (255, 0, 0) is cyan which is (0, 255, 255).
-        }
-
+        hex = RgbToHex(r, g, b);
         return hex;
     }
    
-    public static string ConvertRgbColorToHex(A.RgbColorModelHex rgbColorModelHex, string defaultColor = "#000000")
+    public static string ConvertRgbColorToHex(A.RgbColorModelHex rgbColorModelHex)
     {
         string? hex = rgbColorModelHex.Val;
         if (hex == null)
         {
             // TODO: the color might be defined from red + green + blue or hue + saturation + luminance
-            return defaultColor;
+            return string.Empty;
         }
         string finalColor = ApplyAdjustments(hex, rgbColorModelHex, out int alpha);
         return $"#{finalColor}";
     }
 
-    public static string ConvertRgbColorToHex(RgbColorModelHex rgbColorModelHex, string defaultColor = "#000000")
+    public static string ConvertRgbColorToHex(RgbColorModelHex rgbColorModelHex)
     {
         string? hex = rgbColorModelHex.Val;
         if (hex == null)
         {
-            return defaultColor;
+            return string.Empty;
         }
         string finalColor = ApplyAdjustments(hex, rgbColorModelHex, out int alpha);
         return $"#{finalColor}";
     }
 
-    public static string ConvertRgbColorPercentageToHex(A.RgbColorModelPercentage rgbColorModelPercentage, string defaultColor = "#000000")
+    public static string ConvertRgbColorPercentageToHex(A.RgbColorModelPercentage rgbColorModelPercentage)
     {
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.RgbColorModelPercentage?view=openxml-3.0.1
         // Linear gamma of 1.0 is assumed
@@ -352,10 +452,10 @@ public static class ColorHelpers
             string finalColor = ApplyAdjustments(hex, rgbColorModelPercentage, out int alpha);
             return $"#{finalColor}";
         }
-        return defaultColor;
+        return string.Empty;
     }
 
-    public static string ConvertHslColorToHex(A.HslColor hslColor, string defaultColor = "#000000")
+    public static string ConvertHslColorToHex(A.HslColor hslColor)
     {
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.HslColor?view=openxml-3.0.1
         // Perceptual gamma of 2.2 is assumed.
@@ -368,37 +468,16 @@ public static class ColorHelpers
             string finalColor = ApplyAdjustments(hex, hslColor, out int alpha);
             return $"#{finalColor}";
         }
-        return defaultColor;
+        return string.Empty;
     }
 
     public static string HslToHex(int hue, int saturation, int luminance)
     {
-        double r, g, b;
-
-        // Convert saturation and luminance from percentage to decimal
-        double s = saturation / 100.0;
-        double l = luminance / 100.0;
-
-        if (s == 0)
-        {
-            r = g = b = l; // achromatic
-        }
-        else
-        {
-            double q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            double p = 2 * l - q;
-            r = HueToRgb(p, q, hue / 360.0 + 1.0 / 3);
-            g = HueToRgb(p, q, hue / 360.0);
-            b = HueToRgb(p, q, hue / 360.0 - 1.0 / 3);
-        }
-
-        // Convert RGB values from [0, 1] to [0, 255]
-        int rInt = (int)(r * 255);
-        int gInt = (int)(g * 255);
-        int bInt = (int)(b * 255);
+        // Convert to RGB first
+        (int r, int g, int b) = HslToRgb(hue, saturation, luminance);
 
         // Format as hex string
-        return $"#{rInt:X2}{gInt:X2}{bInt:X2}";
+        return $"#{r:X2}{g:X2}{b:X2}";
     }
 
     private static double HueToRgb(double p, double q, double t)
@@ -411,36 +490,116 @@ public static class ColorHelpers
         return p;
     }
 
-    public static string ConvertSchemeColorToHex(SchemeColor schemeColor, string defaultColor = "#000000")
+    /// <summary>
+    /// Convert RGB (red, green and blue) to HSL (hue, saturation and luminance)
+    /// </summary>
+    /// <param name="r">Red (0-255)</param>
+    /// <param name="g">Green (0-255)</param>
+    /// <param name="b">Blue (0-255)</param>
+    /// <returns>Hue (0-360), saturation (0-100%) and luminance (0-100%) tuple</returns>
+    public static (int hue, int saturation, int luminance) RgbToHsl(int r, int g, int b)
     {
-        if (schemeColor.Val != null && schemeColor.GetMainDocumentPart() is MainDocumentPart mainPart)
-        {
-            string hex = ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, defaultColor);
-            string finalColor = ApplyAdjustments(hex!, schemeColor, out int alpha);
-            return $"#{finalColor}";
-        }
-        else 
-            return defaultColor;
-    }
+        double rNorm = r / 255.0;
+        double gNorm = g / 255.0;
+        double bNorm = b / 255.0;
 
-    public static string ConvertSchemeColorToHex(A.SchemeColor schemeColor, string defaultColor = "#000000")
-    {
-        if (schemeColor.Val != null && schemeColor.GetMainDocumentPart() is MainDocumentPart mainPart)
+        double max = Math.Max(rNorm, Math.Max(gNorm, bNorm));
+        double min = Math.Min(rNorm, Math.Min(gNorm, bNorm));
+        double h, s, l = (max + min) / 2.0;
+
+        if (max == min)
         {
-            string hex = ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, defaultColor);
-            string finalColor = ApplyAdjustments(hex!, schemeColor, out int alpha);
-            return $"#{finalColor}";
+            h = s = 0; // Achromatic
         }
         else
-            return defaultColor;
+        {
+            double delta = max - min;
+            s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+
+            if (max == rNorm)
+            {
+                h = (gNorm - bNorm) / delta + (gNorm < bNorm ? 6 : 0);
+            }
+            else if (max == gNorm)
+            {
+                h = (bNorm - rNorm) / delta + 2;
+            }
+            else
+            {
+                h = (rNorm - gNorm) / delta + 4;
+            }
+
+            h /= 6;
+        }
+
+        return ((int)(h * 360), (int)(s * 100), (int)(l * 100));
     }
 
-    private static string ConvertSchemeColorToHex(string? schemeColor, MainDocumentPart mainPart, string defaultColor = "#000000")
+    /// <summary>
+    /// Convert HSL (hue, saturation and luminance) to RGB (red, green and blue) 
+    /// </summary>
+    /// <param name="h">Hue (0-360)</param>
+    /// <param name="s">Saturation (0-100%)</param>
+    /// <param name="l">Luminance (0-100%)</param>
+    /// <returns>Red, green and blue tuple (0-255)</returns>
+    public static (int red, int green, int blue) HslToRgb(int h, int s, int l)
     {
-        if (schemeColor == null) return defaultColor;
+        double r, g, b;
+
+        if (s == 0)
+        {
+            r = g = b = l; // Achromatic
+        }
+        else
+        {
+            double q = l < 0.5 ? l * (1 + s) : l + s - (l * s);
+            double p = 2 * l - q;
+
+            r = HueToRgb(p, q, h + 1.0 / 3.0);
+            g = HueToRgb(p, q, h);
+            b = HueToRgb(p, q, h - 1.0 / 3.0);
+        }
+
+        return ((int)(r * 255), (int)(g * 255), (int)(b * 255));
+    }
+
+    public static string ConvertSchemeColorToHex(SchemeColor schemeColor, string secondColor)
+    {
+        if (schemeColor.Val != null && schemeColor.GetMainDocumentPart() is MainDocumentPart mainPart)
+        {
+            string hex = ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, secondColor);
+            if (!string.IsNullOrWhiteSpace(hex.TrimStart('#')))
+            {
+                string finalColor = ApplyAdjustments(hex!, schemeColor, out int alpha);
+                return $"#{finalColor}";
+            }
+        }
+        return string.Empty;
+    }
+
+    public static string ConvertSchemeColorToHex(A.SchemeColor schemeColor, string secondColor)
+    {
+        if (schemeColor.Val != null && schemeColor.GetMainDocumentPart() is MainDocumentPart mainPart)
+        {
+            string hex = ConvertSchemeColorToHex(schemeColor.Val.ToString(), mainPart, secondColor);
+            if (!string.IsNullOrWhiteSpace(hex.TrimStart('#')))
+            {
+                string finalColor = ApplyAdjustments(hex!, schemeColor, out int alpha);
+                return $"#{finalColor}";
+            }
+        }
+        return string.Empty;
+    }
+
+    private static string ConvertSchemeColorToHex(string? schemeColor, MainDocumentPart mainPart, string secondColor)
+    {
+        if (schemeColor == null) return string.Empty;
+
+        if (schemeColor.Equals("phClr", StringComparison.OrdinalIgnoreCase))
+            return secondColor;
 
         var colorScheme = mainPart.ThemePart?.Theme?.ThemeElements?.ColorScheme;
-        if (colorScheme == null) return defaultColor;
+        if (colorScheme == null) return string.Empty;
 
         foreach (var color in colorScheme.Elements())
         {
@@ -458,30 +617,30 @@ public static class ColorHelpers
             {
                 if (color.GetFirstChild<A.RgbColorModelHex>() is A.RgbColorModelHex rgbColor)
                 {
-                    return ConvertRgbColorToHex(rgbColor, defaultColor);
+                    return ConvertRgbColorToHex(rgbColor);
                 }
                 else if (color.GetFirstChild<A.RgbColorModelPercentage>() is A.RgbColorModelPercentage rgbColorModelPercentage)
                 {
-                    return ConvertRgbColorPercentageToHex(rgbColorModelPercentage, defaultColor);
+                    return ConvertRgbColorPercentageToHex(rgbColorModelPercentage);
                 }
                 else if (color.GetFirstChild<A.HslColor>() is A.HslColor hslColor)
                 {
-                    return ConvertHslColorToHex(hslColor, defaultColor);
+                    return ConvertHslColorToHex(hslColor);
                 }
                 else if (color.GetFirstChild<A.PresetColor>() is A.PresetColor presetColor)
                 {
-                    return ConvertPresetColorToHex(presetColor, defaultColor);
+                    return ConvertPresetColorToHex(presetColor);
                 }
                 else if (color.GetFirstChild<A.SystemColor>() is A.SystemColor systemColor)
                 {
-                    return ConvertSystemColorToHex(systemColor, defaultColor);
+                    return ConvertSystemColorToHex(systemColor);
                 }
             }
         }
-        return defaultColor;
+        return string.Empty;
     }
 
-    public static string ConvertPresetColorToHex(A.PresetColor presetColor, string defaultColor = "#000000")
+    public static string ConvertPresetColorToHex(A.PresetColor presetColor)
     {
         if (presetColor.Val != null)
         {
@@ -492,7 +651,7 @@ public static class ColorHelpers
                 return $"#{finalColor}";
             }
         }
-        return defaultColor;
+        return string.Empty;
     }
 
     public static string? ConvertNamedColorToHex(string name)
@@ -611,7 +770,7 @@ public static class ColorHelpers
             return null;
     }
 
-    public static string ConvertSystemColorToHex(A.SystemColor systemColor, string defaultColor = "#000000")
+    public static string ConvertSystemColorToHex(A.SystemColor systemColor)
     {
         if (systemColor.Val != null)
         {
@@ -623,7 +782,8 @@ public static class ColorHelpers
             else if (systemColor.Val.Value == A.SystemColorValues.ApplicationWorkspace)
                 hex = System.Drawing.SystemColors.AppWorkspace.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.Background)
-                hex = defaultColor;
+                hex = System.Drawing.SystemColors.Desktop.ToString();
+                //hex = System.Drawing.SystemColors.Control.ToString();
             else if (systemColor.Val.Value == A.SystemColorValues.ButtonFace)
                 hex = System.Drawing.SystemColors.ButtonFace.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ButtonHighlight)
@@ -683,7 +843,7 @@ public static class ColorHelpers
                 return $"#{finalColor}";
             }
         }
-        return defaultColor;
+        return string.Empty;
     }
 
     internal static string? EnsureHexColor(string? value)

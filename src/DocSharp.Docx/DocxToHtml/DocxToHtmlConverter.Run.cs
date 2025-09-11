@@ -269,7 +269,9 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             double hShadow = distance * Math.Cos(radians); // Horizontal offset
             double vShadow = distance * Math.Sin(radians); // Vertical offset
 
-            string shadowColor = ColorHelpers.GetColor(shadow14, "#000000");
+            string shadowColor = ColorHelpers.GetColor(shadow14);
+            if (string.IsNullOrEmpty(shadowColor))
+                shadowColor = "#000000";
             double blurRadius = shadow14.BlurRadius?.Value / 12700.0 ?? 0; // Convert EMUs to points
 
             styles.Add($"text-shadow: {hShadow.ToStringInvariant(2)}pt {vShadow.ToStringInvariant(2)}pt {blurRadius.ToStringInvariant(2)}pt {shadowColor};");
@@ -301,13 +303,17 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             string outlineColor = "black";
             if (outline14.Elements<W14.SolidColorFillProperties>().FirstOrDefault() is W14.SolidColorFillProperties solidFill)
             {
-                outlineColor = ColorHelpers.GetColor(solidFill, outlineColor);
+                outlineColor = ColorHelpers.GetColor(solidFill);
+                if (string.IsNullOrEmpty(outlineColor))
+                    outlineColor = "black";
             }
             else if (outline14.Elements<W14.GradientFillProperties>().FirstOrDefault() is W14.GradientFillProperties gradientFill &&
                      gradientFill.GradientStopList?.Elements<W14.GradientStop>().FirstOrDefault() is W14.GradientStop firstGradientStop)
             {
                 // Extract the first color from the gradient
-                outlineColor = ColorHelpers.GetColor(firstGradientStop, outlineColor);
+                outlineColor = ColorHelpers.GetColor(firstGradientStop);
+                if (string.IsNullOrEmpty(outlineColor))
+                    outlineColor = "black";
             }
             else if (outline14.Elements<W14.NoFillEmpty>().FirstOrDefault() is not null)
             {
@@ -328,13 +334,17 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
             string fillColor = "black";
             if (fill14.Elements<W14.SolidColorFillProperties>().FirstOrDefault() is W14.SolidColorFillProperties solidFill)
             {
-                fillColor = ColorHelpers.GetColor(solidFill, fillColor);
+                fillColor = ColorHelpers.GetColor(solidFill);
+                if (string.IsNullOrEmpty(fillColor))
+                    fillColor = "black";
             }
             else if (fill14.Elements<W14.GradientFillProperties>().FirstOrDefault() is W14.GradientFillProperties gradientFill &&
                      gradientFill.GradientStopList?.Elements<W14.GradientStop>().FirstOrDefault() is W14.GradientStop firstGradientStop)
             {
                 // Extract the first color from the gradient
-                fillColor = ColorHelpers.GetColor(firstGradientStop, fillColor);
+                fillColor = ColorHelpers.GetColor(firstGradientStop);
+                if (string.IsNullOrEmpty(fillColor))
+                    fillColor = "black";
             }
             else if (fill14.Elements<W14.NoFillEmpty>().FirstOrDefault() is W14.NoFillEmpty)
             {
