@@ -1191,6 +1191,10 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessDrawingInline(Wp.Inline inline, RtfStringWriter sb)
     {
+        // TODO: for inline shapes with "fPseudoInline" in RTF, 
+        // we should also write a pict element of the same size as the shape, 
+        // otherwise RTF readers do not leave space for the shape and it overlaps with text, 
+        // also it's not vertically aligned with text baseline.
         var distT = inline.DistanceFromTop;
         var distB = inline.DistanceFromBottom;
         var distL = inline.DistanceFromLeft;
@@ -1215,28 +1219,36 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         sb.WriteWordWithValue("shpright", extentXtwips);
         sb.WriteWordWithValue("shpbottom", extentYtwips);
+        sb.Write(@"\shpbxcolumn\shpbxignore\shpbypara\shpbyignore\shpwr3\shpwrk0\shpfblwtxt0\shpz0\shplockanchor");
 
         sb.WriteLine();
 
         sb.WriteShapeProperty("fUseShapeAnchor", false);
         sb.WriteShapeProperty("fPseudoInline", true);
+        sb.WriteShapeProperty("fAllowOverlap", "1");
+        sb.WriteShapeProperty("fLayoutInCell", "1");
+        sb.WriteShapeProperty("lockPosition", "1");
+        sb.WriteShapeProperty("lockRotation", "1");
+        sb.WriteShapeProperty("posrelh", "3");
+        sb.WriteShapeProperty("posrelv", "3");
 
-        if (distT != null)
-        {
-            sb.WriteShapeProperty("dyWrapDistTop", distT.Value);
-        }
-        if (distB != null)
-        {
-            sb.WriteShapeProperty("dyWrapDistBottom", distB.Value);
-        }
-        if (distL != null)
-        {
-            sb.WriteShapeProperty("dxWrapDistLeft", distL.Value);
-        }
-        if (distR != null)
-        {
-            sb.WriteShapeProperty("dxWrapDistRight", distR.Value);
-        }
+        // Not supported for inlines ? (however set to 0 in tested DOCX files)
+        //if (distT != null)
+        //{
+        //    sb.WriteShapeProperty("dyWrapDistTop", distT.Value);
+        //}
+        //if (distB != null)
+        //{
+        //    sb.WriteShapeProperty("dyWrapDistBottom", distB.Value);
+        //}
+        //if (distL != null)
+        //{
+        //    sb.WriteShapeProperty("dxWrapDistLeft", distL.Value);
+        //}
+        //if (distR != null)
+        //{
+        //    sb.WriteShapeProperty("dxWrapDistRight", distR.Value);
+        //}
     }
 
     internal void ProcessDrawingAnchor(Wp.Anchor anchor, RtfStringWriter sb)
