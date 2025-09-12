@@ -202,7 +202,7 @@ public static class ColorHelpers
 
     private static string ApplyAdjustments(string hex, OpenXmlElement parentColor, out int opacity)
     {
-        opacity = 0; // Don't change alpha by default
+        opacity = 100; // Full opacity by default (0 means completely transparent)
 
         hex = EnsureHexColor(hex) ?? "";
         if (string.IsNullOrEmpty(hex)) // Something wrong in the input string
@@ -212,164 +212,243 @@ public static class ColorHelpers
 
         foreach (var element in parentColor.Elements())
         {
-            // PositiveFixedPercentageType
             if (element is Alpha || element is A.Alpha)
             {
+                // Set opacity to the specified value.
+                // 100000 = 100% = fully opaque
+                // 0 = fully transparent
                 Int32Value? val = (element as Alpha)?.Val ?? (element as A.Alpha)?.Val;
                 if (val != null)
                 {
-                    // Percentage is multiplied by 1000 in Open XML, convert to 0-255 range
-                    opacity = (int)Math.Round((val.Value / 100000m) * 255m);
-                    // Clamp between 0 and 255
-                    opacity = Math.Max(0, Math.Min(255, opacity));
+                    opacity = Math.Max(0, Math.Min((int)Math.Round(val.Value / 1000m), 100));
                 }
             }
-            else if (element is Shade || element is A.Shade)
-            {
-                Int32Value? val = (element as Shade)?.Val ?? (element as A.Shade)?.Val;
-                if (val != null)
-                {
-                    // Specifies a darker version of the input color: 
-                    // 15000 = 15% of the input color combined with 85% black
-                    decimal pct = Math.Max(Math.Min(Math.Round(val / 1000m), 100), 0);
-                    r = (int)Math.Round(r * pct / 100m);
-                    g = (int)Math.Round(g * pct / 100m);
-                    b = (int)Math.Round(b * pct / 100m);
-                }
-            }
-            else if (element is Tint || element is A.Tint)
-            {
-                Int32Value? val = (element as Tint)?.Val ?? (element as A.Tint)?.Val;
-                if (val != null)
-                {
-                    // Specifies a lighter version of the input color: 
-                    // 15000 = 15% of the input color combined with 85% white
-                    decimal pct = Math.Max(Math.Min(Math.Round(val / 1000m), 100), 0);
-                    r = (int)(r * (pct / 100m) + (255 * (100 - pct) / 100m));
-                    g = (int)(g * (pct / 100m) + (255 * (100 - pct) / 100m));
-                    b = (int)(b * (pct / 100m) + (255 * (100 - pct) / 100m));
-                }
-            }
-            // ----
-
-            // PositivePercentageType
-            else if (element is A.AlphaModulation alphaMod && alphaMod.Val != null)
-            {
-                // Specifies a more or less opaque version of the input color.
-                // 200000 = 200% = twice as opaque as before
-                // 50000 = 50% = half as opaque as before
-
-                // Percentage is multiplied by 1000 in Open XML
-                int pct = (int)Math.Round(alphaMod.Val.Value / 1000m);
-
-                // Calculate new opacity base
-                opacity = opacity * pct / 100;
-
-                // Clamp between 0 and 255
-                opacity = Math.Max(0, Math.Min(255, opacity));
-            }
-            else if (element is A.HueModulation hueMod && hueMod.Val != null)
-            {
-            }
-            // ----
-
-            // PercentageType
             else if (element is A.Red red && red.Val != null)
             {
                 // Set red to the specified value (100000 = 100% = 255)
                 r = Math.Max(0, Math.Min(red.Val.Value * 255 / 100000, 255));
-            }
-            else if (element is A.RedOffset redOffset && redOffset.Val != null)
-            {
-            }
-            else if (element is A.RedModulation redMod && redMod.Val != null)
-            {
-                // 200000 = 200% = double the red component
-                // 50000 = 50% = reduces red component by half
-                r = Math.Max(0, Math.Min(r * redMod.Val.Value / 100000, 255));
             }
             else if (element is A.Green green && green.Val != null)
             {
                 // Set green to the specified value (100000 = 100% = 255)
                 g = Math.Max(0, Math.Min(green.Val.Value * 255 / 100000, 255));
             }
-            else if (element is A.GreenOffset greenOffset && greenOffset.Val != null)
-            {
-            }
-            else if (element is A.GreenModulation greenMod && greenMod.Val != null)
-            {
-                // 200000 = 200% = double the green component
-                // 50000 = 50% = reduces green component by half
-                g = Math.Max(0, Math.Min(g * greenMod.Val.Value / 100000, 255));
-            }
             else if (element is A.Blue blue && blue.Val != null)
             {
                 // Set blue to the specified value (100000 = 100% = 255)
                 b = Math.Max(0, Math.Min(blue.Val.Value * 255 / 100000, 255));
             }
-            else if (element is A.BlueOffset blueOffset && blueOffset.Val != null)
+            else if (element is A.Hue hue && hue.Val != null)
             {
+                // Set hue to the specified value.
+                // Hue value is multiplied by 60000 in Open XML, so divide by 60000 and clamp between 0 and 360.
+                (int h, int s, int l) = RgbToHsl(r, g, b);
+                h = Math.Max(Math.Min((int)Math.Round(hue.Val / 60000m), 360), 0);
+                (r, g, b) = HslToRgb(h, s, l);
+            }
+            else if (element is Saturation || element is A.Saturation)
+            {
+                // Set saturation to the specified value.
+                // 100000 = 100% saturation
+                Int32Value? val = (element as Saturation)?.Val ?? (element as A.Saturation)?.Val;
+                if (val != null)
+                {
+                    (int h, int s, int l) = RgbToHsl(r, g, b);
+                    s = Math.Max(0, Math.Min((int)Math.Round(val / 1000m), 100));
+                    (r, g, b) = HslToRgb(h, s, l);
+                }
+            }
+            else if (element is Luminance || element is A.Luminance)
+            {
+                // Set luminance to the specified value.
+                // 100000 = 100% luminance
+                Int32Value? val = (element as Luminance)?.Val ?? (element as A.Luminance)?.Val;
+                if (val != null)
+                {
+                    (int h, int s, int l) = RgbToHsl(r, g, b);
+                    l = Math.Max(0, Math.Min((int)Math.Round(val / 1000m), 100));
+                    (r, g, b) = HslToRgb(h, s, l);
+                }
+            }
+
+            else if (element is A.AlphaModulation alphaMod && alphaMod.Val != null)
+            {
+                // Specifies a more or less opaque version of the input color.
+                // 200000 = 200% = twice as opaque as before
+                // 50000 = 50% = half as opaque as before
+                // The final value is still limited between 0 and 100.
+                opacity = Math.Max(0, Math.Min((int)Math.Round(opacity * alphaMod.Val / 100000m), 100));
+            }
+            else if (element is A.RedModulation redMod && redMod.Val != null)
+            {
+                // 200000 = 200% = doubles the red component
+                // 50000 = 50% = reduces the red component by half
+                // The final value is still limited between 0 and 255
+                r = Math.Max(0, Math.Min(r * redMod.Val.Value / 100000, 255));
+            }
+            else if (element is A.GreenModulation greenMod && greenMod.Val != null)
+            {
+                // 200000 = 200% = doubles the green component
+                // 50000 = 50% = reduces the green component by half
+                // The final value is still limited between 0 and 255
+                g = Math.Max(0, Math.Min(g * greenMod.Val.Value / 100000, 255));
             }
             else if (element is A.BlueModulation blueMod && blueMod.Val != null)
             {
-                // 200000 = 200% = double the green component
-                // 50000 = 50% = reduces green component by half
+                // 200000 = 200% = doubles the blue component
+                // 50000 = 50% = reduces the blue component by half
+                // The final value is still limited between 0 and 255
                 b = Math.Max(0, Math.Min(b * blueMod.Val.Value / 100000, 255));
             }
-            else if (element is A.Saturation sat && sat.Val != null)
+            else if (element is HueModulation || element is A.HueModulation)
             {
+                // 200000 = 200% = doubles the hue component
+                // 50000 = 50% = reduces the hue component by half
+                // The final value is still limited between 0 and 360
+                Int32Value? val = (element as HueModulation)?.Val ?? (element as A.HueModulation)?.Val;
+                if (val != null)
+                {
+                    (int h, int s, int l) = RgbToHsl(r, g, b);
+                    h = Math.Max(0, Math.Min((int)Math.Round(h * val / 100000m), 360));
+                    (r, g, b) = HslToRgb(h, s, l);
+                }
             }
-            else if (element is A.SaturationOffset satOffset && satOffset.Val != null)
+            else if (element is SaturationModulation || element is A.SaturationModulation)
             {
+                // 200000 = 200% = double the saturation component
+                // 50000 = 50% = reduces saturation component by half
+                // The final value is still limited between 0 and 100
+                Int32Value? val = (element as SaturationModulation)?.Val ?? (element as A.SaturationModulation)?.Val;
+                if (val != null)
+                {
+                    (int h, int s, int l) = RgbToHsl(r, g, b);
+                    s = Math.Max(0, Math.Min((int)Math.Round(s * val / 100000m), 100));
+                    (r, g, b) = HslToRgb(h, s, l);
+                }
             }
-            else if (element is A.SaturationModulation satMod && satMod.Val != null)
+            else if (element is LuminanceModulation || element is A.LuminanceModulation)
             {
+                // 200000 = 200% = doubles the lumination component
+                // 50000 = 50% = reduces the lumination component by half
+                // The final value is still limited between 0 and 100
+                Int32Value? val = (element as LuminanceModulation)?.Val ?? (element as A.LuminanceModulation)?.Val;
+                if (val != null)
+                {
+                    (int h, int s, int l) = RgbToHsl(r, g, b);
+                    l = Math.Max(0, Math.Min((int)Math.Round(l * val / 100000m), 100));
+                    (r, g, b) = HslToRgb(h, s, l);
+                }
             }
-            else if (element is A.Luminance lum && lum.Val != null)
-            {
-            }
-            else if (element is A.LuminanceOffset lumOffset && lumOffset.Val != null)
-            {
-            }
-            else if (element is A.LuminanceModulation lumMod && lumMod.Val != null)
-            {
-            }
-            else if (element is Saturation)
-            {
-            }
-            else if (element is SaturationOffset)
-            {
-            }
-            else if (element is SaturationModulation)
-            {
-            }
-            else if (element is Luminance)
-            {
-            }
-            else if (element is LuminanceOffset)
-            {
-            }
-            else if (element is LuminanceModulation)
-            {
-            }
-            // ----
 
-            // OpenXmlLeafElement with integer value
             else if (element is A.AlphaOffset alphaOffset && alphaOffset.Val != null)
             {
+                // Increases or decreases the input alpha percentage by the specified percentage offset.
+                // 10% alpha offset increases a 50% opacity to 60%.
+                // -10% alpha offset decreases a 50% opacity to 40%.
+                // The final value is still limited between 0 and 100.
+                opacity = (int)Math.Round(opacity + (alphaOffset.Val / 1000m));
+                opacity = Math.Max(Math.Min(opacity, 100), 0);
             }
-            else if (element is A.Hue hue && hue.Val != null)
+            else if (element is SaturationOffset || element is A.SaturationOffset)
             {
+                // Increases or decreases the saturation component by the specified percentage offset.
+                // 10% offset increases a 50% saturation to 60%.
+                // -10% offset decreases a 50% saturation to 40%.
+                // The final value is still limited between 0 and 100.
+                Int32Value? val = (element as SaturationOffset)?.Val ?? (element as A.SaturationOffset)?.Val;
+                if (val != null)
+                {
+                    (int h, int s, int l) = RgbToHsl(r, g, b);
+                    s = (int)Math.Round(s + (val / 1000m));
+                    s = Math.Max(0, Math.Min(s, 100));
+                    (r, g, b) = HslToRgb(h, s, l);
+                }
+            }
+            else if (element is LuminanceOffset || element is A.LuminanceOffset)
+            {
+                // Increases or decreases the luminance component by the specified percentage offset.
+                // 10% offset increases a 50% luminance to 60%.
+                // -10% offset decreases a 50% luminance to 40%.
+                // The final value is still limited between 0 and 100.
+                Int32Value? val = (element as LuminanceOffset)?.Val ?? (element as A.LuminanceOffset)?.Val;
+                if (val != null)
+                {
+                    (int h, int s, int l) = RgbToHsl(r, g, b);
+                    l = (int)Math.Round(l + (val / 1000m));
+                    l = Math.Max(0, Math.Min(l, 100));
+                    (r, g, b) = HslToRgb(h, s, l);
+                }
             }
             else if (element is A.HueOffset hueOffset && hueOffset.Val != null)
             {
+                // Increases or decreases the hue component by the specified percentage offset.
+                // 10% offset increases a 50% hue to 60%.
+                // -10% offset decreases a 50% hue to 40%.
+                // The final value is still limited between 0 and 360.
+                (int h, int s, int l) = RgbToHsl(r, g, b);
+                // In this case multiply the percentage by 3.6 to fit the 0-360 scale rather than 0-100
+                h = (int)Math.Round(s + (hueOffset.Val * 3.6m / 1000m));
+                h = Math.Max(0, Math.Min(h, 360));
+                (r, g, b) = HslToRgb(h, s, l);
             }
-            else if (element is HueModulation)
+            else if (element is A.RedOffset redOffset && redOffset.Val != null)
             {
+                // Increases or decreases the red component by the specified percentage offset.
+                // 10% offset increases a 50% red to 60%.
+                // -10% offset decreases a 50% red to 40%.
+                // The final value is still limited between 0 and 255.
+                r = (int)Math.Round(r + (redOffset.Val * 2.55m / 1000m));
+                // In this case multiply by 2.55 to fit the 0-255 scale rather than 0-100
+                r = Math.Max(Math.Min(opacity, 255), 0);
             }
-            // ----
+            else if (element is A.GreenOffset greenOffset && greenOffset.Val != null)
+            {
+                // Increases or decreases the green component by the specified percentage offset.
+                // 10% offset increases a 50% green to 60%.
+                // -10% offset decreases a 50% green to 40%.
+                // The final value is still limited between 0 and 255.
+                g = (int)Math.Round(g + (greenOffset.Val * 2.55m / 1000m));
+                // In this case multiply by 2.55 to fit the 0-255 scale rather than 0-100
+                g = Math.Max(Math.Min(opacity, 255), 0);
+            }
+            else if (element is A.BlueOffset blueOffset && blueOffset.Val != null)
+            {
+                // Increases or decreases the blue component by the specified percentage offset.
+                // 10% offset increases a 50% blue to 60%.
+                // -10% offset decreases a 50% blue to 40%.
+                // The final value is still limited between 0 and 255.
+                b = (int)Math.Round(b + (blueOffset.Val * 2.55m / 1000m));
+                // In this case multiply by 2.55 to fit the 0-255 scale rather than 0-100
+                b = Math.Max(Math.Min(opacity, 255), 0);
+            }
 
-            // OpenXmlLeafElement - consider true if present
+            else if (element is Shade || element is A.Shade)
+            {
+                // Specifies a darker version of the input color: 
+                // 15000 = 15% of the input color combined with 85% black
+                Int32Value? val = (element as Shade)?.Val ?? (element as A.Shade)?.Val;
+                if (val != null)
+                {
+                    decimal pct = Math.Max(0, Math.Min(val / 1000m, 100));
+                    r = Math.Max(0, Math.Min((int)Math.Round(r * pct / 100m), 255));
+                    g = Math.Max(0, Math.Min((int)Math.Round(g * pct / 100m), 255));
+                    b = Math.Max(0, Math.Min((int)Math.Round(b * pct / 100m), 255));
+                }
+            }
+            else if (element is Tint || element is A.Tint)
+            {
+                // Specifies a lighter version of the input color: 
+                // 15000 = 15% of the input color combined with 85% white
+                Int32Value? val = (element as Tint)?.Val ?? (element as A.Tint)?.Val;
+                if (val != null)
+                {
+                    decimal pct = Math.Max(Math.Min(val / 1000m, 100), 0);
+                    r = Math.Max(0, Math.Min((int)(r * (pct / 100m) + (255 * (100 - pct) / 100m)), 255));
+                    g = Math.Max(0, Math.Min((int)(g * (pct / 100m) + (255 * (100 - pct) / 100m)), 255));
+                    b = Math.Max(0, Math.Min((int)(b * (pct / 100m) + (255 * (100 - pct) / 100m)), 255));
+                }
+            }
+
             else if (element is A.Inverse inverse)
             {
                 // Specifies that the output color is the inverse of the input color.
@@ -387,10 +466,48 @@ public static class ColorHelpers
             else if (element is A.Gamma gamma)
             {
                 // Specifies that the output color is the sRGB gamma shift of the input color.
+                double rNorm = r / 255.0;
+                double gNorm = g / 255.0;
+                double bNorm = b / 255.0;
+
+                static double GammaShift(double c)
+                {
+                    if (c <= 0.04045)
+                        return c / 12.92;
+                    else
+                        return Math.Pow((c + 0.055) / 1.055, 2.4);
+                }
+
+                double linearR = GammaShift(rNorm);
+                double linearG = GammaShift(gNorm);
+                double linearB = GammaShift(bNorm);
+
+                r = (int)Math.Round(linearR * 255);
+                g = (int)Math.Round(linearG * 255);
+                b = (int)Math.Round(linearB * 255);
             }
             else if (element is A.InverseGamma inverseGamma)
             {
                 // Specifies that the output color is the inverse sRGB gamma shift of the input color.
+                double rNorm = r / 255.0;
+                double gNorm = g / 255.0;
+                double bNorm = b / 255.0;
+
+                static double GammaShiftInverse(double c)
+                {
+                    if (c <= 0.0031308)
+                        return c * 12.92;
+                    else
+                        return 1.055 * Math.Pow(c, 1.0 / 2.4) - 0.055;
+                }
+
+                double invR = GammaShiftInverse(r);
+                double invG = GammaShiftInverse(g);
+                double invB = GammaShiftInverse(b);
+
+                r = (int)Math.Round(invR * 255);
+                g = (int)Math.Round(invG * 255);
+                b = (int)Math.Round(invB * 255);
             }
             else if (element is A.Complement complement)
             {
@@ -401,7 +518,6 @@ public static class ColorHelpers
                 g = 255 - g;
                 b = 255 - b;
             }
-            // OpenXmlLeafElement - consider true if present
         }
 
         hex = RgbToHex(r, g, b);
@@ -480,13 +596,13 @@ public static class ColorHelpers
         return $"#{r:X2}{g:X2}{b:X2}";
     }
 
-    private static double HueToRgb(double p, double q, double t)
+    private static decimal HueToRgb(decimal p, decimal q, decimal t)
     {
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
-        if (t < 1.0 / 6) return p + (q - p) * 6 * t;
-        if (t < 1.0 / 2) return q;
-        if (t < 2.0 / 3) return p + (q - p) * (2.0 / 3 - t) * 6;
+        if (t < 1m / 6m) return p + (q - p) * 6m * t;
+        if (t < 1m / 2m) return q;
+        if (t < 2m / 3m) return p + (q - p) * (2m / 3m - t) * 6m;
         return p;
     }
 
@@ -499,13 +615,13 @@ public static class ColorHelpers
     /// <returns>Hue (0-360), saturation (0-100%) and luminance (0-100%) tuple</returns>
     public static (int hue, int saturation, int luminance) RgbToHsl(int r, int g, int b)
     {
-        double rNorm = r / 255.0;
-        double gNorm = g / 255.0;
-        double bNorm = b / 255.0;
+        decimal rNorm = r / 255m;
+        decimal gNorm = g / 255m;
+        decimal bNorm = b / 255m;
 
-        double max = Math.Max(rNorm, Math.Max(gNorm, bNorm));
-        double min = Math.Min(rNorm, Math.Min(gNorm, bNorm));
-        double h, s, l = (max + min) / 2.0;
+        decimal max = Math.Max(rNorm, Math.Max(gNorm, bNorm));
+        decimal min = Math.Min(rNorm, Math.Min(gNorm, bNorm));
+        decimal h, s, l = (max + min) / 2m;
 
         if (max == min)
         {
@@ -513,8 +629,8 @@ public static class ColorHelpers
         }
         else
         {
-            double delta = max - min;
-            s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+            decimal delta = max - min;
+            s = l > 0.5m ? delta / (2 - max - min) : delta / (max + min);
 
             if (max == rNorm)
             {
@@ -532,7 +648,7 @@ public static class ColorHelpers
             h /= 6;
         }
 
-        return ((int)(h * 360), (int)(s * 100), (int)(l * 100));
+        return ((int)Math.Round(h * 360), (int)Math.Round(s * 100), (int)Math.Round(l * 100));
     }
 
     /// <summary>
@@ -544,23 +660,26 @@ public static class ColorHelpers
     /// <returns>Red, green and blue tuple (0-255)</returns>
     public static (int red, int green, int blue) HslToRgb(int h, int s, int l)
     {
-        double r, g, b;
+        decimal hNorm = h / 360m;
+        decimal sNorm = s / 100m;
+        decimal lNorm = l / 100m;
+        decimal r, g, b;
 
-        if (s == 0)
+        if (sNorm == 0)
         {
-            r = g = b = l; // Achromatic
+            r = g = b = lNorm; // Achromatic
         }
         else
         {
-            double q = l < 0.5 ? l * (1 + s) : l + s - (l * s);
-            double p = 2 * l - q;
+            decimal q = lNorm < 0.5m ? lNorm * (1 + sNorm) : lNorm + sNorm - (lNorm * sNorm);
+            decimal p = 2 * lNorm - q;
 
-            r = HueToRgb(p, q, h + 1.0 / 3.0);
-            g = HueToRgb(p, q, h);
-            b = HueToRgb(p, q, h - 1.0 / 3.0);
+            r = HueToRgb(p, q, hNorm + 1m / 3m);
+            g = HueToRgb(p, q, hNorm);
+            b = HueToRgb(p, q, hNorm - 1m / 3m);
         }
 
-        return ((int)(r * 255), (int)(g * 255), (int)(b * 255));
+        return ((int)Math.Round(r * 255), (int)Math.Round(g * 255), (int)Math.Round(b * 255));
     }
 
     public static string ConvertSchemeColorToHex(SchemeColor schemeColor, string secondColor)

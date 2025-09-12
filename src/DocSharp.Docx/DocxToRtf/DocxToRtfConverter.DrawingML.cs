@@ -873,14 +873,14 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 if (isGradient && gradientFill.GetFirstChild<A.FillToRectangle>() is A.FillToRectangle fillToRect)
                 {
                     if (fillToRect.Left != null)
-                        sb.WriteShapeProperty("fillToLeft", (long)Math.Round(fillToRect.Left.Value / 1.5258m));
+                        sb.WriteShapeProperty("fillToLeft", (long)Math.Round(fillToRect.Left.Value * 65536m / 100000m));
                     // Convert 100000 --> 65536
                     if (fillToRect.Top != null)
-                        sb.WriteShapeProperty("fillToTop", (long)Math.Round(fillToRect.Top.Value / 1.5258m));
+                        sb.WriteShapeProperty("fillToTop", (long)Math.Round(fillToRect.Top.Value * 65536m / 100000m));
                     if (fillToRect.Right != null)
-                        sb.WriteShapeProperty("fillToRight", (long)Math.Round(fillToRect.Right.Value / 1.5258m));
+                        sb.WriteShapeProperty("fillToRight", (long)Math.Round(fillToRect.Right.Value * 65536m / 100000m));
                     if (fillToRect.Bottom != null)
-                        sb.WriteShapeProperty("fillToBottom", (long)Math.Round(fillToRect.Bottom.Value / 1.5258m));
+                        sb.WriteShapeProperty("fillToBottom", (long)Math.Round(fillToRect.Bottom.Value * 65536m / 100000m));
                 }
             }
             else
@@ -914,12 +914,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                                 // if schemeColorName == phClr ?
                             {
                                 // In OpenXML position goes from 0 to 100000, while in RTF from 0 to 65536
-                                int pos = (int)Math.Round(gradientStop.Position / 1.5258m);
+                                int pos = (int)Math.Round(gradientStop.Position * 65536m / 100000m);
                                 fillShadeColors += $"({gradientStopColor.Value},{pos});";
                                 ++count;
                             }
                         }
-                        //int numbers = (count * 2) + 2; // number of elements in the array including count and numbers itself
                         int numbers = (count * 2); // number of elements in the array
                         fillShadeColors = $"{numbers};{count};{fillShadeColors.TrimEnd(';')}";
                         if (!string.IsNullOrEmpty(fillShadeColors))
@@ -978,27 +977,27 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             if (blipFill.GetFirstChild<A.SourceRectangle>() is A.SourceRectangle sourceRect)
             {
                 if (sourceRect.Left != null)
-                    sb.WriteShapeProperty("fillRectLeft", (long)Math.Round(sourceRect.Left.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillRectLeft", (long)Math.Round(sourceRect.Left.Value * 65536m / 100000m));
                 // Convert 100000 --> 65536
                 if (sourceRect.Top != null)
-                    sb.WriteShapeProperty("fillRectTop", (long)Math.Round(sourceRect.Top.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillRectTop", (long)Math.Round(sourceRect.Top.Value * 65536m / 100000m));
                 if (sourceRect.Right != null)
-                    sb.WriteShapeProperty("fillRectRight", (long)Math.Round(sourceRect.Right.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillRectRight", (long)Math.Round(sourceRect.Right.Value * 65536m / 100000m));
                 if (sourceRect.Bottom != null)
-                    sb.WriteShapeProperty("fillRectBottom", (long)Math.Round(sourceRect.Bottom.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillRectBottom", (long)Math.Round(sourceRect.Bottom.Value * 65536m / 100000m));
             }
             if (blipFill.GetFirstChild<A.Stretch>() is A.Stretch stretch &&
                 stretch.FillRectangle is A.FillRectangle fillRect)
             {
                 if (fillRect.Left != null)
-                    sb.WriteShapeProperty("fillToLeft", (long)Math.Round(fillRect.Left.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillToLeft", (long)Math.Round(fillRect.Left.Value * 65536m / 100000m));
                 // Convert 100000 --> 65536
                 if (fillRect.Top != null)
-                    sb.WriteShapeProperty("fillToTop", (long)Math.Round(fillRect.Top.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillToTop", (long)Math.Round(fillRect.Top.Value * 65536m / 100000m));
                 if (fillRect.Right != null)
-                    sb.WriteShapeProperty("fillToRight", (long)Math.Round(fillRect.Right.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillToRight", (long)Math.Round(fillRect.Right.Value * 65536m / 100000m));
                 if (fillRect.Bottom != null)
-                    sb.WriteShapeProperty("fillToBottom", (long)Math.Round(fillRect.Bottom.Value / 1.5258m));
+                    sb.WriteShapeProperty("fillToBottom", (long)Math.Round(fillRect.Bottom.Value * 65536m / 100000m));
             }
 
             sb.WriteShapeProperty("pictureGray", "0");
@@ -1692,20 +1691,24 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
         if (polygon != null)
         {
-            // {\sv 8;5;(-3,0);(-3,21341);(21504,21341);(21504,0);(-3,0)}
+            // Produce a string in this format {\sv 8;5;(-3,0);(-3,21341);(21504,21341);(21504,0);(-3,0)}
             StringBuilder polygonVertices = new();
+            int count = 0;
             foreach (var element in polygon.Elements())
             {
                 if (element is Wp.StartPoint sp && sp.X != null && sp.Y != null)
                 {
                     polygonVertices.Append($"({sp.X.Value.ToStringInvariant()},{sp.Y.Value.ToStringInvariant()});");
+                    ++count;
                 }
                 else if (element is Wp.LineTo lt && lt.X != null && lt.Y != null)
                 {
                     polygonVertices.Append($"({lt.X.Value.ToStringInvariant()},{lt.Y.Value.ToStringInvariant()});");
+                    ++count;
                 }
             }
-            sb.WriteShapeProperty("pWrapPolygonVertices", polygonVertices.ToString().TrimEnd(';'));
+            int numbers = (count * 2); // number of elements in the array
+            sb.WriteShapeProperty("pWrapPolygonVertices", $"{numbers};{count};{polygonVertices.ToString().TrimEnd(';')}");
         }
     }
 }

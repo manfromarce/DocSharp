@@ -237,6 +237,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 var gradientColors = background.Fill.Colors.Value.Split(';');
                 string shadeColors = "";
+
+                int count = 0;
                 foreach (var gradientColor in gradientColors)
                 {
                     var properties = gradientColor.Split(' ');
@@ -245,15 +247,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                         && ColorHelpers.HexToBgr(properties[1].Trim()) is int color)
                     {
                         shadeColors += $"({color},{(long)Math.Round(pos * 65536)});";
+                        ++count;
                     }
                 }
-                shadeColors = shadeColors.TrimEnd(';');
-                /*
-                 * TEST: 
-                0 #03d4a8;.25 #21d6e0;.75 #0087e6;1 #005cbf
-                --> 8;4;(11064323,0);(14734881,16384);(15107840,49152);(12540928,65536)
-                 What are the first two values?
-                 */
+                int numbers = (count * 2); // number of elements in the array
+                shadeColors = $"{numbers};{count};{shadeColors.TrimEnd(';')}";
                 if (!string.IsNullOrEmpty(shadeColors))
                     sb.WriteShapeProperty("fillShadeColors", shadeColors);
             }
