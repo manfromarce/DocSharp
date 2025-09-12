@@ -1,6 +1,7 @@
-## 0.14.0 - Not released yet
+## 0.15.0 - Not released yet
 
-- Initial support for shapes, lines and text boxes in DOCX to RTF converter.
+- Support for shapes, lines and text boxes in DOCX to RTF converter.  
+  Not everything is supported, see [Supported features](https://github.com/manfromarce/DocSharp/blob/main/documentation/Supported_features.MD) for reference.
 
 ## 0.14.0 - 2025.09.03
 
