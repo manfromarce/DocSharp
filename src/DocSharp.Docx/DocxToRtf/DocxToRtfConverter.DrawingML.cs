@@ -660,10 +660,28 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal static void ProcessLineDashValue(A.CustomDash customDash, RtfStringWriter sb)
     {
+        StringBuilder builder = new();
+        int count = 0;
         foreach (var dashStop in customDash.Elements<A.DashStop>())
         {
+            if (dashStop.DashLength != null && dashStop.SpaceLength != null)
+            {
+                // TODO: check units
 
+                // Array should be of type: 
+                // total;count;(dash length 1, space length 1);(dash length 2, space length 2); ...
+                // where count is the number of dash/space pairs and total is count * 2
+                builder.Append('(');
+                builder.Append(dashStop.DashLength.Value.ToString(CultureInfo.InvariantCulture));
+                builder.Append(',');
+                builder.Append(dashStop.SpaceLength.Value.ToString(CultureInfo.InvariantCulture));
+                builder.Append(')');
+                builder.Append(';');
+                ++count;
+            }
         }
+        string array = (count * 2).ToStringInvariant() + ";" + count.ToStringInvariant() + ";" + builder.ToString();
+        sb.WriteShapeProperty("lineDashStyle", array.TrimEnd(';'));
     }
 
     internal (int width, int color) ProcessOutline(A.Outline? outline, A.Outline? styleOutline, RtfStringWriter sb, OpenXmlElement? secondStyle = null, bool isPicture = false)
