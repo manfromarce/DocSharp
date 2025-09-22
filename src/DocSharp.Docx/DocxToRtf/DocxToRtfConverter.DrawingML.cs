@@ -27,7 +27,9 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     internal override bool IsSupportedGraphicData(A.GraphicData graphicData)
     {
         return graphicData.GetFirstChild<Pictures.Picture>() != null ||
-               graphicData.GetFirstChild<Wps.WordprocessingShape>() != null;
+               graphicData.GetFirstChild<Wps.WordprocessingShape>() != null ||
+               graphicData.GetFirstChild<Wpc.WordprocessingCanvas>() != null ||
+               graphicData.GetFirstChild<Wpg.WordprocessingGroup>() != null;
     }
 
     internal override void ProcessDrawing(Drawing drawing, RtfStringWriter sb)
@@ -668,9 +670,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 // TODO: check units
 
-                // Array should be of type: 
-                // total;count;(dash length 1, space length 1);(dash length 2, space length 2); ...
-                // where count is the number of dash/space pairs and total is count * 2
                 builder.Append('(');
                 builder.Append(dashStop.DashLength.Value.ToString(CultureInfo.InvariantCulture));
                 builder.Append(',');
@@ -680,7 +679,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                 ++count;
             }
         }
-        string array = (count * 2).ToStringInvariant() + ";" + count.ToStringInvariant() + ";" + builder.ToString();
+        // 8 = number of bytes (2 numbers for each pair)
+        string array = "8;" + count.ToStringInvariant() + ";" + builder.ToString();
         sb.WriteShapeProperty("lineDashStyle", array.TrimEnd(';'));
     }
 
@@ -1066,8 +1066,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                                 ++count;
                             }
                         }
-                        int numbers = (count * 2); // number of elements in the array
-                        fillShadeColors = $"{numbers};{count};{fillShadeColors.TrimEnd(';')}";
+                        // 8 = number of bytes (2 numbers for each pair)
+                        fillShadeColors = $"8;{count};{fillShadeColors.TrimEnd(';')}";
                         if (!string.IsNullOrEmpty(fillShadeColors))
                             sb.WriteShapeProperty("fillShadeColors", fillShadeColors);
                     }
@@ -1272,13 +1272,69 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
     internal void ProcessPathList(A.PathList pathList, RtfStringWriter sb)
     {
-        if (!pathList.Elements<A.Path>().Any())
-            return;
-        // pVerticies + pSegmentInfo or shapePath
-        foreach (var path in pathList.Elements<A.Path>())
-        {
+        // Issues need to be resolved before implementing this:
 
-        }
+        //var pathElements = pathList.Elements<A.Path>().SelectMany(p => p.Elements());
+        //if (!pathElements.Any())
+        //    return;
+
+        ////TODO: what are these used for?
+        ////var width = pathList.Elements<A.Path>().FirstOrDefault()?.Width;
+        ////var height = pathList.Elements<A.Path>().FirstOrDefault()?.Height;
+        ////var stroke = pathList.Elements<A.Path>().FirstOrDefault()?.Stroke;
+        ////var fill = pathList.Elements<A.Path>().FirstOrDefault()?.Fill;
+        ////var extrOk = pathList.Elements<A.Path>().FirstOrDefault()?.ExtrusionOk;
+
+        //int verticiesCount = 0;
+        //int segmentsCount = 0;
+        //var verticiesBuilder = new StringBuilder();
+        //var segmentsBuilder = new StringBuilder();
+        //foreach (var pathElement in pathElements)
+        //{
+        //    if (pathElement is A.LineTo)
+        //        segmentsBuilder.Append('1');
+        //    else if (pathElement is A.CubicBezierCurveTo)
+        //        segmentsBuilder.Append("8193");
+        //    else if (pathElement is A.MoveTo)
+        //        segmentsBuilder.Append("16384");
+        //    else if (pathElement is A.CloseShapePath)
+        //        segmentsBuilder.Append("24577");
+        //    //else if (pathElement is A.QuadraticBezierCurveTo) // unclear, causes issues
+        //    //    segmentsBuilder.Append("43265");
+        //    //else if (pathElement is A.ArcTo) // TODO (width, height, start, swing)
+        //    else
+        //        continue;
+
+        //    //segmentsBuilder.Append("32768"); // usually added by Word at the end of the path
+
+        //    ++segmentsCount;
+
+        //    foreach (var point in pathElement.Elements<A.Point>())
+        //    {
+        //        if (point.X?.Value != null && point.Y?.Value != null &&
+        //            long.TryParse(point.X.Value.ToString(), out long x) &&
+        //            long.TryParse(point.Y.Value.ToString(), out long y))
+        //        {
+        //            verticiesBuilder.Append('(');
+        //            verticiesBuilder.Append(x.ToString(CultureInfo.InvariantCulture));
+        //            verticiesBuilder.Append(',');
+        //            verticiesBuilder.Append(y.ToString(CultureInfo.InvariantCulture));
+        //            verticiesBuilder.Append(')');
+        //            verticiesBuilder.Append(';');
+        //            ++verticiesCount;
+        //        }
+        //    }
+        //}
+
+        //// 8 = number of bytes (2 numbers for each path element)
+        //string array = "8;" + verticiesCount.ToStringInvariant() + ";" + verticiesBuilder.ToString();
+        //sb.WriteShapeProperty("pVerticies", array.TrimEnd(';'));
+
+        //// 4 = number of bytes (1 number for each segment)
+        //string array2 = "4;" + segmentsCount.ToStringInvariant() + ";" + segmentsBuilder.ToString();
+        //sb.WriteShapeProperty("pSegmentInfo", array2.TrimEnd(';'));
+
+        //sb.WriteShapeProperty("shapePath", "2"); // when is this different from 4?
     }
 
     internal void ProcessTransform2D(A.Transform2D? transform2D, RtfStringWriter sb)
@@ -1838,8 +1894,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     ++count;
                 }
             }
-            int numbers = (count * 2); // number of elements in the array
-            sb.WriteShapeProperty("pWrapPolygonVertices", $"{numbers};{count};{polygonVertices.ToString().TrimEnd(';')}");
+            // 8 = number of bytes (2 numbers for each pair)
+            sb.WriteShapeProperty("pWrapPolygonVertices", $"8;{count};{polygonVertices.ToString().TrimEnd(';')}");
         }
     }
 }

@@ -1,3 +1,9 @@
+## 0.16.0 - not released yet
+
+- Support shape type and outline color/width for pictures in DOCX to RTF converter  
+  (some issues remaining with inline pictures: line color might not be correct and line dash style is not preserved)
+- Support custom dash styles for shape outlines in DOCX to RTF converter
+
 ## 0.15.0 - 2025.09.12
 
 - Support for shapes, lines and text boxes in DOCX to RTF converter.  

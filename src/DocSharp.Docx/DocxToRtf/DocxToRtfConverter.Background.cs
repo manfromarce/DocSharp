@@ -250,8 +250,8 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                         ++count;
                     }
                 }
-                int numbers = (count * 2); // number of elements in the array
-                shadeColors = $"{numbers};{count};{shadeColors.TrimEnd(';')}";
+                // 8 = number of bytes (2 numbers for each pair)
+                shadeColors = $"8;{count};{shadeColors.TrimEnd(';')}";
                 if (!string.IsNullOrEmpty(shadeColors))
                     sb.WriteShapeProperty("fillShadeColors", shadeColors);
             }
