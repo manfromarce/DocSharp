@@ -13,6 +13,7 @@ using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 using Wpc = DocumentFormat.OpenXml.Office2010.Word.DrawingCanvas;
 using Wpg = DocumentFormat.OpenXml.Office2010.Word.DrawingGroup;
 using Dgm = DocumentFormat.OpenXml.Drawing.Diagrams;
+using Pic14 = DocumentFormat.OpenXml.Office2010.Drawing.Pictures;
 using DocSharp.Writers;
 using System.Globalization;
 using DocSharp.Helpers;
@@ -88,15 +89,18 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             {
                 var rootPart = OpenXmlHelpers.GetRootPart(drawing);
 
-                // Generic properties such as rotation and flip are supported for both inline and floating/anchored images
+                // Generic properties (rotation, flip) and some effects (recolor, shadow, 3D)
+                // are supported for both inline and floating/anchored images.
                 var shapePropertiesBuilder = new RtfStringWriter();
-                ProcessShapeProperties(pic.ShapeProperties, shapePropertiesBuilder);
+                var shapeStyle = pic.GetFirstChild<Pic14.ShapeStyle>();
+                var borderInfo = ProcessShapeProperties(pic.ShapeProperties, shapeStyle, shapePropertiesBuilder, true);
+                ProcessBlipEffects(blipFill.Blip, shapePropertiesBuilder);
                 string shapeProperties = shapePropertiesBuilder.ToString();
 
                 if (ignoreWrapLayouts || drawing.Inline != null)
                 {
                     // Inline image (\pict destination)
-                    ProcessImagePart(rootPart, relId, properties, sb, shapeProperties);
+                    ProcessImagePart(rootPart, relId, properties, sb, shapeProperties, borderInfo);
                 }
                 else if (drawing.Anchor != null)
                 {
@@ -109,7 +113,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
 
                     // Write position properties
                     ProcessDrawingAnchor(drawing.Anchor, sb);
-                    sb.WriteShapeProperty("shapeType", "75"); // Picture
 
                     // Write generic shape properties 
                     // (process after inline so that all standard control words such as \shpleft have been written
@@ -422,104 +425,208 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
     }
 
-    internal void ProcessShapeProperties(Wps.ShapeProperties? shapePr, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
+    internal (int borderWidth, int borderColor)? ProcessShapeProperties(OpenXmlElement? shapePr, OpenXmlElement? shapeStyle, RtfStringWriter sb, bool isPicture = false)
     {
-        if (shapePr == null)
-            return;
+        if (shapePr is not Wps.ShapeProperties &&
+            shapePr is not Pictures.ShapeProperties)
+            // Unexpected element
+            return null;
 
-#if DEBUG
-        var shapeType = shapePr.GetFirstChild<A.PresetGeometry>()?.Preset;
-#endif
+        (int borderWidth, int borderColor)? borderInfo = null;
 
-        ProcessGeometry(shapePr, sb);
-        ProcessTransform2D(shapePr.Transform2D, sb);
+        ProcessGeometry(shapePr, sb, isPicture);
+        ProcessTransform2D(shapePr.GetFirstChild<A.Transform2D>(), sb);
+
+        var fillReference = (shapeStyle as Wps.ShapeStyle)?.FillReference ?? (shapeStyle as Pic14.ShapeStyle)?.FillReference;
+        var lineReference = (shapeStyle as Wps.ShapeStyle)?.LineReference ?? (shapeStyle as Pic14.ShapeStyle)?.LineReference;
+        var effectReference = (shapeStyle as Wps.ShapeStyle)?.EffectReference ?? (shapeStyle as Pic14.ShapeStyle)?.EffectReference;
+        //var fontReference = (shapeStyle as Wps.ShapeStyle)?.FontReference ?? (shapeStyle as Pic14.ShapeStyle)?.FontReference;
 
         // Outline contained directly in the ShapeProperties has priority over style, 
         // but if outline is present and a property is not defined we need to search for it in the style too.
-        if (shapeStyle?.LineReference != null && shapeStyle.LineReference.Index != null)
+        if (lineReference != null && lineReference.Index != null)
         {
             // Note: the color contained in shapeStyle.LineReference directly is the second style
             // and is only relevant if the index points to phColor style, 
             // for other styles we should get the outline properties from the theme instead.
-            uint index = shapeStyle.LineReference.Index.Value;
+            uint index = lineReference.Index.Value;
             if (shapePr.GetThemePart()?.ThemeElements?.FormatScheme?.LineStyleList is A.LineStyleList lineStyleList &&
                 lineStyleList.ChildElements.Count >= index)
             {
                 OpenXmlElement? style = lineStyleList.Elements().ToArray()[index - 1];
                 if (style is A.Outline styleOutline)
                 {
-                    ProcessOutline(shapePr.GetFirstChild<A.Outline>(), styleOutline, sb, shapeStyle.LineReference);
+                    borderInfo = ProcessOutline(shapePr.GetFirstChild<A.Outline>(), styleOutline, sb, lineReference, isPicture);
                 }
             }
         }
         else
         {
-            ProcessOutline(shapePr.GetFirstChild<A.Outline>(), null, sb);
+            borderInfo = ProcessOutline(shapePr.GetFirstChild<A.Outline>(), null, sb, null, isPicture);
         }
 
-        // Try to find fill
-        if (shapePr.GetFirstChild<A.NoFill>() is A.NoFill noFill)
-            ProcessFill(noFill, sb);
-        else if (shapePr.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
-            ProcessFill(solidFill, sb);
-        else if (shapePr.GetFirstChild<A.GradientFill>() is A.GradientFill gradientFill)
-            ProcessFill(gradientFill, sb);
-        else if (shapePr.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
-            ProcessFill(patternFill, sb);
-        else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill)
-            ProcessFill(blipFill, sb);
-        else if (shapePr.GetFirstChild<A.GroupFill>() is A.GroupFill groupFill)
-            ProcessFill(groupFill, sb);
-        else
+        if (!isPicture)
         {
-            // No fill found, try to find style
-            if (shapeStyle?.FillReference != null && shapeStyle.FillReference.Index != null)
-            {
-                // Note: the color contained in shapeStyle.FillReference directly is the second style
-                // and is only relevant if the index points to phColor style, 
-                // for other styles we should get the outline properties from the theme instead.
-
-                uint index = shapeStyle.FillReference.Index.Value;
-
-                // - 0 or 1000 = no fill
-                // - 1 to 999 = index within fillStyleLst
-                // - 1001 or greater = index within bgFillStyleLst 
-                // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.FillReference?view=openxml-3.0.1)
-                if (index == 0 || index == 1000)
-                {
-                    sb.WriteShapeProperty("fFilled", "0");
-                }
-                else if (shapePr.GetThemePart()?.ThemeElements?.FormatScheme is A.FormatScheme formatScheme)
-                {
-                    OpenXmlElement? style = null;
-                    if (index >= 1 && index <= 999 && formatScheme.FillStyleList != null &&
-                        formatScheme.FillStyleList.ChildElements.Count >= index)
-                    {
-                        style = formatScheme.FillStyleList.Elements().ToArray()[index - 1];
-                    }
-                    else if (index >= 1001 && formatScheme.BackgroundFillStyleList != null &&
-                        formatScheme.BackgroundFillStyleList.ChildElements.Count >= (index - 1000))
-                    {
-                        // 1001 is the first, 1002 is the second, ...
-                        style = formatScheme.BackgroundFillStyleList.Elements().ToArray()[index - 1001];
-                    }
-                    if (style != null)
-                    {
-                        ProcessFill(style, sb, shapeStyle.FillReference);
-                    }
-                }
-            }
+            // Try to find fill
+            if (shapePr.GetFirstChild<A.NoFill>() is A.NoFill noFill)
+                ProcessFill(noFill, sb);
+            else if (shapePr.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
+                ProcessFill(solidFill, sb);
+            else if (shapePr.GetFirstChild<A.GradientFill>() is A.GradientFill gradientFill)
+                ProcessFill(gradientFill, sb);
+            else if (shapePr.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
+                ProcessFill(patternFill, sb);
+            else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill)
+                ProcessFill(blipFill, sb);
+            else if (shapePr.GetFirstChild<A.GroupFill>() is A.GroupFill groupFill)
+                ProcessFill(groupFill, sb);
             else
             {
-                // TODO: specify no fill / white / transparent?
+                // No fill found, try to find style
+                if (fillReference != null && fillReference.Index != null)
+                {
+                    // Note: the color contained in shapeStyle.FillReference directly is the second style
+                    // and is only relevant if the index points to phColor style, 
+                    // for other styles we should get the outline properties from the theme instead.
+
+                    uint index = fillReference.Index.Value;
+
+                    // - 0 or 1000 = no fill
+                    // - 1 to 999 = index within fillStyleLst
+                    // - 1001 or greater = index within bgFillStyleLst 
+                    // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.FillReference?view=openxml-3.0.1)
+                    if (index == 0 || index == 1000)
+                    {
+                        sb.WriteShapeProperty("fFilled", "0");
+                    }
+                    else if (shapePr.GetThemePart()?.ThemeElements?.FormatScheme is A.FormatScheme formatScheme)
+                    {
+                        OpenXmlElement? style = null;
+                        if (index >= 1 && index <= 999 && formatScheme.FillStyleList != null &&
+                            formatScheme.FillStyleList.ChildElements.Count >= index)
+                        {
+                            style = formatScheme.FillStyleList.Elements().ToArray()[index - 1];
+                        }
+                        else if (index >= 1001 && formatScheme.BackgroundFillStyleList != null &&
+                            formatScheme.BackgroundFillStyleList.ChildElements.Count >= (index - 1000))
+                        {
+                            // 1001 is the first, 1002 is the second, ...
+                            style = formatScheme.BackgroundFillStyleList.Elements().ToArray()[index - 1001];
+                        }
+                        if (style != null)
+                        {
+                            ProcessFill(style, sb, fillReference);
+                        }
+                    }
+                }
+                else
+                {
+                    // TODO: specify no fill / white / transparent?
+                }
             }
         }
 
-        if (shapePr.BlackWhiteMode != null)
-        { 
+        //if (shapePr.GetAttribute("bwMode", OpenXmlConstants.DrawingNamespace) != null)
+        //{
+        //}
+
+        ProcessEffects(shapePr, effectReference, sb);
+
+        return borderInfo;
+    }
+
+    internal void ProcessEffects(OpenXmlElement shapePr, A.EffectReference? effectReference, RtfStringWriter sb)
+    {
+        if (shapePr is not Wps.ShapeProperties &&
+            shapePr is not Pictures.ShapeProperties)
+            // Unexpected element
+            return;
+
+        // Implementation notes: 
+        // - glow, soft edge are not supported in RTF and removed by Microsoft Word too
+        // - reflection is not supported in RTF, Word preserves it by rendering the effect in the image itself
+        // - emboss, shadow and 3d are available in RTF but with some differences
+        if (shapePr.GetFirstChild<A.EffectDag>() != null)
+        {
+        }
+        if (shapePr.GetFirstChild<A.EffectList>() != null)
+        {
+        }
+        if (shapePr.GetFirstChild<A.Scene3DType>() != null)
+        {
+        }
+        if (shapePr.GetFirstChild<A.Shape3DType>() != null)
+        {
         }
 
-        ProcessEffects(shapePr, shapeStyle, sb);
+        if (effectReference != null)
+        {
+        }
+    }
+
+    internal void ProcessBlipEffects(A.Blip blip, RtfStringWriter sb)
+    {
+        // This function processes effects only available for images: 
+        // - "recolor" is a DuoTone, GrayScale or BiLevel element
+        // - "set transparent color" is an <a:clrChange> element
+        // - Artistic effects, blur/sharpness, brightness/contrast, temperature/saturation
+        // and background removal are actually saved as standalone images in the DOCX files,
+        // no special handling is required for preserving them in RTF
+
+        if (blip.GetFirstChild<A.AlphaBiLevel>() is A.AlphaBiLevel)
+        {
+        }
+        if (blip.GetFirstChild<A.AlphaCeiling>() is A.AlphaCeiling)
+        {
+        }
+        if (blip.GetFirstChild<A.AlphaFloor>() is A.AlphaFloor)
+        {
+        }
+        if (blip.GetFirstChild<A.AlphaInverse>() is A.AlphaInverse)
+        {
+        }
+        if (blip.GetFirstChild<A.AlphaModulationEffect>() is A.AlphaModulationEffect)
+        {
+        }
+        if (blip.GetFirstChild<A.AlphaModulationFixed>() is A.AlphaModulationFixed)
+        {
+        }
+        if (blip.GetFirstChild<A.AlphaReplace>() is A.AlphaReplace)
+        {
+        }
+        if (blip.GetFirstChild<A.BiLevel>() is A.BiLevel)
+        {
+        }
+        if (blip.GetFirstChild<A.BlipExtensionList>() is A.BlipExtensionList)
+        {
+        }
+        if (blip.GetFirstChild<A.Blur>() is A.Blur)
+        {
+        }
+        if (blip.GetFirstChild<A.ColorChange>() is A.ColorChange)
+        {
+        }
+        if (blip.GetFirstChild<A.ColorReplacement>() is A.ColorReplacement)
+        {
+        }
+        if (blip.GetFirstChild<A.Duotone>() is A.Duotone)
+        {
+        }
+        if (blip.GetFirstChild<A.FillOverlay>() is A.FillOverlay)
+        {
+        }
+        if (blip.GetFirstChild<A.Grayscale>() is A.Grayscale)
+        {
+        }
+        if (blip.GetFirstChild<A.Hsl>() is A.Hsl)
+        {
+        }
+        if (blip.GetFirstChild<A.LuminanceEffect>() is A.LuminanceEffect)
+        {
+        }
+        if (blip.GetFirstChild<A.TintEffect>() is A.TintEffect)
+        {
+        }
     }
 
     internal static void ProcessLineDashValue(A.PresetDash presetDash, RtfStringWriter sb)
@@ -559,20 +666,33 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
     }
 
-    internal void ProcessOutline(A.Outline? outline, A.Outline? styleOutline, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
+    internal (int width, int color) ProcessOutline(A.Outline? outline, A.Outline? styleOutline, RtfStringWriter sb, OpenXmlElement? secondStyle = null, bool isPicture = false)
     {
+        // For inline pictures, we should also set the outline as if it was a paragraph border
+        // before jpegblip (or similar):
+        // \brdrt\brdrs\brdrw60\brdrcf0 \brdrl\brdrs\brdrw60\brdrcf0 \brdrb\brdrs\brdrw60\brdrcf0 \brdrr\brdrs\brdrw60\brdrcf0
+        // TODO: support dash styles too for this case.
+
+        // Set these to -1 by default.
+        int borderWidth = -1;
+        int borderColor = -1;
+
         if ((outline?.GetFirstChild<A.NoFill>() ?? (styleOutline?.GetFirstChild<A.NoFill>())) is A.NoFill noFill)
             ProcessOutlineFill(noFill, sb, secondStyle);
         if ((outline?.GetFirstChild<A.SolidFill>() ?? (styleOutline?.GetFirstChild<A.SolidFill>())) is A.SolidFill solidFill)
-            ProcessOutlineFill(solidFill, sb, secondStyle);
+            borderColor = ProcessOutlineFill(solidFill, sb, secondStyle, isPicture);
         if ((outline?.GetFirstChild<A.GradientFill>() ?? (styleOutline?.GetFirstChild<A.GradientFill>())) is A.GradientFill gradientFill)
             ProcessOutlineFill(gradientFill, sb, secondStyle);
         if ((outline?.GetFirstChild<A.PatternFill>() ?? (styleOutline?.GetFirstChild<A.PatternFill>())) is A.PatternFill patternFill)
             ProcessOutlineFill(patternFill, sb, secondStyle);
 
         if ((outline?.Width ?? styleOutline?.Width) is Int32Value width)
+        {
             sb.WriteShapeProperty("lineWidth", width.Value); // EMUs (default is 9,525 = 0.75pt) 
-        
+            // Set borderWidth for paragraph border if inline picture (convert EMUs to twips)
+            borderWidth = (int)Math.Round(width.Value / 635m);
+        }
+
         if ((outline?.Alignment ?? styleOutline?.Alignment) is EnumValue<A.PenAlignmentValues> alignment)
         {
             if (alignment == A.PenAlignmentValues.Center)
@@ -720,9 +840,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else if (styleOutline?.GetFirstChild<A.Round>() != null)
             sb.WriteShapeProperty("lineJoinStyle", "2");
+
+        return (borderWidth, borderColor);
     }
 
-    internal void ProcessOutlineFill(OpenXmlElement? outlineFill, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
+    internal int ProcessOutlineFill(OpenXmlElement? outlineFill, RtfStringWriter sb, OpenXmlElement? secondStyle = null, bool isPicture = false)
     {
         string secondColor = secondStyle != null ? ColorHelpers.GetColor2(secondStyle, out _, "") : "";
         if (outlineFill is A.NoFill)
@@ -735,9 +857,15 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             sb.WriteShapeProperty("lineType", "0"); // solid
 
             // Check if a valid color (PresetColor, SchemeColor, ...) is found
-            int? color = ColorHelpers.HexToBgr(ColorHelpers.GetColor2(solidFill, out string schemeColorName, secondColor));
+            string hexColor = ColorHelpers.GetColor2(solidFill, out string schemeColorName, secondColor);
+            int? color = ColorHelpers.HexToBgr(hexColor);
             if (color != null)
                 sb.WriteShapeProperty("lineColor", color.Value);
+            if (isPicture)
+            {
+                colors.TryAddAndGetIndex(hexColor, out int colorIndex);
+                return colorIndex;
+            }
         }
         else if (outlineFill is A.GradientFill gradientFill)
         {
@@ -784,6 +912,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
             // in that case the pattern fill is specified as an embedded picture in VML
             // and we can translate to RTF directly.
         }
+        return -1;
     }
 
     internal void ProcessFill(OpenXmlElement? fill, RtfStringWriter sb, OpenXmlElement? secondStyle = null)
@@ -1018,32 +1147,16 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
     }
 
-    internal void ProcessEffects(Wps.ShapeProperties shapePr, Wps.ShapeStyle? shapeStyle, RtfStringWriter sb)
-    {
-        if (shapePr.GetFirstChild<A.EffectDag>() != null)
-        {
-        }
-        if (shapePr.GetFirstChild<A.EffectList>() != null)
-        {
-        }
-        if (shapePr.GetFirstChild<A.Scene3DType>() != null)
-        {
-        }
-        if (shapePr.GetFirstChild<A.Shape3DType>() != null)
-        {
-        }
-
-        if (shapeStyle?.EffectReference != null)
-        {
-        }
-    }
-
-    internal void ProcessGeometry(Wps.ShapeProperties shapePr, RtfStringWriter sb)
+    internal void ProcessGeometry(OpenXmlElement shapePr, RtfStringWriter sb, bool isPicture = false)
     {
         if (shapePr.GetFirstChild<A.PresetGeometry>() is A.PresetGeometry presetGeometry &&
                     presetGeometry.Preset != null)
         {
             int shapeType = RtfShapeTypeMapper.GetShapeType(presetGeometry.Preset);
+
+            if (shapeType == 1 && isPicture)
+                shapeType = 75; // Rectangle --> Picture frame
+
             // TODO: manual adjustments are needed for some shapes
             sb.WriteShapeProperty("shapeType", shapeType);
             if (presetGeometry.GetFirstChild<A.AdjustValueList>() is A.AdjustValueList presetGeomAdjustList)
@@ -1084,7 +1197,7 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         }
         else
         {
-            sb.WriteShapeProperty("shapeType", 1); // Default to rectangle
+            sb.WriteShapeProperty("shapeType", isPicture ? 75 : 1); // Default to picture or rectangle
         }
     }
 
@@ -1148,18 +1261,6 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
         {
 
         }
-    }
-
-    internal void ProcessShapeProperties(Pictures.ShapeProperties? picProp, RtfStringWriter shapePropertiesBuilder)
-    {
-        if (picProp == null)
-        {
-            return;
-        }
-
-        ProcessTransform2D(picProp.Transform2D, shapePropertiesBuilder);
-
-        // TODO: others
     }
 
     internal void ProcessTransform2D(A.Transform2D? transform2D, RtfStringWriter sb)

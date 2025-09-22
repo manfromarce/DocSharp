@@ -16,7 +16,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
 {
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, RtfStringWriter sb, string shapeProperties = "")
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, RtfStringWriter sb, string shapeProperties = "", (int borderWidth, int borderColor)? borderInfo = null)
     {
         if (rootPart?.GetPartById(relId) is ImagePart imagePart)
         {
@@ -126,6 +126,19 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
                     sb.Write(shapeProperties);
                     sb.Write(@"}");
                 }
+
+                if (borderInfo != null && borderInfo.Value.borderWidth >= 0)
+                {
+                    // For inline pictures, we should also set the outline as if it was a paragraph border
+                    // before the format and blip data, e.g.:
+                    // \brdrt\brdrs\brdrw60\brdrcf0 \brdrl\brdrs\brdrw60\brdrcf0 \brdrb\brdrs\brdrw60\brdrcf0 \brdrr\brdrs\brdrw60\brdrcf0
+                    int borderColor = borderInfo.Value.borderColor >= 0 ? borderInfo.Value.borderColor : 0;
+                    sb.Write($@"\brdrt\brdrs\brdrw{borderInfo.Value.borderWidth}\brdrcf{borderColor} ");
+                    sb.Write($@"\brdrl\brdrs\brdrw{borderInfo.Value.borderWidth}\brdrcf{borderColor} ");
+                    sb.Write($@"\brdrr\brdrs\brdrw{borderInfo.Value.borderWidth}\brdrcf{borderColor} ");
+                    sb.Write($@"\brdrb\brdrs\brdrw{borderInfo.Value.borderWidth}\brdrcf{borderColor} ");
+                }
+
                 sb.Write(format);
                 sb.WriteWordWithValue("picw", properties.Width);
                 sb.WriteWordWithValue("pich", properties.Height);
