@@ -268,7 +268,7 @@ namespace DocSharp.Binary.WordprocessingMLMapping
             var papx = findValidPapx(fc);
             var tai = new TableInfo(papx);
 
-            int fcRowEnd = findRowEndFc(cp, out cp, nestingLevel);
+            int fcRowEnd = findRowEndFc(cp, out int rowEndCp, nestingLevel);
 
             while (tai.fInTable)
             {
@@ -295,7 +295,13 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                 //get the next papx
                 papx = findValidPapx(fcRowEnd);
                 tai = new TableInfo(papx);
-                fcRowEnd = findRowEndFc(cp, out cp, nestingLevel);
+                
+                // Prevent infinite loop: stop if no longer in table or not advancing
+                if (!tai.fInTable || rowEndCp <= cp)
+                    break;
+                    
+                cp = rowEndCp;
+                fcRowEnd = findRowEndFc(cp, out rowEndCp, nestingLevel);
             }
 
             //build the grid based on the boundaries
