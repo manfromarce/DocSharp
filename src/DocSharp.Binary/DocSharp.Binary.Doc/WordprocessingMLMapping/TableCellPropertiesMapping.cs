@@ -68,7 +68,10 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                     case  SinglePropertyModifier.OperationCode.sprmTDefTable:
                         var tdef = new SprmTDefTable(sprm.Arguments);
                         this._tGrid = tdef.rgdxaCenter;
-                        this._tcDef = tdef.rgTc80[this._cellIndex];
+                        
+                        // Bounds check to prevent array out of range exceptions
+                        int cellDefIndex = Math.Clamp(this._cellIndex, 0, Math.Max(0, tdef.rgTc80.Length - 1));
+                        this._tcDef = tdef.rgTc80.Length > 0 ? tdef.rgTc80[cellDefIndex] : new TC80();
 
                         appendValueElement(this._tcPr, "textDirection", this._tcDef.textFlow.ToString(), false);
 
@@ -88,7 +91,16 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                             appendValueElement(this._tcPr, "noWrap", "", true);
 
                         //_width = _tcDef.wWidth;
-                        this._width = (short)(tdef.rgdxaCenter[this._cellIndex + 1] - tdef.rgdxaCenter[this._cellIndex]);
+                        // Bounds check to prevent array out of range exceptions
+                        if (tdef.rgdxaCenter.Length >= 2)
+                        {
+                            int widthIndex = Math.Clamp(this._cellIndex, 0, tdef.rgdxaCenter.Length - 2);
+                            this._width = (short)(tdef.rgdxaCenter[widthIndex + 1] - tdef.rgdxaCenter[widthIndex]);
+                        }
+                        else
+                        {
+                            this._width = 0;
+                        }
                         this._ftsWidth = this._tcDef.ftsWidth;
 
                         //borders
@@ -209,7 +221,8 @@ namespace DocSharp.Binary.WordprocessingMLMapping
 
             //grid span
             this._gridSpan = 1;
-            if (this._width > this._grid[this._gridIndex])
+            // Bounds check to prevent array out of range exceptions
+            if (this._grid != null && this._gridIndex >= 0 && this._gridIndex < this._grid.Count && this._width > this._grid[this._gridIndex])
             {
                 //check the number of merged cells
                 int w = this._grid[this._gridIndex];
