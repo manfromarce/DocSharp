@@ -70,7 +70,7 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                         this._tGrid = tdef.rgdxaCenter;
                         
                         // Bounds check to prevent array out of range exceptions
-                        int cellDefIndex = Math.Clamp(this._cellIndex, 0, Math.Max(0, tdef.rgTc80.Length - 1));
+                        int cellDefIndex = MathHelper.Clamp(this._cellIndex, 0, Math.Max(0, tdef.rgTc80.Length - 1));
                         this._tcDef = tdef.rgTc80.Length > 0 ? tdef.rgTc80[cellDefIndex] : new TC80();
 
                         appendValueElement(this._tcPr, "textDirection", this._tcDef.textFlow.ToString(), false);
@@ -94,7 +94,7 @@ namespace DocSharp.Binary.WordprocessingMLMapping
                         // Bounds check to prevent array out of range exceptions
                         if (tdef.rgdxaCenter.Length >= 2)
                         {
-                            int widthIndex = Math.Clamp(this._cellIndex, 0, tdef.rgdxaCenter.Length - 2);
+                            int widthIndex = MathHelper.Clamp(this._cellIndex, 0, tdef.rgdxaCenter.Length - 2);
                             this._width = (short)(tdef.rgdxaCenter[widthIndex + 1] - tdef.rgdxaCenter[widthIndex]);
                         }
                         else

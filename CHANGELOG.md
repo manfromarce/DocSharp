@@ -1,8 +1,9 @@
-## 0.16.0 - not released yet
+## 0.16.0 - 2025.10.26
 
 - Support shape type and outline color/width for pictures in DOCX to RTF converter  
   (some issues remaining with inline pictures: line color might not be correct and line dash style is not preserved)
 - Support custom dash styles for shape outlines in DOCX to RTF converter
+- Fix table grid iteration and bounds checks in DOC converter (PR [#14](https://github.com/manfromarce/DocSharp/pull/14))
 
 ## 0.15.0 - 2025.09.12
 
