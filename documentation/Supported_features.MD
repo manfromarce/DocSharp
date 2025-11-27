@@ -1,3 +1,23 @@
+# Supported formats (direct conversion)
+
+| From \ To | DOCX | XLSX| PPTX | RTF | HTML | Markdown | TXT | Renderer (PDF, XPS, SVG, Images) |
+| --------- | :--: | :--: | :--: | :--: | :----: | :-: | :------------------------------: |
+| DOCX      |  -   |  -  |  -   |  ✅  |  ✅  |  ✅  |  ✅ |               ⏳                |
+| DOC       |  ✅  |  -  |  -  |  ❌  |  ❌  |  ❌  |  ❌ |               ❌                 |
+| XLS       |  -   |  ✅ |  -  |  ❌  |  ❌  |  ❌  |  ❌ |              ❌                 |
+| PPT       |  -   |  -  |  ✅  |  ❌ |  ❌  |  ❌  |  ❌ |              ❌                 |
+| RTF       |  Planned  | - | - |  -  |  ❌  |  ❌  |  ❌  |               ❌                |
+| ODT       |  Planned  | - | - |  ❌  |  ❌ |  ❌  |  ❌  |               ❌                |
+| Markdown  |  ✅  |  ❌  |  ❌  | ❌ | ❌ |   -   | ❌ |           ❌                      |
+
+Other conversions (not planned / out of scope):  
+- For RTF to HTML, you can convert RTF -> DOCX -> HTML, or use [RtfPipe](https://github.com/erdomke/RtfPipe)
+- For HTML to DOCX, use [HtmlToOpenXml](https://github.com/onizet/html2openxml)
+- For HTML to Markdown, use [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
+- For HTML to PDF, you can use [HTMLToQPDF](https://github.com/Relorer/HTMLToQPDF) or [PeachPdf](https://github.com/jhaygood86/PeachPDF) for simple HTML, or libraries such as [Puppeteer Sharp](https://github.com/hardkoded/puppeteer-sharp) or similar for complex web pages (these depend on Chromium).
+- For Markdown to HTML, use [Markdig](https://github.com/xoofx/markdig)
+- For Markdown to PDF rendering, use VectSharp or [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown)
+
 # Supported features (per format)
 
 ## DOCX converters

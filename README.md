@@ -1,12 +1,16 @@
 # DocSharp
 
-DocSharp is a pure C# library to convert between document formats without Office interop or native dependencies.
+DocSharp is a pure C# library to convert between document formats without Office interop or native dependencies.  
+The only exception is the renderer package which depends on QuestPDF (see Requirements).
 
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
 - DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
+- DocSharp.Renderer (experimental, not published yet): render DOCX to PDF, XPS, SVG or images (PNG, JPEG) using QuestPDF.
+
+For a visual overview of supported conversions, see [Supported features](https://github.com/manfromarce/DocSharp/blob/main/documentation/Supported_features.MD).
 
 Packages can be installed via NuGet:  
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Doc?style=flat-square&label=DocSharp.Binary.Doc)](https://www.nuget.org/packages/DocSharp.Binary.Doc/) 
@@ -30,6 +34,7 @@ For now, you can consider the following libraries for documents creation and man
 
 - .NET 6, 8, 9, 10 and .NET Framework 4.6.2 and higher are supported, but tests are mostly performed on .NET 8 and above.
 - DocSharp.SystemDrawing is for Windows only (.NET Framework or net*-windows), as System.Drawing.Common is only supported on Windows; while DocSharp.ImageSharp is cross-platform for .NET 6+ (ImageSharp does not support .NET Framework).
+- DocSharp.Renderer depends on QuestPDF, which supports Windows (x86, x64), macOS (x64, arm64), Linux (x64, arm64). Other platforms such as Windows ARM64, Android and iOS are not supported at this time (limitation of QuestPDF's custom Skia build).
 
 ### Usage
 
@@ -49,6 +54,7 @@ Dependencies:
 - [Markdig](https://github.com/xoofx/markdig) - for DocSharp.Markdown
 - [ImageSharp](https://github.com/SixLabors/ImageSharp) and [VectSharp](https://github.com/arklumpus/VectSharp) - for DocSharp.ImageSharp
 - System.Drawing.Common and [SVG.NET](https://github.com/svg-net/SVG) - for DocSharp.SystemDrawing (supported on Windows only)
+- [QuestPDF](https://github.com/QuestPDF/QuestPDF) - for rendering DOCX to PDF, XPS, SVG or images (optional, for DocSharp.Renderer only)
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
@@ -65,5 +71,7 @@ Others:
 DocSharp is licensed under MIT license and can be used for both open source and commercial projects.  
 
 DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt); ImageSharp may require a commercial license for some use cases, please visit [their repository](https://github.com/SixLabors/ImageSharp/blob/main/LICENSE) for more information.
+
+DocSharp.Renderer is licensed under MIT, however QuestPDF has its own license which may require a payment for commercial use, please refer to their [license page](https://www.questpdf.com/license/) for more information.
 
 If you find the library useful, adding a star is highly appreciated, stars are a way to guide other developers towards helpful libraries and tools.

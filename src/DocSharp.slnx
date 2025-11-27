@@ -25,4 +25,5 @@
   <Project Path="DocSharp.Common/DocSharp.Common.csproj" />
   <Project Path="DocSharp.Docx/DocSharp.Docx.csproj" />
   <Project Path="DocSharp.Markdown/DocSharp.Markdown.csproj" />
+  <Project Path="DocSharp.Renderer/DocSharp.Renderer.csproj" Id="2bddad1b-302a-4fba-8a07-da26169199f9" />
 </Solution>
