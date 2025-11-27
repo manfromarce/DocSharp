@@ -28,7 +28,8 @@ For now, you can consider the following libraries for documents creation and man
 
 ### Requirements
 
-.NET 6, 8, 9 and .NET Framework 4.6.2 and higher are supported, but tests are mostly performed on .NET 8 and above.
+- .NET 6, 8, 9, 10 and .NET Framework 4.6.2 and higher are supported, but tests are mostly performed on .NET 8 and above.
+- DocSharp.SystemDrawing is for Windows only (.NET Framework or net*-windows), as System.Drawing.Common is only supported on Windows; while DocSharp.ImageSharp is cross-platform for .NET 6+ (ImageSharp does not support .NET Framework).
 
 ### Usage
 
@@ -63,6 +64,6 @@ Others:
 
 DocSharp is licensed under MIT license and can be used for both open source and commercial projects.  
 
-DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt); ImageSharp and VectSharp have their own licenses, please visit their repositories for more information.
+DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt); ImageSharp may require a commercial license for some use cases, please visit [their repository](https://github.com/SixLabors/ImageSharp/blob/main/LICENSE) for more information.
 
 If you find the library useful, adding a star is highly appreciated, stars are a way to guide other developers towards helpful libraries and tools.

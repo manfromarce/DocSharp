@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="FridaysForks.RtfPipe" Version="3.7.0" />
-    <PackageReference Include="HtmlToOpenXml.dll" Version="3.2.5" />
+    <PackageReference Include="HtmlToOpenXml.dll" Version="3.2.8" />
     <PackageReference Include="PreMailer.Net" Version="2.7.2" />
     <PackageReference Include="XlsxToHtmlConverter" Version="1.2.21" />
   </ItemGroup>
