@@ -1,3 +1,9 @@
+## 0.17.0 - 2025.12.04
+
+- Add .NET 10 target and update dependencies
+- Fix: appending Markdown with links to a DOCX that already contains one (or more) hyperlinks resulted in a corrupted document
+- Changed the default DOCX template culture (for DocSharp.Markdown) to en-US
+
 ## 0.16.0 - 2025.10.26
 
 - Support shape type and outline color/width for pictures in DOCX to RTF converter  
