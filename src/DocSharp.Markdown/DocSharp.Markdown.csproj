@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net8.0;net9.0;net462</TargetFrameworks>
+    <TargetFrameworks>net6.0;net8.0;net9.0;net10.0;net462</TargetFrameworks>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -26,11 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.41.3" />
+    <PackageReference Include="Markdig" Version="0.44.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocSharp.Common\DocSharp.Common.csproj" />
     <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
   </ItemGroup>
 
