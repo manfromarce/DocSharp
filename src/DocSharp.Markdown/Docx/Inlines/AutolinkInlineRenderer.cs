@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using DocSharp.Docx;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax.Inlines;
 
@@ -7,8 +8,6 @@ namespace Markdig.Renderers.Docx.Inlines;
 
 public class AutolinkInlineRenderer : DocxObjectRenderer<AutolinkInline>
 {
-    private int _hyperlinkIdCounter;
-
     protected override void WriteObject(DocxDocumentRenderer renderer, AutolinkInline obj)
     {
         var uriString = obj.Url;
@@ -30,7 +29,7 @@ public class AutolinkInlineRenderer : DocxObjectRenderer<AutolinkInline>
 
         if (uri == null) return;
         
-        var linkId = $"AL{_hyperlinkIdCounter++}";
+        var linkId = $"AL{OpenXmlHelpers.GetLinksCount(renderer.Document) + 1}";
         Debug.Assert(renderer.Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
 
         renderer.Document.MainDocumentPart.AddHyperlinkRelationship(uri, isAbsoluteUri, linkId);

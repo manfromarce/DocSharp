@@ -16,9 +16,6 @@ namespace Markdig.Renderers.Docx.Inlines;
 
 public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
 {
-    private uint _hyperlinkIdCounter = 1;
-    private uint _imageIdCounter = 1;
-
     protected override void WriteObject(DocxDocumentRenderer renderer, LinkInline obj)
     {
         if (string.IsNullOrWhiteSpace(obj.Url))
@@ -31,7 +28,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         {
             if (!renderer.SkipImages)
             {
-                LinkImageRenderHelper.GetImageAttributes(obj, out long widthInTwips, out long heightInTwips);
+                DocSharp.Markdown.Common.ImageHelpers.GetImageAttributes(obj, out long widthInTwips, out long heightInTwips);
                 ProcessImage(renderer, obj.Url!, obj.Label, obj.Title, widthInTwips, heightInTwips);
             }
         }
@@ -49,7 +46,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
             }
             else
             {
-                uri = LinkImageRenderHelper.NormalizeLinkUri(obj.Url, renderer.LinksBaseUri);
+                uri = UriHelpers.NormalizeLinkUri(obj.Url, renderer.LinksBaseUri);
             }
 
             if (uri == null && anchorName == string.Empty)
@@ -59,7 +56,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                 return;
             }
             
-            var linkId = $"L{_hyperlinkIdCounter++}";
+            var linkId = $"L{OpenXmlHelpers.GetLinksCount(renderer.Document) + 1}";
             Debug.Assert(renderer.Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
 
             Hyperlink hl;
@@ -93,7 +90,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
 
     private void ProcessImage(DocxDocumentRenderer renderer, string url, string? label, string? title, long widthInTwips, long heightInTwips)
     {
-        Uri? uri = LinkImageRenderHelper.NormalizeImageUri(url, renderer.ImagesBaseUri);
+        Uri? uri = UriHelpers.NormalizeImageUri(url, renderer.ImagesBaseUri);
         if (uri != null)
         {
             try
@@ -131,7 +128,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
     {
         try
         {
-            using (var tempStream = LinkImageRenderHelper.ConvertAndScaleImage(stream,
+            using (var tempStream = DocSharp.Markdown.Common.ImageHelpers.ConvertAndScaleImage(stream,
                                                            out ImageFormat fileType,
                                                            renderer.Document.GetEffectivePageSize(), 
                                                            widthInTwips, heightInTwips,
@@ -145,8 +142,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
                     var imagePart = renderer.Document.MainDocumentPart?.AddImagePart(tempStream, imagePartType.Value);
                     if (imagePart != null && renderer.Document.MainDocumentPart?.GetIdOfPart(imagePart) is string rId)
                     {
-                        var imageElement = ImageHelpers.CreateImage(rId, calculatedWidth, calculatedHeight, _imageIdCounter, label, title);
-                        ++_imageIdCounter;
+                        var imageElement = DocSharp.Docx.ImageHelpers.CreateImage(rId, calculatedWidth, calculatedHeight, (uint)(OpenXmlHelpers.GetImagesCount(renderer.Document) + 1), label, title);
                         if (renderer.Cursor.Container is Run run)
                         {
                             renderer.Cursor.Write(imageElement);

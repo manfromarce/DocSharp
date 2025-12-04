@@ -26,7 +26,7 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
             if (!renderer.SkipImages)
             {
                 long width, height;
-                LinkImageRenderHelper.GetImageAttributes(obj, out width, out height);
+                DocSharp.Markdown.Common.ImageHelpers.GetImageAttributes(obj, out width, out height);
                 ProcessImage(renderer, obj.Url!, obj.Label, obj.Title, width, height);
             }
         }
@@ -44,7 +44,7 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
             }
             else
             {
-                uri = LinkImageRenderHelper.NormalizeLinkUri(obj.Url, renderer.LinksBaseUri);
+                uri = UriHelpers.NormalizeLinkUri(obj.Url, renderer.LinksBaseUri);
             }
 
             if (uri == null && anchorName == string.Empty)
@@ -73,7 +73,7 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
 
     private void ProcessImage(RtfRenderer renderer, string url, string? label, string? title, long width, long height)
     {
-        Uri? uri = LinkImageRenderHelper.NormalizeImageUri(url, renderer.ImagesBaseUri);
+        Uri? uri = UriHelpers.NormalizeImageUri(url, renderer.ImagesBaseUri);
         if (uri != null)
         {
             try
@@ -112,7 +112,7 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
         try
         {
             var pageSize = new System.Drawing.Size(9026, 13958); // A4 page size - margins (in twips)
-            using (var tempStream = LinkImageRenderHelper.ConvertAndScaleImage(stream,
+            using (var tempStream = DocSharp.Markdown.Common.ImageHelpers.ConvertAndScaleImage(stream,
                                                            out ImageFormat fileType,
                                                            pageSize,
                                                            desiredWidth, desiredHeight,

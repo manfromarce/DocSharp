@@ -18,6 +18,16 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlHelpers
 {
+    public static int GetLinksCount(WordprocessingDocument document)
+    {
+        return document.MainDocumentPart?.HyperlinkRelationships.Count() ?? 0;
+    }
+
+    public static int GetImagesCount(WordprocessingDocument document)
+    {
+        return document.MainDocumentPart?.ImageParts.Count() ?? 0;
+    }
+
     public static bool IsMathElement(this OpenXmlElement element)
     {
         return element.NamespaceUri.StartsWith(OpenXmlConstants.MathNamespace, StringComparison.OrdinalIgnoreCase);
