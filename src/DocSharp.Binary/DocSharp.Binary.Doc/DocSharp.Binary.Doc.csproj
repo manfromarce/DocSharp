@@ -14,7 +14,7 @@
     <PackageId>DocSharp.Binary.Doc</PackageId>
     <Title>DocSharp.Binary.Doc</Title>
     <Description>.NET library for converting documents. The DocSharp.Binary.Doc package provides DOC (Word 97-2003) to DOCX (Open XML) conversion.</Description>
-    <PackageTags>doc docx rtf convert word openxml</PackageTags>
+    <PackageTags>doc docx rtf convert converter word openxml office binary</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

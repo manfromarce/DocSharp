@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DocSharp.IO;
+namespace DocSharp.Docx;
 
 public enum SaveFormat
 {

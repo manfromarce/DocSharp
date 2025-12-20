@@ -14,7 +14,7 @@
     <PackageId>DocSharp.Binary.Ppt</PackageId>
     <Title>DocSharp.Binary.Ppt</Title>
     <Description>.NET library for converting documents. The DocSharp.Binary.Ppt package provides PPT (PowerPoint 97-2003) to PPTX (Open XML) conversion.</Description>
-    <PackageTags>ppt pptx convert powerpoint openxml</PackageTags>
+    <PackageTags>ppt pptx convert converter powerpoint openxml office binary</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

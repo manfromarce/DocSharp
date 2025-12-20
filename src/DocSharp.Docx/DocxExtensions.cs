@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DocSharp.IO;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
@@ -14,70 +13,67 @@ public static class DocxExtensions
 {
     /// <summary>
     /// Converts the document to another format or saves a DOCX copy.
-    /// Please note that the document cannot be exported in the same stream in which it was loaded,
-    /// the Save() method should be used for that.
+    /// Note: the document cannot be exported in the same stream in which it was loaded using this method,
+    /// the Save() method should be used for that instead.
     /// </summary>
     /// <param name="document"></param>
     /// <param name="outputStream">The output file path.</param>
-    /// <param name="format">The output format.</param>
-    public static void SaveTo(this WordprocessingDocument document, Stream outputStream, SaveFormat format)
+    /// <param name="options">Conversion options for the output format.</param>
+    public static void SaveTo(this WordprocessingDocument document, Stream outputStream, ISaveOptions options)
     {
-        switch (format)
+        switch (options)
         {
-            case SaveFormat.Docx:
+            case DocxSaveOptions docxSaveOptions: 
                 using (var clone = document.Clone(outputStream))
                 {
-                    if (clone.DocumentType != WordprocessingDocumentType.Document)
+                    if (clone.DocumentType != docxSaveOptions.DocumentType)
                     {
-                        clone.ChangeDocumentType(WordprocessingDocumentType.Document);
+                        clone.ChangeDocumentType(docxSaveOptions.DocumentType);
                     }
                     clone.Save();
                 }
                 break;
-            case SaveFormat.Dotx:
-                using (var clone = document.Clone(outputStream))
+            case RtfSaveOptions rtfSaveOptions: 
+                var docxToRtfConverter = new DocxToRtfConverter()
                 {
-                    if (clone.DocumentType != WordprocessingDocumentType.Template)
-                    {
-                        clone.ChangeDocumentType(WordprocessingDocumentType.Template);
-                    }
-                    clone.Save();
-                }
-                break;
-            case SaveFormat.Docm:
-                using (var clone = document.Clone(outputStream))
-                {
-                    if (clone.DocumentType != WordprocessingDocumentType.MacroEnabledDocument)
-                    {
-                        clone.ChangeDocumentType(WordprocessingDocumentType.MacroEnabledDocument);
-                    }
-                    clone.Save();
-                }
-                break;
-            case SaveFormat.Dotm:
-                using (var clone = document.Clone(outputStream))
-                {
-                    if (clone.DocumentType != WordprocessingDocumentType.MacroEnabledTemplate)
-                    {
-                        clone.ChangeDocumentType(WordprocessingDocumentType.MacroEnabledTemplate);
-                    }
-                    clone.Save();
-                }
-                break;
-            case SaveFormat.Rtf:
-                var docxToRtfConverter = new DocxToRtfConverter();
+                    DefaultSettings = rtfSaveOptions.DefaultSettings,
+                    OutputFolderPath = rtfSaveOptions.OutputFolderPath,
+                    ImageConverter = rtfSaveOptions.ImageConverter,
+                    OriginalFolderPath = rtfSaveOptions.OriginalFolderPath
+                };
                 docxToRtfConverter.Convert(document, outputStream);
                 break;
-            case SaveFormat.Html:
-                var docxToHtmlConverter = new DocxToHtmlConverter();
+            case HtmlSaveOptions htmlSaveOptions: 
+                var docxToHtmlConverter = new DocxToHtmlConverter()
+                {
+                    ExportFootnotesEndnotes = htmlSaveOptions.ExportFootnotesEndnotes,
+                    ExportHeaderFooter = htmlSaveOptions.ExportHeaderFooter,
+                    OriginalFolderPath = htmlSaveOptions.OriginalFolderPath,
+                    ImageConverter = htmlSaveOptions.ImageConverter,
+                    ImagesBaseUriOverride = htmlSaveOptions.ImagesBaseUriOverride,
+                    ImagesOutputFolder = htmlSaveOptions.ImagesOutputFolder
+                };
                 docxToHtmlConverter.Convert(document, outputStream);
                 break;
-            case SaveFormat.Markdown:
-                var docxToMdConverter = new DocxToMarkdownConverter();
+            case MarkdownSaveOptions mdSaveOptions: 
+                var docxToMdConverter = new DocxToMarkdownConverter()
+                {
+                    ExportFootnotesEndnotes = mdSaveOptions.ExportFootnotesEndnotes,
+                    ExportHeaderFooter = mdSaveOptions.ExportHeaderFooter,
+                    OriginalFolderPath = mdSaveOptions.OriginalFolderPath,
+                    ImageConverter = mdSaveOptions.ImageConverter,
+                    ImagesBaseUriOverride = mdSaveOptions.ImagesBaseUriOverride,
+                    ImagesOutputFolder = mdSaveOptions.ImagesOutputFolder
+                };
                 docxToMdConverter.Convert(document, outputStream);
                 break;
-            case SaveFormat.Txt:
-                var docxToTxtConverter = new DocxToTxtConverter();
+            case TxtSaveOptions txtSaveOptions: 
+                var docxToTxtConverter = new DocxToTxtConverter()
+                {
+                    ExportFootnotesEndnotes = txtSaveOptions.ExportFootnotesEndnotes,
+                    ExportHeaderFooter = txtSaveOptions.ExportHeaderFooter,
+                    OriginalFolderPath = txtSaveOptions.OriginalFolderPath,                     
+                };
                 docxToTxtConverter.Convert(document, outputStream);
                 break;
         }
@@ -85,53 +81,44 @@ public static class DocxExtensions
 
     /// <summary>
     /// Converts the document to another format or saves a DOCX copy.
-    /// Please note that the document cannot be exported in the same file which was loaded,
-    /// the Save() method should be used for that.
+    /// Note: the document cannot be exported in the same stream in which it was loaded using this method,
+    /// the Save() method should be used for that instead.
+    /// </summary>
+    /// <param name="document"></param>
+    /// <param name="outputStream">The output file path.</param>
+    /// <param name="format">The output format.</param>
+    public static void SaveTo(this WordprocessingDocument document, Stream outputStream, SaveFormat format)
+    {
+        document.SaveTo(outputStream, FileFormatHelpers.ToSaveOptions(format));
+    }
+
+    /// <summary>
+    /// Converts the document to another format or saves a DOCX copy.
+    /// Note: the document cannot be exported in the same stream in which it was loaded using this method,
+    /// the Save() method should be used for that instead.
+    /// </summary>
+    /// <param name="document"></param>
+    /// <param name="outputFilePath">The output file path.</param>
+    /// <param name="options">Conversion options for the output format.</param>
+    public static void SaveTo(this WordprocessingDocument document, string outputFilePath, ISaveOptions options)
+    {
+        using (var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
+        {
+            document.SaveTo(fs, options);
+        }
+    }
+
+    /// <summary>
+    /// Converts the document to another format or saves a DOCX copy.
+    /// Note: the document cannot be exported in the same stream in which it was loaded using this method,
+    /// the Save() method should be used for that instead.
     /// </summary>
     /// <param name="document"></param>
     /// <param name="outputFilePath">The output file path.</param>
     /// <param name="format">If null, the file format is detected from the output file extension.</param>
     public static void SaveTo(this WordprocessingDocument document, string outputFilePath, SaveFormat? format = null)
     {
-        if (format == null)
-        {
-            switch (Path.GetExtension(outputFilePath.ToLower()))
-            {
-                case ".docx":
-                    format = SaveFormat.Docx;
-                    break;
-                case ".dotx":
-                    format = SaveFormat.Dotx;
-                    break;
-                case ".docm":
-                    format = SaveFormat.Docm;
-                    break;
-                case ".dotm":
-                    format = SaveFormat.Dotm;
-                    break;
-                case ".rtf":
-                    format = SaveFormat.Rtf;
-                    break;
-                case ".md":
-                case ".markdown":
-                case ".mkd":
-                case ".mkdn":
-                case ".mkdwn":
-                case ".markdn":
-                case ".mdown":
-                case ".mdwn":
-                case ".mdtxt":
-                case ".mdtext":
-                case ".text":
-                    format = SaveFormat.Markdown;
-                    break;
-                case ".txt":
-                    format = SaveFormat.Txt;
-                    break;
-                default:
-                    throw new NotImplementedException("Unsupported save format.");
-            }
-        }
+        format ??= FileFormatHelpers.ExtensionToSaveFormat(Path.GetExtension(outputFilePath));
         using (var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
         {
             document.SaveTo(fs, format.Value);
