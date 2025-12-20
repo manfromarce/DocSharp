@@ -47,6 +47,9 @@ public static class FileFormatHelpers
                 return SaveFormat.Dotm;
             case ".RTF":
                 return SaveFormat.Rtf;
+            case ".HTML":
+            case ".HTM":
+                return SaveFormat.Html;
             case ".MD":
             case ".MARKDOWN":
             case ".MKD":
