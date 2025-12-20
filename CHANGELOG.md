@@ -1,3 +1,8 @@
+## 0.18.0 - not published yet
+
+- Added conversion options to `WordprocessingDocument.SaveTo` extension methods
+- Minor improvements
+
 ## 0.17.0 - 2025.12.04
 
 - Add .NET 10 target and update dependencies
