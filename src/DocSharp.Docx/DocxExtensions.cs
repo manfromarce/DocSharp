@@ -9,6 +9,9 @@ using DocumentFormat.OpenXml.Packaging;
 
 namespace DocSharp.Docx;
 
+/// <summary>
+/// Provides public extension methods for WordprocessingDocument.
+/// </summary>
 public static class DocxExtensions
 {
     /// <summary>

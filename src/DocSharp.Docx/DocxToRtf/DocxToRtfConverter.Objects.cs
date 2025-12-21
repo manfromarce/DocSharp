@@ -7,7 +7,7 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal override void ProcessEmbeddedObject(EmbeddedObject obj, RtfStringWriter sb)
     {

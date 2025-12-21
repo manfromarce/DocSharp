@@ -13,7 +13,7 @@ using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal override void ProcessRun(Run run, RtfStringWriter sb)
     {

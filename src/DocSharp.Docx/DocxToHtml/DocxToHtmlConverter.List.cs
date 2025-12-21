@@ -9,7 +9,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     private readonly Dictionary<int, (int numId, int abstractNumId, int counter)> _listLevelCounters = new();
 

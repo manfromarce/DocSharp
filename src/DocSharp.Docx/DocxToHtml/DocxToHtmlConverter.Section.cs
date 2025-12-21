@@ -14,7 +14,7 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, HtmlTextWriter sb)
     {

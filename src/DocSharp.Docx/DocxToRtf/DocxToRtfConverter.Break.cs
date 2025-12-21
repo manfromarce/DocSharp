@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal override void ProcessBreak(Break @break, RtfStringWriter sb)
     {

@@ -8,7 +8,7 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     /*
     * From documentation (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.headerreference?view=openxml-3.0.1):

@@ -12,7 +12,7 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal void ProcessSettings(Settings? settings, RtfStringWriter writer)
     {

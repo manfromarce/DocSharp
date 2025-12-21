@@ -17,7 +17,10 @@ using Path = System.IO.Path;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+/// <summary>
+/// DOCX to RTF converter.
+/// </summary>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     /// <summary>
     /// Gets or set the default font and paragraph properties used in (rare) cases where 
@@ -47,6 +50,11 @@ public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWrite
     public DocxToRtfConverter()
     {
         DefaultSettings = new DocumentDefaultSettings();
+    }
+
+    public override void Append(WordprocessingDocument inputDocument, string outputFilePath)
+    {
+        throw new NotSupportedException("Appending to an existing RTF file is not supported.");
     }
 
     internal override void ProcessDocument(Document document, RtfStringWriter sb)

@@ -9,7 +9,7 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     private void ProcessTabs(Tabs tabs, RtfStringWriter sb)
     {

@@ -13,7 +13,11 @@ using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace DocSharp.Docx;
 
-public abstract class DocxConverterBase<TOutput>
+/// <summary>
+/// Base class for DOCX converters.
+/// </summary>
+/// <typeparam name="TOutput"></typeparam>
+public abstract class DocxConverterBase<TOutput> : BinaryDocumentConverterBase<TOutput> where TOutput : class
 {
     /// <summary>
     /// Get or set the base file path for processing external sub-documents (if any).
@@ -28,9 +32,43 @@ public abstract class DocxConverterBase<TOutput>
     }
 #endif
 
-    internal List<(List<OpenXmlElement> content, SectionProperties properties)> Sections;
+    internal List<(List<OpenXmlElement> content, SectionProperties properties)> Sections = new();
     internal bool TitlePage = false;
     internal bool FacingPages = false;
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public abstract void Convert(WordprocessingDocument inputDocument, Stream outputStream);
+    // This is the main function that must be implemented by specific converters.
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputStream">The input DOCX stream to use.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public override void Convert(Stream inputStream, Stream outputStream)
+    {
+        using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
+        {
+            Convert(wordDocument, outputStream);
+        }
+    }
+
+    /// <summary>
+    /// Convert a DOCX file to the output format.
+    /// </summary>
+    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public virtual void Convert(WordprocessingDocument inputDocument, string outputFilePath)
+    {
+        using (var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
+        {
+            Convert(inputDocument, fs);
+        }
+    }
 
     internal virtual void ProcessDocument(Document document, TOutput sb)
     {

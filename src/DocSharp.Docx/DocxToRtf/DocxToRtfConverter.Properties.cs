@@ -13,7 +13,7 @@ using DocumentFormat.OpenXml.VariantTypes;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal void ProcessProperties(WordprocessingDocument doc, RtfStringWriter sb)
     {

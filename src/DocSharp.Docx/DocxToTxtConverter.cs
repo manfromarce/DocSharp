@@ -15,7 +15,10 @@ using V = DocumentFormat.OpenXml.Vml;
 
 namespace DocSharp.Docx;
 
-public class DocxToTxtConverter : DocxToTextConverterBase<TxtStringWriter>
+/// <summary>
+/// DOCX to plain text converter.
+/// </summary>
+public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 {
     /// <summary>
     /// Since plain text is not paginated, only the header of the first section and

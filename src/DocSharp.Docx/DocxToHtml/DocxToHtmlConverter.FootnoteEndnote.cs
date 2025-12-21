@@ -12,7 +12,7 @@ using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     // Note: FootnoteReference and EndnoteReference are found inside runs in the document body,
     // while FootnoteReferenceMark and EndnoteReferenceMark are in runs in the footnote/endnote part itself. 

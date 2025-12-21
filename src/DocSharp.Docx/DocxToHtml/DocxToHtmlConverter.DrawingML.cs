@@ -18,7 +18,7 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessDrawing(Drawing drawing, HtmlTextWriter sb)
     {

@@ -15,8 +15,13 @@ using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
+/// <summary>
+/// DOCX to HTML converter.
+/// </summary>
+public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
+    public override HtmlTextWriter CreateXmlWriter(TextWriter writer) => new HtmlTextWriter(writer);
+
     /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
@@ -65,23 +70,6 @@ public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
     /// Set this property to false to ignore footnotes and endnotes.
     /// </summary>
     public bool ExportFootnotesEndnotes { get; set; } = true;
-
-    /// <summary>
-    /// Convert a DOCX file to the output format.
-    /// </summary>
-    /// <param name="inputDocument">The WordprocessingDocument to use.</param>
-    /// <param name="writer">The output writer.</param>
-    public override void Convert(WordprocessingDocument inputDocument, TextWriter writer)
-    {
-        using (var htmlWriter = new HtmlTextWriter(writer))
-        {
-            var document = inputDocument.MainDocumentPart?.Document;
-            if (document != null)
-            {
-                ProcessDocument(document, htmlWriter);
-            }
-        }
-    }
 
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {

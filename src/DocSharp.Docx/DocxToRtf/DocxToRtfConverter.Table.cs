@@ -8,7 +8,7 @@ using DocSharp.Writers;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     private int tableNestingLevel = 0;
     // 0 means no table, 1 means inside a table, 2 means inside a nested table, etc.

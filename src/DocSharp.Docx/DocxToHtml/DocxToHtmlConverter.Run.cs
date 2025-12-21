@@ -12,7 +12,7 @@ using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToHtmlConverter : DocxToTextWriterBase<HtmlTextWriter>
+public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessRun(Run run, HtmlTextWriter sb)
     {

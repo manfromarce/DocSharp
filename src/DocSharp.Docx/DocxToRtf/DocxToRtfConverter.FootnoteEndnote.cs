@@ -10,7 +10,7 @@ using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal FootnotesEndnotesType FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
 

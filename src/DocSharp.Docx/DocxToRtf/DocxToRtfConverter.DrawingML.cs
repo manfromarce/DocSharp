@@ -22,7 +22,7 @@ using DocSharp.IO;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal override bool IsSupportedGraphicData(A.GraphicData graphicData)
     {

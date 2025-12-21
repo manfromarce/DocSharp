@@ -15,7 +15,7 @@ using DocSharp.Collections;
 
 namespace DocSharp.Docx;
 
-public partial class DocxToRtfConverter : DocxToTextConverterBase<RtfStringWriter>
+public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     internal void WriteFileTable(FastStringCollection files, MainDocumentPart mainPart, RtfStringWriter sb)
     {
