@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocSharp.Docx;
@@ -33,9 +34,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     {
         encoding ??= Encodings.UTF8NoBOM;
         using (var sw = new StreamWriter(outputStream, encoding: encoding, bufferSize: 1024, leaveOpen: true))
-        {
             Convert(inputDocument, sw);
-        }
     }
 
     /// <summary>
@@ -46,11 +45,8 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     /// <param name="encoding">The encoding to use.</param>
     public void Convert(WordprocessingDocument inputDocument, string outputFilePath, Encoding encoding)
     {
-        encoding ??= Encodings.UTF8NoBOM;
-        using (var sw = new StreamWriter(outputFilePath, false, encoding))
-        {
-            Convert(inputDocument, sw);
-        }
+        using (var fileStream = File.Create(outputFilePath))
+            Convert(inputDocument, fileStream, encoding);
     }
 
     /// <summary>
@@ -61,11 +57,8 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     /// <param name="encoding">The encoding to use.</param>
     public void Convert(string inputFilePath, Stream outputStream, Encoding encoding)
     {
-        encoding ??= Encodings.UTF8NoBOM;
         using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
             Convert(wordDocument, outputStream, encoding);
-        }
     }
 
     /// <summary>
@@ -76,11 +69,8 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     /// <param name="encoding">The encoding to use.</param>
     public void Convert(string inputFilePath, string outputFilePath, Encoding encoding)
     {
-        encoding ??= Encodings.UTF8NoBOM;
-        using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
-            Convert(wordDocument, outputFilePath, encoding);
-        }
+        using (var fileStream = File.Create(outputFilePath))
+            Convert(inputFilePath, fileStream, encoding);
     }
 
     /// <summary>
@@ -93,9 +83,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     {
         encoding ??= Encodings.UTF8NoBOM;
         using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
             Convert(wordDocument, outputStream, encoding);
-        }
     }
 
     /// <summary>
@@ -108,9 +96,55 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     {
         encoding ??= Encodings.UTF8NoBOM;
         using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
             Convert(wordDocument, outputFilePath, encoding);
-        }
+    }
+
+    /// <summary>
+    /// Convert document bytes to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The input document as byte array.</param>
+    /// <param name="outputStream">The output document stream.</param>
+    /// <param name="encoding">The encoding to use.</param>
+    public void Convert(byte[] inputBytes, Stream outputStream, Encoding encoding)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+            Convert(memoryStream, outputStream, encoding);
+    }
+
+    /// <summary>
+    /// Convert document bytes to the output format.
+    /// </summary>
+    /// <param name="inputBytes">The input document as byte array.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    /// <param name="encoding">The encoding to use.</param>
+    public void Convert(byte[] inputBytes, string outputFilePath, Encoding encoding)
+    {
+        using (var memoryStream = new MemoryStream(inputBytes))
+            Convert(memoryStream, outputFilePath, encoding);
+    }
+
+    /// <summary>
+    /// Convert a Flat OPC (XML) document to the output format.
+    /// </summary>
+    /// <param name="flatOpc">The FlatOPC XDocument to use.</param>
+    /// <param name="outputStream">The output stream.</param>
+    /// <param name="encoding">The encoding to use.</param>
+    public virtual void Convert(XDocument flatOpc, Stream outputStream, Encoding encoding)
+    {
+        using (var docx = WordprocessingDocument.FromFlatOpcDocument(flatOpc))
+            Convert(docx, outputStream, encoding);
+    }
+
+    /// <summary>
+    /// Convert a Flat OPC (XML) document to the output format.
+    /// </summary>
+    /// <param name="flatOpc">The FlatOPC XDocument to use.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    /// <param name="encoding">The encoding to use.</param>
+    public virtual void Convert(XDocument flatOpc, string outputFilePath, Encoding encoding)
+    {
+        using (var docx = WordprocessingDocument.FromFlatOpcDocument(flatOpc))
+            Convert(docx, outputFilePath, encoding);
     }
 
     #endregion
@@ -123,7 +157,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     /// <param name="inputDocument">The WordprocessingDocument to use.</param>
     /// <param name="writer">The output writer.</param>
     public abstract void Convert(WordprocessingDocument inputDocument, TextWriter writer);
-    // This is the main method that derived converters need to implement.
+    // This is the main method that derived converters must implement.
 
     /// <summary>
     /// Convert a DOCX file to the output format.
@@ -133,9 +167,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     public void Convert(string inputFilePath, TextWriter writer)
     {
         using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
             Convert(wordDocument, writer);
-        }
     }
 
     /// <summary>
@@ -146,9 +178,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     public void Convert(Stream inputStream, TextWriter writer)
     {
         using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
             Convert(wordDocument, writer);
-        }
     }
 
     /// <summary>
@@ -165,6 +195,17 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
                 Convert(wordDocument, writer);
             }
         }
+    }
+
+    /// <summary>
+    /// Convert a Flat OPC (XML) document to the output format.
+    /// </summary>
+    /// <param name="flatOpc">The FlatOPC XDocument to use.</param>
+    /// <param name="writer">The output writer.</param>
+    public void Convert(XDocument flatOpc, TextWriter writer)
+    {
+        using (var docx = WordprocessingDocument.FromFlatOpcDocument(flatOpc))
+            Convert(docx, writer);
     }
 
     /// <summary>
@@ -189,9 +230,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     public string ConvertToString(Stream inputStream)
     {
         using (var wordDocument = WordprocessingDocument.Open(inputStream, false))
-        {
             return ConvertToString(wordDocument);
-        }
     }
 
     /// <summary>
@@ -202,9 +241,7 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
     public string ConvertToString(string inputFilePath)
     {
         using (var wordDocument = WordprocessingDocument.Open(inputFilePath, false))
-        {
             return ConvertToString(wordDocument);
-        }
     }
 
     /// <summary>
@@ -221,6 +258,16 @@ public abstract class DocxToTextConverterBase<TWriter> : DocxConverterBase<TWrit
                 return ConvertToString(wordDocument);
             }
         }
+    }
+
+    /// <summary>
+    /// Convert a Flat OPC (XML) document to a string in the output format.
+    /// </summary>
+    /// <param name="flatOpc">The FlatOPC XDocument to use.</param>
+    public string ConvertToString(XDocument flatOpc)
+    {
+        using (var docx = WordprocessingDocument.FromFlatOpcDocument(flatOpc))
+            return ConvertToString(docx);
     }
 
     #endregion

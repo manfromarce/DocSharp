@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.ExtendedProperties;
 using DocumentFormat.OpenXml.Packaging;
@@ -67,6 +68,32 @@ public abstract class DocxConverterBase<TOutput> : BinaryDocumentConverterBase<T
         using (var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
         {
             Convert(inputDocument, fs);
+        }
+    }
+
+    /// <summary>
+    /// Convert a Flat OPC (XML) document to the output format.
+    /// </summary>
+    /// <param name="flatOpc">The FlatOPC XDocument to use.</param>
+    /// <param name="outputStream">The output stream.</param>
+    public virtual void Convert(XDocument flatOpc, Stream outputStream)
+    {
+        using (var docx = WordprocessingDocument.FromFlatOpcDocument(flatOpc))
+        {
+            Convert(docx, outputStream);
+        }
+    }
+
+    /// <summary>
+    /// Convert a Flat OPC (XML) document to the output format.
+    /// </summary>
+    /// <param name="flatOpc">The FlatOPC XDocument to use.</param>
+    /// <param name="outputFilePath">The output file path.</param>
+    public virtual void Convert(XDocument flatOpc, string outputFilePath)
+    {
+        using (var docx = WordprocessingDocument.FromFlatOpcDocument(flatOpc))
+        {
+            Convert(docx, outputFilePath);
         }
     }
 
