@@ -28,8 +28,8 @@ For now, you can consider the following libraries for documents creation and man
 
 ### Requirements
 
-- .NET 6, 8, 9, 10 and .NET Framework 4.6.2 and higher are supported, but tests are mostly performed on .NET 8 and above.
-- DocSharp.SystemDrawing is for Windows only (.NET Framework or net*-windows), as System.Drawing.Common is only supported on Windows; while DocSharp.ImageSharp is cross-platform for .NET 6+ (ImageSharp does not support .NET Framework).
+- .NET 8, 9, 10 and .NET Framework 4.6.2 and higher are supported, but tests are mostly performed on .NET 8 and above.
+- DocSharp.SystemDrawing is for Windows only (.NET Framework or net*-windows), as System.Drawing.Common is only supported on Windows; while DocSharp.ImageSharp is cross-platform for .NET 8+ (ImageSharp does not support .NET Framework).
 
 ### Usage
 
