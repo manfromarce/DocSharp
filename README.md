@@ -17,9 +17,9 @@ Packages can be installed via NuGet:
 
 The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/) and [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> MD).
 
-There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use.  
-A new simplified DOM and RTF import are being worked on in a separate branch, but I can't guarantee when/if it will be ready.  
-For now, you can consider the following libraries for documents creation and manipulation: [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler), [QuestPDF](https://github.com/QuestPDF/QuestPDF), [MigraDoc](https://github.com/empira/PDFsharp).  
+There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
+
+You can also consider the following libraries for documents creation and manipulation: the Open XML SDK itself, [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler), [QuestPDF](https://github.com/QuestPDF/QuestPDF), [MigraDoc](https://github.com/empira/PDFsharp).  
 
 ### Supported features
 
@@ -41,6 +41,7 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 - Reduce code duplication, cleanup
 - Async functions/progress callback (some tasks such as downloading images referenced in Markdown may take some time)
 - Improve support for right-to-left and complex script languages
+- Reverse RTF to DOCX conversion
 
 ### Credits
 
