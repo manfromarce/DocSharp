@@ -17,10 +17,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore src/DocSharp.sln
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore --nologo
+        run: dotnet build src/DocSharp.sln --configuration Release --no-restore --nologo
 
       - name: Test
-        run: dotnet test --configuration Release --no-build --nologo
+        run: dotnet test src/DocSharp.sln --configuration Release --no-build --nologo
