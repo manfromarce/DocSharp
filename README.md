@@ -4,7 +4,8 @@ DocSharp is a pure C# library to convert between document formats without Office
 
 The following packages are currently available:
 
-- DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes. 
+- DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.  
+Note: pre-97 formats and XLSB are very different and not supported. For Excel files, you can also consider the [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader) library to read at least plain values from more file types. 
 - DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors/services, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
 
@@ -59,7 +60,15 @@ Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
 - [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion
 - [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion
-- [RtfPipe](https://github.com/erdomke/RtfPipe), [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter) and [PeachPdf](https://github.com/jhaygood86/PeachPDF) are only used in the sample app to test two-steps conversions.
+- [OpenMcdf](https://github.com/ironfede/openmcdf) for better understanding Microsoft Compound format.
+
+Used in the sample app or for internal tests/comparisons (*not* direct dependencies when installing packages):  
+- [RtfPipe](https://github.com/erdomke/RtfPipe)  
+- [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
+- [PeachPdf](https://github.com/jhaygood86/PeachPDF)  
+- [HTML-Renderer](https://github.com/ArthurHub/HTML-Renderer)
+- [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown)
+- [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
 
 ### License
 
