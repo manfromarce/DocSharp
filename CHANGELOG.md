@@ -2,6 +2,7 @@
 
 - Added conversion options to `WordprocessingDocument.SaveTo` extension methods
 - Minor improvements
+- Code refactor for maintainability and extensibility
 
 ## 0.17.0 - 2025.12.04
 
