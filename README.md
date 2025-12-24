@@ -38,11 +38,12 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 
 ### Roadmap
 
+- Implement reverse RTF to DOCX conversion (⌛ started)  
+- Implement DOCX renderer using QuestPDF (⌛ started)  
 - Support more elements and attributes, and fix issues on edge cases
 - Reduce code duplication, cleanup
 - Async functions/progress callback (some tasks such as downloading images referenced in Markdown may take some time)
 - Improve support for right-to-left and complex script languages
-- Reverse RTF to DOCX conversion
 
 ### Credits
 
