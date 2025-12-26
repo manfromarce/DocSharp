@@ -52,6 +52,7 @@ public abstract class DocxToStringWriterBase<TWriter> : DocxToTextConverterBase<
         using (var sw = new StreamWriter(outputFilePath, append: true, encoding))
         {
             sw.WriteLine();
+            sw.WriteLine();
             Convert(inputDocument, sw);
         }
     }

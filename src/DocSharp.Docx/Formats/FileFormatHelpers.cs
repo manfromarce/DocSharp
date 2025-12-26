@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml;
 
 namespace DocSharp.Docx;
 
@@ -66,6 +67,22 @@ public static class FileFormatHelpers
                 return SaveFormat.Txt;
             default:
                 throw new NotImplementedException("Unsupported save format.");
+        }
+    }
+
+    public static WordprocessingDocumentType ExtensionToDocumentType(string ext)
+    {
+        switch (ext.ToUpperInvariant())
+        {
+            case ".DOTX":
+                return WordprocessingDocumentType.Template;
+            case ".DOCM":
+                return WordprocessingDocumentType.MacroEnabledDocument;
+            case ".DOTM":
+                return WordprocessingDocumentType.MacroEnabledTemplate;            
+            case ".DOCX":
+            default:
+                return WordprocessingDocumentType.Document;
         }
     }
 }

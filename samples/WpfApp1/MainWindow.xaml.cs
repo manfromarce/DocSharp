@@ -117,7 +117,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
@@ -133,8 +133,7 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToRtfConverter()
                     {
-                        ImageConverter = new ImageSharpConverter(),
-                        // Converts TIFF, GIF and other formats which are not supported in RTF.
+                        ImageConverter = new ImageSharpConverter(), // Converts TIFF, GIF and other formats which are not supported in RTF.
                         OriginalFolderPath = Path.GetDirectoryName(ofd.FileName), // converts sub-documents (if any)
                         OutputFolderPath = Path.GetDirectoryName(sfd.FileName)
                     };
@@ -152,7 +151,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
@@ -171,7 +170,7 @@ public partial class MainWindow : Window
                         ExportHeaderFooter = true,
                         ExportFootnotesEndnotes = true,
                         ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
-                                                                      // (ImageSharp does not support WMF / EMF yet)
+                                                                       // (ImageSharp does not support WMF / EMF yet)
                         OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
@@ -188,7 +187,43 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Word OpenXML document|*.docx;*.dotx",
+            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn;*.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var converter = new DocxToMarkdownConverter()
+                    {
+                        ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                        ImagesBaseUriOverride = "",
+                        ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
+                                                                       // (ImageSharp does not support WMF / EMF yet)
+                        OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
+                    };
+                    converter.Convert(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void DocxToMarkdownAppend_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
@@ -206,13 +241,11 @@ public partial class MainWindow : Window
                     {
                         ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
                         ImagesBaseUriOverride = "",
-                        //ImagesBaseUriOverride = "..",
-                        //ImagesBaseUriOverride = "images/",
                         ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
                                                                        // (ImageSharp does not support WMF / EMF yet)
                         OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
                     };
-                    converter.Convert(ofd.FileName, sfd.FileName);
+                    converter.Append(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -265,7 +298,7 @@ public partial class MainWindow : Window
         {
             var sfd = new SaveFileDialog()
             {
-                Filter = "Word OpenXML document|*.docx",
+                Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
                 FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
             };
             if (sfd.ShowDialog(this) == true)
@@ -279,7 +312,7 @@ public partial class MainWindow : Window
                         ImageConverter = new ImageSharpConverter() // Convert WEBP images which are not supported in DOCX
                                                                    // (possibly AVIF and JXL too in a future release) 
                     };
-                    converter.ToDocx(markdown, sfd.FileName);
+                    converter.ToDocx(markdown, sfd.FileName, FileFormatHelpers.ExtensionToDocumentType(Path.GetExtension(sfd.FileName)));
                 }
                 catch (Exception ex)
                 {
@@ -294,14 +327,15 @@ public partial class MainWindow : Window
         var ofd = new OpenFileDialog()
         {
             Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+            Title = "Choose the Markdown document to convert",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
         {
             var ofd2 = new OpenFileDialog()
             {
-                Filter = "Word OpenXML document|*.docx",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
+                Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
+                Title = "Choose the target Word document"
             };
             if (ofd2.ShowDialog(this) == true)
             {

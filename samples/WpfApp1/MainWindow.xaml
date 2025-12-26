@@ -45,6 +45,9 @@
                 Click="DocxToMarkdown_Click"
                 Content="Docx to Markdown" />
             <Button
+                Click="DocxToMarkdownAppend_Click"
+                Content="Docx to Markdown (Append)" />
+            <Button
                  Click="DocxToTxt_Click"
                  Content="Docx to Txt" />
             <Button

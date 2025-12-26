@@ -49,7 +49,7 @@ public class MarkdownConverter
     /// </summary>
     /// <param name="markdown">The input markdown source.</param>
     /// <param name="outputStream">The output stream.</param>
-    /// <param name="openXmlDocumentType">The Open XML document type (Document by default).</param>
+    /// <param name="openXmlDocumentType">The Open XML document type (Document by default). Has no effect when appending to an existing document.</param>
     /// <param name="append">If true, adds the converted Markdown to the DOCX content rather than replacing it (false by default). 
     /// The default styles are automatically inserted if the document does not override them.</param>
     public void ToDocx(MarkdownSource markdown, Stream outputStream, WordprocessingDocumentType openXmlDocumentType = WordprocessingDocumentType.Document, bool append = false)
@@ -65,7 +65,7 @@ public class MarkdownConverter
     /// </summary>
     /// <param name="markdown">The input markdown source.</param>
     /// <param name="outputFilePath">The output file path.</param>
-    /// <param name="openXmlDocumentType">The Open XML document type (Document by default).</param>
+    /// <param name="openXmlDocumentType">The Open XML document type (Document by default). Has no effect when appending to an existing document.</param>
     /// <param name="append">If true and the output file exists, adds the converted Markdown to the DOCX content rather than replacing it (false by default). 
     /// The default styles are automatically inserted if the document does not override them.</param>
     public void ToDocx(MarkdownSource markdown, string outputFilePath, WordprocessingDocumentType openXmlDocumentType = WordprocessingDocumentType.Document, bool append = false)
@@ -96,7 +96,7 @@ public class MarkdownConverter
     /// </summary>
     /// <param name="markdown">The markdown source.</param>
     /// <param name="outputStream">The output stream.</param>
-    /// <param name="openXmlDocumentType">The Open XML document type (Document by default).</param>
+    /// <param name="openXmlDocumentType">The Open XML document type (Document by default). Has no effect when appending to an existing document.</param>
     /// <param name="append">If true, adds the converted Markdown to the DOCX content rather than replacing it (false by default). 
     /// The default styles are automatically inserted if the document does not override them.</param>
     /// <returns>A <see cref="WordprocessingDocument"/> object.</returns>
@@ -130,7 +130,7 @@ public class MarkdownConverter
     /// </summary>
     /// <param name="markdown">The markdown source.</param>
     /// <param name="outputFilePath">The output file path.</param>
-    /// <param name="openXmlDocumentType">The Open XML document type (Document by default).</param>
+    /// <param name="openXmlDocumentType">The Open XML document type (Document by default). Has no effect when appending to an existing document.</param>
     /// <param name="append">If true and the output file exists, adds the converted Markdown to the DOCX content rather than replacing it (false by default). 
     /// The default styles are automatically inserted if the document does not override them.</param>
     /// <returns>A <see cref="WordprocessingDocument"/> object.</returns>
