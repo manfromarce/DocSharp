@@ -127,6 +127,23 @@ public static class TextToDocxExtensions
     }    
 
     /// <summary>
+    /// Convert the input document to a FlatOPC XDocument that can be furtherly manipulated.
+    /// </summary>
+    /// <param name="input">The input text reader.</param>
+    /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
+    public static XDocument ConvertToFlatOPC(this ITextToDocxConverter converter, TextReader input, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document)
+    {
+        using (var tempStream = new MemoryStream())
+        {
+            using (var wpd = WordprocessingDocument.Create(tempStream, documentType, true))
+            {
+                converter.BuildDocx(input, wpd);
+                return wpd.ToFlatOpcDocument();
+            }
+        }
+    }    
+
+    /// <summary>
     /// Convert the input document to DOCX and return a WordprocessingDocument instance for further manipulation.  
     /// The consuming application is responsible for disposing the WordprocessingDocument object.
     /// </summary>
@@ -193,6 +210,7 @@ public static class TextToDocxExtensions
     /// </summary>
     /// <param name="inputStream">The input stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
+    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
     public static byte[] ConvertToBytes(this ITextToDocxConverter converter, Stream inputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         using (var tempStream = new MemoryStream())
@@ -208,6 +226,25 @@ public static class TextToDocxExtensions
     } 
 
     /// <summary>
+    /// Convert the input document to DOCX and return a FlatOPC XDocument for further manipulation.  
+    /// The consuming application is responsible for disposing the WordprocessingDocument object.
+    /// </summary>
+    /// <param name="inputStream">The input stream.</param>
+    /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
+    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    public static XDocument ConvertToFlatOPC(this ITextToDocxConverter converter, Stream inputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
+    {
+        using (var ms = new MemoryStream())
+        {
+            using (var wpd = WordprocessingDocument.Create(ms, documentType, true))
+            {
+                converter.BuildDocx(inputStream, wpd, inputEncoding);
+                return wpd.ToFlatOpcDocument();            
+            }            
+        }
+    }
+
+    /// <summary>
     /// Convert the input document to DOCX and return a WordprocessingDocument instance for further manipulation.  
     /// The consuming application is responsible for disposing the WordprocessingDocument object.
     /// </summary>
@@ -221,7 +258,6 @@ public static class TextToDocxExtensions
         converter.BuildDocx(inputFilePath, wpd, inputEncoding);
         return wpd;
     }
-
 
     /// <summary>
     /// Convert the input document to DOCX and return a WordprocessingDocument instance for further manipulation.  
@@ -290,6 +326,26 @@ public static class TextToDocxExtensions
     } 
 
     /// <summary>
+    /// Convert the input document to DOCX and return a FlatOPC XDocument for further manipulation.  
+    /// The consuming application is responsible for disposing the WordprocessingDocument object.
+    /// </summary>
+    /// <param name="inputFilePath">The input stream.</param>
+    /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
+    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    public static XDocument ConvertToFlatOPC(this ITextToDocxConverter converter, string inputFilePath, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
+    {
+        inputEncoding ??= Encoding.UTF8;
+        using (var ms = new MemoryStream())
+        {
+            using (var wpd = WordprocessingDocument.Create(ms, documentType, true))
+            {
+                converter.BuildDocx(inputFilePath, wpd, inputEncoding);
+                return wpd.ToFlatOpcDocument();            
+            }            
+        }
+    }
+
+    /// <summary>
     /// Convert a string in the input format to DOCX and return a WordprocessingDocument instance for further manipulation.  
     /// The consuming application is responsible for disposing the WordprocessingDocument object.
     /// </summary>
@@ -352,7 +408,7 @@ public static class TextToDocxExtensions
     /// </summary>
     /// <param name="inputString">The input content to be converted.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    public static byte[] ConvertToBytes(this ITextToDocxConverter converter, string inputString, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document)
+    public static byte[] ConvertStringToBytes(this ITextToDocxConverter converter, string inputString, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document)
     {
         using (var tempStream = new MemoryStream())
         {
@@ -363,6 +419,23 @@ public static class TextToDocxExtensions
             }
             tempStream.Position = 0;
             return tempStream.ToArray();     
+        }
+    }
+
+    /// <summary>
+    /// Convert a string in the input format to a FlatOPC XDocument that can be furtherly manipulated.
+    /// </summary>
+    /// <param name="inputString">The input content to be converted.</param>
+    /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
+    public static XDocument ConvertStringToFlatOPC(this ITextToDocxConverter converter, string inputString, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document)
+    {
+        using (var tempStream = new MemoryStream())
+        {
+            using (var wpd = WordprocessingDocument.Create(tempStream, documentType, true))
+            {
+                converter.BuildDocxFromString(inputString, wpd);
+                return wpd.ToFlatOpcDocument();
+            }
         }
     } 
 }
