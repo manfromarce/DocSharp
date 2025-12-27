@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using DocSharp.Xml;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -96,6 +96,8 @@ internal class EpubToDocxConverter : IBinaryToDocxConverter
             tempDir += Path.DirectorySeparatorChar; 
         try
         {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir);
             Directory.CreateDirectory(tempDir);            
         }
         catch (Exception ex)
@@ -106,8 +108,18 @@ internal class EpubToDocxConverter : IBinaryToDocxConverter
         try
         {
             // Extract EPUB to temp directory
-            ZipFile.ExtractToDirectory(input, tempDir, overwriteFiles: true);
+            using (var zip = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: true))
+            {
+                zip.ExtractToDirectory(tempDir);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new SystemException($"Unable to extract EPUB to the temp directory. This step is necessary for EPUB processing. Details: {ex.Message}");
+        }
 
+        try
+        {
             // Initialize document
             var mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
             mainPart.Document ??= new Document();
