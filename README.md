@@ -16,7 +16,9 @@ Packages can be installed via NuGet:
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Docx?style=flat-square&label=DocSharp.Docx)](https://www.nuget.org/packages/DocSharp.Docx/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Markdown?style=flat-square&label=DocSharp.Markdown)](https://www.nuget.org/packages/DocSharp.Markdown/)
 
-The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/) and [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> MD).
+The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/) and [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> MD).  
+
+The codebase also contains few experimental converters that are not ready and not published on NuGet yet.  
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
 
@@ -63,13 +65,16 @@ Others:
 - [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion
 - [OpenMcdf](https://github.com/ironfede/openmcdf) for better understanding Microsoft Compound format.
 
-Used in the sample app or for internal tests/comparisons (*not* direct dependencies when installing packages):  
+Used in the sample app or for internal tests/comparisons (*not* dependencies when installing packages):  
 - [RtfPipe](https://github.com/erdomke/RtfPipe)  
 - [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
 - [PeachPdf](https://github.com/jhaygood86/PeachPDF)  
 - [HTML-Renderer](https://github.com/ArthurHub/HTML-Renderer)
 - [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown)
 - [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
+- [PDFtoImage](https://github.com/sungaila/PDFtoImage)
+- [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
+- [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia)
 
 ### License
 
