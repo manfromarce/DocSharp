@@ -1,8 +1,11 @@
 ## 0.18.0 - not published yet
 
 - Added conversion options to `WordprocessingDocument.SaveTo` extension methods
-- Minor improvements
+- Added ability to append to existing Markdown / plain text when converting DOCX
 - Code refactor for maintainability and extensibility
+- Remove .NET 6 target, now out of support
+- Created GitHub Actions workflow for build, test and NuGet publish
+- Other improvements
 
 ## 0.17.0 - 2025.12.04
 
