@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
@@ -12,5 +13,5 @@ public interface IBinaryToDocxConverter
     /// </summary>
     /// <param name="input">The input stream.</param>
     /// <param name="targetDocument">The target DOCX document.</param>
-    void BuildDocx(Stream input, WordprocessingDocument targetDocument);
+    Task BuildDocxAsync(Stream input, WordprocessingDocument targetDocument);
 }

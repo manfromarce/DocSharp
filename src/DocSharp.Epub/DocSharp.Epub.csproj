@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0;net462</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- NuGet package -->
+  <PropertyGroup>
+    <AssemblyName>DocSharp.Epub</AssemblyName>
+    <AssemblyTitle>DocSharp.Epub</AssemblyTitle>
+    <PackageId>DocSharp.Epub</PackageId>
+    <Title>DocSharp.Epub</Title>
+    <Description>.NET library for converting documents. The DocSharp.Epub package provides EPUB to DOCX conversion.</Description>
+    <PackageTags>epub docx convert converter renderer openxml office word epubcore</PackageTags>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="EpubCore" Version="1.6.2" />
+    <PackageReference Include="HtmlToOpenXml.dll" Version="3.2.8" />
+    <PackageReference Include="PreMailer.Net" Version="2.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
+  </ItemGroup>
+
+</Project>
