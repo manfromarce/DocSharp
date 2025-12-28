@@ -8,10 +8,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using DocSharp.Helpers;
-using DocSharp;
+using DocSharp.Primitives;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 using EpubCore;
 using HtmlToOpenXml;
@@ -104,9 +103,9 @@ internal class EpubToDocxConverter : IBinaryToDocxConverter
         {
             // Initialize document
             var mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
-            mainPart.Document ??= new Document();
+            mainPart.Document ??= new W.Document();
             mainPart.Document.RemoveAllChildren();
-            var body = mainPart.Document.AppendChild(new Body());
+            var body = mainPart.Document.AppendChild(new W.Body());
 
             // Initialize HTML to DOCX converter
             var converter = new HtmlConverter(mainPart)
@@ -152,9 +151,9 @@ internal class EpubToDocxConverter : IBinaryToDocxConverter
                 // Before each chapter, add a bookmark in DOCX to make internal links work
                 string anchorName = $"_{fileName.Replace(' ', '_')}";
                 int id = new Random().Next(100000, 999999); // TODO: improve id generation
-                body.AppendChild(new Paragraph([
-                    new BookmarkStart() { Name = anchorName, Id = id.ToString() }, 
-                    new BookmarkEnd() { Id = id.ToString() }
+                body.AppendChild(new W.Paragraph([
+                    new W.BookmarkStart() { Name = anchorName, Id = id.ToString() }, 
+                    new W.BookmarkEnd() { Id = id.ToString() }
                 ]));
 
                 // Parse the HTML body, convert to Open XML and append to the DOCX.
@@ -163,18 +162,18 @@ internal class EpubToDocxConverter : IBinaryToDocxConverter
                 if (PageBreakAfterChapters)
                 {
                     // Add a page break after each chapter if desired.
-                    body.AppendChild(new Paragraph(new Run(new Break() { Type = BreakValues.Page })));
+                    body.AppendChild(new W.Paragraph(new W.Run(new W.Break() { Type = W.BreakValues.Page })));
                 }
             }            
 
             // Add default section properties            
-            body.AppendChild(new SectionProperties(
+            body.AppendChild(new W.SectionProperties(
                 new W.PageSize()
                 {
                     Width = (uint)((PageSize ?? PageSize.Default).WidthTwips()),
                     Height = (uint)((PageSize ?? PageSize.Default).HeightTwips()),
                 },
-                new PageMargin()
+                new W.PageMargin()
                 {
                     // Notes: 
                     // - PageMargin uses uint for Left and Right margins, and int for top and bottom (enforced by Open XML SDK)

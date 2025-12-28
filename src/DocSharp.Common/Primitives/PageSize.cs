@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace DocSharp;
+namespace DocSharp.Primitives;
 
 public class PageSize
 {

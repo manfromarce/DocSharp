@@ -8,10 +8,9 @@ using Markdig.Syntax;
 using Markdig.Renderers.Docx;
 using Markdig.Renderers.Rtf;
 using DocSharp.Writers;
-using DocSharp;
+using DocSharp.Primitives;
 using System;
 using System.Linq;
-using DocumentFormat.OpenXml.Wordprocessing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Markdown;
@@ -331,10 +330,10 @@ public class MarkdownConverter
     {
         if (document?.MainDocumentPart == null) return;
 
-        var sect = document.MainDocumentPart.Document.Body.Elements<SectionProperties>().LastOrDefault();
+        var sect = document.MainDocumentPart.Document.Body.Elements<W.SectionProperties>().LastOrDefault();
         if (sect == null)
         {
-            sect = new SectionProperties();
+            sect = new W.SectionProperties();
             document.MainDocumentPart.Document.Body.AppendChild(sect);
         }
 
@@ -353,12 +352,12 @@ public class MarkdownConverter
         // Page margins
         if (PageMargins != null)
         {
-            var pm = sect.GetFirstChild<PageMargin>() ?? new PageMargin();
+            var pm = sect.GetFirstChild<W.PageMargin>() ?? new W.PageMargin();
             pm.Left = (uint)PageMargins.LeftTwips();
             pm.Right = (uint)PageMargins.RightTwips();
             pm.Top = (int)PageMargins.TopTwips();
             pm.Bottom = (int)PageMargins.BottomTwips();
-            if (sect.GetFirstChild<PageMargin>() == null)
+            if (sect.GetFirstChild<W.PageMargin>() == null)
                 sect.AppendChild(pm);
         }
     }

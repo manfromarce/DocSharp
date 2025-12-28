@@ -1,4 +1,4 @@
-namespace DocSharp;
+namespace DocSharp.Primitives;
 
 public class PageMargins
 {
