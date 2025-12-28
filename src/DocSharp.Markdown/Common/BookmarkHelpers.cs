@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DocSharp.Markdown;
+namespace DocSharp.Markdown.Common;
 
-internal static class MarkdownUtils
+internal static class BookmarkHelpers
 {
     internal static string GetBookmarkName(string text)
     {

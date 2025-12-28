@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Markdig.Syntax;
 
-namespace DocSharp.Markdown;
+namespace DocSharp.Markdown.Common;
 
 public static class MarkdownElementExtensions
 {

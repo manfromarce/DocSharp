@@ -1,6 +1,7 @@
 using System.Drawing;
 using DocSharp.Helpers;
 using DocSharp.Markdown;
+using DocSharp.Markdown.Common;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Markdig.Syntax;
 

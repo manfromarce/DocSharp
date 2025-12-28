@@ -8,6 +8,7 @@ using DocSharp.IO;
 using DocSharp.Markdown.Common;
 using Markdig.Renderers.Html;
 using Markdig.Syntax.Inlines;
+using UriHelpers = DocSharp.Markdown.Common.UriHelpers;
 
 namespace Markdig.Renderers.Rtf.Inlines;
 

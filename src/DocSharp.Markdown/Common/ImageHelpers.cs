@@ -14,7 +14,7 @@ using DocSharp.Helpers;
 
 namespace DocSharp.Markdown.Common;
 
-public static class ImageHelpers
+internal static class ImageHelpers
 {
     public static void GetImageAttributes(LinkInline obj, out long width, out long height)
     {

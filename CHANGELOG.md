@@ -2,6 +2,8 @@
 
 - Added conversion options to `WordprocessingDocument.SaveTo` extension methods
 - Added ability to append to existing Markdown / plain text when converting DOCX
+- Markdown to DOCX / RTF converter: added ability to configure page size and margins
+- Improved input/output encodings handling
 - Code refactor for maintainability and extensibility
 - Remove .NET 6 target, now out of support
 - Created GitHub Actions workflow for build, test and NuGet publish

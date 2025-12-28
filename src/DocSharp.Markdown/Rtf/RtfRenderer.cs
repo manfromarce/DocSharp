@@ -28,7 +28,15 @@ public class RtfRenderer : RendererBase
 
     public RtfStringWriter RtfWriter;
 
-    internal List<string> Bookmarks = [];
+    internal List<string> Bookmarks = new List<string>();
+
+    // Optional page settings in twips (apply only when set)
+    public int? PageWidthTwips { get; set; }
+    public int? PageHeightTwips { get; set; }
+    public int? MarginLeftTwips { get; set; }
+    public int? MarginRightTwips { get; set; }
+    public int? MarginTopTwips { get; set; }
+    public int? MarginBottomTwips { get; set; }
 
     internal bool isInTable = false;
     internal bool isInTableHeader = false;
@@ -76,8 +84,14 @@ public class RtfRenderer : RendererBase
     {
         RtfWriter.WriteRtfHeader();
 
-        // Write A4 paper size and margins in twips (1 inch is 1440 twips)
-        RtfWriter.WriteLine(@"\paperw11906\paperh16838\margl1440\margr1440\margt1440\margb1440");
+        // Write paper size and margins in twips
+        int paperw = PageWidthTwips ?? 11906; // default A4 width in twips
+        int paperh = PageHeightTwips ?? 16838; // default A4 height in twips
+        int margl = MarginLeftTwips ?? 1440; // 1 inch
+        int margr = MarginRightTwips ?? 1440;
+        int margt = MarginTopTwips ?? 1440;
+        int margb = MarginBottomTwips ?? 1440;
+        RtfWriter.WriteLine($"\\paperw{paperw}\\paperh{paperh}\\margl{margl}\\margr{margr}\\margt{margt}\\margb{margb}");
 
         // Enable endnotes
         RtfWriter.WriteLine(@"\enddoc\aenddoc");

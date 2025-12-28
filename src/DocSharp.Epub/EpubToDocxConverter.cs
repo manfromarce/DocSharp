@@ -8,9 +8,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using DocSharp.Helpers;
+using DocSharp;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using W = DocumentFormat.OpenXml.Wordprocessing;
 using EpubCore;
 using HtmlToOpenXml;
 
@@ -49,34 +51,14 @@ internal class EpubToDocxConverter : IBinaryToDocxConverter
     public bool PreserveCssStyles { get; set; } = true;
 
     /// <summary>
-    /// The page width in millimeters. If not set, the default page size is A4 (210 x 297 mm) for regions using metric units and Letter (8.5 x 11 inches) for regions using imperial units.
+    /// Page size for the output DOCX document.
     /// </summary>
-    public int PageWidth { get; set; } = -1;
+    public PageSize PageSize { get; set; } = PageSize.Default;
 
     /// <summary>
-    /// The page height in millimeters. If not set, the default page size is A4 (210 x 297 mm) for regions using metric units and Letter (8.5 x 11 inches) for regions using imperial units.
+    /// Page margins for the output DOCX document.
     /// </summary>
-    public int PageHeight { get; set; } = -1;
-
-    /// <summary>
-    /// The page top margin in millimeters. If not set, the default page margins are top = 25 mm, left/right/bottom = 20 mm
-    /// </summary>
-    public int PageLeftMargin { get; set; } = -1;
-
-    /// <summary>
-    /// The page top margin in millimeters. If not set, the default page margins are top = 25 mm, left/right/bottom = 20 mm
-    /// </summary>
-    public int PageTopMargin { get; set; } = -1;
-
-    /// <summary>
-    /// The page right margin in millimeters. If not set, the default page margins are top = 25 mm, left/right/bottom = 20 mm
-    /// </summary>
-    public int PageRightMargin { get; set; } = -1;
-
-    /// <summary>
-    /// The page bottom margin in millimeters. If not set, the default page margins are top = 25 mm, left/right/bottom = 20 mm
-    /// </summary>
-    public int PageBottomMargin { get; set; } = -1;
+    public PageMargins PageMargins { get; set; } = PageMargins.Default;
 
     public async Task BuildDocxAsync(Stream input, WordprocessingDocument targetDocument)
     {
@@ -187,20 +169,20 @@ internal class EpubToDocxConverter : IBinaryToDocxConverter
 
             // Add default section properties            
             body.AppendChild(new SectionProperties(
-                new PageSize() 
-                { 
-                    Width = (uint)(PageWidth > 0 ? UnitMetricHelper.ConvertToTwips(PageWidth, UnitMetric.Millimeter) : DocumentSettingsHelpers.GetDefaultPageWidth()), 
-                    Height = (uint)(PageHeight > 0 ? UnitMetricHelper.ConvertToTwips(PageHeight, UnitMetric.Millimeter) : DocumentSettingsHelpers.GetDefaultPageHeight()), 
+                new W.PageSize()
+                {
+                    Width = (uint)((PageSize ?? PageSize.Default).WidthTwips()),
+                    Height = (uint)((PageSize ?? PageSize.Default).HeightTwips()),
                 },
                 new PageMargin()
                 {
                     // Notes: 
                     // - PageMargin uses uint for Left and Right margins, and int for top and bottom (enforced by Open XML SDK)
                     // - 0 is allowed for margins but not recommended
-                    Left = (uint)(PageLeftMargin >= 0 ? UnitMetricHelper.ConvertToTwips(PageLeftMargin, UnitMetric.Millimeter) : DocumentSettingsHelpers.GetDefaultPageLeftMargin()), 
-                    Right = (uint)(PageRightMargin >= 0 ? UnitMetricHelper.ConvertToTwips(PageRightMargin, UnitMetric.Millimeter) : DocumentSettingsHelpers.GetDefaultPageRightMargin()),
-                    Top = (int)(PageTopMargin >= 0 ? UnitMetricHelper.ConvertToTwips(PageTopMargin, UnitMetric.Millimeter) : DocumentSettingsHelpers.GetDefaultPageTopMargin()),
-                    Bottom = (int)(PageBottomMargin >= 0 ? UnitMetricHelper.ConvertToTwips(PageBottomMargin, UnitMetric.Millimeter) : DocumentSettingsHelpers.GetDefaultPageBottomMargin()),
+                    Left = (uint)((PageMargins ?? PageMargins.Default)).LeftTwips(),
+                    Right = (uint)((PageMargins ?? PageMargins.Default)).RightTwips(),
+                    Top = (int)((PageMargins ?? PageMargins.Default)).TopTwips(),
+                    Bottom = (int)((PageMargins ?? PageMargins.Default)).BottomTwips(),
                 }));
             
             if (targetDocument.CanSave)

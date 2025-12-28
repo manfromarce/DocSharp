@@ -12,7 +12,9 @@ using Markdig.Syntax.Inlines;
 using DocSharp.Helpers;
 #endif
 
-public static class UriHelpers
+namespace DocSharp.Markdown.Common;
+
+internal static class UriHelpers
 {
     public static Uri? NormalizeImageUri(string url, string? imagesBaseUri)
     {

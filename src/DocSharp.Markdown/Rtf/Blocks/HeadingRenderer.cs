@@ -5,6 +5,7 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using DocSharp.Helpers;
 using DocSharp.Markdown;
+using DocSharp.Markdown.Common;
 
 namespace Markdig.Renderers.Rtf.Blocks;
 
@@ -15,7 +16,7 @@ public class HeadingRenderer : LeafBlockParagraphRendererBase<HeadingBlock>
         string? bookmarkName = null;
         if (obj.Inline?.FindDescendants<LiteralInline>().FirstOrDefault() is LiteralInline literal)
         {
-            bookmarkName = MarkdownUtils.GetBookmarkName(literal.Content.ToString());
+            bookmarkName = BookmarkHelpers.GetBookmarkName(literal.Content.ToString());
         }
 
         int headingLevel = obj.Level; // 1-based

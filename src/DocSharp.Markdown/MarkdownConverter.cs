@@ -8,7 +8,11 @@ using Markdig.Syntax;
 using Markdig.Renderers.Docx;
 using Markdig.Renderers.Rtf;
 using DocSharp.Writers;
+using DocSharp;
 using System;
+using System.Linq;
+using DocumentFormat.OpenXml.Wordprocessing;
+using W = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Markdown;
 
@@ -43,6 +47,23 @@ public class MarkdownConverter
     /// this property can be set to a new instance of ImageSharpConverter or SystemDrawingConverter. 
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
+
+    /// <summary>
+    /// Page size in millimetres (width, height). When set, applies to newly created DOCX/RTF documents.
+    /// Values are expressed in millimetres; conversion to twips is performed internally.
+    /// If null, the default template/page size is kept.
+    /// </summary>
+    /// <summary>
+    /// Page size in millimetres. When set, applies to newly created DOCX/RTF documents.
+    /// If null, the default template/page size is kept.
+    /// </summary>
+    public PageSize PageSize { get; set; } = PageSize.Default;
+
+    /// <summary>
+    /// Page margins in millimetres. When set, applies to newly created DOCX/RTF documents.
+    /// If null, the default template/margins are kept.
+    /// </summary>
+    public PageMargins PageMargins { get; set; } = PageMargins.Default;
 
     /// <summary>
     /// Convert Markdown to DOCX.
@@ -121,6 +142,11 @@ public class MarkdownConverter
             ImageConverter = this.ImageConverter
         };
         renderer.Render(markdown.Document);
+        // Apply page settings only for newly created documents (not when appending)
+        if (!append)
+        {
+            ApplyPageSettingsToDocx(document);
+        }
         return document;
     }
 
@@ -146,6 +172,11 @@ public class MarkdownConverter
         else
         {
             document = DocxTemplateHelper.BuildFromDefaultTemplate(outputFilePath, openXmlDocumentType);
+        }
+        // Apply page settings only for newly created documents (not when appending)
+        if (!append)
+        {
+            ApplyPageSettingsToDocx(document);
         }
         var renderer = new DocxDocumentRenderer(document, defaultStyles)
         {
@@ -280,6 +311,55 @@ public class MarkdownConverter
             ImageConverter = this.ImageConverter,
             SkipImages = this.SkipImages
         };
+        // Apply page settings for RTF if configured
+        if (PageSize != null)
+        {
+            renderer.PageWidthTwips = (int)PageSize.WidthTwips();
+            renderer.PageHeightTwips = (int)PageSize.HeightTwips();
+        }
+        if (PageMargins != null)
+        {
+            renderer.MarginLeftTwips = (int)PageMargins.LeftTwips();
+            renderer.MarginTopTwips = (int)PageMargins.TopTwips();
+            renderer.MarginRightTwips = (int)PageMargins.RightTwips();
+            renderer.MarginBottomTwips = (int)PageMargins.BottomTwips();
+        }
         renderer.Render(document);
+    }
+
+    private void ApplyPageSettingsToDocx(WordprocessingDocument document)
+    {
+        if (document?.MainDocumentPart == null) return;
+
+        var sect = document.MainDocumentPart.Document.Body.Elements<SectionProperties>().LastOrDefault();
+        if (sect == null)
+        {
+            sect = new SectionProperties();
+            document.MainDocumentPart.Document.Body.AppendChild(sect);
+        }
+
+        // Page size
+        if (PageSize != null)
+        {
+            uint width = (uint)PageSize.WidthTwips();
+            uint height = (uint)PageSize.HeightTwips();
+            var pgSize = sect.GetFirstChild<W.PageSize>() ?? new W.PageSize();
+            pgSize.Width = width;
+            pgSize.Height = height;
+            if (sect.GetFirstChild<W.PageSize>() == null)
+                sect.PrependChild(pgSize);
+        }
+
+        // Page margins
+        if (PageMargins != null)
+        {
+            var pm = sect.GetFirstChild<PageMargin>() ?? new PageMargin();
+            pm.Left = (uint)PageMargins.LeftTwips();
+            pm.Right = (uint)PageMargins.RightTwips();
+            pm.Top = (int)PageMargins.TopTwips();
+            pm.Bottom = (int)PageMargins.BottomTwips();
+            if (sect.GetFirstChild<PageMargin>() == null)
+                sect.AppendChild(pm);
+        }
     }
 }
