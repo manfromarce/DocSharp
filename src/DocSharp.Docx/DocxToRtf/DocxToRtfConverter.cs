@@ -23,6 +23,26 @@ namespace DocSharp.Docx;
 public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter>
 {
     /// <summary>
+    /// This property should not be changed. 
+    /// According to the specification, RTF writer should use ASCII (chars 0-127) 
+    /// and escape other chars as '\xx (using code pages for chars 128-255)  
+    /// or as \uc1\u{X} (using Unicode). 
+    /// If an old reader does not support Unicode it will skip these characters rather than corrupting the document. 
+    /// </summary>
+    public override Encoding DefaultEncoding => Encoding.ASCII; 
+
+    /// <summary>
+    /// Specifies the default code page number, that will be written in the RTF header and used to encode special characters. 
+    /// For example, "à" is encoded as \'e0 when the encoding is Windows-1252. 
+    /// For characters not available in the code page, Unicode will be used, for example (e.g. \uc1\u915). 
+    /// By default, the code page of the system region is used and changing it is not recommended. 
+    /// A full list of code pages can be found at https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers, 
+    /// but note that not all code pages are supported in RTF (notably, UTF-8 is not supported). 
+    /// The RTF specification can be found in the repository. 
+    /// </summary>
+    public int DefaultCodePage { get; set; } = Encodings.SystemCodePage;
+
+    /// <summary>
     /// Gets or set the default font and paragraph properties used in (rare) cases where 
     /// they are not specified in in neither the document body, styles or default style. 
     /// In these cases, different word processors and versions behave differently. 
@@ -59,7 +79,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     internal override void ProcessDocument(Document document, RtfStringWriter sb)
     {
-        sb.WriteRtfHeader();
+        sb.WriteRtfHeader(DefaultCodePage);
 
         if (document.MainDocumentPart?.StyleDefinitionsPart?.Styles is Styles styles)
         {

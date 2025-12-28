@@ -20,6 +20,8 @@ namespace DocSharp.Docx;
 /// </summary>
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
+    public override Encoding DefaultEncoding => Encodings.UTF8NoBOM;
+
     public override HtmlTextWriter CreateXmlWriter(TextWriter writer) => new HtmlTextWriter(writer);
 
     /// <summary>

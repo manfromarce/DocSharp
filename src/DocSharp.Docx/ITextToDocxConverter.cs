@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
@@ -13,4 +14,9 @@ public interface ITextToDocxConverter
     /// <param name="input">The input text reader.</param>
     /// <param name="targetDocument">The target DOCX document.</param>
     void BuildDocx(TextReader input, WordprocessingDocument targetDocument);
+
+    /// <summary>
+    /// Default encoding to use when reading an input file. BOM is still detected, if present, and can override this property.
+    /// </summary>
+    Encoding DefaultEncoding { get; }
 }

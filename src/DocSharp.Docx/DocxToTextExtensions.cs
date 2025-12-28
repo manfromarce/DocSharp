@@ -13,10 +13,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputDocument">The WordprocessingDocument to use.</param>
     /// <param name="output">The output stream.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, WordprocessingDocument inputDocument, Stream outputStream, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputStream, outputEncoding, 1024, leaveOpen: true))
             converter.Convert(inputDocument, sw);
     }
@@ -26,10 +26,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputDocument">The WordprocessingDocument to use.</param>
     /// <param name="outputFilePath">The output file path.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, WordprocessingDocument inputDocument, string outputFilePath, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputFilePath, append: false, outputEncoding, 1024))
             converter.Convert(inputDocument, sw);
     }
@@ -64,10 +64,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputStream">The input DOCX stream.</param>
     /// <param name="output">The output stream.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, Stream inputStream, Stream outputStream, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputStream, outputEncoding, 1024, leaveOpen: true))
             converter.Convert(inputStream, sw);
     }
@@ -77,10 +77,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputStream">The input DOCX stream.</param>
     /// <param name="outputFilePath">The output file path.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, Stream inputStream, string outputFilePath, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputFilePath, append: false, outputEncoding, 1024))
             converter.Convert(inputStream, sw);
     }
@@ -115,10 +115,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputFilePath">The input DOCX file path.</param>
     /// <param name="output">The output stream.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, string inputFilePath, Stream outputStream, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputStream, outputEncoding, 1024, leaveOpen: true))
             converter.Convert(inputFilePath, sw);
     }
@@ -128,10 +128,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputFilePath">The input DOCX file path.</param>
     /// <param name="outputFilePath">The output file path.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, string inputFilePath, string outputFilePath, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputFilePath, append: false, outputEncoding, 1024))
             converter.Convert(inputFilePath, sw);
     }
@@ -166,10 +166,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputBytes">The input DOCX bytes.</param>
     /// <param name="output">The output stream.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, byte[] inputBytes, Stream outputStream, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputStream, outputEncoding, 1024, leaveOpen: true))
             converter.Convert(inputBytes, sw);
     }
@@ -179,10 +179,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="inputBytes">The input DOCX bytes.</param>
     /// <param name="outputFilePath">The output file path.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, byte[] inputBytes, string outputFilePath, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputFilePath, append: false, outputEncoding, 1024))
             converter.Convert(inputBytes, sw);
     }
@@ -217,10 +217,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="flatOpc">The input flatOPC as XDocument.</param>
     /// <param name="output">The output stream.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, XDocument flatOpc, Stream outputStream, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputStream, outputEncoding, 1024, leaveOpen: true))
             converter.Convert(flatOpc, sw);
     }
@@ -230,10 +230,10 @@ public static class DocxToTextExtensions
     /// </summary>
     /// <param name="flatOpc">The input flatOPC as XDocument.</param>
     /// <param name="outputFilePath">The output file path.</param>
-    /// <param name="outputEncoding">The output encoding to use (UTF-8 without BOM by default).</param>
+    /// <param name="outputEncoding">The output encoding to use. If not set, defaults to Converter.DefaultEncoding.</param>
     public static void Convert(this IDocxToTextConverter converter, XDocument flatOpc, string outputFilePath, Encoding? outputEncoding = null)
     {
-        outputEncoding ??= Encodings.UTF8NoBOM;
+        outputEncoding ??= converter.DefaultEncoding;
         using (var sw = new StreamWriter(outputFilePath, append: false, outputEncoding, 1024))
             converter.Convert(flatOpc, sw);
     }

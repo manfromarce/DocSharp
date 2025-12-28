@@ -15,10 +15,10 @@ public static class TextToDocxExtensions
     /// </summary>
     /// <param name="input">The input stream.</param>
     /// <param name="targetDocument">The target DOCX document.</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     internal static void BuildDocx(this ITextToDocxConverter converter, Stream input, WordprocessingDocument targetDocument, Encoding? inputEncoding = null)
     {
-        inputEncoding ??= Encoding.UTF8;
+        inputEncoding ??= converter.DefaultEncoding;
         using (var sr = new StreamReader(input, inputEncoding, true, 1024, leaveOpen: true))
             converter.BuildDocx(sr, targetDocument);
     }
@@ -29,10 +29,10 @@ public static class TextToDocxExtensions
     /// </summary>
     /// <param name="input">The input file path.</param>
     /// <param name="targetDocument">The target DOCX document.</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     internal static void BuildDocx(this ITextToDocxConverter converter, string inputFilePath, WordprocessingDocument targetDocument, Encoding? inputEncoding = null)
     {
-        inputEncoding ??= Encoding.UTF8;
+        inputEncoding ??= converter.DefaultEncoding;
         using (var sr = new StreamReader(inputFilePath, inputEncoding, true, 1024))
             converter.BuildDocx(sr, targetDocument);
     }
@@ -150,7 +150,7 @@ public static class TextToDocxExtensions
     /// <param name="inputStream">The input stream.</param>
     /// <param name="outputStream">The output DOCX stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static WordprocessingDocument ConvertToWordProcessingDocument(this ITextToDocxConverter converter, Stream inputStream, Stream outputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         var wpd = WordprocessingDocument.Create(outputStream, documentType, true);
@@ -165,7 +165,7 @@ public static class TextToDocxExtensions
     /// <param name="inputStream">The input stream.</param>
     /// <param name="outputFilePath">The output DOCX file path.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static WordprocessingDocument ConvertToWordProcessingDocument(this ITextToDocxConverter converter, Stream inputStream, string outputFilePath, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         var wpd = WordprocessingDocument.Create(outputFilePath, documentType, true);
@@ -179,7 +179,7 @@ public static class TextToDocxExtensions
     /// <param name="inputStream">The input stream.</param>
     /// <param name="outputStream">The output DOCX stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static void Convert(this ITextToDocxConverter converter, Stream inputStream, Stream outputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         using (var wpd = WordprocessingDocument.Create(outputStream, documentType, true))
@@ -195,7 +195,7 @@ public static class TextToDocxExtensions
     /// <param name="inputStream">The input stream.</param>
     /// <param name="outputFilePath">The output DOCX file path.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static void Convert(this ITextToDocxConverter converter, Stream inputStream, string outputFilePath, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         using (var wpd = WordprocessingDocument.Create(outputFilePath, documentType, true))
@@ -210,7 +210,7 @@ public static class TextToDocxExtensions
     /// </summary>
     /// <param name="inputStream">The input stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static byte[] ConvertToBytes(this ITextToDocxConverter converter, Stream inputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         using (var tempStream = new MemoryStream())
@@ -231,7 +231,7 @@ public static class TextToDocxExtensions
     /// </summary>
     /// <param name="inputStream">The input stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static XDocument ConvertToFlatOPC(this ITextToDocxConverter converter, Stream inputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         using (var ms = new MemoryStream())
@@ -251,7 +251,7 @@ public static class TextToDocxExtensions
     /// <param name="inputFilePath">The input file path.</param>
     /// <param name="outputStream">The output DOCX stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static WordprocessingDocument ConvertToWordProcessingDocument(this ITextToDocxConverter converter, string inputFilePath, Stream outputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         var wpd = WordprocessingDocument.Create(outputStream, documentType, true);
@@ -266,7 +266,7 @@ public static class TextToDocxExtensions
     /// <param name="inputFilePath">The input file path.</param>
     /// <param name="outputFilePath">The output DOCX file path.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static WordprocessingDocument ConvertToWordProcessingDocument(this ITextToDocxConverter converter, string inputFilePath, string outputFilePath, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         var wpd = WordprocessingDocument.Create(outputFilePath, documentType, true);
@@ -280,7 +280,7 @@ public static class TextToDocxExtensions
     /// <param name="inputFilePath">The input file path.</param>
     /// <param name="outputStream">The output DOCX stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static void Convert(this ITextToDocxConverter converter, string inputFilePath, Stream outputStream, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         using (var wpd = WordprocessingDocument.Create(outputStream, documentType, true))
@@ -296,7 +296,7 @@ public static class TextToDocxExtensions
     /// <param name="inputFilePath">The input file path.</param>
     /// <param name="outputFilePath">The output DOCX file path.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static void Convert(this ITextToDocxConverter converter, string inputFilePath, string outputFilePath, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         using (var wpd = WordprocessingDocument.Create(outputFilePath, documentType, true))
@@ -331,7 +331,7 @@ public static class TextToDocxExtensions
     /// </summary>
     /// <param name="inputFilePath">The input stream.</param>
     /// <param name="documentType">The document type (regular document, template, macro-enabled document).</param>
-    /// <param name="inputEncoding">The input encoding (UTF-8 by default).</param>
+    /// <param name="inputEncoding">The input encoding. If not set, defaults to Converter.DefaultEncoding. In any case, it can be overriden by BOM, if present.</param>
     public static XDocument ConvertToFlatOPC(this ITextToDocxConverter converter, string inputFilePath, WordprocessingDocumentType documentType = WordprocessingDocumentType.Document, Encoding? inputEncoding = null)
     {
         inputEncoding ??= Encoding.UTF8;

@@ -24,6 +24,8 @@ namespace DocSharp.Docx;
 /// </summary>
 public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWriter>
 {
+    public override Encoding DefaultEncoding => Encodings.UTF8NoBOM;
+
     /// <summary>
     /// If this property is set to a directory, images will be exported to that folder
     /// and a reference will be added in Markdown syntax,

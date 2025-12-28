@@ -20,6 +20,8 @@ namespace DocSharp.Docx;
 /// </summary>
 public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 {
+    public override Encoding DefaultEncoding => Encodings.UTF8NoBOM;
+
     /// <summary>
     /// Since plain text is not paginated, only the header of the first section and
     /// footer of the last section are exported.

@@ -12,4 +12,9 @@ public interface IDocxToTextConverter
     /// <param name="inputDocument">The WordprocessingDocument to use.</param>
     /// <param name="output">The output text writer.</param>
     void Convert(WordprocessingDocument inputDocument, TextWriter output);
+
+    /// <summary>
+    /// Default encoding to use when writing an output file.
+    /// </summary>
+    Encoding DefaultEncoding { get; }
 }

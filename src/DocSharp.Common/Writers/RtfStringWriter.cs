@@ -63,9 +63,9 @@ public sealed class RtfStringWriter : BaseStringWriter
         Write(RtfHelpers.ConvertUnicodeChar(charCode));
     }   
 
-    public void WriteRtfHeader()
+    public void WriteRtfHeader(int codePage)
     {
-        Write(@"{\rtf1\ansi\deff0\nouicompat");
+        Write(@$"{{\rtf1\ansi\ansicpg{codePage}\deff0\nouicompat");
     }
 
     public void Write(System.Drawing.Color color)
@@ -197,12 +197,12 @@ public sealed class RtfStringWriter : BaseStringWriter
         Date/time references use the following bit field structure (DTTM): 
         | Bit numbers | Information  | Range           |
         | ----------- | ------------ | ----------------|
-        | 0�5         | Minute       | 0�59            |
-        | 6�10        | Hour         | 0�23            |
-        | 11�15       | Day of month | 1�31            |
-        | 16�19       | Month        | 1�12            |
-        | 20�28       | Year         | = Year � 1900   |
-        | 29�31       | Day of week  | 0 (Sun)�6 (Sat) |
+        | 0-5         | Minute       | 0-59            |
+        | 6-10        | Hour         | 0-23            |
+        | 11-15       | Day of month | 1-31            |
+        | 16-19       | Month        | 1-12            |
+        | 20-28       | Year         | = Year - 1900   |
+        | 29-31       | Day of week  | 0 (Sun)-6 (Sat) |
         */
         
         long nDT = (uint)value.DayOfWeek;
