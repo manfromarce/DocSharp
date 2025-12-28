@@ -4,6 +4,5 @@ namespace DocSharp.Rtf;
 
 internal class RtfDocument
 {
-    internal IEnumerable<RtfToken> Tokens = [];
+    public RtfGroup Root { get; } = new RtfGroup();
 }
-

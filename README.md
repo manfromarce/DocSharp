@@ -60,13 +60,13 @@ Forked:
 - [markdig.docx](https://github.com/morincer/markdig.docx)
 
 Others:
-- [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.
-- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion
-- [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion
-- [OpenMcdf](https://github.com/ironfede/openmcdf) for better understanding Microsoft Compound format.
+- [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.  
+- [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion  
+- [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion  
+- [OpenMcdf](https://github.com/ironfede/openmcdf) for better understanding Microsoft Compound format.  
+- [RtfPipe](https://github.com/erdomke/RtfPipe) and [FridaysForks.RtfPipe](https://github.com/cezarypiatek/FridaysForks.RtfPipe) for part of the RTF parsing logic.  
 
 Used in the sample app or for internal tests/comparisons (*not* dependencies when installing packages):  
-- [RtfPipe](https://github.com/erdomke/RtfPipe)  
 - [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
 - [PeachPdf](https://github.com/jhaygood86/PeachPDF)  
 - [HTML-Renderer](https://github.com/ArthurHub/HTML-Renderer)

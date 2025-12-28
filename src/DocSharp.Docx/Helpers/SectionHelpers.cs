@@ -63,4 +63,11 @@ public static class SectionHelpers
 
         return sections;
     }
+
+    // Needed for DOCX to EPUB conversion. Rather than using sections, it detects paragraph heading styles. 
+    internal static List<(List<OpenXmlElement> content, string title)> GetChapters(this Body body)
+    {
+        // TODO
+        return [];
+    }
 }
