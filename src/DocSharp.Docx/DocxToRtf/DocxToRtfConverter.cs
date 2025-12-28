@@ -28,6 +28,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     /// and escape other chars as '\xx (using code pages for chars 128-255)  
     /// or as \uc1\u{X} (using Unicode). 
     /// If an old reader does not support Unicode it will skip these characters rather than corrupting the document. 
+    /// This property only affects how the RTF file itself is written, 
+    /// and does not change how charactes are encoded in RTF text tokens. 
     /// </summary>
     public override Encoding DefaultEncoding => Encoding.ASCII; 
 
