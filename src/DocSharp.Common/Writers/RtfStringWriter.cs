@@ -63,6 +63,12 @@ public sealed class RtfStringWriter : BaseStringWriter
         Write(RtfHelpers.ConvertUnicodeChar(charCode));
     }   
 
+    public void WriteRtfHeader()
+    {
+        WriteRtfHeader(Encodings.SystemCodePage);
+        // TODO: ensure the system code page is supported by RTF, otherwise default to 1252.
+    }
+
     public void WriteRtfHeader(int codePage)
     {
         Write(@$"{{\rtf1\ansi\ansicpg{codePage}\deff0\nouicompat");
