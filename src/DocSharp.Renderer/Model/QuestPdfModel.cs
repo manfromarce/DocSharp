@@ -41,17 +41,27 @@ internal class QuestPdfModel
                     }
                     if (pageSet.Content != null && pageSet.NumberOfColumns > 0 && pageSet.Content.Content != null)
                     {
-                        page.Content().MultiColumn(content =>
+                        if (pageSet.NumberOfColumns > 1)
                         {
-                            content.Columns(pageSet.NumberOfColumns);
-                            if (pageSet.NumberOfColumns > 1 && pageSet.SpaceBetweenColumns.HasValue)
-                                content.Spacing(pageSet.SpaceBetweenColumns.Value, Unit.Point);
-                            
-                            content.Content().Column(column =>
+                            page.Content().MultiColumn(content =>
+                            {
+                                content.Columns(pageSet.NumberOfColumns);
+                                if (pageSet.SpaceBetweenColumns.HasValue)
+                                    content.Spacing(pageSet.SpaceBetweenColumns.Value, Unit.Point);
+                                
+                                content.Content().Column(column =>
+                                {
+                                    CreateColumn(column, pageSet.Content.Content);
+                                });
+                            });                        
+                        }
+                        else
+                        {
+                            page.Content().Column(column =>
                             {
                                 CreateColumn(column, pageSet.Content.Content);
                             });
-                        });                        
+                        }
                     }
                 });
             }

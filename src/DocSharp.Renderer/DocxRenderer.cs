@@ -14,6 +14,11 @@ namespace DocSharp.Renderer;
 
 internal class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<QuestPDF.Fluent.Document>
 {
+    static DocxRenderer()
+    {
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;    
+    }
+
     private QuestPdfPageSet? currentPageSet; // Current section
     private Stack<QuestPdfContainer> currentContainer = new(); // Container can be the main document body, header, footer, table cell, ...
     private Stack<IQuestPdfRunContainer> currentRunContainer = new(); // Spans can only be added to a paragraph or hyperlink
