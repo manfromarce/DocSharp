@@ -168,6 +168,39 @@ readonly struct Unit
         }
     }
 
+     /// <summary>
+    /// Gets the value expressed in twips / DXA.
+    /// </summary>
+    internal static double CalculateMillimeters(UnitMetric type, double value)
+    {
+        switch (type)
+        {
+            case UnitMetric.Auto:
+            case UnitMetric.Unitless:
+            case UnitMetric.Percent: return 0.0; // not applicable
+
+            case UnitMetric.Millimeter: return value;
+            case UnitMetric.Centimeter: return value * 10;
+            case UnitMetric.Himetric: return value / 100; // 1 himetric = 1/100 mm
+
+            case UnitMetric.Inch: return value / 25.4 ; // 1 inch = 25.4 mm
+            case UnitMetric.Point: return value * 72 / 25.4; // 1 point = 1/72 inch
+            case UnitMetric.Twip: return value * 1440 / 25.4; // 1 twip = 1/1440 inch
+            case UnitMetric.HundrethsOfInch: return value * 100 / 25.4; // 1/100 inch
+            case UnitMetric.Pica: return value * 6 / 25.4; // 1 pica = 1/6 inch
+
+            case UnitMetric.Emus: return value / 36000; // 1 mm = 36,000 EMUs
+
+            case UnitMetric.EM: return value * 12 * 72 / 25.4; // Considering 1 em = 12 pt
+            case UnitMetric.Ex: return value * 6 * 72 / 25.4; // Considering half of em
+            
+            case UnitMetric.Diu: return value * 96 / 25.4; // 1 DIU = 1/96 inch
+            case UnitMetric.Pixel: goto case UnitMetric.Diu; // Considering 96 DPI
+
+            default: goto case UnitMetric.Pixel;
+        }
+    }
+
     //____________________________________________________________________
     //
 

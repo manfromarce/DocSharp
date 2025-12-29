@@ -15,6 +15,8 @@ namespace DocSharp.Renderer;
 
 internal class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
 {
+    public bool RenderGridlines { get; set; } = false;
+
     /// <summary>
     /// Render a DOCX document to a QuestPDF document.
     /// </summary>
@@ -22,13 +24,24 @@ internal class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
     /// <returns></returns>
     public QuestPDF.Fluent.Document Render(SpreadsheetDocument inputDocument)
     {
-        var outputDoc = QuestPDF.Fluent.Document.Create((_) =>
+        var workbookPart = inputDocument.WorkbookPart;
+        if (workbookPart != null && workbookPart.WorksheetParts != null && workbookPart.WorksheetParts.Count() > 0)
         {
-            
-        });
-        throw new NotImplementedException();
+            var model = new QuestPdfModel();
+            ProcessWorkbook(workbookPart, model);
+            return model.ToQuestPdfDocument();
+        }
+        else 
+        {
+            // Return empty PDF document.
+            return QuestPDF.Fluent.Document.Create(container => {
+                container.Page(page => {
+                    page.Size(QuestPDF.Helpers.PageSizes.A4);                    
+                });
+            });
+        }
     }
-    
+
     /// <summary>
     /// Render a DOCX document to a QuestPDF document.
     /// </summary>
@@ -47,5 +60,9 @@ internal class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
     {
         using (var docx = SpreadsheetDocument.FromFlatOpcDocument(flatOpc))
             return Render(docx);
+    }
+
+    internal void ProcessWorkbook(WorkbookPart workbookPart, QuestPdfModel model)
+    {
     }
 }

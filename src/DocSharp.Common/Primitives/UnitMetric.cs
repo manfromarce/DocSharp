@@ -61,6 +61,14 @@ public static class UnitMetricHelper
         return Unit.CalculateTwips(unitType, value);
     }
 
+    /// <summary>
+    /// Converts value of the specified UnitMetric to millimeters.
+    /// </summary>
+    public static double ConvertToMillimeters(double value, UnitMetric unitType)
+    {
+        return Unit.CalculateMillimeters(unitType, value);
+    }
+
     internal static UnitMetric ToUnitMetric(string? type)
     {
         if (type == null) return UnitMetric.Unitless;
