@@ -965,6 +965,11 @@ public static class ColorHelpers
         return string.Empty;
     }
 
+    /// <summary>
+    /// Removes '#' from hex color string; converts the short RGB format to RRGGBB; converts named color to hex (e.g. "Red" to FF0000).
+    /// </summary>
+    /// <param name="value">The hex string to normalize.</param>
+    /// <returns></returns>
     internal static string? EnsureHexColor(string? value)
     {
         if (value == null)

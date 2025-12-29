@@ -160,6 +160,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 sb.Write(@"\qk10");
             else if (alignment.Val == JustificationValues.HighKashida)
                 sb.Write(@"\qk20");
+            // else if (alignment.Val == JustificationValues.NumTab)
         }
 
         var spacing = paragraph.GetEffectiveSpacing();
