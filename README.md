@@ -82,4 +82,9 @@ DocSharp is licensed under MIT license and can be used for both open source and 
 
 DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt); ImageSharp and VectSharp have their own licenses, please visit their repositories for more information.
 
-If you find the library useful, adding a star is highly appreciated, stars are a way to guide other developers towards helpful libraries and tools.
+### Contribute
+
+- If you know how to fix a bug, feel free to open a Pull Request  
+- To implement a new feature, please open an issue or discussion to propose it before working on the pull request  
+- If you find the library useful, adding a star is highly appreciated. Stars are a way to guide other developers towards helpful libraries and tools.
+- This is a hobby project. You are welcome to donate to financially support it further development, if you wish (sponsor links for GitHub, LiberaPay, Ko-Fi, BuyMeACoffee and Thanks.dev are available in the repo page).  
