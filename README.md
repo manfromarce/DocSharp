@@ -46,6 +46,7 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 - Reduce code duplication, cleanup
 - Async functions/progress callback (some tasks such as downloading images referenced in Markdown may take some time)
 - Improve support for right-to-left and complex script languages
+- Make converters thread-safe
 
 ### Credits
 
@@ -84,7 +85,7 @@ DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.or
 
 ### Contribute
 
-- If you know how to fix a bug, feel free to open a Pull Request  
-- To implement a new feature, please open an issue or discussion to propose it before working on the pull request  
+- If you know how to fix a bug, feel free to open a Pull Request.  
+- To implement a new feature, please open an issue or discussion to propose it before working on the pull request.   
 - If you find the library useful, adding a star is highly appreciated. Stars are a way to guide other developers towards helpful libraries and tools.
-- This is a hobby project. You are welcome to donate to financially support it further development, if you wish (sponsor links for GitHub, LiberaPay, Ko-Fi, BuyMeACoffee and Thanks.dev are available in the repo page).  
+- This is a hobby project. You are welcome to donate to financially support its further development, if you wish (sponsor links for GitHub, LiberaPay, Ko-Fi, BuyMeACoffee and Thanks.dev are available in the repo page).  
