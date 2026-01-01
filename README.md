@@ -83,7 +83,8 @@ Used in the sample app or for internal tests/comparisons (*not* dependencies whe
 
 DocSharp is licensed under MIT license and can be used for both open source and commercial projects.  
 
-DocSharp.ImageSharp is licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt); ImageSharp and VectSharp have their own licenses, please visit their repositories for more information.
+DocSharp.ImageSharp and DocSharp.MagickNET are licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt).  
+ImageSharp and VectSharp have their own licenses, please visit their repositories for more information.
 
 ### Contribute
 
