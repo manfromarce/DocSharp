@@ -14,7 +14,7 @@
     <AssemblyTitle>DocSharp.Common</AssemblyTitle>
     <PackageId>DocSharp.Common</PackageId>
     <Title>DocSharp.Common</Title>
-    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
+    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown). The DocSharp.Binary.Common package provides common classes and features for other DocSharp packages.</Description>
     <PackageTags>docx doc rtf markdown convert</PackageTags>
   </PropertyGroup>
 

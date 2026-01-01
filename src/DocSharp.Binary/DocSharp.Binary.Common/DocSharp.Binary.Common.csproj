@@ -12,7 +12,7 @@
     <AssemblyTitle>DocSharp.Binary.Common</AssemblyTitle>
     <PackageId>DocSharp.Binary.Common</PackageId>
     <Title>DocSharp.Binary.Common</Title>
-    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown).</Description>
+    <Description>.NET library for converting documents (Open XML, Office 97-2003, RTF, Markdown). The DocSharp.Binary.Common package provides common classes and features for DocSharp.Binary.Doc/Xls/Ppt.</Description>
     <PackageTags>doc xls ppt convert</PackageTags>
   </PropertyGroup>
 
