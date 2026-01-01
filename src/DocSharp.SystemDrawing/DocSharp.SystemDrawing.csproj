@@ -14,7 +14,7 @@
     <PackageId>DocSharp.SystemDrawing</PackageId>
     <Title>DocSharp.SystemDrawing</Title>
     <Description>.NET library for converting documents. The DocSharp.SystemDrawing package provides helper functions to convert unsupported images when creating documents, using System.Drawing.Common (Windows only) as graphics library.</Description>
-    <PackageTags>docx rtf markdown convert converter openxml docsharp images imagesharp</PackageTags>
+    <PackageTags>docx to rtf html markdown convert converter openxml docsharp imaging images graphics systemdrawing gdi svg tiff emf wmf ico png gif bmp jpeg jp2 j2k jpeg2000</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Svg" Version="3.4.7" />

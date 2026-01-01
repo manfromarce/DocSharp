@@ -14,7 +14,7 @@
     <PackageId>DocSharp.Renderer</PackageId>
     <Title>DocSharp.Renderer</Title>
     <Description>.NET library for converting documents. The DocSharp.Renderer package provides DOCX to PDF / XPS / SVG / images conversion using QuestPDF.</Description>
-    <PackageTags>docx pdf svg jpg png xps convert converter renderer openxml office word</PackageTags>
+    <PackageTags>docx to pdf svg jpg png xps convert converter renderer openxml office word docsharp</PackageTags>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 

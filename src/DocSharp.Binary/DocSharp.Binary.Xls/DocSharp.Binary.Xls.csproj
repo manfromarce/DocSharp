@@ -14,7 +14,7 @@
     <PackageId>DocSharp.Binary.Xls</PackageId>
     <Title>DocSharp.Binary.Xls</Title>
     <Description>.NET library for converting documents. The DocSharp.Binary.Xls package provides XLS (Excel 97-2003) to XLSX (Open XML) conversion.</Description>
-    <PackageTags>xls xlsx convert converter excel openxml office binary</PackageTags>
+    <PackageTags>xls to xlsx convert converter excel openxml office binary docsharp</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
