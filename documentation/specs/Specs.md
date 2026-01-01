@@ -35,3 +35,9 @@ This is a list of file format specifications which may be useful for this projec
 - RTF:
   + [1.9.1 specification (available in this repo)](Word2007RTFSpec9.pdf)
   + [Older specifications](https://latex2rtf.sourceforge.net/docs.html)
+- Latex:
+  + LaTex2e unofficial reference manual: <https://texdoc.org/serve/latex2e.pdf/0> 
+- Markdown: 
+  + [Markdown Cheat sheet](https://www.markdownguide.org/cheat-sheet/)
+- HTML: 
+  + [W3School HTML Reference](https://www.w3schools.com/tags/ref_byfunc.asp)
