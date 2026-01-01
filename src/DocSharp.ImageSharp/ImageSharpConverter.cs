@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using CoreJ2K.ImageSharp;
 using DocSharp.IO;
 using SixLabors.ImageSharp;
 using VectSharp.Raster.ImageSharp;
@@ -19,6 +20,13 @@ public class ImageSharpConverter : IImageConverter
                 using (var image = svg.SaveAsImage())
                 {
                     image.SaveAsPng(output);
+                }
+            }
+            else if (inputFormat == IO.ImageFormat.Jpeg2000)
+            {
+                using (var bmp = ImageSharpJ2kExtensions.FromJ2KStream(input))
+                {
+                    bmp.SaveAsPng(output);
                 }
             }
             else

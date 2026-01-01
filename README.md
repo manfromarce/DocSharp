@@ -16,7 +16,7 @@ Packages can be installed via NuGet:
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Docx?style=flat-square&label=DocSharp.Docx)](https://www.nuget.org/packages/DocSharp.Docx/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Markdown?style=flat-square&label=DocSharp.Markdown)](https://www.nuget.org/packages/DocSharp.Markdown/)
 
-The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/) and [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> MD).  
+The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/) and [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML).  
 
 The codebase also contains few experimental converters that are not ready and not published on NuGet yet.  
 
@@ -54,7 +54,8 @@ Dependencies:
 - [Open XML SDK](https://github.com/dotnet/Open-XML-SDK)
 - [Markdig](https://github.com/xoofx/markdig) - for DocSharp.Markdown
 - [ImageSharp](https://github.com/SixLabors/ImageSharp) and [VectSharp](https://github.com/arklumpus/VectSharp) - for DocSharp.ImageSharp
-- System.Drawing.Common and [SVG.NET](https://github.com/svg-net/SVG) - for DocSharp.SystemDrawing (supported on Windows only)
+- System.Drawing.Common and [SVG.NET](https://github.com/svg-net/SVG) - for DocSharp.SystemDrawing
+- [CoreJ2K](https://github.com/cinderblocks/CoreJ2K) - for JPEG2000 support in both DocSharp.ImageSharp and DocSharp.System.Drawing
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)

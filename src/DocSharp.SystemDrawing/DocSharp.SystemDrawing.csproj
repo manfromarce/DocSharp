@@ -18,6 +18,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Svg" Version="3.4.7" />
+    <PackageReference Include="CoreJ2K.Windows" Version="2.1.0.101" />
   </ItemGroup>
   
   <ItemGroup>

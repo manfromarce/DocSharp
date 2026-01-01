@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.Diagnostics;
 using System;
 using Svg;
+using CoreJ2K.Windows;
 
 namespace DocSharp.Imaging;
 
@@ -18,6 +19,13 @@ public class SystemDrawingConverter : IImageConverter
             {
                 var svg = SvgDocument.Open<SvgDocument>(input);
                 using (var bmp = svg.Draw())
+                {
+                    bmp.Save(output, ImageFormat.Png);
+                }
+            }
+            else if (inputFormat == IO.ImageFormat.Jpeg2000)
+            {
+                using (var bmp = BitmapJ2kExtensions.FromJ2KStream(input))
                 {
                     bmp.Save(output, ImageFormat.Png);
                 }
