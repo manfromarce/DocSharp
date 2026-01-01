@@ -14,6 +14,8 @@ This is a list of file format specifications which may be useful for this projec
   + Compound file format: <https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-CFB/%5bMS-CFB%5d.pdf>
   + DOC: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-DOC/%5bMS-DOC%5d.pdf>
   + XLS: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-XLS/%5bMS-XLS%5d.pdf>
+  + Excel 2, 3, 4, 5, 95, 97, 2000, XP, 2003 format (OpenOffice website): <https://www.openoffice.org/sc/excelfileformat.pdf>
+  + Compound file format (OpenOffice website): <https://www.openoffice.org/sc/compdocfileformat.pdf>
   + XLSB: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-XLSB/%5bMS-XLSB%5d.pdf>
   + PPT: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-PPT/%5bMS-PPT%5d.pdf>
   + Drawing: <https://officeprotocoldoc.z19.web.core.windows.net/files/MS-ODRAW/%5bMS-ODRAW%5d.pdf>
