@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0;net462</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- NuGet package -->
+  <PropertyGroup>
+    <AssemblyName>DocSharp.MagickNET</AssemblyName>
+    <AssemblyTitle>DocSharp.MagickNET</AssemblyTitle>
+    <PackageId>DocSharp.MagickNET</PackageId>
+    <Title>DocSharp.MagickNET</Title>
+    <Description>.NET library for converting documents. The DocSharp.ImageSharp package provides helper functions to convert unsupported images when creating documents, using Magick.NET as graphics library.</Description>
+    <PackageTags>docx to rtf html markdown convert converter openxml docsharp imaging images graphics magick magick.net magicknet svg tiff emf wmf ico png gif bmp jpeg jp2 j2k jpeg2000 pcx pict webp avif jxl jpegxl</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.10.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DocSharp.Common\DocSharp.Common.csproj" />
+  </ItemGroup>
+
+</Project>

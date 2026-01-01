@@ -35,7 +35,7 @@ public class SystemDrawingConverter : IImageConverter
                 if (inputFormat == IO.ImageFormat.Wmf || inputFormat == IO.ImageFormat.Emf)
                 {
                     // Unfortunately, for some reason GDI+ fails when a metafile is in a ZipWrappingStream produced by Open XML SDK,
-                    // so we need to copy all the bytes into a new stream and load that.
+                    // so we need to copy all the bytes into a new stream and load that one.
                     using (var ms = new MemoryStream())
                     {
                         input.CopyTo(ms);

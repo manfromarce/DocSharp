@@ -8,6 +8,7 @@
   <Folder Name="/Imaging/">
     <Project Path="DocSharp.ImageSharp/DocSharp.ImageSharp.csproj" />
     <Project Path="DocSharp.SystemDrawing/DocSharp.SystemDrawing.csproj" />
+    <Project Path="DocSharp.MagickNET/DocSharp.MagickNET.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="../samples/WpfApp1/WpfApp1.csproj" />
