@@ -22,7 +22,7 @@ The codebase also contains few experimental converters that are not ready and no
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
 
-You can also consider the following libraries for documents creation and manipulation: the Open XML SDK itself, [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [OpenXML-Office](https://github.com/DraviaVemal/OpenXML-Office), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler), [QuestPDF](https://github.com/QuestPDF/QuestPDF), [MigraDoc](https://github.com/empira/PDFsharp).  
+You can also consider the following libraries for documents creation and manipulation: the Open XML SDK itself, [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [Clippit](https://github.com/sergey-tihon/Clippit), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler), [QuestPDF](https://github.com/QuestPDF/QuestPDF), [FossPDF.NET](https://github.com/FossPDF/FossPDF.Net), [MigraDoc](https://github.com/empira/PDFsharp)
 
 ### Supported features
 
