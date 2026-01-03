@@ -13,14 +13,14 @@ using Document = QuestPDF.Fluent.Document;
 
 namespace DocSharp.Renderer;
 
-internal class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
+public class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
 {
     public bool RenderGridlines { get; set; } = false;
 
     /// <summary>
-    /// Render a DOCX document to a QuestPDF document.
+    /// Render a XLSX document to a QuestPDF document.
     /// </summary>
-    /// <param name="inputDocument">The input WordprocessingDocument instance.</param>
+    /// <param name="inputDocument">The input SpreadsheetDocument instance.</param>
     /// <returns></returns>
     public QuestPDF.Fluent.Document Render(SpreadsheetDocument inputDocument)
     {
@@ -43,23 +43,13 @@ internal class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
     }
 
     /// <summary>
-    /// Render a DOCX document to a QuestPDF document.
+    /// Render a XLSX document to a QuestPDF document.
     /// </summary>
-    /// <param name="inputStream">The input DOCX stream.</param>
-    public QuestPDF.Fluent.Document Render(Stream inputStream)
+    /// <param name="inputStream">The input XLSX stream.</param>
+    public QuestPDF.Fluent.Document Render(Stream inputStream) // implements the interface
     {        
-        using var docx = SpreadsheetDocument.Open(inputStream, false);
-            return Render(docx);
-    }
-
-    /// <summary>
-    /// Render a Flat OPC (Open XML) document to a QuestPDF document.
-    /// </summary>
-    /// <param name="flatOpc">The Flat OPC XDocument.</param>
-    public QuestPDF.Fluent.Document Render(XDocument flatOpc)
-    {
-        using (var docx = SpreadsheetDocument.FromFlatOpcDocument(flatOpc))
-            return Render(docx);
+        using var xlsx = SpreadsheetDocument.Open(inputStream, false);
+            return Render(xlsx);
     }
 
     internal void ProcessWorkbook(WorkbookPart workbookPart, QuestPdfModel model)

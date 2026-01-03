@@ -7,7 +7,7 @@ using QuestPDF.Infrastructure;
 
 namespace DocSharp.Renderer;
 
-internal class QuestPdfModel
+public class QuestPdfModel
 {
     internal List<QuestPdfPageSet> PageSets = new();
     

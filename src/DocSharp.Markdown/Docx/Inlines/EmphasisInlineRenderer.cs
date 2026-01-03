@@ -13,21 +13,21 @@ public class EmphasisInlineRenderer : DocxObjectRenderer<EmphasisInline>
         {
             case '*':
             case '_':
-                if (obj.DelimiterCount == 2)
+                if (obj.DelimiterCount == 2) // strong emphasis (bold)
                 {
                     props.Bold = new Bold();
                 }
-                else
+                else if (obj.DelimiterCount == 1) // emphasized text (italic)
                 {
                     props.Italic = new Italic();
                 }
                 break;
             case '~':
-                if (obj.DelimiterCount == 2)
+                if (obj.DelimiterCount == 2) // deleted text (strikethrough)
                 {
                     props.Strike = new Strike();
                 }
-                else
+                else if (obj.DelimiterCount == 1) // subscript
                 {
                     props.VerticalTextAlignment = new VerticalTextAlignment 
                     {
@@ -36,18 +36,21 @@ public class EmphasisInlineRenderer : DocxObjectRenderer<EmphasisInline>
                 }
                 break;
             case '^':
-                props.VerticalTextAlignment = new VerticalTextAlignment()
+                if (obj.DelimiterCount == 1) // superscript
                 {
-                    Val = VerticalPositionValues.Superscript
-                };
+                    props.VerticalTextAlignment = new VerticalTextAlignment()
+                    {
+                        Val = VerticalPositionValues.Superscript
+                    };
+                }
                 break;
-            case '+':
+            case '+': // inserted text
                 if (obj.DelimiterCount == 2)
                 {
                     props.Highlight = new Highlight { Val = HighlightColorValues.Green };
                 }
                 break;
-            case '=':
+            case '=': // marked text
                 if (obj.DelimiterCount == 2)
                 {
                     props.Highlight = new Highlight { Val = HighlightColorValues.Yellow };

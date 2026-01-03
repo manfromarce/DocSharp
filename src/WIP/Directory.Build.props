@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ItemGroup>
+    <None Include="../../../README.md" Pack="true" PackagePath="$(PackageReadmeFile)"/>
+  </ItemGroup>
+
+  <!-- Disable NuGet package creation for experimental projects -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <Import Project="../Directory.Build.props" />
+</Project>

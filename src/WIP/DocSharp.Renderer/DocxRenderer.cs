@@ -12,7 +12,7 @@ using QuestPDF.Fluent;
 
 namespace DocSharp.Renderer;
 
-internal class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<QuestPDF.Fluent.Document>
+public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<QuestPDF.Fluent.Document>
 {
     static DocxRenderer()
     {
@@ -57,19 +57,9 @@ internal class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Q
     /// Render a DOCX document to a QuestPDF document.
     /// </summary>
     /// <param name="inputStream">The input DOCX stream.</param>
-    public QuestPDF.Fluent.Document Render(Stream inputStream)
+    public QuestPDF.Fluent.Document Render(Stream inputStream) // implements the interface
     {        
         using var docx = WordprocessingDocument.Open(inputStream, false);
-            return Render(docx);
-    }
-
-    /// <summary>
-    /// Render a Flat OPC (Open XML) document to a QuestPDF document.
-    /// </summary>
-    /// <param name="flatOpc">The Flat OPC XDocument.</param>
-    public QuestPDF.Fluent.Document Render(XDocument flatOpc)
-    {
-        using (var docx = WordprocessingDocument.FromFlatOpcDocument(flatOpc))
             return Render(docx);
     }
 

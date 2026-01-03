@@ -37,7 +37,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save the rendered document as PDF.
     /// </summary>
-    /// <param name="inputFilePath">The input document stream.</param>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputFilePath">The output file path where the PDF should be saved to.</param>
     public static void SaveAsPdf(this IDocumentRenderer<Document> renderer, Stream inputStream, string outputFilePath)
     {
@@ -47,8 +47,8 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save the rendered document as PDF.
     /// </summary>
-    /// <param name="inputFilePath">The input document stream.</param>
-    /// <param name="outputFilePath">The output stream where the PDF should be saved to.</param>
+    /// <param name="inputStream">The input document stream.</param>
+    /// <param name="outputStream">The output stream where the PDF should be saved to.</param>
     public static void SaveAsPdf(this IDocumentRenderer<Document> renderer, Stream inputStream, Stream outputStream)
     {
         renderer.Render(inputStream).GeneratePdf(outputStream);
@@ -68,7 +68,7 @@ public static class QuestPdfRendererExtensions
     /// Save the rendered document as PDF.
     /// </summary>
     /// <param name="inputBytes">The input document bytes.</param>
-    /// <param name="outputFilePath">The output stream where the PDF should be saved to.</param>
+    /// <param name="outputStream">The output stream where the PDF should be saved to.</param>
     public static void SaveAsPdf(this IDocumentRenderer<Document> renderer, byte[] inputBytes, Stream outputStream)
     {
         renderer.Render(inputBytes).GeneratePdf(outputStream);
@@ -97,7 +97,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save the rendered document as XPS.
     /// </summary>
-    /// <param name="inputFilePath">The input document stream.</param>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputFilePath">The output file path where the XPS should be saved to.</param>
     public static void SaveAsXps(this IDocumentRenderer<Document> renderer, Stream inputStream, string outputFilePath)
     {
@@ -107,8 +107,8 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save the rendered document as XPS.
     /// </summary>
-    /// <param name="inputFilePath">The input document stream.</param>
-    /// <param name="outputFilePath">The output stream where the XPS should be saved to.</param>
+    /// <param name="inputStream">The input document stream.</param>
+    /// <param name="outputStream">The output stream where the XPS should be saved to.</param>
     public static void SaveAsXps(this IDocumentRenderer<Document> renderer, Stream inputStream, Stream outputStream)
     {
         renderer.Render(inputStream).GenerateXps(outputStream);
@@ -128,7 +128,7 @@ public static class QuestPdfRendererExtensions
     /// Save the rendered document as XPS.
     /// </summary>
     /// <param name="inputBytes">The input document bytes.</param>
-    /// <param name="outputFilePath">The output stream where the XPS should be saved to.</param>
+    /// <param name="outputStream">The output stream where the XPS should be saved to.</param>
     public static void SaveAsXps(this IDocumentRenderer<Document> renderer, byte[] inputBytes, Stream outputStream)
     {
         renderer.Render(inputBytes).GenerateXps(outputStream);
@@ -137,6 +137,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Get all pages of the rendered documents as IEnumerable of JPEG bytes.
     /// </summary>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <returns></returns>
     public static IEnumerable<byte[]> GetAllPagesAsJpeg(this IDocumentRenderer<Document> renderer, string inputFilePath)
     {        
@@ -149,6 +150,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Get all pages of the rendered documents as IEnumerable of JPEG bytes.
     /// </summary>
+    /// <param name="inputStream">The input document stream.</param>
     /// <returns></returns>
     public static IEnumerable<byte[]> GetAllPagesAsJpeg(this IDocumentRenderer<Document> renderer, Stream inputStream)
     {        
@@ -161,6 +163,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Get all pages of the rendered documents as IEnumerable of JPEG bytes.
     /// </summary>
+    /// <param name="inputBytes">The input document bytes.</param>
     /// <returns></returns>
     public static IEnumerable<byte[]> GetAllPagesAsJpeg(this IDocumentRenderer<Document> renderer, byte[] inputBytes)
     {        
@@ -173,6 +176,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Get all pages of the rendered documents as IEnumerable of PNG bytes.
     /// </summary>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <returns></returns>
     public static IEnumerable<byte[]> GetAllPagesAsPng(this IDocumentRenderer<Document> renderer, string inputFilePath)
     {        
@@ -185,6 +189,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Get all pages of the rendered documents as IEnumerable of PNG bytes.
     /// </summary>
+    /// <param name="inputStream">The input document stream.</param>
     /// <returns></returns>
     public static IEnumerable<byte[]> GetAllPagesAsPng(this IDocumentRenderer<Document> renderer, Stream inputStream)
     {        
@@ -209,6 +214,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Get all pages of the rendered documents as IEnumerable of SVG strings.
     /// </summary>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <returns></returns>
     public static IEnumerable<string> GetAllPagesAsSvg(this IDocumentRenderer<Document> renderer, string inputFilePath)
     {
@@ -218,6 +224,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Get all pages of the rendered documents as IEnumerable of SVG strings.
     /// </summary>
+    /// <param name="inputStream">The input document stream.</param>
     /// <returns></returns>
     public static IEnumerable<string> GetAllPagesAsSvg(this IDocumentRenderer<Document> renderer, Stream inputStream)
     {
@@ -236,6 +243,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save all pages of the rendered document as JPEG.
     /// </summary>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
     /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.jpg".</param>
     public static void SaveAllPagesAsJpeg(this IDocumentRenderer<Document> renderer, string inputFilePath, string outputDirPath, string baseName)
@@ -253,6 +261,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save all pages of the rendered document as JPEG.
     /// </summary>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
     /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.jpg".</param>
     public static void SaveAllPagesAsJpeg(this IDocumentRenderer<Document> renderer, Stream inputStream, string outputDirPath, string baseName)
@@ -270,6 +279,7 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save all pages of the rendered document as JPEG.
     /// </summary>
+    /// <param name="inputBytes">The input document bytes.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
     /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.jpg".</param>
     public static void SaveAllPagesAsJpeg(this IDocumentRenderer<Document> renderer, byte[] inputBytes, string outputDirPath, string baseName)
@@ -287,15 +297,16 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save all pages of the rendered document as PNG.
     /// </summary>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
-    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.jpg".</param>
+    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.png".</param>
     public static void SaveAllPagesAsPng(this IDocumentRenderer<Document> renderer, string inputFilePath, string outputDirPath, string baseName)
     {
         var images = renderer.GetAllPagesAsPng(inputFilePath);        
         int pageNumber = 1;
         foreach (var image in images)
         {
-            string fileName = baseName + "_" + pageNumber.ToString() + ".jpg";
+            string fileName = baseName + "_" + pageNumber.ToString() + ".png";
             File.WriteAllBytes(Path.Combine(outputDirPath, fileName), image);
             ++pageNumber;
         }
@@ -304,15 +315,16 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save all pages of the rendered document as PNG.
     /// </summary>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
-    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.jpg".</param>
+    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.png".</param>
     public static void SaveAllPagesAsPng(this IDocumentRenderer<Document> renderer, Stream inputStream, string outputDirPath, string baseName)
     {
         var images = renderer.GetAllPagesAsPng(inputStream);        
         int pageNumber = 1;
         foreach (var image in images)
         {
-            string fileName = baseName + "_" + pageNumber.ToString() + ".jpg";
+            string fileName = baseName + "_" + pageNumber.ToString() + ".png";
             File.WriteAllBytes(Path.Combine(outputDirPath, fileName), image);
             ++pageNumber;
         }
@@ -321,25 +333,27 @@ public static class QuestPdfRendererExtensions
     /// <summary>
     /// Save all pages of the rendered document as PNG.
     /// </summary>
+    /// <param name="inputBytes">The input document bytes.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
-    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.jpg".</param>
+    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.png".</param>
     public static void SaveAllPagesAsPng(this IDocumentRenderer<Document> renderer, byte[] inputBytes, string outputDirPath, string baseName)
     {
         var images = renderer.GetAllPagesAsPng(inputBytes);        
         int pageNumber = 1;
         foreach (var image in images)
         {
-            string fileName = baseName + "_" + pageNumber.ToString() + ".jpg";
+            string fileName = baseName + "_" + pageNumber.ToString() + ".png";
             File.WriteAllBytes(Path.Combine(outputDirPath, fileName), image);
             ++pageNumber;
         }
     }
 
     /// <summary>
-    /// Save all pages of the rendered document as PNG.
+    /// Save all pages of the rendered document as SVG.
     /// </summary>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
-    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.png".</param>
+    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.svg".</param>
     public static void SaveAllPagesAsSvg(this IDocumentRenderer<Document> renderer, string inputFilePath, string outputDirPath, string baseName)
     {
         var images = renderer.GetAllPagesAsSvg(inputFilePath);        
@@ -353,10 +367,11 @@ public static class QuestPdfRendererExtensions
     }
 
     /// <summary>
-    /// Save all pages of the rendered document as PNG.
+    /// Save all pages of the rendered document as SVG.
     /// </summary>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
-    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.png".</param>
+    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.svg".</param>
     public static void SaveAllPagesAsSvg(this IDocumentRenderer<Document> renderer, Stream inputStream, string outputDirPath, string baseName)
     {
         var images = renderer.GetAllPagesAsSvg(inputStream);        
@@ -370,10 +385,11 @@ public static class QuestPdfRendererExtensions
     }
 
     /// <summary>
-    /// Save all pages of the rendered document as PNG.
+    /// Save all pages of the rendered document as SVG.
     /// </summary>
+    /// <param name="inputBytes">The input document bytes.</param>
     /// <param name="outputDirPath">The output directory path (write access is needed).</param>
-    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.png".</param>
+    /// <param name="baseName">The base file name. The total file name will be "baseName_pageNumber.svg".</param>
     public static void SaveAllPagesAsSvg(this IDocumentRenderer<Document> renderer, byte[] inputBytes, string outputDirPath, string baseName)
     {
         var images = renderer.GetAllPagesAsSvg(inputBytes);        
@@ -390,6 +406,7 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as JPEG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <param name="outputFilePath">The output JPG file path.</param>
     public static void SaveAsJpeg(this IDocumentRenderer<Document> renderer, int pageNumber, string inputFilePath, string outputFilePath)
     {
@@ -405,6 +422,7 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as JPEG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputFilePath">The output JPG file path.</param>
     public static void SaveAsJpeg(this IDocumentRenderer<Document> renderer, int pageNumber, Stream inputStream, string outputFilePath)
     {
@@ -420,7 +438,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as JPEG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputStream">The output stream where the JPG image should be saved to.</param>
+    /// <param name="inputBytes">The input document bytes.</param>
+    /// <param name="outputFilePath">The output JPG file path.</param>
     public static void SaveAsJpeg(this IDocumentRenderer<Document> renderer, int pageNumber, byte[] inputBytes, string outputFilePath)
     {
         var images = renderer.GetAllPagesAsJpeg(inputBytes);
@@ -435,7 +454,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as JPEG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputFilePath">The output JPG file path.</param>
+    /// <param name="inputFilePath">The input document file path.</param>
+    /// <param name="outputStream">The output JPG stream.</param>
     public static void SaveAsJpeg(this IDocumentRenderer<Document> renderer, int pageNumber, string inputFilePath, Stream outputStream)
     {
         var images = renderer.GetAllPagesAsJpeg(inputFilePath);
@@ -450,7 +470,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as JPEG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputFilePath">The output JPG file path.</param>
+    /// <param name="inputStream">The input document stream.</param>
+    /// <param name="outputStream">The output JPG stream.</param>
     public static void SaveAsJpeg(this IDocumentRenderer<Document> renderer, int pageNumber, Stream inputStream, Stream outputStream)
     {
         var images = renderer.GetAllPagesAsJpeg(inputStream);
@@ -465,6 +486,7 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as JPEG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
+    /// <param name="inputBytes">The input document bytes.</param>
     /// <param name="outputStream">The output stream where the JPG image should be saved to.</param>
     public static void SaveAsJpeg(this IDocumentRenderer<Document> renderer, int pageNumber, byte[] inputBytes, Stream outputStream)
     {
@@ -480,7 +502,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as PNG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputFilePath">The output JPG file path.</param>
+    /// <param name="inputFilePath">The input document file path.</param>
+    /// <param name="outputFilePath">The output PNG file path.</param>
     public static void SaveAsPng(this IDocumentRenderer<Document> renderer, int pageNumber, string inputFilePath, string outputFilePath)
     {
         var images = renderer.GetAllPagesAsPng(inputFilePath);
@@ -495,7 +518,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as PNG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputFilePath">The output JPG file path.</param>
+    /// <param name="inputStream">The input document stream.</param>
+    /// <param name="outputFilePath">The output PNG file path.</param>
     public static void SaveAsPng(this IDocumentRenderer<Document> renderer, int pageNumber, Stream inputStream, string outputFilePath)
     {
         var images = renderer.GetAllPagesAsPng(inputStream);
@@ -510,7 +534,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as PNG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputStream">The output stream where the JPG image should be saved to.</param>
+    /// <param name="inputBytes">The input document bytes.</param>
+    /// <param name="outputFilePath">The output PNG file path.</param>
     public static void SaveAsPng(this IDocumentRenderer<Document> renderer, int pageNumber, byte[] inputBytes, string outputFilePath)
     {
         var images = renderer.GetAllPagesAsPng(inputBytes);
@@ -525,7 +550,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as PNG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputFilePath">The output JPG file path.</param>
+    /// <param name="inputFilePath">The input document file path.</param>
+    /// <param name="outputStream">The output stream where the PNG image should be saved to.</param>
     public static void SaveAsPng(this IDocumentRenderer<Document> renderer, int pageNumber, string inputFilePath, Stream outputStream)
     {
         var images = renderer.GetAllPagesAsPng(inputFilePath);
@@ -540,7 +566,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as PNG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputFilePath">The output JPG file path.</param>
+    /// <param name="inputStream">The input document stream.</param>
+    /// <param name="outputStream">The output stream where the PNG image should be saved to.</param>
     public static void SaveAsPng(this IDocumentRenderer<Document> renderer, int pageNumber, Stream inputStream, Stream outputStream)
     {
         var images = renderer.GetAllPagesAsPng(inputStream);
@@ -555,7 +582,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as PNG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputStream">The output stream where the JPG image should be saved to.</param>
+    /// <param name="inputBytes">The input document bytes.</param>
+    /// <param name="outputStream">The output stream where the PNG image should be saved to.</param>
     public static void SaveAsPng(this IDocumentRenderer<Document> renderer, int pageNumber, byte[] inputBytes, Stream outputStream)
     {
         var images = renderer.GetAllPagesAsPng(inputBytes);
@@ -570,6 +598,7 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as SVG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <param name="outputFilePath">The output SVG file path.</param>
     public static void SaveAsSvg(this IDocumentRenderer<Document> renderer, int pageNumber, string inputFilePath, string outputFilePath)
     {
@@ -585,6 +614,7 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as SVG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
+    /// <param name="inputFilePath">The input document file path.</param>
     /// <param name="outputStream">The output stream where the SVG should be saved to.</param>
     public static void SaveAsSvg(this IDocumentRenderer<Document> renderer, int pageNumber, string inputFilePath, Stream outputStream)
     {
@@ -603,6 +633,7 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as SVG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputFilePath">The output SVG file path.</param>
     public static void SaveAsSvg(this IDocumentRenderer<Document> renderer, int pageNumber, Stream inputStream, string outputFilePath)
     {
@@ -618,6 +649,7 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as SVG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
+    /// <param name="inputStream">The input document stream.</param>
     /// <param name="outputStream">The output stream where the SVG should be saved to.</param>
     public static void SaveAsSvg(this IDocumentRenderer<Document> renderer, int pageNumber, Stream inputStream, Stream outputStream)
     {
@@ -636,7 +668,8 @@ public static class QuestPdfRendererExtensions
     /// Save a page (1 to pages count) of the rendered document as SVG.
     /// </summary>
     /// <param name="pageNumber">Page number (must be between 1 and pages count).</param>
-    /// <param name="outputStream">The output stream where the SVG should be saved to.</param>
+    /// <param name="inputBytes">The input document bytes.</param>
+    /// <param name="outputFilePath">The output SVG file path.</param>
     public static void SaveAsSvg(this IDocumentRenderer<Document> renderer, int pageNumber, byte[] inputBytes, string outputFilePath)
     {
         var images = renderer.GetAllPagesAsSvg(inputBytes);

@@ -41,3 +41,6 @@ This is a list of file format specifications which may be useful for this projec
   + [Markdown Cheat sheet](https://www.markdownguide.org/cheat-sheet/)
 - HTML: 
   + [W3School HTML Reference](https://www.w3schools.com/tags/ref_byfunc.asp)
+- EPUB:
+  + [EPUB 3.3 (w3.org)](https://www.w3.org/TR/epub/)
+  + [EPUB Reading Systems 3.3 (w3.org)](https://www.w3.org/TR/epub-rs/)

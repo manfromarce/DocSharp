@@ -15,7 +15,6 @@
     <Title>DocSharp.Epub</Title>
     <Description>.NET library for converting documents. The DocSharp.Epub package provides EPUB to DOCX conversion.</Description>
     <PackageTags>epub to docx convert converter renderer openxml office word epubcore docsharp ebook</PackageTags>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
   
   <ItemGroup>
@@ -25,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
+    <ProjectReference Include="..\..\DocSharp.Docx\DocSharp.Docx.csproj" />
   </ItemGroup>
 
 </Project>

@@ -14,23 +14,24 @@ using DocumentFormat.OpenXml.Packaging;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 using EpubCore;
 using HtmlToOpenXml;
+using DocSharp.Docx;
 
-namespace DocSharp.Docx;
+namespace DocSharp.Ebook;
 
 // NOTE: internal links currently don't work due to the Html2OpenXml library not creating the necessary bookmarks 
 // for HTML ids. 
 
 /// <summary>
 /// Basic experimental EPUB to DOCX converter that performs the following steps: 
-/// 1. Reads the EPUB using EpubCore to get the chapters in reading order
-/// 2. Extract the EPUB into a temp folder
+/// 1. Extract the EPUB into a temp folder
+/// 2. Reads the EPUB using EpubCore to get the chapters in reading order
 /// 3. For each chapter, replace image sources with absolute URIs, 
 /// attempt to fix links to other chapters, 
 /// and move CSS styles inline using the PreMailer library.
 /// 4. Convert HTML to DOCX using the HtmlToOpenXml library and append to the DOCX document.
 /// 5. Delete the temp directory.
 /// </summary>
-internal class EpubToDocxConverter : IBinaryToDocxConverter
+public class EpubToDocxConverter : IBinaryToDocxConverter
 {
     /// <summary>
     /// If true, only the "core" chapters will get converted.

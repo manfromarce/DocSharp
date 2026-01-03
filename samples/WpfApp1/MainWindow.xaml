@@ -11,87 +11,113 @@
     MinWidth="300"
     MinHeight="200"
     mc:Ignorable="d">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0"
-                   Margin="4"
-                   Text="Supported features:"/>
-        <UniformGrid 
-            Margin="4"
-            HorizontalAlignment="Left"
-            Grid.Row="1"
-            Columns="2">
-            <UniformGrid.Resources>
-                <Style TargetType="Button">
-                    <Setter Property="Padding" Value="3,5,3,5"/>
-                    <Setter Property="Margin" Value="2"/>
-                </Style>
-            </UniformGrid.Resources>
-            <Button
-                Click="BinaryToOpenXml_Click"
-                Content="Binary to Open XML" />
-            <Button
-                Click="DocxToRtf_Click"
-                Content="Docx to Rtf" />
-            <Button
-                Click="DocxToHtml_Click"
-                Content="Docx to Html" />
-            <Button
-                Click="DocxToMarkdown_Click"
-                Content="Docx to Markdown" />
-            <Button
-                Click="DocxToMarkdownAppend_Click"
-                Content="Docx to Markdown (Append)" />
-            <Button
-                 Click="DocxToTxt_Click"
-                 Content="Docx to Txt" />
-            <Button
-                Click="MarkdownToDocx_Click"
-                Content="Markdown to Docx" />
-            <Button
-                Click="MarkdownToRtf_Click"
-                Content="Markdown to Rtf" />
-            <Button
-                Click="MarkdownToDocxAppend_Click"
-                Content="Markdown to Docx (Append)" />
-            <Button
-                Click="ViewDocx_Click"
-                Content="View Docx document" />
-        </UniformGrid>
-        <TextBlock Grid.Row="2"
-            Margin="4,10,4,4"
-            Text="Two-steps conversions or integration with other libraries:"/>
-        <UniformGrid 
-          Margin="4"
-          HorizontalAlignment="Left"
-          Grid.Row="3"
-          Columns="2">
-            <UniformGrid.Resources>
-                <Style TargetType="Button">
-                    <Setter Property="Padding" Value="3,5,3,5"/>
-                    <Setter Property="Margin" Value="2"/>
-                </Style>
-            </UniformGrid.Resources>
-            <Button
-               Click="RtfToHtmlDocx_Click"
-               Content="Rtf to Html/Docx (third-party)" />
-            <Button
-               Click="DocToRtf_Click"
-               Content="Doc to Rtf" /> 
-            <Button
-               Click="DocToHtml_Click"
-               Content="Doc to Html" />
-            <Button
-              Click="HtmlToRtf_Click"
-              Content="Html to Docx/Rtf (via Html2OpenXml)" />
-            <Button
-              Click="XlsToHtml_Click"
-              Content="Xls/Xlsx to Html" />
-        </UniformGrid>
-    </Grid>
+    <ScrollViewer>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0"
+                    Margin="4"
+                    Text="Supported features:"/>
+            <UniformGrid 
+                Margin="4"
+                HorizontalAlignment="Left"
+                Grid.Row="1"
+                Columns="3">
+                <UniformGrid.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="Padding" Value="3,5,3,5"/>
+                        <Setter Property="Margin" Value="2"/>
+                    </Style>
+                </UniformGrid.Resources>
+                <Button
+                    Click="BinaryToOpenXml_Click"
+                    Content="Binary to Open XML" />
+                <Button
+                    Click="DocxToRtf_Click"
+                    Content="Docx to Rtf" />
+                <Button
+                    Click="DocxToHtml_Click"
+                    Content="Docx to Html" />
+                <Button
+                    Click="DocxToMarkdown_Click"
+                    Content="Docx to Markdown" />
+                <Button
+                    Click="DocxToMarkdownAppend_Click"
+                    Content="Docx to Markdown (Append)" />
+                <Button
+                    Click="DocxToTxt_Click"
+                    Content="Docx to Txt" />
+                <Button
+                    Click="RtfToDocx_Click"
+                    Content="Rtf to Docx" />
+                <Button
+                    Click="MarkdownToDocx_Click"
+                    Content="Markdown to Docx" />
+                <Button
+                    Click="MarkdownToRtf_Click"
+                    Content="Markdown to Rtf" />
+                <Button
+                    Click="MarkdownToDocxAppend_Click"
+                    Content="Markdown to Docx (Append)" />
+                <Button
+                    Click="DocxToPdf_Click"
+                    Content="Docx to Pdf" />
+                <Button
+                    Click="DocxToImages_Click"
+                    Content="Docx to images" />
+                <Button
+                    Click="XlsxToPdf_Click"
+                    Content="Xlsx to Pdf" />
+                <Button
+                    Click="ViewDocx_Click"
+                    Content="View Docx document" />
+            </UniformGrid>
+            <TextBlock Grid.Row="2"
+                Margin="4,10,4,4"
+                Text="Two-steps conversions or integration with other libraries:"/>
+            <UniformGrid 
+                Margin="4"
+                HorizontalAlignment="Left"
+                Grid.Row="3"
+                Columns="2">
+                <UniformGrid.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="Padding" Value="3,5,3,5"/>
+                        <Setter Property="Margin" Value="2"/>
+                    </Style>
+                </UniformGrid.Resources>
+                <Button
+                    Click="DocToRtf_Click"
+                    Content="Doc to Rtf" /> 
+                <Button
+                    Click="DocToHtml_Click"
+                    Content="Doc to Html" />
+                <Button
+                    Click="RtfToHtml_Click"
+                    Content="Rtf to Html" />
+                <Button
+                    Click="RtfToMarkdown_Click"
+                    Content="Rtf to Markdown" />
+                <Button
+                    Click="HtmlToRtf_Click"
+                    Content="Html to Docx/Rtf (via Html2OpenXml)" />
+                <Button
+                    Click="XlsToHtml_Click"
+                    Content="Xls/Xlsx to Html" />
+                <Button
+                    Click="GenerateDocx_Click"
+                    Content="Generate DOCX, PDF, RTF, HTML (via Open XML SDK)" />
+                <Button
+                    Click="GenerateMigraDoc_Click"
+                    Content="Generate PDF, RTF, DOCX (via MigraDoc)" />
+                <Button
+                    Click="GenerateXlsx_Click"
+                    Content="Generate spreadsheet + PDF (via ClosedXML)" />
+            </UniformGrid>
+        </Grid>
+    </ScrollViewer>
 </Window>

@@ -15,9 +15,9 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace DocSharp.Docx;
+namespace DocSharp.Ebook;
 
-public class HtmlUtils
+internal class HtmlUtils
 {
     public static string NormalizeHtml(string htmlContent, string tempDir, List<string> chapterFileNames)
     {

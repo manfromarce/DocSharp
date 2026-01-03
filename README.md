@@ -5,7 +5,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.  
-Note: pre-97 formats and XLSB are very different and not supported. For Excel files, you can also consider the [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader) library to read at least plain values from more file types. 
+Note: pre-97 formats and XLSB are very different and not supported.
 - DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors/services, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
 
@@ -18,11 +18,13 @@ Packages can be installed via NuGet:
 
 The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), DocSharp.MagickNET (not published yet) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). More information on images can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
 
-The codebase also contains few experimental converters that are not ready and not published on NuGet yet.  
+The codebase also contains few experimental converters that are not ready and not published on NuGet yet:  
+- DocSharp.Renderer: provides basic DOCX and XLSX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
+- DocSharp.Epub: provides basic EPUB to DOCX (via HTML) conversion.
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
-
-You can also consider the following libraries for documents creation and manipulation: the Open XML SDK itself, [OfficeIMO](https://github.com/EvotecIT/OfficeIMO), [Clippit](https://github.com/sergey-tihon/Clippit), [ClosedXML](https://github.com/ClosedXML/ClosedXML), [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler), [QuestPDF](https://github.com/QuestPDF/QuestPDF), [FossPDF.NET](https://github.com/FossPDF/FossPDF.Net), [MigraDoc](https://github.com/empira/PDFsharp)
+You can consider using the Open XML SDK itself or other <a href="#recommended_libraries">recommended libraries</a> for documents creation and manipulation. Some of these are used in the sample app to test two-steps conversions, compare results, or generate documents in multiple formats with the same code.  
+DocSharp provides methods to accept/return a WordprocessingDocument directly (in addition to file path / Stream / byte array), and a SaveTo extension method for WordprocessingDocument.
 
 ### Supported features
 
@@ -33,6 +35,7 @@ You can also consider the following libraries for documents creation and manipul
 
 - Supported targets are .NET 8, 9, 10 and .NET Framework 4.6.2 (minimum netfx version still supported).  
 - DocSharp.SystemDrawing is for Windows only (.NET Framework or net*-windows), as System.Drawing.Common is only supported on Windows; while DocSharp.ImageSharp is cross-platform for .NET 8+ (ImageSharp does not support .NET Framework).
+- DocSharp.Renderer depends on QuestPDF, which currently supports Windows x64 / x86, macOS x64 / ARM64, Linux x64 / ARM64. Windows ARM64, Android, iOS are not supported yet, due to a custom Skia build. 
 
 ### Usage
 
@@ -40,8 +43,7 @@ You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki
 
 ### Roadmap
 
-- Implement reverse RTF to DOCX conversion (⌛ started)  
-- Implement DOCX renderer using QuestPDF (⌛ started)  
+- Finish and publish experimental converters
 - Support more elements and attributes, and fix issues on edge cases
 - Reduce code duplication, cleanup
 - Async functions/progress callback (some tasks such as downloading images referenced in Markdown may take some time)
@@ -57,6 +59,8 @@ Dependencies:
 - System.Drawing.Common and [SVG.NET](https://github.com/svg-net/SVG) - for DocSharp.SystemDrawing
 - [CoreJ2K](https://github.com/cinderblocks/CoreJ2K) - for JPEG2000 support in both DocSharp.ImageSharp and DocSharp.System.Drawing
 - [Magick.NET-Q8-AnyCPU](https://github.com/dlemstra/Magick.NET) - for DocSharp.MagickNET
+- [QuestPDF](https://github.com/QuestPDF/QuestPDF) - for DocSharp.Renderer
+- [EpubCore](https://github.com/Pennable/EpubCore), [Html2OpenXml](https://github.com/onizet/html2openxml), [PreMailer.Net](https://github.com/milkshakesoftware/PreMailer.Net), [AngleSharp](https://github.com/AngleSharp/AngleSharp) - for DocSharp.Epub (AngleSharp is a dependency of Html2OpenXml and PreMailer.Net)
 
 Forked: 
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
@@ -66,25 +70,49 @@ Others:
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.  
 - [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion  
 - [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion  
-- [OpenMcdf](https://github.com/ironfede/openmcdf) for better understanding Microsoft Compound format.  
-- [RtfPipe](https://github.com/erdomke/RtfPipe) and [FridaysForks.RtfPipe](https://github.com/cezarypiatek/FridaysForks.RtfPipe) for part of the RTF parsing logic.  
+- [RtfPipe](https://github.com/erdomke/RtfPipe), [FridaysForks.RtfPipe](https://github.com/cezarypiatek/FridaysForks.RtfPipe), [RtfConverter](https://github.com/jokecamp/RtfConverter) for part of the RTF parsing logic.  
 
-Used in the sample app or for internal tests/comparisons (*not* dependencies when installing packages):  
-- [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
-- [PeachPdf](https://github.com/jhaygood86/PeachPDF)  
-- [HTML-Renderer](https://github.com/ArthurHub/HTML-Renderer)
-- [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown)
-- [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
-- [PDFtoImage](https://github.com/sungaila/PDFtoImage)
-- [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
-- [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia)
+<a id="recommended_libraries"></a>
+Other recommended libraries (some of these are used in the sample app, *not* dependencies when installing packages):  
+- Read, write, manipulate docuents: 
+    + [OfficeIMO](https://github.com/EvotecIT/OfficeIMO) - DOCX, XLSX, PPTX, Markdown, CSV; can also merge, compare and convert some formats
+    + [Clippit](https://github.com/sergey-tihon/Clippit) - DOCX, XLSX, PPTX; can also merge, compare and convert some formats
+    + [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) - PPTX; can also render slides to images
+    + [ClosedXML](https://github.com/ClosedXML/ClosedXML) - XLSX
+    + [NPOI](https://github.com/nissl-lab/npoi) - DOCX, XLSX, XLS; partial port of Apache POI
+- Extract data: 
+    + [GustavoHennig/b2xtranslator](https://github.com/GustavoHennig/b2xtranslator) - DOC prior to Office 97
+    + [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader) - XLS (pre-97 too), XLSB, XLSX, CSV
+    + [PdfPig](https://github.com/UglyToad/PdfPig), [Tabula.Csv](https://github.com/BobLd/tabula-sharp) - PDF
+    + [OpenMcdf](https://github.com/ironfede/openmcdf) - Microsoft Compound format
+- Generate documents: 
+    + PDF, XPS, SVG, images: [QuestPDF](https://github.com/QuestPDF/QuestPDF), [FossPDF.NET](https://github.com/FossPDF/FossPDF.Net)
+    + PDF and RTF: [PdfSharp / MigraDoc](https://github.com/empira/PDFsharp)
+    + PDF and XLSX: [PdfRpt.Core](https://github.com/VahidN/PdfReport.Core)
+    + DOCX: [SharpDocx](https://github.com/egonl/SharpDocx)
+    + DOC(X), XLS(X), ODT, ODS: [maltreport](https://github.com/oldrev/maltreport)
+- Convert or render documents: 
+    + [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
+    + [PeachPdf](https://github.com/jhaygood86/PeachPDF)  
+    + [HTML-Renderer](https://github.com/ArthurHub/HTML-Renderer)
+    + [Html2OpenXml](https://github.com/onizet/html2openxml)
+    + [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
+    + [PDFtoImage](https://github.com/sungaila/PDFtoImage)
+    + [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia)
+    + [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
+    + [Markdig](https://github.com/xoofx/markdig)
+    + [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown)
+    + [VectSharp.Markdown + VectSharp.PDF](https://github.com/arklumpus/VectSharp)
 
 ### License
 
 DocSharp is licensed under MIT license and can be used for both open source and commercial projects.  
 
 DocSharp.ImageSharp and DocSharp.MagickNET are licensed under [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.txt).  
-ImageSharp and VectSharp have their own licenses, please visit their repositories for more information.
+ImageSharp has a dual license, please visit [their repository](https://github.com/SixLabors/ImageSharp) for more information. 
+VectSharp is used under LGPL in this project (GPL packages are not used).  
+
+DocSharp.Renderer is itself licensed under MIT, but depends on QuestPDF which has additional requirements for companies and may require purchasing a license. Please check [their repository](https://github.com/QuestPDF/QuestPDF?tab=readme-ov-file#fair-and-sustainable-license) for information on the Community and Commercial licenses.  
 
 ### Contribute
 

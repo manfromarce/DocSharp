@@ -16,7 +16,7 @@ using DocSharp.Rtf;
 
 namespace DocSharp.Docx;
 
-internal class RtfToDocxConverter : ITextToDocxConverter
+public class RtfToDocxConverter : ITextToDocxConverter
 {
     /// <summary>
     /// RTF files typically use ASCII (chars 0-127) and escape other chars using 

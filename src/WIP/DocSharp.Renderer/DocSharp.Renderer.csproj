@@ -15,15 +15,15 @@
     <Title>DocSharp.Renderer</Title>
     <Description>.NET library for converting documents. The DocSharp.Renderer package provides DOCX to PDF / XPS / SVG / images conversion using QuestPDF.</Description>
     <PackageTags>docx to pdf svg jpg png xps convert converter renderer openxml office word docsharp</PackageTags>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="QuestPDF" Version="2025.12.0" />
+    <!-- <PackageReference Include="FossPDF" Version="2025.7.2" /> --> <!-- TODO -->
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
+    <ProjectReference Include="..\..\DocSharp.Docx\DocSharp.Docx.csproj" />
   </ItemGroup>
 
 </Project>
