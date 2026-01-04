@@ -92,8 +92,10 @@ Other recommended libraries (some of these are used in the sample app, *not* dep
     + PDF, XPS, SVG, images: [QuestPDF](https://github.com/QuestPDF/QuestPDF), [FossPDF.NET](https://github.com/FossPDF/FossPDF.Net)
     + PDF and RTF: [PdfSharp / MigraDoc](https://github.com/empira/PDFsharp)
     + PDF and XLSX: [PdfRpt.Core](https://github.com/VahidN/PdfReport.Core)
-    + DOCX: [SharpDocx](https://github.com/egonl/SharpDocx)
-    + DOC(X), XLS(X), ODT, ODS: [maltreport](https://github.com/oldrev/maltreport)
+    + PDF, RTF, HTML: [iTextSharp.LGPLv2.Core](https://github.com/VahidN/iTextSharp.LGPLv2.Core)
+    + DOCX: [SharpDocx](https://github.com/egonl/SharpDocx), [DocxTemplater](https://github.com/Amberg/DocxTemplater), [MiniWord](https://github.com/mini-software/MiniWord)
+    + XLSX: [MiniExcel](https://github.com/mini-software/MiniExcel), [ClosedXML.Report](https://github.com/ClosedXML/ClosedXML.Report)
+    + XLSX, ODS, CSV: [FreeDataExports](https://github.com/ryankueter/FreeDataExports)
 - Convert or render documents: 
     + [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
     + [PeachPdf](https://github.com/jhaygood86/PeachPDF)  
