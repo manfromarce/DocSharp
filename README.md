@@ -80,6 +80,7 @@ Other recommended libraries (some of these are used in the sample app, *not* dep
     + [Clippit](https://github.com/sergey-tihon/Clippit) - DOCX, XLSX, PPTX; can also merge, compare and convert some formats
     + [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) - PPTX; can also render slides to images
     + [ClosedXML](https://github.com/ClosedXML/ClosedXML) - XLSX
+    + [Sylvan.Data.Excel](https://github.com/MarkPflug/Sylvan.Data.Excel) - XLSX, XLS, XLSB
     + [NPOI](https://github.com/nissl-lab/npoi) - DOCX, XLSX, XLS; partial port of Apache POI
     + [FluentNPOI](https://github.com/HouseAlwaysWin/FluentNPOI) - XLSX, XLS; HTML/PDF export
 - Extract data: 
