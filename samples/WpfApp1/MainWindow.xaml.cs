@@ -976,6 +976,49 @@ public partial class MainWindow : Window
         }
     }
 
+    private void Generate_iTextSharpLGPL_Click(object sender, RoutedEventArgs e)
+    {
+        var pdfFilePath = "iTextSharpLGPL.pdf";
+        var rtfFilePath = "iTextSharpLGPL.rtf";
+        var htmlFilePath = "iTextSharpLGPL.html";
+        var docxFilePath = "iTextSharpLGPL.docx";
+
+        // Generate PDF, HTML and RTF document using iTextSharp.LGPLv2.Core
+        var document = new iTextSharp.text.Document(iTextSharp.text.PageSize.A4);
+        var pdfFileStream = new FileStream(pdfFilePath, FileMode.Create);
+        var rtfFileStream = new FileStream(rtfFilePath, FileMode.Create);
+        var htmlFileStream = new FileStream(htmlFilePath, FileMode.Create);
+        var pdfWriter = iTextSharp.text.pdf.PdfWriter.GetInstance(document, pdfFileStream);
+        var rtfWriter = iTextSharp.text.rtf.RtfWriter2.GetInstance(document, rtfFileStream);
+        var htmlWriter = iTextSharp.text.html.HtmlWriter.GetInstance(document, htmlFileStream);
+        document.AddAuthor(System.Environment.UserName);
+        document.Open();
+        var fontTitle = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 16, iTextSharp.text.Font.BOLD);
+        var parTitle = new iTextSharp.text.Paragraph("This is a new document", fontTitle);
+        var phrase = new iTextSharp.text.Phrase();
+        var boldChunk = new iTextSharp.text.Chunk("Bold, ", iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 12, iTextSharp.text.Font.BOLD));
+        var italicChunk = new iTextSharp.text.Chunk("italic, ", iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 12, iTextSharp.text.Font.ITALIC));
+        var underlineChunk = new iTextSharp.text.Chunk("underlined, ", iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 12, iTextSharp.text.Font.UNDERLINE));
+        var strikeChunk = new iTextSharp.text.Chunk("strikethrough ", iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 12, iTextSharp.text.Font.STRIKETHRU));
+        var regularChunk = new iTextSharp.text.Chunk("text", iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 12, iTextSharp.text.Font.NORMAL));
+        phrase.Add(boldChunk);
+        phrase.Add(italicChunk);
+        phrase.Add(underlineChunk);
+        phrase.Add(strikeChunk);
+        phrase.Add(regularChunk);
+        var parBody = new iTextSharp.text.Paragraph(phrase);
+        document.Add(parTitle);
+        document.Add(parBody);
+        document.Dispose();
+        pdfFileStream.Dispose();
+        rtfFileStream.Dispose();
+        htmlFileStream.Dispose();
+
+        // Convert RTF to DOCX
+        var converter = new RtfToDocxConverter();
+        converter.Convert(rtfFilePath, docxFilePath);
+    }
+
     private void GenerateXlsx_Click(object sender, RoutedEventArgs e)
     {
         var sfd = new SaveFileDialog()

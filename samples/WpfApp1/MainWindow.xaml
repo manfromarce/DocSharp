@@ -115,8 +115,11 @@
                     Click="GenerateMigraDoc_Click"
                     Content="Generate PDF, RTF, DOCX (via MigraDoc)" />
                 <Button
+                    Click="Generate_iTextSharpLGPL_Click"
+                    Content="Generate PDF, HTML, RTF, DOCX (via iTextSharp.LGPL)" />
+                <Button
                     Click="GenerateXlsx_Click"
-                    Content="Generate spreadsheet + PDF (via ClosedXML)" />
+                    Content="Generate XLSX + PDF (via ClosedXML)" />
             </UniformGrid>
         </Grid>
     </ScrollViewer>

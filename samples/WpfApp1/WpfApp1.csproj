@@ -14,6 +14,7 @@
     <PackageReference Include="XlsxToHtmlConverter" Version="1.2.21" />
     <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.3" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.7.12" />
   </ItemGroup>
 
   <ItemGroup>      
