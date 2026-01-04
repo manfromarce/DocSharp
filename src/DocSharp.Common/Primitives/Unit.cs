@@ -130,7 +130,7 @@ readonly struct Unit
                 return (long) (value * 9525L);
             case UnitMetric.Pixel:
                 // Considering 96 DPI as Microsoft Word uses this value
-                return (long) (value * 9525L);
+                goto case UnitMetric.Diu;
             default: goto case UnitMetric.Pixel;
         }
     }
@@ -162,7 +162,7 @@ readonly struct Unit
             case UnitMetric.Ex: return (long)(value * 20 * 12 / 2); // Considering half of em
             
             case UnitMetric.Diu: return (long)(value * 15); // 1 DIU = 1/96 inch
-            case UnitMetric.Pixel: return (long)(value * 15); // Considering 96 DPI
+            case UnitMetric.Pixel: goto case UnitMetric.Diu; // Considering 96 DPI
 
             default: goto case UnitMetric.Pixel;
         }
@@ -183,18 +183,18 @@ readonly struct Unit
             case UnitMetric.Centimeter: return value * 10;
             case UnitMetric.Himetric: return value / 100; // 1 himetric = 1/100 mm
 
-            case UnitMetric.Inch: return value / 25.4 ; // 1 inch = 25.4 mm
-            case UnitMetric.Point: return value * 72 / 25.4; // 1 point = 1/72 inch
-            case UnitMetric.Twip: return value * 1440 / 25.4; // 1 twip = 1/1440 inch
-            case UnitMetric.HundrethsOfInch: return value * 100 / 25.4; // 1/100 inch
-            case UnitMetric.Pica: return value * 6 / 25.4; // 1 pica = 1/6 inch
+            case UnitMetric.Inch: return value * 25.4 ; // 1 inch = 25.4 mm
+            case UnitMetric.Point: return (value / 72) * 25.4; // 1 point = 1/72 inch
+            case UnitMetric.Twip: return (value / 1440) * 25.4; // 1 twip = 1/1440 inch
+            case UnitMetric.HundrethsOfInch: return value * 0.254; // 1/100 inch
+            case UnitMetric.Pica: return (value / 6) * 25.4; // 1 pica = 1/6 inch
 
             case UnitMetric.Emus: return value / 36000; // 1 mm = 36,000 EMUs
 
-            case UnitMetric.EM: return value * 12 * 72 / 25.4; // Considering 1 em = 12 pt
-            case UnitMetric.Ex: return value * 6 * 72 / 25.4; // Considering half of em
+            case UnitMetric.EM: return (value * 12 * 25.4) / 72; // Considering 1 em = 12 pt
+            case UnitMetric.Ex: return (value * 6 * 25.4) / 72; // Considering half of em
             
-            case UnitMetric.Diu: return value * 96 / 25.4; // 1 DIU = 1/96 inch
+            case UnitMetric.Diu: return (value / 96) * 25.4; // 1 DIU = 1/96 inch
             case UnitMetric.Pixel: goto case UnitMetric.Diu; // Considering 96 DPI
 
             default: goto case UnitMetric.Pixel;

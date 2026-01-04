@@ -4,8 +4,6 @@ namespace DocSharp.Primitives;
 
 public class PageSize
 {
-    private UnitMetric unit = UnitMetric.Millimeter;
-
 	public double WidthMm { get; set; }
 	public double HeightMm { get; set; }
 

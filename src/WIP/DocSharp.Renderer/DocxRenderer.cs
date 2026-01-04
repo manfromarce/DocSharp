@@ -94,39 +94,36 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
         // Process section properties here and add them to a new QuestPdfPageSet object
         var sectionProperties = section.properties;
-        float w = Primitives.PageSize.Default.WidthTwips();
-        float h = Primitives.PageSize.Default.HeightTwips();
-        float l = Primitives.PageMargins.Default.LeftTwips();
-        float t = Primitives.PageMargins.Default.TopTwips();
-        float r = Primitives.PageMargins.Default.RightTwips();
-        float b = Primitives.PageMargins.Default.BottomTwips();
+        float w = (float)Primitives.PageSize.Default.WidthTwips();
+        float h = (float)Primitives.PageSize.Default.HeightTwips();
+        float l = (float)Primitives.PageMargins.Default.LeftTwips();
+        float t = (float)Primitives.PageMargins.Default.TopTwips();
+        float r = (float)Primitives.PageMargins.Default.RightTwips();
+        float b = (float)Primitives.PageMargins.Default.BottomTwips();
 
         if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
         {
             if (size.Width != null)
-                w = (float)UnitMetricHelper.ConvertToMillimeters(size.Width.Value, UnitMetric.Twip);
+                w = size.Width.Value;
             if (size.Height != null)
-                h = (float)UnitMetricHelper.ConvertToMillimeters(size.Height.Value, UnitMetric.Twip);
+                h = size.Height.Value;
             // if (size.Orient != null && size.Orient.Value == PageOrientationValues.Landscape)
         }
         if (sectionProperties.GetFirstChild<PageMargin>() is PageMargin margins)
         {            
             if (margins.Top != null)
-                t = (float)UnitMetricHelper.ConvertToMillimeters(margins.Top.Value, UnitMetric.Twip);
+                t = margins.Top.Value;
             if (margins.Bottom != null)
-            {
-                b = (float)UnitMetricHelper.ConvertToMillimeters(margins.Bottom.Value, UnitMetric.Twip);
-            }
+                b = margins.Bottom.Value;
             if (margins.Left != null)
-            {
-                l = (float)UnitMetricHelper.ConvertToMillimeters(margins.Left.Value, UnitMetric.Twip);
-            }
+                l = margins.Left.Value;
             if (margins.Right != null)
-            {
-                r = (float)UnitMetricHelper.ConvertToMillimeters(margins.Right.Value, UnitMetric.Twip);
-            }
+                r = margins.Right.Value;
         }
-        var pageSet = new QuestPdfPageSet(w, h, l, t, r, b, QuestPDF.Infrastructure.Unit.Millimetre);
+
+        // Convert twips to points
+        var pageSet = new QuestPdfPageSet(w / 20f, h / 20f, l / 20f, t / 20f, r / 20f, b / 20f, 
+                                          QuestPDF.Infrastructure.Unit.Point);
         if (pageColor.HasValue)
             pageSet.BackgroundColor = pageColor.Value;
 
@@ -218,20 +215,99 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
     internal override void ProcessRun(Run run, QuestPdfModel output)
     {
+        if (run.GetEffectiveProperty<Vanish>().ToBool())
+            return; // don't process hidden runs
+
         // Process run properties and add them to a new QuestPdfSpan object
-        bool bold = run.GetEffectiveProperty<Bold>() is Bold b && (b.Val == null || b.Val);
-        bool italic = run.GetEffectiveProperty<Italic>() is Italic i && (i.Val == null || i.Val);
+        bool bold = run.GetEffectiveProperty<Bold>().ToBool();
+        bool italic = run.GetEffectiveProperty<Italic>().ToBool();
+        
         UnderlineStyle underline = UnderlineStyle.None;
-        StrikethroughStyle strikethrough = StrikethroughStyle.None;
-        SubSuperscript supSuperscript = SubSuperscript.Normal;
-        CapsType caps = CapsType.Normal;
-        string? fontFamily = null;
-        int? fontSize = null;
-        QuestPDF.Infrastructure.Color? fontColor = null;
-        QuestPDF.Infrastructure.Color? bgColor = null;
+        bool thickUnderline = false;
         QuestPDF.Infrastructure.Color? underlineColor = null;
+        if (run.GetEffectiveProperty<Underline>() is Underline u && u.Val != null && u.Val.Value != UnderlineValues.None)
+        {
+            if (u.Val.Value == UnderlineValues.Dash || u.Val.Value == UnderlineValues.DashedHeavy || 
+                u.Val.Value == UnderlineValues.DashLong || u.Val.Value == UnderlineValues.DashLongHeavy ||
+                u.Val.Value == UnderlineValues.DotDash || u.Val.Value == UnderlineValues.DashDotDotHeavy ||
+                u.Val.Value == UnderlineValues.DotDotDash || u.Val.Value == UnderlineValues.DashDotDotHeavy)
+                underline = UnderlineStyle.Dashed;
+            else if (u.Val.Value == UnderlineValues.Dotted || u.Val.Value == UnderlineValues.DottedHeavy)
+                underline = UnderlineStyle.Dotted;
+            else if (u.Val.Value == UnderlineValues.Wave || u.Val.Value == UnderlineValues.WavyDouble || u.Val.Value == UnderlineValues.WavyHeavy)
+                underline = UnderlineStyle.Wavy;
+            else if (u.Val.Value == UnderlineValues.Double)
+                underline = UnderlineStyle.Double;
+            else // solid, thick, words
+                underline = UnderlineStyle.Solid;
+            
+            thickUnderline = u.Val.Value == UnderlineValues.DashedHeavy || u.Val.Value == UnderlineValues.DashLongHeavy || 
+                             u.Val.Value == UnderlineValues.DashDotDotHeavy || u.Val.Value == UnderlineValues.DashDotDotHeavy || 
+                             u.Val.Value == UnderlineValues.DottedHeavy || u.Val.Value == UnderlineValues.WavyHeavy || 
+                             u.Val.Value == UnderlineValues.Thick;
+
+            if (ColorHelpers.EnsureHexColor(u.Color?.Value) is string uc)
+            {
+                underlineColor = QuestPDF.Infrastructure.Color.FromHex(uc);
+            }
+        }
+        StrikethroughStyle strikethrough = StrikethroughStyle.None;
+        if (run.GetEffectiveProperty<Strike>().ToBool())
+            strikethrough = StrikethroughStyle.Single;
+        else if (run.GetEffectiveProperty<DoubleStrike>().ToBool()) 
+            strikethrough = StrikethroughStyle.Double;
+
+        SubSuperscript supSuperscript = SubSuperscript.Normal;
+        var verticalPos = run.GetEffectiveProperty<VerticalTextAlignment>();
+        if (verticalPos != null && verticalPos.Val != null && verticalPos.Val.Value != VerticalPositionValues.Baseline)
+        {
+            supSuperscript = verticalPos.Val.Value == VerticalPositionValues.Subscript ? SubSuperscript.Subscript : SubSuperscript.Superscript;
+        }
+
+        CapsType caps = CapsType.Normal;
+        if (run.GetEffectiveProperty<SmallCaps>().ToBool())
+            caps = CapsType.SmallCaps;
+        else if (run.GetEffectiveProperty<Caps>().ToBool()) 
+            caps = CapsType.AllCaps;
+
+        float? fontSize = null;
+        var fs = OpenXmlHelpers.GetEffectiveProperty<FontSize>(run)?.Val?.Value;
+        if (!string.IsNullOrEmpty(fs) && float.TryParse(fs, out float fontSizeValue))
+        {
+            fontSizeValue /= 2f; // Convert half-points to points
+            fontSize = fontSizeValue;
+        }
+
+        // Text color
+        QuestPDF.Infrastructure.Color? fontColor = null;
+        if (run.GetEffectiveProperty<Color>() is Color color && 
+            ColorHelpers.EnsureHexColor(color.Val?.Value) is string colorValue)
+        {
+            fontColor = QuestPDF.Infrastructure.Color.FromHex(colorValue);
+        }
+
+        // Highlight and shading (highlight has priority over shading)
+        QuestPDF.Infrastructure.Color? bgColor = null;
+        var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
+        if (highlight?.Val != null && highlight.Val != HighlightColorValues.None)
+        {
+            string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
+            if (!string.IsNullOrEmpty(hex))
+            {
+                bgColor = QuestPDF.Infrastructure.Color.FromHex(hex);
+            }
+        }
+        else if (OpenXmlHelpers.GetEffectiveProperty<Shading>(run) is Shading shading && 
+                 ColorHelpers.EnsureHexColor(shading.Fill?.Value) is string fill)
+        {
+            bgColor = QuestPDF.Infrastructure.Color.FromHex(fill);
+        }
+
+        // TODO: font family; letter spacing; vertical offset
+        string? fontFamily = null;
         float? letterSpacing = null;
-        var span = new QuestPdfSpan(null, bold, italic, underline, strikethrough, supSuperscript, caps, fontFamily, fontSize, fontColor, bgColor, underlineColor, letterSpacing);
+
+        var span = new QuestPdfSpan(null, bold, italic, underline, strikethrough, supSuperscript, caps, fontFamily, fontSize, fontColor, bgColor, underlineColor, letterSpacing, thickUnderline);
 
         // Add span to the paragraph/hyperlink.
         if (currentRunContainer.Count > 0)
@@ -247,7 +323,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
     internal override void ProcessText(Text text, QuestPdfModel output)
     {
         if (currentSpan.Count > 0 && !string.IsNullOrEmpty(text.Text))
-            currentSpan.Peek().Text += Environment.NewLine;
+            currentSpan.Peek().Text += text.Text;
     }
 
     internal override void ProcessBreak(Break @break, QuestPdfModel output)

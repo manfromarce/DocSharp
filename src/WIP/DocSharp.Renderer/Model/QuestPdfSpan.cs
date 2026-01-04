@@ -8,8 +8,9 @@ internal class QuestPdfSpan : QuestPdfInlineElement
 {
     internal string Text { get; set; } = string.Empty;
     internal TextStyle Style { get; set; } = TextStyle.Default;
+    internal bool ISAllCaps { get; set; } = false;
 
-    internal QuestPdfSpan(string? text, bool bold, bool italic, UnderlineStyle underline, StrikethroughStyle strikethrough, SubSuperscript subSuperscript, CapsType caps, string? fontFamily, int? fontSize, Color? fontColor, Color? backgroundColor, Color? underlineColor, float? letterSpacing)
+    internal QuestPdfSpan(string? text, bool bold, bool italic, UnderlineStyle underline, StrikethroughStyle strikethrough, SubSuperscript subSuperscript, CapsType caps, string? fontFamily, float? fontSize, Color? fontColor, Color? backgroundColor, Color? underlineColor, float? letterSpacing, bool thickUnderline = false)
     {
         // TODO: span borders (not supported by QuestPDF)
         
@@ -27,7 +28,7 @@ internal class QuestPdfSpan : QuestPdfInlineElement
         if (caps == CapsType.SmallCaps)
             Style = Style.EnableFontFeature(FontFeatures.SmallCapitals); // Unclear if this works
         else if (caps == CapsType.AllCaps)
-            Text = Text.ToUpper();
+            ISAllCaps = true;
 
         // QuestPDF does not support independent styles for underline and strikethrough, decorations styles are applied to both. 
         // In addition, in Microsoft Word documents only solid single/double strikethrough with standard thickness and color are available.
@@ -49,6 +50,9 @@ internal class QuestPdfSpan : QuestPdfInlineElement
                 }
                 if (underlineColor.HasValue)
                     Style = Style.DecorationColor(underlineColor.Value);
+                
+                if (thickUnderline)
+                    Style = Style.DecorationThickness(2f); // relative factor (1 is the default thickness)
             }   
         }
         if (strikethrough != StrikethroughStyle.None)

@@ -92,6 +92,18 @@ Only watermarks are not supported because they require full VML support in order
 This operation is complex and currently considered out-of-scope for this library.  
 However, some charts may already be OLE objects (Excel/MS Graph object; usually happens if the document was originally a Word 2007 DOCX, or a DOC/RTF converted to DOCX keeping compatibility mode), and these are supported. 
 
+## RTF to DOCX
+
+⌛ Work in progress
+
+## DOCX to QuestPDF renderer
+
+⌛ Work in progress
+
+## XLSX to QuestPDF renderer
+
+⌛ Work in progress
+
 ## Markdown renderers
 
 | Feature       | ➡️ DOCX | ➡️ RTF |

@@ -24,9 +24,11 @@ public class RtfToDocxConverter : ITextToDocxConverter
     /// Code pages specify chars 128-255, depend on the system region and are also called "ANSI". 
     /// Unicode can encode many more characters and is often called "non-ANSI" in the RTF specification.  
     /// The code page is specified by the \ansi (default), \mac, \pc or \pca control in the RTF header, 
-    /// optionally followed by \ansicpgN. For example \ansicpg1252 indicates Windows-1252 and is used by U.s. Windows 
+    /// optionally followed by \ansicpgN. For example \ansicpg1252 indicates Windows-1252 and is used by U.S. Windows 
     /// (extends ASCII with other letters and symbols related to the english alphabet). 
-    /// If the code page is not specified, ANSI based on the system region is assumed. 
+    /// If the code page is not specified, ANSI based on the system culture is assumed 
+    /// (to force english code page by default, set CultureInfo.CurrentCulture = CultureInfo.InvariantCulture 
+    /// before calling the converter). 
     /// Despite this, it's possible the some old RTF files use non-ASCII-based code pages, 
     /// or that some RTF writers directly write non-ASCII letters such as à into text tokens, 
     /// although it's not standard. 
@@ -46,7 +48,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
     /// <param name="input"></param>
     /// <param name="targetDocument"></param>
     public void BuildDocx(TextReader input, WordprocessingDocument targetDocument)
-    {
+    {        
         if (targetDocument.MainDocumentPart == null)
             targetDocument.AddMainDocumentPart();
 

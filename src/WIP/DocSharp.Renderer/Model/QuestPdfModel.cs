@@ -108,7 +108,7 @@ public class QuestPdfModel
                         if (inline is QuestPdfSpan span)
                         {
                             // Why is LineHeight at the span level in QuestPDF rather than at the same level as ParagraphFirstLineIndentation?
-                            text.Span(span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);                                                                                                    
+                            text.Span(span.ISAllCaps ? span.Text.ToUpper() : span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);                                                                                                    
                         }
                         else if (inline is QuestPdfHyperlink hyperlink)
                         {

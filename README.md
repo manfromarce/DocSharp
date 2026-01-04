@@ -21,6 +21,7 @@ The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages
 The codebase also contains few experimental converters that are not ready and not published on NuGet yet:  
 - DocSharp.Renderer: provides basic DOCX and XLSX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
 - DocSharp.Epub: provides basic EPUB to DOCX (via HTML) conversion.
+- RTF to DOCX converter class in the DocSharp.Docx project
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
 You can consider using the Open XML SDK itself or other <a href="#recommended_libraries">recommended libraries</a> for documents creation and manipulation. Some of these are used in the sample app to test two-steps conversions, compare results, or generate documents in multiple formats with the same code.  
@@ -80,6 +81,7 @@ Other recommended libraries (some of these are used in the sample app, *not* dep
     + [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) - PPTX; can also render slides to images
     + [ClosedXML](https://github.com/ClosedXML/ClosedXML) - XLSX
     + [NPOI](https://github.com/nissl-lab/npoi) - DOCX, XLSX, XLS; partial port of Apache POI
+    + [FluentNPOI](https://github.com/HouseAlwaysWin/FluentNPOI) - XLSX, XLS; HTML/PDF export
 - Extract data: 
     + [GustavoHennig/b2xtranslator](https://github.com/GustavoHennig/b2xtranslator) - DOC prior to Office 97
     + [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader) - XLS (pre-97 too), XLSB, XLSX, CSV
