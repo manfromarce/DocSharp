@@ -15,7 +15,20 @@ namespace DocSharp.Renderer;
 
 public class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
 {
+    /// <summary>
+    /// Set whether grid lines should be drawn in the output document.
+    /// </summary>
     public bool RenderGridlines { get; set; } = false;
+
+    /// <summary>
+    /// Customize properties for the output PDF, such as compression, compliance with the PDF/A standard, DPI, etc.
+    /// </summary>
+    public QuestPDF.Infrastructure.DocumentSettings? PdfSettings { get; set; }
+    
+    /// <summary>
+    /// Customize metadata such as title and author. If not set, the converter will try to retrieve these properties from the input XLSX document.
+    /// </summary>
+    public QuestPDF.Infrastructure.DocumentMetadata? PdfMetadata { get; set; }
 
     /// <summary>
     /// Render a XLSX document to a QuestPDF document.
@@ -29,7 +42,9 @@ public class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
         {
             var model = new QuestPdfModel();
             ProcessWorkbook(workbookPart, model);
-            return model.ToQuestPdfDocument();
+            return model.ToQuestPdfDocument()
+                        .WithSettings(PdfSettings ?? QuestPDF.Infrastructure.DocumentSettings.Default)
+                        .WithMetadata(PdfMetadata ?? QuestPdfMetadataHelpers.FromOpenXmlDocument(inputDocument));
         }
         else 
         {

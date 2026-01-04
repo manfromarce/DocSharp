@@ -9,6 +9,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 using QuestPDF.Fluent;
+using System.Globalization;
 
 namespace DocSharp.Renderer;
 
@@ -18,6 +19,16 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
     {
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;    
     }
+
+    /// <summary>
+    /// Customize properties for the output PDF, such as compression, compliance with the PDF/A standard, DPI, etc.
+    /// </summary>
+    public QuestPDF.Infrastructure.DocumentSettings? PdfSettings { get; set; }
+    
+    /// <summary>
+    /// Customize metadata such as title and author. If not set, the converter will try to retrieve these properties from the input DOCX document.
+    /// </summary>
+    public QuestPDF.Infrastructure.DocumentMetadata? PdfMetadata { get; set; }
 
     private QuestPdfPageSet? currentPageSet; // Current section
     private Stack<QuestPdfContainer> currentContainer = new(); // Container can be the main document body, header, footer, table cell, ...
@@ -40,7 +51,9 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
         {
             var model = new QuestPdfModel();
             ProcessDocument(doc, model);
-            return model.ToQuestPdfDocument();
+            return model.ToQuestPdfDocument()
+                        .WithSettings(PdfSettings ?? QuestPDF.Infrastructure.DocumentSettings.Default)
+                        .WithMetadata(PdfMetadata ?? QuestPdfMetadataHelpers.FromOpenXmlDocument(inputDocument));
         }
         else 
         {
@@ -303,8 +316,16 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
             bgColor = QuestPDF.Infrastructure.Color.FromHex(fill);
         }
 
-        // TODO: font family; letter spacing; vertical offset
-        string? fontFamily = null;
+        string? fontFamily = null; 
+        if (run.GetEffectiveProperty<RunFonts>()?.Ascii?.Value is string asciiFont && 
+            !string.IsNullOrWhiteSpace(asciiFont))
+        {
+            fontFamily = asciiFont;
+        }
+        // TODO: improve fonts handling to support complex scripts;
+        // check font embedding license; check QuestPDF subsetting options
+
+        // TODO: letter spacing; vertical offset
         float? letterSpacing = null;
 
         var span = new QuestPdfSpan(null, bold, italic, underline, strikethrough, supSuperscript, caps, fontFamily, fontSize, fontColor, bgColor, underlineColor, letterSpacing, thickUnderline);
@@ -465,7 +486,25 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, QuestPdfModel output)
     {
-    }
+        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) &&
+            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
+        {
+            string hexValue = symbolChar?.Char?.Value!;
+            if (hexValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                hexValue.StartsWith("&h", StringComparison.OrdinalIgnoreCase))
+            {
+                hexValue = hexValue.Substring(2);
+            }
+            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int decimalValue))
+            {
+                ProcessRun(new Run(new RunProperties() { RunFonts = new RunFonts()
+                {
+                    Ascii = symbolChar!.Font.Value
+                }
+                }, new Text(((char)decimalValue).ToString())), output);
+            }
+        }
+    }   
 
     internal override void EnsureSpace(QuestPdfModel output)
     {

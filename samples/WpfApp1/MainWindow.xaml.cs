@@ -329,9 +329,10 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    // var converter = new DocxRenderer()
-                    // {                        
-                    // };
+                    var converter = new DocxRenderer()
+                    {                        
+                    };
+                    converter.SaveAllPagesAsPng(ofd.FileName, sfd.FolderName, Path.GetFileNameWithoutExtension(ofd.FileName));
                 }
                 catch (Exception ex)
                 {
@@ -345,7 +346,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn;*.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
@@ -380,7 +381,7 @@ public partial class MainWindow : Window
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn;*.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
             Title = "Choose the Markdown document to convert",
             Multiselect = false,
         };
@@ -416,7 +417,7 @@ public partial class MainWindow : Window
         // Currently achieved through a two steps conversion.
         var ofd = new OpenFileDialog()
         {
-            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn; *.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+            Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn;*.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
