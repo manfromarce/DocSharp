@@ -1,6 +1,6 @@
 # DocSharp
 
-DocSharp is a pure C# library to convert between document formats without Office interop or native dependencies.
+DocSharp is a pure C# library to convert between document formats without Office interop or native dependencies (except for some special packages, see [requirements](#requirements)).
 
 The following packages are currently available:
 
@@ -16,7 +16,7 @@ Packages can be installed via NuGet:
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Docx?style=flat-square&label=DocSharp.Docx)](https://www.nuget.org/packages/DocSharp.Docx/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Markdown?style=flat-square&label=DocSharp.Markdown)](https://www.nuget.org/packages/DocSharp.Markdown/)
 
-The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), DocSharp.MagickNET (not published yet) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). More information on images can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
+The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), [DocSharp.MagickNET](https://www.nuget.org/packages/DocSharp.MagickNET/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). Each of these has pros and cons, the choice depends on your requirements. More information can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
 
 The codebase also contains few experimental converters that are not ready and not published on NuGet yet:  
 - DocSharp.Renderer: provides basic DOCX and XLSX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
@@ -32,11 +32,15 @@ DocSharp provides methods to accept/return a WordprocessingDocument directly (in
 - Binary formats: most doc/xls/ppt features were supported by the original project, but exceptions occurred when using .NET (rather than .NET Framework) or loading specific documents. The most noticeable issues have been fixed, but more work is needed to make the library reliable; if you find other bugs, you are welcome to open an issue (please attach a sample file if the issue only occurs for specific documents).
 - DOCX, RTF, Markdown: supported elements vary depending on input and output formats, see [Supported features](https://github.com/manfromarce/DocSharp/blob/main/documentation/Supported_features.MD) for an overview.
 
+<a id="Requirements"></a>
+
 ### Requirements
 
 - Supported targets are .NET 8, 9, 10 and .NET Framework 4.6.2 (minimum netfx version still supported).  
-- DocSharp.SystemDrawing is for Windows only (.NET Framework or net*-windows), as System.Drawing.Common is only supported on Windows; while DocSharp.ImageSharp is cross-platform for .NET 8+ (ImageSharp does not support .NET Framework).
-- DocSharp.Renderer depends on QuestPDF, which currently supports Windows x64 / x86, macOS x64 / ARM64, Linux x64 / ARM64. Windows ARM64, Android, iOS are not supported yet, due to a custom Skia build. 
+- DocSharp.SystemDrawing is for Windows only (.NET Framework or net*-windows), as System.Drawing.Common is based on GDI+ and only supported on Windows since .NET 6.
+- DocSharp.ImageSharp is cross-platform for .NET 8+, as ImageSharp is fully managed C# code but does not support .NET Framework.
+- DocSharp.MagickNET is cross-platform for both .NET and .NET Framework, but Magick.NET bundles many native libraries that might not work on non-desktop platforms (Android / iOS / 
+- DocSharp.Renderer depends on QuestPDF, which currently supports Windows x64 / x86, macOS x64 / ARM64, Linux x64 / ARM64. Windows ARM64, Android, iOS are not supported yet, due to a custom Skia build. Plus, the XPS generation is only supported on Windows. 
 
 ### Usage
 

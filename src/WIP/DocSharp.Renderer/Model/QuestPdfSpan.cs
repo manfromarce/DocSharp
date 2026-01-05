@@ -7,8 +7,34 @@ namespace DocSharp.Renderer;
 internal class QuestPdfSpan : QuestPdfInlineElement
 {
     internal string Text { get; set; } = string.Empty;
-    internal TextStyle Style { get; set; } = TextStyle.Default;
-    internal bool ISAllCaps { get; set; } = false;
+    internal TextStyle Style { get; private set; } = TextStyle.Default;
+    internal bool IsAllCaps { get; set; } = false;
+
+    private string _fontFamily = string.Empty; // Used to cache the value, as TextStyle cannot be used to retrieve it
+
+    /// <summary>
+    /// Get or set the current Font Family
+    /// </summary>
+    internal string FontFamily 
+    {
+        get
+        {
+            return _fontFamily;
+        }
+        set
+        {
+            _fontFamily = value;
+            Style = Style.FontFamily(value);
+        }
+    }
+
+    public QuestPdfSpan(TextStyle style, bool isAllCaps, string fontFamily)
+    {
+        Style = style;
+        IsAllCaps = isAllCaps;
+        Text = string.Empty;
+        _fontFamily = fontFamily;
+    }
 
     internal QuestPdfSpan(string? text, bool bold, bool italic, UnderlineStyle underline, StrikethroughStyle strikethrough, SubSuperscript subSuperscript, CapsType caps, string? fontFamily, float? fontSize, Color? fontColor, Color? backgroundColor, Color? underlineColor, float? letterSpacing, bool thickUnderline = false)
     {
@@ -28,7 +54,7 @@ internal class QuestPdfSpan : QuestPdfInlineElement
         if (caps == CapsType.SmallCaps)
             Style = Style.EnableFontFeature(FontFeatures.SmallCapitals); // Unclear if this works
         else if (caps == CapsType.AllCaps)
-            ISAllCaps = true;
+            IsAllCaps = true;
 
         // QuestPDF does not support independent styles for underline and strikethrough, decorations styles are applied to both. 
         // In addition, in Microsoft Word documents only solid single/double strikethrough with standard thickness and color are available.
@@ -65,9 +91,12 @@ internal class QuestPdfSpan : QuestPdfInlineElement
         }
         
         if (fontFamily != null && !string.IsNullOrWhiteSpace(fontFamily))
+        {
+            _fontFamily = fontFamily;
             Style = Style.FontFamily([fontFamily]); 
             // TODO: add a fallback if font is not installed in the runtime environment; 
             // ship some royalty-free fonts with the library and register them using QuestPDF.Drawing.FontManager
+        }
         if (fontSize.HasValue)
             Style = Style.FontSize(fontSize.Value); // value in points
         if (letterSpacing.HasValue)
@@ -78,5 +107,14 @@ internal class QuestPdfSpan : QuestPdfInlineElement
             Style = Style.FontColor(fontColor.Value);
         if (backgroundColor.HasValue)
             Style = Style.BackgroundColor(backgroundColor.Value);
+    }
+
+    /// <summary>
+    /// Returns a clone of this QuestPdf with the same style and properties, but no text content.
+    /// </summary>
+    /// <returns></returns>
+    internal QuestPdfSpan CloneEmpty()
+    {
+        return new QuestPdfSpan(this.Style, this.IsAllCaps, this._fontFamily);
     }
 }

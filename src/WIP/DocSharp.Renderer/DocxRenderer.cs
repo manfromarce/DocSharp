@@ -284,7 +284,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
             caps = CapsType.AllCaps;
 
         float? fontSize = null;
-        var fs = OpenXmlHelpers.GetEffectiveProperty<FontSize>(run)?.Val?.Value;
+        var fs = run.GetEffectiveProperty<FontSize>()?.Val?.Value;
         if (!string.IsNullOrEmpty(fs) && float.TryParse(fs, out float fontSizeValue))
         {
             fontSizeValue /= 2f; // Convert half-points to points
@@ -301,7 +301,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
         // Highlight and shading (highlight has priority over shading)
         QuestPDF.Infrastructure.Color? bgColor = null;
-        var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
+        var highlight = run.GetEffectiveProperty<Highlight>();
         if (highlight?.Val != null && highlight.Val != HighlightColorValues.None)
         {
             string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
@@ -310,7 +310,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
                 bgColor = QuestPDF.Infrastructure.Color.FromHex(hex);
             }
         }
-        else if (OpenXmlHelpers.GetEffectiveProperty<Shading>(run) is Shading shading && 
+        else if (run.GetEffectiveProperty<Shading>() is Shading shading && 
                  ColorHelpers.EnsureHexColor(shading.Fill?.Value) is string fill)
         {
             bgColor = QuestPDF.Infrastructure.Color.FromHex(fill);
@@ -440,6 +440,52 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
     {
     }
 
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, QuestPdfModel output)
+    {
+        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) &&
+            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
+        {
+            // Parse the hex char code to a decimal code
+            string hexValue = symbolChar?.Char?.Value!;
+            if (hexValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                hexValue.StartsWith("&h", StringComparison.OrdinalIgnoreCase))
+            {
+                hexValue = hexValue.Substring(2);
+            }
+            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int decimalValue))
+            {
+                if (currentRunContainer.Count > 0 && 
+                    currentSpan.Count > 0) // SymbolChar can only be present inside a Run, just like regular Text elements.
+                {
+                    // Close the current span
+                    var oldSpan = currentSpan.Pop();
+
+                    // Create a new span for the symbol with the specified font and char.
+                    // The SymbolChar in DOCX has the same properties (bold, italic, color, ...) as the parent run, 
+                    // except for the font family.
+                    var symbolSpan = oldSpan.CloneEmpty();
+                    symbolSpan.FontFamily = symbolChar!.Font.Value;
+                    symbolSpan.Text = ((char)decimalValue).ToString(); // convert decimal char code to string.
+
+                    // Add the new span to the paragraph/hyperlink.
+                    currentRunContainer.Peek().AddSpan(symbolSpan);
+
+                    // The old span was closed ahead of time to process the SymbolChar element.
+                    // Create a new span with the same properties to contain further text elements. 
+                    // The new span will be closed by the ProcessRun method.
+                    // If there are no remaining elements, the new span will be empty 
+                    // and will be ignored in the rendering step.
+                    var newSpan = oldSpan.CloneEmpty();
+                    currentSpan.Push(newSpan);
+                }
+            }
+        }
+    }
+
+    internal override void ProcessPageNumber(PageNumber pageNumber, QuestPdfModel output)
+    {
+    }
+
     internal override void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, QuestPdfModel output)
     {
     }
@@ -464,49 +510,13 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
     {
     }
 
-    internal override void ProcessFieldChar(FieldChar field, QuestPdfModel output)
-    {
-    }
+    internal override void ProcessFieldChar(FieldChar field, QuestPdfModel output) { }
 
-    internal override void ProcessFieldCode(FieldCode field, QuestPdfModel output)
-    {
-    }
+    internal override void ProcessFieldCode(FieldCode field, QuestPdfModel output) { }
 
-    internal override void ProcessMathElement(OpenXmlElement element, QuestPdfModel output)
-    {
-    }
+    internal override void ProcessMathElement(OpenXmlElement element, QuestPdfModel output) { }
 
-    internal override void ProcessPageNumber(PageNumber pageNumber, QuestPdfModel output)
-    {
-    }
+    internal override void ProcessPositionalTab(PositionalTab posTab, QuestPdfModel output) { }
 
-    internal override void ProcessPositionalTab(PositionalTab posTab, QuestPdfModel output)
-    {
-    }
-
-    internal override void ProcessSymbolChar(SymbolChar symbolChar, QuestPdfModel output)
-    {
-        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) &&
-            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
-        {
-            string hexValue = symbolChar?.Char?.Value!;
-            if (hexValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
-                hexValue.StartsWith("&h", StringComparison.OrdinalIgnoreCase))
-            {
-                hexValue = hexValue.Substring(2);
-            }
-            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int decimalValue))
-            {
-                ProcessRun(new Run(new RunProperties() { RunFonts = new RunFonts()
-                {
-                    Ascii = symbolChar!.Font.Value
-                }
-                }, new Text(((char)decimalValue).ToString())), output);
-            }
-        }
-    }   
-
-    internal override void EnsureSpace(QuestPdfModel output)
-    {
-    }
+    internal override void EnsureSpace(QuestPdfModel output) { }
 }
