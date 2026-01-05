@@ -196,6 +196,24 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
                 p.Alignment = ParagraphAlignment.Left;
         }
 
+        var docxBgColor = paragraph.GetEffectiveBackgroundColor();
+        if (!string.IsNullOrWhiteSpace(docxBgColor))
+        {
+            p.BackgroundColor = QuestPDF.Infrastructure.Color.FromHex(docxBgColor!);
+        }
+
+        var spacing = paragraph.GetEffectiveSpacingValues();
+        p.SpaceBefore = spacing.SpaceBefore;
+        p.SpaceAfter = spacing.SpaceAfter;
+        p.LineHeight = spacing.LineHeight;
+
+        var indent = paragraph.GetEffectiveIndentValues();
+        p.LeftIndent = indent.LeftIndent;
+        p.RightIndent = indent.RightIndent;
+        p.StartIndent = indent.StartIndent;
+        p.EndIndent = indent.EndIndent;
+        p.FirstLineIndent = indent.FirstLineIndent;
+
         // Add paragraph to the current container (body, header, footer, table cell, ...)
         if (currentContainer.Count > 0)
             currentContainer.Peek().Content.Add(p);
@@ -293,27 +311,18 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
         // Text color
         QuestPDF.Infrastructure.Color? fontColor = null;
-        if (run.GetEffectiveProperty<Color>() is Color color && 
-            ColorHelpers.EnsureHexColor(color.Val?.Value) is string colorValue)
+        var docxFontColor = run.GetEffectiveTextColor();
+        if (!string.IsNullOrWhiteSpace(docxFontColor))
         {
-            fontColor = QuestPDF.Infrastructure.Color.FromHex(colorValue);
+            fontColor = QuestPDF.Infrastructure.Color.FromHex(docxFontColor!);
         }
 
         // Highlight and shading (highlight has priority over shading)
         QuestPDF.Infrastructure.Color? bgColor = null;
-        var highlight = run.GetEffectiveProperty<Highlight>();
-        if (highlight?.Val != null && highlight.Val != HighlightColorValues.None)
+        var docxBgColor = run.GetEffectiveBackgroundColor();
+        if (!string.IsNullOrWhiteSpace(docxBgColor))
         {
-            string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
-            if (!string.IsNullOrEmpty(hex))
-            {
-                bgColor = QuestPDF.Infrastructure.Color.FromHex(hex);
-            }
-        }
-        else if (run.GetEffectiveProperty<Shading>() is Shading shading && 
-                 ColorHelpers.EnsureHexColor(shading.Fill?.Value) is string fill)
-        {
-            bgColor = QuestPDF.Infrastructure.Color.FromHex(fill);
+            bgColor = QuestPDF.Infrastructure.Color.FromHex(docxBgColor!);
         }
 
         string? fontFamily = null; 
@@ -349,12 +358,125 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
     internal override void ProcessBreak(Break @break, QuestPdfModel output)
     {
-        if (@break.Type == null || !@break.Type.HasValue || @break.Type.Value == BreakValues.TextWrapping)
+        if (currentContainer.Count > 0 && 
+            currentRunContainer.Count > 0 && 
+            currentSpan.Count > 0) // Break can only be present inside a Run, just like regular Text elements.
         {
-            if (currentSpan.Count > 0)
-                currentSpan.Peek().Text += Environment.NewLine;
+            if (@break.Type == null || !@break.Type.HasValue || @break.Type.Value == BreakValues.TextWrapping)
+            {
+                // Line breaks were previously handled using a QuestPdfLineBreak object (at the same level as span). 
+                // However, I was not able to make it render properly in QuestPDF. 
+                // When using either text.EmptyLine().LineHeight(0) and text.Span("\n"), 
+                // QuestPDF applies the first line indentation (if any) to the new line,
+                // rather than using left indent only like for regular lines (after automatic breaks).
+                // This behavior is different compared to DOCX and word processors. 
+                //
+                // To workaround this, we create a new paragraph and span, 
+                // preserving all properties except FirstLineIndent (set to 0),
+                // and setting spacing between the two paragraphs to 0.
+                                
+                // Close and retrieve the current span and run container (paragraph/hyperlink)
+                var oldSpan = currentSpan.Pop();
+                var oldRunContainer = currentRunContainer.Pop();
+
+                // Cache "space after" value of the current paragraph (it will be used later)               
+                var oldParagraph = currentParagraph.Peek();
+                var spaceAFter = oldParagraph.SpaceAfter;
+                
+                // Set space after to 0 for the current paragraph (to simulate line break within the same paragraph)
+                oldParagraph.SpaceAfter = 0;
+
+                // Remove the current paragraph from the stack
+                currentParagraph.Pop();
+
+                // Create a new run container and span
+                var newRunContainer = oldRunContainer.CloneEmpty();
+                var newSpan = oldSpan.CloneEmpty();
+
+                // Add span to the paragraph/hyperlink
+                newRunContainer.AddSpan(newSpan);              
+
+                // If the run container is an hyperlink, enclose it into a new paragraph
+                QuestPdfParagraph newParagraph;
+                if (newRunContainer is QuestPdfParagraph paragraph)
+                {
+                    newParagraph = paragraph;
+                }
+                else
+                {
+                    newParagraph = (QuestPdfParagraph)(oldParagraph.CloneEmpty());
+                    if (newRunContainer is QuestPdfHyperlink hyperlink)
+                    {
+                        newParagraph.Elements.Add(hyperlink);                        
+                    }
+                }
+
+                // Set first line indent and "space before" to 0 on the new paragraph, 
+                // and "space after" to the value of the previous paragraph
+                // (to simulate a line break in the same paragraph).
+                newParagraph.FirstLineIndent = 0;
+                newParagraph.SpaceBefore = 0;
+                newParagraph.SpaceAfter = spaceAFter;
+            
+                // Set current span, run container and paragraph
+                currentParagraph.Push(newParagraph);
+                currentRunContainer.Push(newRunContainer);
+                currentSpan.Push(newSpan);
+
+                // Add paragraph to the current container (body, header, footer, table cell, ...)
+                currentContainer.Peek().Content.Add(newParagraph);    
+            }
+            else if (@break.Type.HasValue && @break.Type.Value == BreakValues.Page)
+            {
+            
+            }
+            else if (@break.Type.HasValue && @break.Type.Value == BreakValues.Column)
+            {
+                // TODO
+            }
         }
-        // TODO: page/column break
+    }
+
+    internal override void ProcessSymbolChar(SymbolChar symbolChar, QuestPdfModel output)
+    {
+        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) &&
+            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
+        {
+            // Parse the hex char code to a decimal code
+            string hexValue = symbolChar?.Char?.Value!;
+            if (hexValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                hexValue.StartsWith("&h", StringComparison.OrdinalIgnoreCase))
+            {
+                hexValue = hexValue.Substring(2);
+            }
+            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int decimalValue))
+            {
+                if (currentRunContainer.Count > 0 && 
+                    currentSpan.Count > 0) // SymbolChar can only be present inside a Run, just like regular Text elements.
+                {
+                    // Close and retrieve the current span
+                    var oldSpan = currentSpan.Pop();
+
+                    // Create a new span for the symbol with the specified font and char.
+                    // The SymbolChar in DOCX has the same properties (bold, italic, color, ...) as the parent run, 
+                    // except for the font family.
+                    var symbolSpan = oldSpan.CloneEmpty();
+                    symbolSpan.FontFamily = symbolChar!.Font.Value;
+                    symbolSpan.Text = ((char)decimalValue).ToString(); // convert decimal char code to string.
+
+                    // Add the new span to the paragraph/hyperlink.
+                    currentRunContainer.Peek().AddSpan(symbolSpan);
+
+                    // The old span was closed ahead of time to process the SymbolChar element.
+                    // Create a new span with the same properties to contain further text elements. 
+                    // The new span will be closed by the ProcessRun method.
+                    // If there are no remaining elements, the new span will be empty 
+                    // and will be ignored during rendering.
+                    var newSpan = oldSpan.CloneEmpty();
+                    currentSpan.Push(newSpan);
+                }
+            }
+        }
     }
 
     internal override void ProcessTable(Table table, QuestPdfModel output)
@@ -403,22 +525,13 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
             if (tableCell.TableCellProperties.GridSpan.Val.Value > 1)
                 cell.ColumnSpan = (uint)tableCell.TableCellProperties.GridSpan.Val.Value;
         }
-        if (tableCell.GetEffectiveProperty<Shading>() is Shading shading)
+
+        var docxBgColor = tableCell.GetEffectiveBackgroundColor();
+        if (!string.IsNullOrWhiteSpace(docxBgColor))
         {
-            if ((shading.Val == null || (shading.Val.Value != ShadingPatternValues.Nil && shading.Val.Value != ShadingPatternValues.Solid)) &&
-                ColorHelpers.EnsureHexColor(shading.Color?.Value) is string color && !string.IsNullOrWhiteSpace(color))
-            {
-                cell.BackgroundColor = QuestPDF.Infrastructure.Color.FromHex(color); 
-                // TODO: recognize other patterns. The pure primary color is displayed for ShadingPatternValues.Clear, 
-                // pure secondary color is displayed for ShadingPatternValues.Solid. 
-                // For now, we use the primary color for all patterns except Solid and Nil, and the secondary color for Solid.
-            }
-            else if ((shading.Val == null || shading.Val.Value == ShadingPatternValues.Solid) &&
-                ColorHelpers.EnsureHexColor(shading.Fill?.Value) is string bgColor && !string.IsNullOrWhiteSpace(bgColor))
-            {
-                cell.BackgroundColor = QuestPDF.Infrastructure.Color.FromHex(bgColor); 
-            } 
-        }        
+            cell.BackgroundColor = QuestPDF.Infrastructure.Color.FromHex(docxBgColor!);
+        }
+
         // TODO: vertical merge (set Cell.RowSpan); borders
 
         // Add cell to the row model.
@@ -438,48 +551,6 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, QuestPdfModel output)
     {
-    }
-
-    internal override void ProcessSymbolChar(SymbolChar symbolChar, QuestPdfModel output)
-    {
-        if (!string.IsNullOrEmpty(symbolChar?.Char?.Value) &&
-            !string.IsNullOrEmpty(symbolChar?.Font?.Value))
-        {
-            // Parse the hex char code to a decimal code
-            string hexValue = symbolChar?.Char?.Value!;
-            if (hexValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
-                hexValue.StartsWith("&h", StringComparison.OrdinalIgnoreCase))
-            {
-                hexValue = hexValue.Substring(2);
-            }
-            if (int.TryParse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int decimalValue))
-            {
-                if (currentRunContainer.Count > 0 && 
-                    currentSpan.Count > 0) // SymbolChar can only be present inside a Run, just like regular Text elements.
-                {
-                    // Close the current span
-                    var oldSpan = currentSpan.Pop();
-
-                    // Create a new span for the symbol with the specified font and char.
-                    // The SymbolChar in DOCX has the same properties (bold, italic, color, ...) as the parent run, 
-                    // except for the font family.
-                    var symbolSpan = oldSpan.CloneEmpty();
-                    symbolSpan.FontFamily = symbolChar!.Font.Value;
-                    symbolSpan.Text = ((char)decimalValue).ToString(); // convert decimal char code to string.
-
-                    // Add the new span to the paragraph/hyperlink.
-                    currentRunContainer.Peek().AddSpan(symbolSpan);
-
-                    // The old span was closed ahead of time to process the SymbolChar element.
-                    // Create a new span with the same properties to contain further text elements. 
-                    // The new span will be closed by the ProcessRun method.
-                    // If there are no remaining elements, the new span will be empty 
-                    // and will be ignored in the rendering step.
-                    var newSpan = oldSpan.CloneEmpty();
-                    currentSpan.Push(newSpan);
-                }
-            }
-        }
     }
 
     internal override void ProcessPageNumber(PageNumber pageNumber, QuestPdfModel output)

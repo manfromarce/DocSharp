@@ -10,6 +10,19 @@ namespace DocSharp.Docx;
 
 public static class StylesHelpers
 {
+    public static bool IsSameStyle(Paragraph par1, Paragraph par2)
+    {
+        var styleId1 = par1.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
+        var styleId2 = par1.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
+        if (string.IsNullOrEmpty(styleId1) && string.IsNullOrEmpty(styleId2))
+            return true;
+        
+        if (string.IsNullOrEmpty(styleId1) || string.IsNullOrEmpty(styleId2))
+            return false;
+        else 
+            return styleId1.Equals(styleId2, StringComparison.OrdinalIgnoreCase);
+    }
+
     public static Styles GetOrCreateStylesPart(this MainDocumentPart mainDocumentPart)
     {
         var part = mainDocumentPart.StyleDefinitionsPart;

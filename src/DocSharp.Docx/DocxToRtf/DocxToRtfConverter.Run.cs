@@ -218,8 +218,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
             else
             {
-                string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
-                if (!string.IsNullOrEmpty(hex))
+                string? hex = highlight.ToHexColor();
+                if (!string.IsNullOrWhiteSpace(hex))
                 {
                     colors.TryAddAndGetIndex(hex!, out int highlightIndex);
                     sb.WriteWordWithValue("highlight", highlightIndex);

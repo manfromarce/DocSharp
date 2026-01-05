@@ -74,10 +74,27 @@ public class QuestPdfModel
         {
             if (element is QuestPdfParagraph paragraph)
             {
-                var paragraphItem = column.Item().PaddingLeft(paragraph.LeftIndent, Unit.Point)
-                                                 .PaddingRight(paragraph.RightIndent, Unit.Point)
-                                                 .PaddingTop(paragraph.SpaceBefore, Unit.Point)
+                var paragraphItem = column.Item().PaddingTop(paragraph.SpaceBefore, Unit.Point)
                                                  .PaddingBottom(paragraph.SpaceAfter, Unit.Point);
+                
+                var leftIndent = Math.Abs(paragraph.LeftIndent);
+                var rightIndent = Math.Abs(paragraph.RightIndent);
+                var startIndent = Math.Abs(paragraph.StartIndent);
+                var endIndent = Math.Abs(paragraph.EndIndent);
+
+                if (leftIndent > 0)
+                    paragraphItem = paragraphItem.PaddingLeft(leftIndent, Unit.Point);
+                else if (startIndent > 0) // TODO: handle direction (start can be left or right)
+                    paragraphItem = paragraphItem.PaddingLeft(startIndent, Unit.Point);
+                else 
+                    paragraphItem = paragraphItem.PaddingLeft(0);
+
+                if (rightIndent > 0)
+                    paragraphItem = paragraphItem.PaddingRight(rightIndent, Unit.Point);
+                else if (endIndent > 0) // TODO: handle direction (end can be right or left)
+                    paragraphItem = paragraphItem.PaddingRight(endIndent, Unit.Point);
+                else 
+                    paragraphItem = paragraphItem.PaddingRight(0);
 
                 if (paragraph.KeepTogether)
                 {
@@ -91,8 +108,13 @@ public class QuestPdfModel
                 
                 paragraphItem.Text(text =>
                 {
-                    // text.ParagraphSpacing(paragraph.SpaceAfter, Unit.Point);
-                    text.ParagraphFirstLineIndentation(paragraph.FirstLineIndent, Unit.Point);
+                    if (paragraph.FirstLineIndent >= 0)
+                    // currently "hanging" (negative) first line indent is not supported by QuestPDF
+                    // (I have filled an issue on GitHub for this)
+                    {
+                        text.ParagraphFirstLineIndentation(paragraph.FirstLineIndent, Unit.Point);                        
+                    } 
+                    
                     switch (paragraph.Alignment)
                     {
                         case ParagraphAlignment.Left: text.AlignLeft(); break;
@@ -108,18 +130,21 @@ public class QuestPdfModel
                         if (inline is QuestPdfSpan span)
                         {
                             // Why is LineHeight at the span level in QuestPDF rather than at the same level as ParagraphFirstLineIndentation?
-                            text.Span(span.IsAllCaps ? span.Text.ToUpper() : span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);                                                                                                    
+                            text.Span(span.IsAllCaps ? span.Text.ToUpper() : span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);   
                         }
                         else if (inline is QuestPdfHyperlink hyperlink)
                         {
                             // Adding multiple formatted spans at once inside the link is not possible, so we add multiple spans with the same URL.
-                            foreach (var subSpan in hyperlink.Spans)
+                            foreach (var subElement in hyperlink.Elements)
                             { 
-                                if (hyperlink.Url != null)
-                                    text.Hyperlink(subSpan.Text, hyperlink.Url).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
-                                else if (hyperlink.Anchor != null)
-                                    // TODO: section names (bookmarks) are not created yet
-                                    text.SectionLink(subSpan.Text, hyperlink.Anchor).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
+                                if (subElement is QuestPdfSpan subSpan)
+                                {                                    
+                                    if (hyperlink.Url != null)
+                                        text.Hyperlink(subSpan.Text, hyperlink.Url).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
+                                    else if (hyperlink.Anchor != null)
+                                        // TODO: section names (bookmarks) are not created yet
+                                        text.SectionLink(subSpan.Text, hyperlink.Anchor).Style(subSpan.Style).LineHeight(paragraph.LineHeight);                                    
+                                }
                             }
                         }
                     }

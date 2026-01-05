@@ -233,19 +233,10 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
 
         // Highlight and shading (highlight has priority over shading)
-        var highlight = OpenXmlHelpers.GetEffectiveProperty<Highlight>(run);
-        if (highlight?.Val != null && highlight.Val != HighlightColorValues.None)
+        string? hex = run.GetEffectiveBackgroundColor();
+        if (!string.IsNullOrWhiteSpace(hex))
         {
-            string? hex = RtfHighlightMapper.GetHexColor(highlight.Val);
-            if (!string.IsNullOrEmpty(hex))
-            {
-                styles.Add($"background-color: #{hex};");
-            }
-        }
-        else if (OpenXmlHelpers.GetEffectiveProperty<Shading>(run) is Shading shading && 
-                 ColorHelpers.EnsureHexColor(shading.Fill?.Value) is string fill)
-        {
-            styles.Add($"background-color: #{fill};");
+            styles.Add($"background-color: #{hex};");
         }
 
         if (border?.Val != null)

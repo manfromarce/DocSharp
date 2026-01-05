@@ -8,11 +8,113 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Office2010.Word;
 using DocumentFormat.OpenXml.Packaging;
 using A = DocumentFormat.OpenXml.Drawing;
+using W = DocumentFormat.OpenXml.Wordprocessing;
+using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
 namespace DocSharp.Docx;
 
 public static class ColorHelpers
 {
+    public static string? ToHexColor(this W.Highlight? highlight)
+    {
+        if (highlight == null || highlight.Val == null || highlight.Val.Value == W.HighlightColorValues.None)
+            return null;
+        else if (highlight.Val == W.HighlightColorValues.Black)
+            return "000000";
+        else if (highlight.Val == W.HighlightColorValues.White)
+            return "FFFFFF";
+        else if (highlight.Val == W.HighlightColorValues.Red)
+            return "FF0000";
+        else if (highlight.Val == W.HighlightColorValues.Green)
+            return "00FF00";
+        else if (highlight.Val == W.HighlightColorValues.Blue)
+            return "0000FF";
+        else if (highlight.Val == W.HighlightColorValues.Yellow)
+            return "FFFF00";
+        else if (highlight.Val == W.HighlightColorValues.Cyan)
+            return "00FFFF";
+        else if (highlight.Val == W.HighlightColorValues.Magenta)
+            return "FF00FF";
+        else if (highlight.Val == W.HighlightColorValues.DarkRed)
+            return "800000";
+        else if (highlight.Val == W.HighlightColorValues.DarkGreen)
+            return "008000";
+        else if (highlight.Val == W.HighlightColorValues.DarkBlue)
+            return "000080";
+        else if (highlight.Val == W.HighlightColorValues.DarkYellow)
+            return "808000";
+        else if (highlight.Val == W.HighlightColorValues.DarkMagenta)
+            return "800080";
+        else if (highlight.Val == W.HighlightColorValues.DarkCyan)
+            return "008080";
+        else if (highlight.Val == W.HighlightColorValues.DarkGray)
+            return "808080";
+        else if (highlight.Val == W.HighlightColorValues.LightGray)
+            return "C0C0C0";
+        else
+            return null;
+    }
+
+    public static string? ToHexColor(this W.Shading? shading)
+    {
+        if (shading == null || (shading.Val != null && shading.Val.Value == W.ShadingPatternValues.Nil))
+            return null;
+
+        // Patterns in Open XML work in this way: 
+        // - The pure primary color (Fill) is displayed for ShadingPatternValues.Clear
+        // or if no pattern (Shading.Val) is specified.
+        // - The pure secondary color (Color) is displayed for ShadingPatternValues.Solid. 
+        // - Other values are displayed as a combination of the two (stripes, checkerboard, ...)
+        // This functions returns the primary color (Fill) in all cases, 
+        // except Solid (for which the secondary color is returned) and Nil (for which null is returned).
+        // If a converter supports pattern types (for example DOCX --> RTF), 
+        // it should map them properly rather than using this method.
+
+        if (shading.Val != null && shading.Val.Value == W.ShadingPatternValues.Solid)
+        {
+            return EnsureHexColor(shading.Color?.Value); // try to get secondary color as hex string
+        }
+        else
+        {
+            return EnsureHexColor(shading.Fill?.Value); // try to get primary color as hex string
+        }
+    }
+
+    public static string? ToHexColor(this W14.FillTextEffect? fillEffect)
+    {
+        if (fillEffect == null)
+            return null;
+
+        string? fillColor = null;
+        if (fillEffect.Elements<W14.SolidColorFillProperties>().FirstOrDefault() is W14.SolidColorFillProperties solidFill)
+        {
+            fillColor = ColorHelpers.GetColor(solidFill);
+            if (string.IsNullOrWhiteSpace(fillColor))
+                fillColor = null;
+        }
+        else if (fillEffect.Elements<W14.GradientFillProperties>().FirstOrDefault() is W14.GradientFillProperties gradientFill &&
+                 gradientFill.GradientStopList?.Elements<W14.GradientStop>().FirstOrDefault() is W14.GradientStop firstGradientStop)
+        {
+            // Extract the first color from the gradient
+            fillColor = ColorHelpers.GetColor(firstGradientStop);
+            if (string.IsNullOrWhiteSpace(fillColor))
+                fillColor = null;
+        }
+        else if (fillEffect.Elements<W14.NoFillEmpty>().FirstOrDefault() is W14.NoFillEmpty)
+        {
+            fillColor = null;
+        }
+        return EnsureHexColor(fillColor);
+    }
+
+    public static string? ToHexColor(this W.Color? color)
+    {
+        if (color == null || color.Val == null || !color.Val.HasValue)
+            return null;
+        else
+            return EnsureHexColor(color.Val.Value);
+    }
+
     public static string ToHexString(this System.Drawing.Color color)
     {
         return $"#{color.R:X2}{color.G:X2}{color.B:X2}";

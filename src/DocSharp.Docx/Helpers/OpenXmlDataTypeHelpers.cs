@@ -33,6 +33,19 @@ public static class OpenXmlDataTypeHelpers
         }
     }
 
+    public static float? ToFloat(this StringValue? stringValue)
+    {
+        if (stringValue?.Value != null &&
+            float.TryParse(stringValue.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out float val))
+        {
+            return val;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public static decimal? ToDecimal(this StringValue? stringValue)
     {
         if (stringValue?.Value != null &&

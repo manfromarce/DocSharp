@@ -13,6 +13,8 @@ using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
+using W = DocumentFormat.OpenXml.Wordprocessing;
+using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
 namespace DocSharp.Docx;
 
@@ -713,6 +715,247 @@ public static class OpenXmlHelpers
 
         // Check default run style for the current document
         return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>();
+    }
+
+    /// <summary>
+    /// Helper function to get text background color from cell/table properties, style or default style.
+    /// Patterns are ignored, returning the primary color only, unless only the secondary color is used.
+    /// </summary>
+    /// <param name="run"></param>
+    /// <param name="stylesPart"></param>
+    /// <returns></returns>
+    public static string? GetEffectiveBackgroundColor(this TableCell tableCell, Styles? stylesPart = null)
+    {
+        return tableCell.GetEffectiveProperty<Shading>().ToHexColor();
+    }
+
+    /// <summary>
+    /// Helper function to get text background color from paragraph properties, style or default style.
+    /// Patterns are ignored, returning the primary color only, unless only the secondary color is used.
+    /// </summary>
+    /// <param name="run"></param>
+    /// <param name="stylesPart"></param>
+    /// <returns></returns>
+    public static string? GetEffectiveBackgroundColor(this Paragraph paragraph, Styles? stylesPart = null)
+    {
+        return paragraph.GetEffectiveProperty<Shading>().ToHexColor();
+    }
+
+    /// <summary>
+    /// Helper function to get text background color from run/paragraph properties, style or default style, 
+    /// considering both highlight and shading 
+    /// (in case of shading, patterns are ignored unless only the secondary color is used).
+    /// </summary>
+    /// <param name="run"></param>
+    /// <param name="stylesPart"></param>
+    /// <returns></returns>
+    public static string? GetEffectiveBackgroundColor(this Run run, Styles? stylesPart = null)
+    {
+        // Highlight has priority over shading in Word.
+
+        // Check run properties
+        var propertyValue = run.RunProperties?.Highlight.ToHexColor() ?? 
+                            run.RunProperties?.Shading?.ToHexColor();
+        if (!string.IsNullOrWhiteSpace(propertyValue))
+        {
+            return propertyValue;
+        }
+
+        // Get styles if not passed to the function.
+        stylesPart ??= GetStylesPart(run);
+
+        // Check conditional formatting, if any
+        var paragraph = run.GetFirstAncestor<Paragraph>();
+        var conditionalFormattingType = paragraph is null ? ConditionalFormattingFlags.None : paragraph.GetCombinedConditionalFormattingFlags();
+        if (paragraph != null && conditionalFormattingType != ConditionalFormattingFlags.None)
+        {
+            propertyValue = GetConditionalFormattingProperty<W.Highlight>(stylesPart, paragraph, conditionalFormattingType)?.ToHexColor() ?? 
+                            GetConditionalFormattingProperty<W.Shading>(stylesPart, paragraph, conditionalFormattingType)?.ToHexColor();
+            if (!string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return propertyValue;
+            }
+        }
+
+        // Check run style
+        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character);
+        while (runStyle != null)
+        {
+            propertyValue = runStyle.StyleRunProperties?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
+                            runStyle.StyleRunProperties?.Shading?.ToHexColor();
+            if (!string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            runStyle = stylesPart.GetBaseStyle(runStyle);
+        }
+
+        // Check paragraph style
+        var paragraphProperties = paragraph?.ParagraphProperties;
+        var paragraphStyle = stylesPart.GetStyleFromId(paragraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
+        while (paragraphStyle != null)
+        {
+            // Check paragraph style run properties
+            propertyValue = paragraphStyle.StyleRunProperties?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
+                            paragraphStyle.StyleRunProperties?.Shading?.ToHexColor();
+            if (!string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return propertyValue;
+            }
+
+            // Check linked style, if any
+            var linkedStyleId = paragraphStyle.LinkedStyle?.Val;
+            if (linkedStyleId != null)
+            {
+                var linkedStyle = stylesPart.GetStyleFromId(linkedStyleId, StyleValues.Character);
+                if (linkedStyle != null)
+                {
+                    propertyValue = linkedStyle.StyleRunProperties?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
+                                    linkedStyle.StyleRunProperties?.Shading?.ToHexColor();
+                    if (!string.IsNullOrWhiteSpace(propertyValue))
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check styles from which the current style inherits
+            paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
+        }
+
+        // Check table run style
+        if (run.GetFirstAncestor<Table>() is Table table &&
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+            while (tableStyle != null)
+            {
+                propertyValue = tableStyle.StyleRunProperties?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
+                                tableStyle.StyleRunProperties?.Shading?.ToHexColor();
+                if (!string.IsNullOrWhiteSpace(propertyValue))
+                {
+                    return propertyValue;
+                }
+
+                // Check styles from which the current style inherits
+                tableStyle = stylesPart.GetBaseStyle(tableStyle);
+            }
+        }
+
+        // Check default run style for the current document
+        var defaultStyle = stylesPart.GetDefaultRunStyle();
+        return defaultStyle?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
+               defaultStyle?.Shading?.ToHexColor();
+    }
+
+    /// <summary>
+    /// Helper function to get text color from run/paragraph properties, style or default style, 
+    /// considering both regular color and fill effect color.
+    /// </summary>
+    /// <param name="run"></param>
+    /// <param name="stylesPart"></param>
+    /// <returns></returns>
+    public static string? GetEffectiveTextColor(this Run run, Styles? stylesPart = null)
+    {
+        // Fill effect has priority over color in Word.
+
+        // Check run properties
+        var propertyValue = run.RunProperties?.FillTextEffect.ToHexColor() ?? 
+                            run.RunProperties?.Color?.ToHexColor();
+        if (!string.IsNullOrWhiteSpace(propertyValue))
+        {
+            return propertyValue;
+        }
+
+        // Get styles if not passed to the function.
+        stylesPart ??= GetStylesPart(run);
+
+        // Check conditional formatting, if any
+        var paragraph = run.GetFirstAncestor<Paragraph>();
+        var conditionalFormattingType = paragraph is null ? ConditionalFormattingFlags.None : paragraph.GetCombinedConditionalFormattingFlags();
+        if (paragraph != null && conditionalFormattingType != ConditionalFormattingFlags.None)
+        {
+            propertyValue = GetConditionalFormattingProperty<W14.FillTextEffect>(stylesPart, paragraph, conditionalFormattingType)?.ToHexColor() ?? 
+                            GetConditionalFormattingProperty<W.Color>(stylesPart, paragraph, conditionalFormattingType)?.ToHexColor();
+            if (!string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return propertyValue;
+            }
+        }
+
+        // Check run style
+        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character);
+        while (runStyle != null)
+        {
+            propertyValue = runStyle.StyleRunProperties?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
+                            runStyle.StyleRunProperties?.Color?.ToHexColor();
+            if (!string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            runStyle = stylesPart.GetBaseStyle(runStyle);
+        }
+
+        // Check paragraph style
+        var paragraphProperties = paragraph?.ParagraphProperties;
+        var paragraphStyle = stylesPart.GetStyleFromId(paragraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
+        while (paragraphStyle != null)
+        {
+            // Check paragraph style run properties
+            propertyValue = paragraphStyle.StyleRunProperties?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
+                            paragraphStyle.StyleRunProperties?.Color?.ToHexColor();
+            if (!string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return propertyValue;
+            }
+
+            // Check linked style, if any
+            var linkedStyleId = paragraphStyle.LinkedStyle?.Val;
+            if (linkedStyleId != null)
+            {
+                var linkedStyle = stylesPart.GetStyleFromId(linkedStyleId, StyleValues.Character);
+                if (linkedStyle != null)
+                {
+                    propertyValue = linkedStyle.StyleRunProperties?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
+                                    linkedStyle.StyleRunProperties?.Color?.ToHexColor();
+                    if (!string.IsNullOrWhiteSpace(propertyValue))
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check styles from which the current style inherits
+            paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
+        }
+
+        // Check table run style
+        if (run.GetFirstAncestor<Table>() is Table table &&
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+            while (tableStyle != null)
+            {
+                propertyValue = tableStyle.StyleRunProperties?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
+                                tableStyle.StyleRunProperties?.Color?.ToHexColor();
+                if (!string.IsNullOrWhiteSpace(propertyValue))
+                {
+                    return propertyValue;
+                }
+
+                // Check styles from which the current style inherits
+                tableStyle = stylesPart.GetBaseStyle(tableStyle);
+            }
+        }
+
+        // Check default run style for the current document
+        var defaultStyle = stylesPart.GetDefaultRunStyle();
+        return defaultStyle?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
+               defaultStyle?.Color?.ToHexColor();
     }
 
     public static T? GetEffectiveProperty<T>(this RunProperties runPr, Styles? stylesPart = null) where T : OpenXmlElement
