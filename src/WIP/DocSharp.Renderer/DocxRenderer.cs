@@ -132,11 +132,28 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
                 l = margins.Left.Value;
             if (margins.Right != null)
                 r = margins.Right.Value;
-        }
+        }        
 
         // Convert twips to points
         var pageSet = new QuestPdfPageSet(w / 20f, h / 20f, l / 20f, t / 20f, r / 20f, b / 20f, 
                                           QuestPDF.Infrastructure.Unit.Point);
+
+        var columns = sectionProperties.GetFirstChild<Columns>();
+        if (columns != null && columns.ColumnCount != null && columns.ColumnCount > 1)
+        {
+            pageSet.NumberOfColumns = columns.ColumnCount.Value;
+
+            if (columns.Space.ToFloat() is float columnGap && columnGap > 0)
+            {
+                pageSet.SpaceBetweenColumns = columnGap / 20f; // Convert twips to points
+            }
+
+            if (columns.EqualWidth != null && columns.EqualWidth.Value == false)
+            {
+                // TODO
+            }
+        }  
+
         if (pageColor.HasValue)
             pageSet.BackgroundColor = pageColor.Value;
 
@@ -145,8 +162,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
         // Process headers for this section
         var headerRefs = sectionProperties.Elements<HeaderReference>();
-        // QuestPDF can't produce different header and footer on odd/even pages.
-        // For now, handle the default header and footer only.
+        // TODO: QuestPDF can produce different header and footer on odd/even pages using the ShowIf() function.
         var headerRef = headerRefs.FirstOrDefault(h => h.Type == null || !h.Type.HasValue || h.Type.Value == HeaderFooterValues.Default);
         if (headerRef?.Id?.Value is string headerId && mainPart.GetPartById(headerId) is HeaderPart headerPart)
         {
@@ -158,8 +174,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
 
         // Process footers for this section
         var footerRefs = sectionProperties.Elements<FooterReference>();
-        // QuestPDF can't produce different header and footer on odd/even pages.
-        // For now, handle the default header and footer only.
+        // TODO: QuestPDF can produce different header and footer on odd/even pages using the ShowIf() function.
         var footerRef = footerRefs.FirstOrDefault(h => h.Type == null || !h.Type.HasValue || h.Type.Value == HeaderFooterValues.Default);
         if (footerRef?.Id?.Value is string footerId && mainPart.GetPartById(footerId) is FooterPart footerPart)
         {
@@ -213,6 +228,9 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
         p.StartIndent = indent.StartIndent;
         p.EndIndent = indent.EndIndent;
         p.FirstLineIndent = indent.FirstLineIndent;
+
+        p.KeepTogether = paragraph.GetEffectiveProperty<KeepLines>().ToBool();
+        // TODO: KeepNext (cannot be set at paragraph level in QuestPDF and requires a different approach)
 
         // Add paragraph to the current container (body, header, footer, table cell, ...)
         if (currentContainer.Count > 0)
@@ -396,7 +414,8 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
                 // Add span to the paragraph/hyperlink
                 newRunContainer.AddSpan(newSpan);              
 
-                // If the run container is an hyperlink, enclose it into a new paragraph
+                // If the run container is an hyperlink, enclose it into a new paragraph, 
+                // otherwise the run container is the container itself.
                 QuestPdfParagraph newParagraph;
                 if (newRunContainer is QuestPdfParagraph paragraph)
                 {
@@ -428,7 +447,47 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
             }
             else if (@break.Type.HasValue && @break.Type.Value == BreakValues.Page)
             {
+                // Close and retrieve the current span, run container (paragraph/hyperlink) and paragraph
+                var oldSpan = currentSpan.Pop();
+                var oldRunContainer = currentRunContainer.Pop();
+                var oldParagraph = currentParagraph.Pop();
+
+                // Add a new QuestPdfPageBreak object
+                currentContainer.Peek().Content.Add(new QuestPdfPageBreak());
+
+                // The old span and paragraph were closed ahead of time to process the Break element.
+                // Create a new paragraph and span with the same properties to contain further elements. 
+
+                // Create a new run container and span
+                var newRunContainer = oldRunContainer.CloneEmpty();
+                var newSpan = oldSpan.CloneEmpty();
+
+                // Add span to the paragraph/hyperlink
+                newRunContainer.AddSpan(newSpan);              
+
+                // If the run container is an hyperlink, enclose it into a new paragraph, 
+                // otherwise the run container is the container itself.
+                QuestPdfParagraph newParagraph;
+                if (newRunContainer is QuestPdfParagraph paragraph)
+                {
+                    newParagraph = paragraph;
+                }
+                else
+                {
+                    newParagraph = (QuestPdfParagraph)(oldParagraph.CloneEmpty());
+                    if (newRunContainer is QuestPdfHyperlink hyperlink)
+                    {
+                        newParagraph.Elements.Add(hyperlink);                        
+                    }
+                }
             
+                // Set current span, run container and paragraph
+                currentParagraph.Push(newParagraph);
+                currentRunContainer.Push(newRunContainer);
+                currentSpan.Push(newSpan);
+
+                // Add paragraph to the current container (body, header, footer, table cell, ...)
+                currentContainer.Peek().Content.Add(newParagraph);   
             }
             else if (@break.Type.HasValue && @break.Type.Value == BreakValues.Column)
             {
@@ -476,6 +535,27 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
                     currentSpan.Push(newSpan);
                 }
             }
+        }
+    }
+
+    internal override void ProcessPageNumber(PageNumber pageNumber, QuestPdfModel output)
+    {
+        if (currentRunContainer.Count > 0 && 
+            currentSpan.Count > 0) // PageNumber can only be present inside a Run, just like regular Text elements.
+        {
+            // Close and retrieve the current span
+            var oldSpan = currentSpan.Pop();
+
+            // Add a new QuestPdfPageNumber object to the current run container.
+            currentRunContainer.Peek().AddPageNumber();
+
+            // The old span was closed ahead of time to process the PageNumber element.
+            // Create a new span with the same properties to contain further text elements. 
+            // The new span will be closed by the ProcessRun method.
+            // If there are no remaining elements, the new span will be empty 
+            // and will be ignored during rendering.
+            var newSpan = oldSpan.CloneEmpty();
+            currentSpan.Push(newSpan);
         }
     }
 
@@ -550,10 +630,6 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
     }
 
     internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, QuestPdfModel output)
-    {
-    }
-
-    internal override void ProcessPageNumber(PageNumber pageNumber, QuestPdfModel output)
     {
     }
 

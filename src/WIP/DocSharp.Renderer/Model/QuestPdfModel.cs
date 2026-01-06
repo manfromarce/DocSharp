@@ -132,6 +132,10 @@ public class QuestPdfModel
                             // Why is LineHeight at the span level in QuestPDF rather than at the same level as ParagraphFirstLineIndentation?
                             text.Span(span.IsAllCaps ? span.Text.ToUpper() : span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);   
                         }
+                        else if (inline is QuestPdfPageNumber pageNumber)
+                        {
+                            text.CurrentPageNumber();
+                        }
                         else if (inline is QuestPdfHyperlink hyperlink)
                         {
                             // Adding multiple formatted spans at once inside the link is not possible, so we add multiple spans with the same URL.
@@ -152,6 +156,7 @@ public class QuestPdfModel
             }
             else if (element is QuestPdfTable table)
             {
+                // Start a new table
                 column.Item().Table(t =>
                 {
                     t.ColumnsDefinition(c =>
@@ -184,6 +189,11 @@ public class QuestPdfModel
                     }
 
                 });
+            }
+            else if (element is QuestPdfPageBreak)
+            {
+                // Force page break
+                column.Item().PageBreak();
             }
         }
     }

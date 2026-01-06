@@ -47,6 +47,11 @@ internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
         Elements.Add(span);
     }
 
+    public void AddPageNumber()
+    {
+        Elements.Add(new QuestPdfPageNumber());        
+    }
+
     public IQuestPdfRunContainer CloneEmpty()
     {
         return new QuestPdfParagraph(Alignment, LineHeight, SpaceBefore, SpaceAfter, LeftIndent, RightIndent, StartIndent, EndIndent, FirstLineIndent, BackgroundColor, KeepTogether);

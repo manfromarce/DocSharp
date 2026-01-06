@@ -28,6 +28,11 @@ internal class QuestPdfHyperlink : QuestPdfInlineElement, IQuestPdfRunContainer
         Elements.Add(span);
     }
 
+    public void AddPageNumber()
+    {
+        Elements.Add(new QuestPdfPageNumber());    
+    }
+
     public IQuestPdfRunContainer CloneEmpty()
     {
         return new QuestPdfHyperlink(Url, Anchor);
