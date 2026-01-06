@@ -658,7 +658,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 //   To preserve formatting such as bold or color we would need to convert these to LaTex syntax,
                 //   as regular Markdown can't be added to LaTex blocks. 
                 // - OfficeMath and Math.Paragraph elements nested into another OfficeMath element are not supported.
-                //   
+                //   (rare, I have never seen this in a real DOCX document).
                 string latex;
                 try
                 {
@@ -681,7 +681,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     // Process word processing element (hyperlink, bookmark, ...)
                     ProcessParagraphElement(element.LastChild, sb);
                 }
-                if (element.LastChild is M.Run run && run.LastChild != null && !run.LastChild.IsMathElement())
+                else if (element.LastChild is M.Run run && run.LastChild != null && !run.LastChild.IsMathElement())
                 {
                     // Process word processing element (break, regular text, ...)
                     ProcessRunElement(run.LastChild, sb);

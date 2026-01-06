@@ -22,7 +22,21 @@ internal class QuestPdfPageSet(float pageWidth, float pageHeight,
     internal int NumberOfColumns { get; set; } = 1;
     internal float? SpaceBetweenColumns { get; set; } // in points (if set)
 
-    internal QuestPdfContainer Header = new();
-    internal QuestPdfContainer Footer = new();
+    internal QuestPdfContainer? HeaderFirst;
+    internal QuestPdfContainer? HeaderEven;
+    internal QuestPdfContainer HeaderOddOrDefault = new();
+
+    internal QuestPdfContainer? FooterFirst;
+    internal QuestPdfContainer? FooterEven;
+    internal QuestPdfContainer FooterOddOrDefault = new();
+
     internal QuestPdfContainer Content = new();
+
+    internal bool DifferentHeaderFooterForOddAndEvenPages => HeaderEven != null;
+    // Note: HeaderEven and FooterEven are both null or both not null considering how the model is built
+    // (based on the Open XML structure) 
+
+    internal bool DifferentHeaderFooterForFirstPage => HeaderFirst != null;
+    // Note: HeaderFirst and FooterFirst are both null or both not null considering how the model is built
+    // (based on the Open XML structure) 
 }

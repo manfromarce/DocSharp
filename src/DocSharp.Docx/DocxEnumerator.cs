@@ -953,7 +953,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
 
     internal SectionProperties? FindPreviousSectionProperties(SectionProperties sectionProperties)
     {
-        var section = Sections.Where(s => s.properties == sectionProperties).FirstOrDefault();
+        var section = Sections.FirstOrDefault(s => s.properties == sectionProperties);
         int i = Sections.IndexOf(section);
         if (i == 0)
         {
@@ -970,8 +970,8 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
             return null;
         }
         if (sectionProperties.Elements<HeaderReference>()
-            .Where(hr => (hr.Type != null && hr.Type == type) || (hr.Type == null && type == HeaderFooterValues.Default))
-            .FirstOrDefault() is HeaderReference headerRef)
+            .FirstOrDefault(hr => (hr.Type != null && hr.Type == type) || (hr.Type == null && type == HeaderFooterValues.Default))
+            is HeaderReference headerRef)
         {
             return headerRef;
         }
@@ -985,8 +985,8 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
             return null;
         }
         if (sectionProperties.Elements<FooterReference>()
-            .Where(hr => (hr.Type != null && hr.Type == type) || (hr.Type == null && type == HeaderFooterValues.Default))
-            .FirstOrDefault() is FooterReference footerRef)
+            .FirstOrDefault(hr => (hr.Type != null && hr.Type == type) || (hr.Type == null && type == HeaderFooterValues.Default))
+            is FooterReference footerRef)
         {
             return footerRef;
         }
@@ -995,30 +995,20 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
 
     internal virtual void ProcessHeaderReference(HeaderReference? headerRef, TOutput writer)
     {
-        if (headerRef != null)
+        if (headerRef != null && 
+            HeaderFooterHelpers.GetHeaderFromReference(headerRef, headerRef.GetMainDocumentPart()) is Header header)
         {
-            var mainPart = headerRef.GetMainDocumentPart();
-            if (mainPart != null &&
-                headerRef?.Id?.Value is string headerId &&
-                mainPart.GetPartById(headerId) is HeaderPart headerPart)
-            {
-                ProcessHeader(headerPart.Header, writer);
-            }
+            ProcessHeader(header, writer);
         }
     }
 
     internal virtual void ProcessFooterReference(FooterReference? footerRef, TOutput writer)
     {
-        if (footerRef != null)
+        if (footerRef != null && 
+            HeaderFooterHelpers.GetFooterFromReference(footerRef, footerRef.GetMainDocumentPart()) is Footer footer)
         {
-            var mainPart = footerRef.GetMainDocumentPart();
-            if (mainPart != null &&
-                footerRef?.Id?.Value is string headerId &&
-                mainPart.GetPartById(headerId) is FooterPart footerPart)
-            {
-                ProcessFooter(footerPart.Footer, writer);
-            }
-        }
+            ProcessFooter(footer, writer);
+        }       
     }
 
     internal virtual void ProcessHeader(Header header, TOutput writer)

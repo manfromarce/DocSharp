@@ -10,10 +10,11 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 using QuestPDF.Fluent;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace DocSharp.Renderer;
 
-public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<QuestPDF.Fluent.Document>
+public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<QuestPDF.Fluent.Document>
 {
     static DocxRenderer()
     {
@@ -160,29 +161,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
         // Add page set to PageSets collection
         output.PageSets.Add(pageSet);
 
-        // Process headers for this section
-        var headerRefs = sectionProperties.Elements<HeaderReference>();
-        // TODO: QuestPDF can produce different header and footer on odd/even pages using the ShowIf() function.
-        var headerRef = headerRefs.FirstOrDefault(h => h.Type == null || !h.Type.HasValue || h.Type.Value == HeaderFooterValues.Default);
-        if (headerRef?.Id?.Value is string headerId && mainPart.GetPartById(headerId) is HeaderPart headerPart)
-        {
-            currentContainer.Push(pageSet.Header);
-            base.ProcessHeader(headerPart.Header, output);
-            if (currentContainer.Count > 0)
-                currentContainer.Pop();
-        }
-
-        // Process footers for this section
-        var footerRefs = sectionProperties.Elements<FooterReference>();
-        // TODO: QuestPDF can produce different header and footer on odd/even pages using the ShowIf() function.
-        var footerRef = footerRefs.FirstOrDefault(h => h.Type == null || !h.Type.HasValue || h.Type.Value == HeaderFooterValues.Default);
-        if (footerRef?.Id?.Value is string footerId && mainPart.GetPartById(footerId) is FooterPart footerPart)
-        {
-            currentContainer.Push(pageSet.Footer);
-            base.ProcessFooter(footerPart.Footer, output);
-            if (currentContainer.Count > 0)
-                currentContainer.Pop();
-        }
+        ProcessHeaderFooters(sectionProperties, pageSet, mainPart, output);        
 
         // Process elements in the section body itself (paragraphs, tables, ...)
         currentContainer.Push(pageSet.Content);
@@ -520,7 +499,7 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
                     // The SymbolChar in DOCX has the same properties (bold, italic, color, ...) as the parent run, 
                     // except for the font family.
                     var symbolSpan = oldSpan.CloneEmpty();
-                    symbolSpan.FontFamily = symbolChar!.Font.Value;
+                    symbolSpan.FontFamily = symbolChar!.Font!.Value!;
                     symbolSpan.Text = ((char)decimalValue).ToString(); // convert decimal char code to string.
 
                     // Add the new span to the paragraph/hyperlink.
@@ -559,72 +538,6 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
         }
     }
 
-    internal override void ProcessTable(Table table, QuestPdfModel output)
-    {
-        // Process table properties and create a new QuestPdfTable object
-        var t = new QuestPdfTable()
-        {
-            ColumnsCount = table.Elements<TableRow>().Max(c => c.Elements<TableCell>().Count())
-            // TODO: check SdtRow/CustomXmlRow and SdtCell/CustomXmlCell too.
-        };
-        // Add table to the current container.
-        if (currentContainer.Count > 0)
-            currentContainer.Peek().Content.Add(t);
-
-        // Enumerate rows and cells    
-        currentTable.Push(t);
-        base.ProcessTable(table, output); 
-        if (currentTable.Count > 0)
-            currentTable.Pop();    
-    }
-
-    internal override void ProcessTableRow(TableRow tableRow, QuestPdfModel output)
-    {
-        // Create a new QuestPdfTableRow object
-        var row = new QuestPdfTableRow();
-
-        // Add row to the table model.
-        if (currentTable.Count > 0)
-            currentTable.Peek().Rows.Add(row);
-
-        // Enumerate cells    
-        currentRow.Push(row);
-        base.ProcessTableRow(tableRow, output);
-        if (currentRow.Count > 0)
-            currentRow.Pop();    
-    }
-
-    internal override void ProcessTableCell(TableCell tableCell, QuestPdfModel output)
-    {
-        // Create a new QuestPdfTableCell object
-        var cell = new QuestPdfTableCell();
-
-        // Process cell properties
-        if (tableCell.TableCellProperties?.GridSpan?.Val != null)
-        {
-            if (tableCell.TableCellProperties.GridSpan.Val.Value > 1)
-                cell.ColumnSpan = (uint)tableCell.TableCellProperties.GridSpan.Val.Value;
-        }
-
-        var docxBgColor = tableCell.GetEffectiveBackgroundColor();
-        if (!string.IsNullOrWhiteSpace(docxBgColor))
-        {
-            cell.BackgroundColor = QuestPDF.Infrastructure.Color.FromHex(docxBgColor!);
-        }
-
-        // TODO: vertical merge (set Cell.RowSpan); borders
-
-        // Add cell to the row model.
-        if (currentRow.Count > 0)
-            currentRow.Peek().Cells.Add(cell);
-
-        // Enumerate paragraphs (or nested tables) in the cell
-        currentContainer.Push(cell);
-        base.ProcessTableCell(tableCell, output);
-        if (currentContainer.Count > 0)
-            currentContainer.Pop();    
-    }
-
     internal override void ProcessBookmarkStart(BookmarkStart bookmarkStart, QuestPdfModel output)
     {
     }
@@ -649,19 +562,9 @@ public class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<Que
     {
     }
 
-    internal override void ProcessDrawing(Drawing picture, QuestPdfModel output)
-    {
-    }
-
-    internal override void ProcessVml(OpenXmlElement picture, QuestPdfModel output)
-    {
-    }
-
     internal override void ProcessFieldChar(FieldChar field, QuestPdfModel output) { }
 
     internal override void ProcessFieldCode(FieldCode field, QuestPdfModel output) { }
-
-    internal override void ProcessMathElement(OpenXmlElement element, QuestPdfModel output) { }
 
     internal override void ProcessPositionalTab(PositionalTab posTab, QuestPdfModel output) { }
 

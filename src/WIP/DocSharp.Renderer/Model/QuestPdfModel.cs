@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuestPDF.Elements;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -25,20 +26,21 @@ public class QuestPdfModel
                     page.MarginBottom(pageSet.MarginBottom, pageSet.Unit);
                     page.PageColor(pageSet.BackgroundColor);
 
-                    if (pageSet.Header != null && pageSet.Header.Content.Count > 0)
+                    // Header() and Footer() can only be called once, 
+                    // so the conditional logic for first/odd/even pages must be handled inside the ColumnDescriptor.
+                    page.Header().Column(header =>
                     {
-                        page.Header().Column(headerColumn =>
-                        {
-                            CreateColumn(headerColumn, pageSet.Header.Content);
-                        });              
-                    }
-                    if (pageSet.Footer != null && pageSet.Footer.Content.Count > 0)
+                        AddItemsToColumn(header, pageSet.HeaderFirst?.Content, QuestPdfContainerType.HeaderFooterFirstPage, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
+                        AddItemsToColumn(header, pageSet.HeaderEven?.Content, QuestPdfContainerType.HeaderFooterEvenPages, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
+                        AddItemsToColumn(header, pageSet.HeaderOddOrDefault?.Content, QuestPdfContainerType.HeaderFooterOddOrDefault, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
+                    });
+                    page.Footer().Column(footer =>
                     {
-                        page.Footer().Column(footerColumn =>
-                        {
-                            CreateColumn(footerColumn, pageSet.Footer.Content);
-                        });
-                    }
+                        AddItemsToColumn(footer, pageSet.FooterFirst?.Content, QuestPdfContainerType.HeaderFooterFirstPage, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
+                        AddItemsToColumn(footer, pageSet.FooterEven?.Content, QuestPdfContainerType.HeaderFooterEvenPages, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
+                        AddItemsToColumn(footer, pageSet.FooterOddOrDefault?.Content, QuestPdfContainerType.HeaderFooterOddOrDefault, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
+                    });                    
+
                     if (pageSet.Content != null && pageSet.NumberOfColumns > 0 && pageSet.Content.Content != null)
                     {
                         if (pageSet.NumberOfColumns > 1)
@@ -51,7 +53,7 @@ public class QuestPdfModel
                                 
                                 content.Content().Column(column =>
                                 {
-                                    CreateColumn(column, pageSet.Content.Content);
+                                    AddItemsToColumn(column, pageSet.Content.Content);
                                 });
                             });                        
                         }
@@ -59,23 +61,51 @@ public class QuestPdfModel
                         {
                             page.Content().Column(column =>
                             {
-                                CreateColumn(column, pageSet.Content.Content);
+                                AddItemsToColumn(column, pageSet.Content.Content);
                             });
                         }
                     }
                 });
             }
         });
-    }
+    }   
 
-    internal void CreateColumn(ColumnDescriptor column, List<QuestPdfBlock> elements)
+    internal void AddItemsToColumn(ColumnDescriptor column, List<QuestPdfBlock>? elements, 
+                                   QuestPdfContainerType containerType = QuestPdfContainerType.Body, 
+                                   bool differentHeaderFooterForFirstPage = false, 
+                                   bool differentHeaderFooterForOddAndEvenPages = false)
     {
+        if (elements == null)
+            return;
         foreach (var element in elements)
         {
             if (element is QuestPdfParagraph paragraph)
             {
-                var paragraphItem = column.Item().PaddingTop(paragraph.SpaceBefore, Unit.Point)
-                                                 .PaddingBottom(paragraph.SpaceAfter, Unit.Point);
+                var paragraphItem = column.Item();
+
+                if (containerType == QuestPdfContainerType.HeaderFooterFirstPage && differentHeaderFooterForFirstPage)
+                {
+                    paragraphItem = paragraphItem.ShowOnce();
+                }
+                if (containerType == QuestPdfContainerType.HeaderFooterEvenPages && differentHeaderFooterForOddAndEvenPages)
+                {
+                    if (differentHeaderFooterForFirstPage)
+                        paragraphItem = paragraphItem.SkipOnce();
+
+                    paragraphItem = paragraphItem.ShowIf((context) => context.PageNumber % 2 == 0);
+                }
+                if (containerType == QuestPdfContainerType.HeaderFooterOddOrDefault)
+                {
+                    if (differentHeaderFooterForFirstPage)
+                        paragraphItem = paragraphItem.SkipOnce();
+                    
+                    if (differentHeaderFooterForOddAndEvenPages)
+                        paragraphItem = paragraphItem.ShowIf((context) => context.PageNumber % 2 == 1);
+                    // else always displayed
+                }
+
+                paragraphItem = paragraphItem.PaddingTop(paragraph.SpaceBefore, Unit.Point)
+                                             .PaddingBottom(paragraph.SpaceAfter, Unit.Point);
                 
                 var leftIndent = Math.Abs(paragraph.LeftIndent);
                 var rightIndent = Math.Abs(paragraph.RightIndent);
@@ -180,7 +210,7 @@ public class QuestPdfModel
 
                             cell.Column(column =>
                             {
-                                CreateColumn(column, tc.Content);
+                                AddItemsToColumn(column, tc.Content);
                                 // TODO: safe check to avoid infinite recursion
                             });
                             ++columnNumber;
