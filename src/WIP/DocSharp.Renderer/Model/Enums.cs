@@ -43,8 +43,11 @@ internal enum StrikethroughStyle
 
 internal enum QuestPdfContainerType
 {
-    HeaderFooterFirstPage, 
-    HeaderFooterEvenPages,
-    HeaderFooterOddOrDefault,
+    HeaderFirstPage, 
+    HeaderEvenPages,
+    HeaderOddOrDefault,
+    FooterFirstPage, 
+    FooterEvenPages,
+    FooterOddOrDefault,
     Body
 }

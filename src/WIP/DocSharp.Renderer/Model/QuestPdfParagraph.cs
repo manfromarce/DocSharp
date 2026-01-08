@@ -52,6 +52,11 @@ internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
         Elements.Add(new QuestPdfPageNumber());        
     }
 
+    public void AddFootnoteReference(long id)
+    {
+        Elements.Add(new QuestPdfFootnoteReference(id));        
+    }
+
     public IQuestPdfRunContainer CloneEmpty()
     {
         return new QuestPdfParagraph(Alignment, LineHeight, SpaceBefore, SpaceAfter, LeftIndent, RightIndent, StartIndent, EndIndent, FirstLineIndent, BackgroundColor, KeepTogether);

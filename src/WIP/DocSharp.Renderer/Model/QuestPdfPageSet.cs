@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
@@ -29,6 +30,9 @@ internal class QuestPdfPageSet(float pageWidth, float pageHeight,
     internal QuestPdfContainer? FooterFirst;
     internal QuestPdfContainer? FooterEven;
     internal QuestPdfContainer FooterOddOrDefault = new();
+    
+    internal List<QuestPdfFootnote> Footnotes = new();
+    internal List<QuestPdfEndnote> Endnotes = new();
 
     internal QuestPdfContainer Content = new();
 

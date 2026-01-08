@@ -16,7 +16,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     internal void ProcessFootnoteProperties(FootnoteDocumentWideProperties? footnoteProperties, RtfStringWriter sb)
     {
-        // Don't add FootnoteProperties is there are no footnotes 
+        // Don't add FootnoteProperties if there are no footnotes 
         if (FootnotesEndnotes != FootnotesEndnotesType.EndnotesOnly)
         {
             if (footnoteProperties == null)
@@ -406,8 +406,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(footnoteReference);
         if (footnoteReference.Id != null &&
             mainPart?.FootnotesPart?.Footnotes.Elements<Footnote>()
-            .Where(fn => fn.Id != null && fn.Id == footnoteReference.Id)
-            .FirstOrDefault() is Footnote footnote)
+            .FirstOrDefault(fn => fn.Id != null && fn.Id == footnoteReference.Id) is Footnote footnote)
         {
             sb.WriteLine("\\chftn");
             sb.Write("{\\footnote ");
@@ -424,8 +423,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(endnoteReference);
         if (endnoteReference.Id != null && 
             mainPart?.EndnotesPart?.Endnotes.Elements<Endnote>()
-            .Where(en => en.Id != null && en.Id == endnoteReference.Id)
-            .FirstOrDefault() is Endnote endnote)
+            .FirstOrDefault(en => en.Id != null && en.Id == endnoteReference.Id) is Endnote endnote)
         {
             sb.WriteLine("\\chftn");
             sb.Write("{\\footnote\\ftnalt ");

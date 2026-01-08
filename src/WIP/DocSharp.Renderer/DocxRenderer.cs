@@ -50,7 +50,12 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         var doc = inputDocument.MainDocumentPart?.Document;
         if (doc != null && doc.Body is Body body)
         {
-            var model = new QuestPdfModel();
+            var model = new QuestPdfModel()
+            {
+                EndnotesAtEndOfSection = inputDocument.MainDocumentPart?.DocumentSettingsPart?.Settings?.GetFirstChild<EndnoteDocumentWideProperties>() is EndnoteDocumentWideProperties endnoteProperties && 
+                                         (endnoteProperties.EndnotePosition?.Val != null &&  endnoteProperties.EndnotePosition.Val == EndnotePositionValues.SectionEnd   )
+            };
+
             ProcessDocument(doc, model);
             return model.ToQuestPdfDocument()
                         .WithSettings(PdfSettings ?? QuestPDF.Infrastructure.DocumentSettings.Default)
@@ -94,10 +99,14 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
     internal override void ProcessBody(W.Body body, QuestPdfModel output)
     {
-        Sections = body.GetSections(); // Split content in sections (implemented in the base class)
-        foreach(var sect in Sections)
+        var mainPart = body.GetMainDocumentPart();
+        if (mainPart != null)
         {
-            ProcessSection(sect, body.GetMainDocumentPart(), output);           
+            Sections = body.GetSections(); // Split content in sections (implemented in the base class)
+            foreach(var sect in Sections)
+            {
+                ProcessSection(sect, mainPart, output);           
+            }        
         }
     }
 

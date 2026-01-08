@@ -1,3 +1,4 @@
+using System.Linq;
 using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -66,5 +67,29 @@ public static class FootnoteEndnoteHelpers
     public static long GetEndnoteId(this EndnoteReference endnoteReference)
     {
         return endnoteReference.Id is IntegerValue id ? id.Value : 1;
+    }
+
+    public static Footnote? GetFootnote(this FootnoteReference footnoteReference)
+    {
+        var mainPart = OpenXmlHelpers.GetMainDocumentPart(footnoteReference);
+        if (footnoteReference.Id != null && 
+            mainPart?.FootnotesPart?.Footnotes.Elements<Footnote>()
+            .FirstOrDefault(en => en.Id != null && en.Id == footnoteReference.Id) is Footnote footnote)
+        {
+            return footnote;
+        }
+        return null;
+    }
+
+    public static Endnote? GetEndnote(this EndnoteReference endnoteReference)
+    {
+        var mainPart = OpenXmlHelpers.GetMainDocumentPart(endnoteReference);
+        if (endnoteReference.Id != null && 
+            mainPart?.EndnotesPart?.Endnotes.Elements<Endnote>()
+            .FirstOrDefault(en => en.Id != null && en.Id == endnoteReference.Id) is Endnote endnote)
+        {
+            return endnote;
+        }
+        return null;
     }
 }

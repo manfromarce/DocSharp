@@ -36,7 +36,6 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
         // EvenAndOddHeaders and TitlePage are assumed false if not present.
                 
-        
         // Process default header for this section.
         var headerRefDefault = FindHeaderReference(sectionProperties, HeaderFooterValues.Default);
         // Header and footer of a specified type (default/odd/first) should be inherited 
