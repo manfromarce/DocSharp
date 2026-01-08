@@ -342,7 +342,8 @@ public class QuestPdfModel
                 uint columnNumber = 1;
                 foreach (var tc in row.Cells)
                 {
-                    var cell = t.Cell().Row(rowNumber).Column(columnNumber).RowSpan(tc.RowSpan).ColumnSpan(tc.ColumnSpan);
+                    var cell = t.Cell().Row(rowNumber).Column(columnNumber).RowSpan(tc.RowSpan).ColumnSpan(tc.ColumnSpan)
+                                .Background(QuestPDF.Infrastructure.Color.FromHex(tc.BackgroundColor ?? Colors.Transparent));
 
                     cell.Column(column =>
                     {

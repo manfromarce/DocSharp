@@ -31,7 +31,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
     /// </summary>
     public QuestPDF.Infrastructure.DocumentMetadata? PdfMetadata { get; set; }
 
-    private QuestPdfPageSet? currentPageSet; // Current section
+    // private QuestPdfPageSet? currentPageSet; // Current section
     private Stack<QuestPdfContainer> currentContainer = new(); // Container can be the main document body, header, footer, table cell, ...
     private Stack<IQuestPdfRunContainer> currentRunContainer = new(); // Spans can only be added to a paragraph or hyperlink
     private Stack<QuestPdfParagraph> currentParagraph = new(); // Hyperlinks can only be added to a paragraph
