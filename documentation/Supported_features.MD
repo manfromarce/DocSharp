@@ -100,6 +100,33 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 
 ⌛ Work in progress
 
+- ✅ Character formatting
+    - Not supported: small caps, text effects, font spacing, horizontal font scaling, borders around text runs, dash-dot/dash-dot-dot/double wavy underline types
+- ✅ Paragraph formatting
+    - Not supported: hanging indentation (negative first line indentation, blocked by lack of support in QuestPDF), paragraph borders, KeepNext, some advanced position properties
+- ✅ Section properties
+    - Supported: page size, orientation, margins, background color color, multi-column layout
+    - Not supported: page borders, page numbering, hyphenation, watermark
+- ✅ Breaks
+    - Supported: page break, line break
+    - Not supported: column break
+    - All sections cause a page break and start on the next page (continuous/odd/even section types are not implemented)
+- ✅ Hyperlinks
+    - Limitation: not every type of bookmark is currently supported (but the most common work properly)
+- ⌛ Lists (currently rendered as regular paragraphs with indentation, without the bullet/number)
+- ⌛ Tables (currently very basic support)
+- ⌛ Pictures
+- ⌛ Math formulas
+- ✅ Fields and page numbers
+    - Limitation: field values are not updated in some cases. We need to calculate them (at least for page numbers)
+- ✅ Header and footer (default, odd/even, first page)
+- ✅ Footnotes and endnotes
+    - Limitations: 
+        - in some cases, a footnote might be rendered in the previous/next page than expected (QuestPDF lacks an easy way to retrieve the current page number, currently we use a workaround that is not always accurate).
+        - footnotes are always rendered at page bottom, which is the default in DOCX, but can be changed to *below text* or *end of section*. This is currently ignored by the renderer, while the setting *end of section*/*end of document* for endnotes is implemented.
+        - footnotes and endnotes IDs are always rendered as arabic numbers and roman numbers respectively. The number format can be customized in DOCX, but is not implemented yet in the renderer.
+
+
 ## XLSX to QuestPDF renderer
 
 ⌛ Work in progress

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuestPDF.Infrastructure;
@@ -57,6 +58,11 @@ internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
         Elements.Add(new QuestPdfFootnoteReference(id));        
     }
 
+    public void AddBookmark(string name)
+    {
+        Elements.Add(new QuestPdfBookmark(name));
+    }
+    
     public IQuestPdfRunContainer CloneEmpty()
     {
         return new QuestPdfParagraph(Alignment, LineHeight, SpaceBefore, SpaceAfter, LeftIndent, RightIndent, StartIndent, EndIndent, FirstLineIndent, BackgroundColor, KeepTogether);

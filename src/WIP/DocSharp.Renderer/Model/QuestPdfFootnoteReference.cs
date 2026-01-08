@@ -6,6 +6,6 @@ internal class QuestPdfFootnoteReference : QuestPdfInlineElement
 
     public QuestPdfFootnoteReference(long id)
     {
-        Id = id;
+        this.Id = id;
     }
 }

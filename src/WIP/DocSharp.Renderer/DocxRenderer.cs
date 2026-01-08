@@ -238,6 +238,10 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
     {
         // Retrieve the URL or anchor for this hyperlink and add it to a new QuestPdfHyperlink object
         var h = new QuestPdfHyperlink();
+        if (hyperlink.GetUrl() is string url && !string.IsNullOrWhiteSpace(url))
+            h.Url = url;
+        else if (hyperlink.GetAnchor() is string anchor && !string.IsNullOrWhiteSpace(anchor))
+            h.Anchor = anchor;
 
         // Add hyperlink to the paragraph model.
         if (currentParagraph.Count > 0)
@@ -549,11 +553,14 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
     internal override void ProcessBookmarkStart(BookmarkStart bookmarkStart, QuestPdfModel output)
     {
+        if (currentParagraph.Count > 0 && bookmarkStart.Name != null && !string.IsNullOrWhiteSpace(bookmarkStart.Name.Value))
+        {
+            // TODO: implement support for bookmarks in more element types (other than paragraphs)
+            currentParagraph.Peek().AddBookmark(bookmarkStart.Name.Value);            
+        }
     }
 
-    internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, QuestPdfModel output)
-    {
-    }
+    internal override void ProcessBookmarkEnd(BookmarkEnd bookmarkEnd, QuestPdfModel output) { }
 
     internal override void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, QuestPdfModel output)
     {

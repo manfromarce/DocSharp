@@ -256,6 +256,14 @@ public class QuestPdfModel
             item = item.Background(paragraph.BackgroundColor.Value);
         }
         // TODO: paragraph borders
+
+        var bookmark = paragraph.Elements.OfType<QuestPdfBookmark>().FirstOrDefault();
+        // TODO: process this inside paragraph directly (currently not possible in QuestPdf) 
+        // (there might be more than one bookmark per paragraph in DOCX))
+        if (bookmark != null)
+        {
+            item = item.Section(bookmark.Name);
+        }                
         
         item.Text(text =>
         {
