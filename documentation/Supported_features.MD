@@ -106,7 +106,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
     - Not supported: hanging indentation (negative first line indentation, blocked by lack of support in QuestPDF), paragraph borders, KeepNext, some advanced position properties
 - ✅ Section properties
     - Supported: page size, orientation, margins, background color color, multi-column layout
-    - Not supported: page borders, page numbering, hyphenation, watermark
+    - Not supported: page borders, hyphenation, watermark, page numbers settings (start from custom number, etc...)
 - ✅ Breaks
     - Supported: page break, line break
     - Not supported: column break
@@ -114,11 +114,15 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Hyperlinks
     - Limitation: not every type of bookmark is currently supported (but the most common work properly)
 - ⌛ Lists (currently rendered as regular paragraphs with indentation, without the bullet/number)
-- ⌛ Tables (currently very basic support)
 - ⌛ Pictures
 - ⌛ Math formulas
-- ✅ Fields and page numbers
-    - Limitation: field values are not updated in some cases. We need to calculate them (at least for page numbers)
+- ✅ Tables
+    - Not supported: external spacing between cells; cell border styles (double, dashed, shadow, ...); diagonal internal borders; fit text, no wrap and other properties; vertical text
+    - Limitation: the border color is the same for top/bottom/left/right of each cell due to a limitation in the QuestPDF API
+- ✅ Fields, page numbers, table of contents
+    - Limitations: 
+        - Field values are not updated in some cases, we need to re-calculate at least page numbers
+        - Links in the table of content point to the correct bookmark, but no document outline ("bookmark tree") is generated
 - ✅ Header and footer (default, odd/even, first page)
 - ✅ Footnotes and endnotes
     - Limitations: 

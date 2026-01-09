@@ -53,7 +53,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             var model = new QuestPdfModel()
             {
                 EndnotesAtEndOfSection = inputDocument.MainDocumentPart?.DocumentSettingsPart?.Settings?.GetFirstChild<EndnoteDocumentWideProperties>() is EndnoteDocumentWideProperties endnoteProperties && 
-                                         (endnoteProperties.EndnotePosition?.Val != null &&  endnoteProperties.EndnotePosition.Val == EndnotePositionValues.SectionEnd   )
+                                         endnoteProperties.EndnotePosition?.Val != null &&  endnoteProperties.EndnotePosition.Val == EndnotePositionValues.SectionEnd
             };
 
             ProcessDocument(doc, model);

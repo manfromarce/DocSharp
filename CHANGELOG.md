@@ -7,6 +7,9 @@
 - Code refactor for maintainability and extensibility
 - Remove .NET 6 target, now out of support
 - Created GitHub Actions workflow for build, test and NuGet publish
+- Added JPEG2000 support in image converters
+- Created DocSharp.MagickNET package as an alternative to System.Drawing.Common and ImageSharp
+- Implemented basic DOCX to PDF / images / XPS / SVG renderer via QuestPDF
 - Other improvements
 
 ## 0.17.0 - 2025.12.04

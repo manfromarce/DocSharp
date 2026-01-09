@@ -22,6 +22,9 @@ internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
     internal float FirstLineIndent { get; set; } = 0; // points
     internal Color? BackgroundColor = null;
     public bool KeepTogether { get; internal set; }
+    
+    internal  bool IsEmpty => Elements.Count(e => e is not QuestPdfBookmark) == 0;
+    // include text, pictures, hyperlinks, footnotes references and page numbers in the count
 
     internal QuestPdfParagraph()
     {

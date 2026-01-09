@@ -41,6 +41,13 @@ internal enum StrikethroughStyle
     Double
 }
 
+internal enum VerticalAlignment
+{
+    Top,
+    Center,
+    Bottom
+}
+
 internal enum QuestPdfContainerType
 {
     HeaderFirstPage, 
