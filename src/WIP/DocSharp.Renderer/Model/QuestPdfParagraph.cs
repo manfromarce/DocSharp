@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuestPDF.Infrastructure;
+using QuestPDF.Helpers;
 
 namespace DocSharp.Renderer;
 internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
@@ -22,7 +23,12 @@ internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
     internal float FirstLineIndent { get; set; } = 0; // points
     internal Color? BackgroundColor = null;
     public bool KeepTogether { get; internal set; }
-    
+    public float LeftBorderThickness = 0.0f;
+    public float RightBorderThickness = 0.0f;
+    public float TopBorderThickness = 0.0f;
+    public float BottomBorderThickness = 0.0f;
+    public Color BordersColor = Colors.Black;
+
     internal  bool IsEmpty => Elements.Count(e => e is not QuestPdfBookmark) == 0;
     // include text, pictures, hyperlinks, footnotes references and page numbers in the count
 

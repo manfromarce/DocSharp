@@ -104,6 +104,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
     - Not supported: small caps, text effects, font spacing, horizontal font scaling, borders around text runs, dash-dot/dash-dot-dot/double wavy underline types
 - ✅ Paragraph formatting
     - Not supported: hanging indentation (negative first line indentation, blocked by lack of support in QuestPDF), paragraph borders, KeepNext, some advanced position properties
+    - Limitation: the paragraph border (if present) has the same color for top/bottom/left/right due to a limitation in the QuestPDF API
 - ✅ Section properties
     - Supported: page size, orientation, margins, background color color, multi-column layout
     - Not supported: page borders, hyphenation, watermark, page numbers settings (start from custom number, etc...)

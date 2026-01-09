@@ -227,7 +227,13 @@ public class QuestPdfModel
     internal void AddParagraphToColumn(IContainer item, QuestPdfParagraph paragraph)
     {
         item = item.PaddingTop(paragraph.SpaceBefore, Unit.Point)
-                   .PaddingBottom(paragraph.SpaceAfter, Unit.Point);
+                   .PaddingBottom(paragraph.SpaceAfter, Unit.Point)
+                   .Background(Color.FromHex(paragraph.BackgroundColor ?? Colors.Transparent))
+                   .BorderLeft(paragraph.LeftBorderThickness)
+                   .BorderTop(paragraph.TopBorderThickness)
+                   .BorderRight(paragraph.RightBorderThickness)
+                   .BorderBottom(paragraph.BottomBorderThickness)
+                   .BorderColor(paragraph.BordersColor);
                 
         var leftIndent = Math.Abs(paragraph.LeftIndent);
         var rightIndent = Math.Abs(paragraph.RightIndent);
@@ -252,11 +258,6 @@ public class QuestPdfModel
         {
             item = item.PreventPageBreak();
         }
-        if (paragraph.BackgroundColor.HasValue)
-        {
-            item = item.Background(paragraph.BackgroundColor.Value);
-        }
-        // TODO: paragraph borders
 
         var bookmark = paragraph.Elements.OfType<QuestPdfBookmark>().FirstOrDefault();
         // TODO: process this inside paragraph directly (currently not possible in QuestPdf) 
