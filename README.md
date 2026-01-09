@@ -16,7 +16,7 @@ Packages can be installed via NuGet:
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Docx?style=flat-square&label=DocSharp.Docx)](https://www.nuget.org/packages/DocSharp.Docx/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Markdown?style=flat-square&label=DocSharp.Markdown)](https://www.nuget.org/packages/DocSharp.Markdown/)
 
-The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), [DocSharp.MagickNET](https://www.nuget.org/packages/DocSharp.MagickNET/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). Each of these has pros and cons, the choice depends on your requirements. More information can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
+The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), DocSharp.MagickNET (not published yet) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). Each of these has pros and cons, the choice depends on your requirements. More information can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
 
 The codebase also contains few experimental converters that are not ready and not published on NuGet yet:  
 - DocSharp.Renderer: provides basic DOCX and XLSX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
