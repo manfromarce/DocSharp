@@ -170,8 +170,8 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         //var tj = row.GetEffectiveProperty<TableJustification>();
         // Not supported for individual rows in HTML
 
-        ProcessTableWidthType(row.GetEffectiveProperty<WidthBeforeTableRow>(), ref rowStyles, "margin-top");
-        ProcessTableWidthType(row.GetEffectiveProperty<WidthAfterTableRow>(), ref rowStyles, "margin-bottom");
+        ProcessTableWidthType(row.GetEffectiveProperty<WidthBeforeTableRow>(), ref rowStyles, "margin-left");
+        ProcessTableWidthType(row.GetEffectiveProperty<WidthAfterTableRow>(), ref rowStyles, "margin-right");
 
         ProcessTableWidthType(row.GetEffectiveMargin<TopMargin>(), ref defaultCellStyles, "padding-top");
         ProcessTableWidthType(row.GetEffectiveMargin<BottomMargin>(), ref defaultCellStyles, "padding-bottom");
@@ -229,47 +229,10 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         bool isFirstColumn = columnNumber == 1;
         bool isLastRow = rowNumber == rowCount;
         bool isLastColumn = columnNumber == columnCount;
-        rowSpan = 1;
-        columnSpan = 1;
-        var vMerge = cell.TableCellProperties?.VerticalMerge;
-        if (vMerge != null)
-        {
-            if (vMerge.Val != null && vMerge.Val == MergedCellValues.Restart)
-            {
-                rowSpan = CalculateRowSpan(cell);
-            }
-            else
-            {
-                // If the val attribute is omitted, its value should be assumed as "continue"
-                // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.verticalmerge.val)
-                // Don't generate a new <td> in this case.
-                return false;
-            }
-        }
-
-        var gridSpan = cell.TableCellProperties?.GridSpan;
-        if (gridSpan?.Val != null)
-        {
-            columnSpan = gridSpan.Val.Value;
-        }
-        else
-        {
-            var hMerge = cell.TableCellProperties?.HorizontalMerge;
-            if (hMerge != null)
-            {
-                if (hMerge?.Val != null && hMerge.Val == MergedCellValues.Restart)
-                {
-                    columnSpan = CalculateColumnSpan(cell);
-                }
-                else
-                {
-                    // If the val attribute is omitted, its value should be assumed as "continue"
-                    // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.horizontalmerge.val)
-                    // Don't generate a new <td> in this case.
-                    return false;
-                }
-            }
-        }
+        rowSpan = cell.GetRowSpan();
+        columnSpan = cell.GetColumnSpan();
+        if (cell.IsInMergedRangeNotFirst())
+            return false; // Don't generate a new <td> in this case
 
         if (cell.GetEffectiveProperty<NoWrap>().ToBool() || cell.GetEffectiveProperty<TableCellFitText>().ToBool())
         {
@@ -446,48 +409,6 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         ProcessShading(cell.GetEffectiveProperty<Shading>(), ref cellStyles);
 
         return true;
-    }
-
-    private int CalculateRowSpan(TableCell cell)
-    {
-        var row = cell.Ancestors<TableRow>().FirstOrDefault();
-        if (row == null)
-        {
-            return 1;
-        }
-        int cellIndex = row.Elements<TableCell>().ToList().IndexOf(cell);
-
-        int rowSpan = 1;
-        // While the next row has a cell at the same index with a vertical merge, increment the row span
-        var nextRow = row.NextSibling<TableRow>();
-        while (nextRow != null)
-        {
-            var nextCell = nextRow.Elements<TableCell>().ElementAtOrDefault(cellIndex);
-            if (nextCell?.TableCellProperties?.VerticalMerge is VerticalMerge vMerge &&
-                (vMerge.Val == null || vMerge.Val == MergedCellValues.Continue))
-            {
-                rowSpan++;
-                nextRow = nextRow.NextSibling<TableRow>();
-            }
-            else
-            {
-                break;
-            }
-        }
-        return rowSpan;
-    }
-
-    private int CalculateColumnSpan(TableCell cell)
-    {
-        int colSpan = 1;
-        var currentCell = cell;
-        while (currentCell?.NextSibling<TableCell>()?.TableCellProperties?.HorizontalMerge is HorizontalMerge hMerge &&
-               (hMerge.Val == null || hMerge.Val == MergedCellValues.Continue))
-        {
-            colSpan++;
-            currentCell = currentCell.NextSibling<TableCell>();
-        }
-        return colSpan;
     }
 
     public void RemoveStyleIfPresent(ref List<string> styles, string style)

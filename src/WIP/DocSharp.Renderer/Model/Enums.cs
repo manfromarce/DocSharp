@@ -41,6 +41,13 @@ internal enum StrikethroughStyle
     Double
 }
 
+internal enum HorizontalAlignment
+{
+    Left,
+    Center,
+    Right
+}
+
 internal enum VerticalAlignment
 {
     Top,

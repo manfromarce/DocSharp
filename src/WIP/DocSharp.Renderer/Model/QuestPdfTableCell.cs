@@ -5,20 +5,21 @@ namespace DocSharp.Renderer;
 
 internal class QuestPdfTableCell : QuestPdfContainer
 {
-    internal Color? BackgroundColor = null;
-    internal float LeftBorderThickness = 1.0f;
-    internal float RightBorderThickness = 1.0f;
-    internal float TopBorderThickness = 1.0f;
-    internal float BottomBorderThickness = 1.0f;
-    internal Color BordersColor = Colors.Black;
-    internal float PaddingLeft = 0f;
-    internal float PaddingRight = 0f;
-    internal float PaddingTop = 0f;
-    internal float PaddingBottom = 0f;
-    internal VerticalAlignment VertAlignment = VerticalAlignment.Top;
-
-    internal uint ColumnSpan { get; set; } = 1;
-    internal uint RowSpan { get; set; } = 1;
-    internal uint ColumnNumber { get; set; } = 1;
-    internal uint RowNumber { get; set; } = 1;
+    public Color? BackgroundColor = null;
+    public float LeftBorderThickness = 1.0f;
+    public float RightBorderThickness = 1.0f;
+    public float TopBorderThickness = 1.0f;
+    public float BottomBorderThickness = 1.0f;
+    public Color BordersColor = Colors.Black;
+    public float PaddingLeft = 0f;
+    public float PaddingRight = 0f;
+    public float PaddingTop = 0f;
+    public float PaddingBottom = 0f;
+    public float Height = 0f;
+    public float MinHeight = 0f;
+    public VerticalAlignment VertAlignment = VerticalAlignment.Top;
+    public uint ColumnSpan { get; set; } = 1;
+    public uint RowSpan { get; set; } = 1;
+    public uint ColumnNumber { get; set; } = 1;
+    public uint RowNumber { get; set; } = 1;
 }

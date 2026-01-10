@@ -229,10 +229,10 @@ public class QuestPdfModel
         item = item.PaddingTop(paragraph.SpaceBefore, Unit.Point)
                    .PaddingBottom(paragraph.SpaceAfter, Unit.Point)
                    .Background(Color.FromHex(paragraph.BackgroundColor ?? Colors.Transparent))
-                   .BorderLeft(paragraph.LeftBorderThickness)
-                   .BorderTop(paragraph.TopBorderThickness)
-                   .BorderRight(paragraph.RightBorderThickness)
-                   .BorderBottom(paragraph.BottomBorderThickness)
+                   .BorderLeft(paragraph.LeftBorderThickness, Unit.Point)
+                   .BorderTop(paragraph.TopBorderThickness, Unit.Point)
+                   .BorderRight(paragraph.RightBorderThickness, Unit.Point)
+                   .BorderBottom(paragraph.BottomBorderThickness, Unit.Point)
                    .BorderColor(paragraph.BordersColor);
                 
         var leftIndent = Math.Abs(paragraph.LeftIndent);
@@ -330,34 +330,59 @@ public class QuestPdfModel
     internal void AddTableToColumn(IContainer item, QuestPdfTable table)
     {
         // Start a new table
-        item.Table(t =>
-        {
+        var maxWidth = table.ColumnsWidth.Sum();
+
+        if (table.Alignment == HorizontalAlignment.Center)
+            item = item.AlignCenter();
+        else if (table.Alignment == HorizontalAlignment.Right)
+            item = item.AlignRight();
+        // else align left (default)
+
+        item.MaxWidth(maxWidth).Table(t =>
+        {      
             t.ColumnsDefinition(c =>
             {
-                // TODO: is it possible to set width at the cell level in QuestPDF ?
-                // the model follows DOCX where tables are defined based on rows, not columns.
-                // For now, just create columns of equal widths.
-                for(int i = 1; i <= table.ColumnsCount; i++)
+                foreach(var columnWidth in table.ColumnsWidth)
                 {
-                    c.RelativeColumn(1);
-                }
+                    //  c.ConstantColumn(columnWidth, Unit.Point) is very likely to throw an exception because: 
+                    // - columns widths are calculated from DOCX cell widths, which include border and margin in the width 
+                    // - math rounding errors due to float (required by QuestPDF) are inevitable
+                    // - DOCX allows tables to exceed the page width (resulting truncated on print) 
+                    // while QuestPDF does not allow this.
+                    // 
+                    // Unconstrained() and ScaleToFit() prevent exceptions but are not suitable for this case. 
+                    // 
+                    // Workaround to mostly preserve the original layout: 
+                    // - use relative columns rather than constant columns, calculating relative factors based on absolute widths.
+                    // - set the table MaxWidth to the sum of column widths. 
+                    if (columnWidth > 0)
+                        c.RelativeColumn(columnWidth / maxWidth);
+                    else // This happens if cell widths are not specified in DOCX or expressed as Auto or Pct; 
+                         // it should be handled better
+                        c.RelativeColumn(1);
+                };
             });
 
             foreach (var row in table.Rows)
-            {
+            {                
                 foreach (var tc in row.Cells)
                 {
                     var cell = t.Cell().Row(tc.RowNumber).Column(tc.ColumnNumber).RowSpan(tc.RowSpan).ColumnSpan(tc.ColumnSpan)
                                 .Background(Color.FromHex(tc.BackgroundColor ?? Colors.Transparent))
-                                .BorderLeft(tc.LeftBorderThickness)
-                                .BorderTop(tc.TopBorderThickness)
-                                .BorderRight(tc.RightBorderThickness)
-                                .BorderBottom(tc.BottomBorderThickness)
+                                .BorderLeft(tc.LeftBorderThickness, Unit.Point)
+                                .BorderTop(tc.TopBorderThickness, Unit.Point)
+                                .BorderRight(tc.RightBorderThickness, Unit.Point)
+                                .BorderBottom(tc.BottomBorderThickness, Unit.Point)
                                 .BorderColor(tc.BordersColor)
-                                .PaddingLeft(tc.PaddingLeft)
-                                .PaddingTop(tc.PaddingTop)
-                                .PaddingRight(tc.PaddingRight)
-                                .PaddingBottom(tc.PaddingBottom);
+                                .PaddingLeft(tc.PaddingLeft, Unit.Point)
+                                .PaddingTop(tc.PaddingTop, Unit.Point)
+                                .PaddingRight(tc.PaddingRight, Unit.Point)
+                                .PaddingBottom(tc.PaddingBottom, Unit.Point);
+
+                    if (tc.MinHeight > 0)
+                        cell = cell.MinHeight(tc.MinHeight, Unit.Point);
+                    if (tc.Height > 0)
+                        cell = cell.Height(tc.Height, Unit.Point);              
 
                     if (tc.VertAlignment == VerticalAlignment.Center)
                         cell = cell.AlignMiddle();

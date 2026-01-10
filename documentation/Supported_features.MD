@@ -101,9 +101,9 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 ⌛ Work in progress
 
 - ✅ Character formatting
-    - Not supported: small caps, text effects, font spacing, horizontal font scaling, borders around text runs, dash-dot/dash-dot-dot/double wavy underline types
+    - Not supported: small caps, text effects, letters spacing, horizontal font scaling, FitText, borders around text runs, dash-dot/dash-dot-dot/double wavy underline types
 - ✅ Paragraph formatting
-    - Not supported: hanging indentation (negative first line indentation, blocked by lack of support in QuestPDF), paragraph borders, KeepNext, some advanced position properties
+    - Not supported: hanging indentation (negative first line indentation, blocked by lack of support in QuestPDF), custom tab stops, some options such as KeepNext, some advanced text wrapping / position properties
     - Limitation: the paragraph border (if present) has the same color for top/bottom/left/right due to a limitation in the QuestPDF API
 - ✅ Section properties
     - Supported: page size, orientation, margins, background color color, multi-column layout
@@ -118,8 +118,8 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ⌛ Pictures
 - ⌛ Math formulas
 - ✅ Tables
-    - Not supported: external spacing between cells; cell border styles (double, dashed, shadow, ...); diagonal internal borders; fit text, no wrap and other properties; vertical text
-    - Limitation: the border color is the same for top/bottom/left/right of each cell due to a limitation in the QuestPDF API
+    - Not supported: external spacing between cells; cell border styles (double, dashed, shadow, ...); diagonal internal borders; vertical text; some options such as CantSplit, NoWrap, TableCellFitText; some advanced text wrapping / position properties; some types of cell/row width (percentage, or TableLayout set to Auto); space before/after single row (different from table)
+    - Limitations: the border color is the same for top/bottom/left/right of each cell due to a limitation in the QuestPDF API  
 - ✅ Fields, page numbers, table of contents
     - Limitations: 
         - Field values are not updated in some cases, we need to re-calculate at least page numbers
@@ -130,7 +130,6 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
         - in some cases, a footnote might be rendered in the previous/next page than expected (QuestPDF lacks an easy way to retrieve the current page number, currently we use a workaround that is not always accurate).
         - footnotes are always rendered at page bottom, which is the default in DOCX, but can be changed to *below text* or *end of section*. This is currently ignored by the renderer, while the setting *end of section*/*end of document* for endnotes is implemented.
         - footnotes and endnotes IDs are always rendered as arabic numbers and roman numbers respectively. The number format can be customized in DOCX, but is not implemented yet in the renderer.
-
 
 ## XLSX to QuestPDF renderer
 

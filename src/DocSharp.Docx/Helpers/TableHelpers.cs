@@ -63,10 +63,61 @@ public static class TableHelpers
 
     public static int GetColumnSpan(this TableCell cell)
     {
-        return cell.TableCellProperties?.GridSpan?.Val ?? GetHorizontalMargeSpan(cell);
+        return cell.TableCellProperties?.GridSpan?.Val ?? GetHorizontalMergeSpan(cell);
     }
 
-    private static int GetHorizontalMargeSpan(this TableCell cell)
+    public static int GetColumnCount(this Table table)
+    {
+        int maxCellsPerRow = 0;
+        foreach (var row in table.Elements<TableRow>())
+        {
+            int cellsPerRow = 0;
+            foreach (var cell in row.Elements<TableCell>())
+            {
+                cellsPerRow += cell.GetColumnSpan();
+            }
+            maxCellsPerRow = Math.Max(maxCellsPerRow, cellsPerRow);
+        }
+        return maxCellsPerRow;
+    }
+
+    public static float GetCellWidthInPoints(this TableCell cell)
+    {
+        var cellWidth = cell.GetEffectiveProperty<TableCellWidth>();
+        if (cellWidth?.Type != null && cellWidth.Type.Value == TableWidthUnitValues.Dxa && 
+            cellWidth.Width != null && cellWidth.Width.ToLong() is long width)
+        {
+            return width / 20f; // convert twips to points
+        }
+        return 0; // Auto, Pct, Nil or unspecified width; should be handled depending on the context
+    }
+
+    public static List<float> GetColumnsWidth(this Table table)
+    {
+        var columnWidths = new List<float>();
+        foreach (var row in table.Elements<TableRow>())
+        {
+            int cellIndex = 0;
+            foreach (var cell in row.Elements<TableCell>())
+            {
+                var gridSpan = cell.GetGridSpan();
+                float width = cell.GetCellWidthInPoints() / gridSpan;
+
+                for (int i = 0; i < gridSpan; i++)
+                {
+                    if (columnWidths.Count > cellIndex)
+                        columnWidths[cellIndex] = Math.Max(columnWidths[cellIndex], width);
+                    else
+                        columnWidths.Add(width);                    
+                    
+                    ++cellIndex;
+                }
+            }
+        }
+        return columnWidths;
+    }
+
+    internal static int GetHorizontalMergeSpan(this TableCell cell)
     {
         int columnSpan = 1;
         if (cell.TableCellProperties?.HorizontalMerge?.Val != null && 

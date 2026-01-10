@@ -4,7 +4,9 @@ namespace DocSharp.Renderer;
 
 internal class QuestPdfTable : QuestPdfBlock
 {
-    internal List<QuestPdfTableRow> Rows = new();
+    public List<QuestPdfTableRow> Rows = new();
 
-    internal int ColumnsCount { get; set; } = 0;
+    public List<float> ColumnsWidth { get; set; } = new();
+
+    public HorizontalAlignment Alignment { get; set; } = HorizontalAlignment.Left;
 }

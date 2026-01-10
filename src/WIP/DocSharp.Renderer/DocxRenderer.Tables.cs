@@ -22,9 +22,20 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         // Process table properties and create a new QuestPdfTable object
         var t = new QuestPdfTable()
         {
-            ColumnsCount = table.Elements<TableRow>().Max(c => c.Elements<TableCell>().Count())
+            ColumnsWidth = table.GetColumnsWidth(),
             // TODO: check SdtRow/CustomXmlRow and SdtCell/CustomXmlCell too.
         };
+        if (table.GetEffectiveProperty<TableJustification>() is TableJustification jc && jc.Val != null)
+        {   
+            if (jc.Val == TableRowAlignmentValues.Center)
+                t.Alignment = HorizontalAlignment.Center;
+            else if (jc.Val == TableRowAlignmentValues.Right)
+                t.Alignment = HorizontalAlignment.Right;
+            else
+                t.Alignment = HorizontalAlignment.Left;
+        }
+
+
         // Add table to the current container.
         if (currentContainer.Count > 0)
             currentContainer.Peek().Content.Add(t);
@@ -70,7 +81,12 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         {
             cell.ColumnSpan = (uint)columnSpan;
         }
-        var rowSpan = tableCell.GetRowSpan();
+        var rowSpan = tableCell.GetRowSpan(); 
+        // The sum of GridSpans can exceed the total number of cells in DOCX, 
+        // while in QuestPDF this causes an exception. 
+        // So, it is ignored and only the cell width is used; 
+        // while HorizontalMerge/VerticalMerge are handled normally.
+        // var rowSpan = tableCell.GetHorizontalMergeSpan();
         if (rowSpan > 1)
         {
             cell.RowSpan = (uint)rowSpan;
@@ -81,6 +97,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             return;
         else 
             cell.ColumnNumber = (uint)columnNumber;
+        
         var rowNumber = tableCell.GetRowNumber();
         if (rowNumber < 1)
             return;
@@ -144,69 +161,45 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         if (topMargin?.Type != null)
         {
             if (topMargin.Type.Value == TableWidthUnitValues.Nil)
-            {
                 cell.PaddingTop = 0;
-            }
             else if (topMargin.Type.Value == TableWidthUnitValues.Dxa && topMargin.Width.ToLong() is long top)
-            {
                 cell.PaddingTop = top / 20f; // convert twips to points
-            }
             // TODO: Auto and Pct types
         }
         if (bottomMargin?.Type != null)
         {
             if (bottomMargin.Type.Value == TableWidthUnitValues.Nil)
-            {
                 cell.PaddingBottom = 0;
-            }
             else if (bottomMargin.Type.Value == TableWidthUnitValues.Dxa && bottomMargin.Width.ToLong() is long bottom)
-            {
                 cell.PaddingBottom = bottom / 20f;
-            }
         }
         if (leftMargin is TableWidthType twt1 && twt1?.Type != null)
         {
             if (twt1.Type.Value == TableWidthUnitValues.Nil)
-            {
                 cell.PaddingLeft = 0;
-            }
             else if (twt1.Type.Value == TableWidthUnitValues.Dxa && twt1.Width.ToLong() is long left)
-            {
                 cell.PaddingLeft = left / 20f;
-            }
         }
         else if (leftMargin is TableWidthDxaNilType dxaNilType1 && dxaNilType1?.Type != null)
         {
             if (dxaNilType1.Type.Value == TableWidthValues.Nil)
-            {
                 cell.PaddingLeft = 0;
-            }
             else if (dxaNilType1.Type.Value == TableWidthValues.Dxa && dxaNilType1.Width != null)
-            {
                 cell.PaddingLeft = dxaNilType1.Width.Value / 20f;
-            }
         }
         if (rightMargin is TableWidthType twt2 && twt2?.Type != null)
         {
             if (twt2.Type.Value == TableWidthUnitValues.Nil)
-            {
                 cell.PaddingRight = 0;
-            }
             else if (twt2.Type.Value == TableWidthUnitValues.Dxa && twt2.Width.ToLong() is long right)
-            {
                 cell.PaddingRight = right / 20f;
-            }
         }
         else if (rightMargin is TableWidthDxaNilType dxaNilType2 && dxaNilType2?.Type != null)
         {
             if (dxaNilType2.Type.Value == TableWidthValues.Nil)
-            {
                 cell.PaddingRight = 0;
-            }
             else if (dxaNilType2.Type.Value == TableWidthValues.Dxa && dxaNilType2.Width != null)
-            {
                 cell.PaddingRight = dxaNilType2.Width.Value / 20f;
-            }
         }
 
         var verticalAlignment = tableCell.GetEffectiveProperty<TableCellVerticalAlignment>();
@@ -218,6 +211,37 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 cell.VertAlignment = VerticalAlignment.Center;
             else if (verticalAlignment.Val == TableVerticalAlignmentValues.Bottom)
                 cell.VertAlignment = VerticalAlignment.Bottom;
+        }
+
+        // Calculate cell height considering row height and rowSpan
+        if (row != null)
+        {
+            int rowSpanCounter = rowSpan;
+            TableRow? currentRow = row;
+            while (rowSpanCounter > 0 && currentRow != null)
+            {
+                var height = currentRow.GetEffectiveProperty<TableRowHeight>();
+                if (height != null &&
+                    height.Val != null &&
+                    (height.HeightType == null || // if HeightType is not specified but a value is present, assume it means "Exact"
+                    height.HeightType.Value == HeightRuleValues.AtLeast ||
+                    height.HeightType.Value == HeightRuleValues.Exact))
+                    // if HeightType is "Auto" instead, the row should automatically resize to fit the content, 
+                    // so don't set an height in QuestPdf
+                {
+                    if (height.HeightType != null && height.HeightType.Value == HeightRuleValues.AtLeast)
+                    {
+                        cell.MinHeight += height.Val.Value / 20f; // Convert twips to points                        
+                    }
+                    else
+                    {
+                        cell.Height += height.Val.Value / 20f;                        
+                        cell.MinHeight += height.Val.Value / 20f;
+                    }
+                }
+                currentRow = currentRow.NextSibling<TableRow>();
+                --rowSpanCounter;                    
+            }
         }
 
         // Add cell to the row model.
