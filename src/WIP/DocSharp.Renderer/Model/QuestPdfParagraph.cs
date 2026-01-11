@@ -36,6 +36,11 @@ internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
     {
         
     }
+
+    internal QuestPdfParagraph(QuestPdfSpan span)
+    {
+        AddSpan(span);
+    }
     
     internal QuestPdfParagraph(ParagraphAlignment alignment, float lineHeight, float spaceBefore, float spaceAfter, float leftIndent, float rightIndent, float startIndent, float endIndent, float firstLineIndent, Color? backgroundColor, bool keepTogether)
     {

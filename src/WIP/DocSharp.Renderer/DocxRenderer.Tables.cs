@@ -20,11 +20,8 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
     internal override void ProcessTable(Table table, QuestPdfModel output)
     {
         // Process table properties and create a new QuestPdfTable object
-        var t = new QuestPdfTable()
-        {
-            ColumnsWidth = table.GetColumnsWidth(),
-            // TODO: check SdtRow/CustomXmlRow and SdtCell/CustomXmlCell too.
-        };
+        var t = new QuestPdfTable(table.GetColumnsWidth());
+        
         if (table.GetEffectiveProperty<TableJustification>() is TableJustification jc && jc.Val != null)
         {   
             if (jc.Val == TableRowAlignmentValues.Center)
@@ -34,7 +31,6 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             else
                 t.Alignment = HorizontalAlignment.Left;
         }
-
 
         // Add table to the current container.
         if (currentContainer.Count > 0)

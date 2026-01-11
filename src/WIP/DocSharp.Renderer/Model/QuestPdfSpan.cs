@@ -28,7 +28,22 @@ internal class QuestPdfSpan : QuestPdfInlineElement
         }
     }
 
-    public QuestPdfSpan(TextStyle style, bool isAllCaps, string fontFamily)
+    public QuestPdfSpan(string text)
+    {
+        Text = text;
+    }
+
+    public QuestPdfSpan(string text, bool bold, bool italic)
+    {
+        Text = text;
+
+        if (bold)
+            Style = Style.Bold();
+        if (italic)
+            Style = Style.Italic();
+    }
+
+    private QuestPdfSpan(TextStyle style, bool isAllCaps, string fontFamily)
     {
         Style = style;
         IsAllCaps = isAllCaps;
@@ -36,7 +51,7 @@ internal class QuestPdfSpan : QuestPdfInlineElement
         _fontFamily = fontFamily;
     }
 
-    internal QuestPdfSpan(string? text, bool bold, bool italic, UnderlineStyle underline, StrikethroughStyle strikethrough, SubSuperscript subSuperscript, CapsType caps, string? fontFamily, float? fontSize, Color? fontColor, Color? backgroundColor, Color? underlineColor, float? letterSpacing, bool thickUnderline = false)
+    public QuestPdfSpan(string? text, bool bold, bool italic, UnderlineStyle underline, StrikethroughStyle strikethrough, SubSuperscript subSuperscript, CapsType caps, string? fontFamily, float? fontSize, Color? fontColor, Color? backgroundColor, Color? underlineColor, float? letterSpacing, bool thickUnderline = false)
     {
         // TODO: span borders (not supported by QuestPDF)
         

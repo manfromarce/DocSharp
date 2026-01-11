@@ -332,13 +332,19 @@ public class QuestPdfModel
         // Start a new table
         var maxWidth = table.ColumnsWidth.Sum();
 
+        if (maxWidth > 0)
+            item = item.MaxWidth(maxWidth);
+
+        if (table.ScaleToFit)
+            item = item.ScaleToFit();
+
         if (table.Alignment == HorizontalAlignment.Center)
             item = item.AlignCenter();
         else if (table.Alignment == HorizontalAlignment.Right)
             item = item.AlignRight();
         // else align left (default)
 
-        item.MaxWidth(maxWidth).Table(t =>
+        item.Table(t =>
         {      
             t.ColumnsDefinition(c =>
             {
@@ -355,7 +361,7 @@ public class QuestPdfModel
                     // Workaround to mostly preserve the original layout: 
                     // - use relative columns rather than constant columns, calculating relative factors based on absolute widths.
                     // - set the table MaxWidth to the sum of column widths. 
-                    if (columnWidth > 0)
+                    if (columnWidth > 0 && maxWidth > 0)
                         c.RelativeColumn(columnWidth / maxWidth);
                     else // This happens if cell widths are not specified in DOCX or expressed as Auto or Pct; 
                          // it should be handled better
