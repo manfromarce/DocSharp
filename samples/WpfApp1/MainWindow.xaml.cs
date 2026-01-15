@@ -682,7 +682,7 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var tempFile = Path.GetTempFileName();
+                var tempFile = Path.GetTempFileName(); // or use MemoryStream
                 try
                 {
                     using (var reader = new StructuredStorageReader(ofd.FileName))
@@ -775,7 +775,7 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var tempFile = Path.GetTempFileName();
+                var tempFile = Path.GetTempFileName(); // or use MemoryStream
                 try
                 {
                     using (var reader = new StructuredStorageReader(ofd.FileName))
@@ -788,7 +788,7 @@ public partial class MainWindow : Window
                     }
                     using (var outputStream = new FileStream(sfd.FileName, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        XlsxToHtmlConverter.Converter.ConvertXlsx(tempFile, outputStream);
+                        XlsxToHtmlConverter.Converter.Convert(tempFile, outputStream);
                     }
                 }
                 catch (Exception ex)

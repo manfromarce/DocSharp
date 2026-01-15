@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlToOpenXml.dll" Version="3.2.8" />
+    <PackageReference Include="HtmlToOpenXml.dll" Version="3.3.0" />
     <PackageReference Include="PreMailer.Net" Version="2.7.2" />
-    <PackageReference Include="XlsxToHtmlConverter" Version="1.2.21" />
-    <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.3" />
+    <PackageReference Include="XlsxToHtmlConverter" Version="2.0.0" />
+    <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.7.12" />
   </ItemGroup>
