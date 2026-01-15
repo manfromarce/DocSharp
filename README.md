@@ -19,9 +19,9 @@ Packages can be installed via NuGet:
 The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), DocSharp.MagickNET (not published yet) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). Each of these has pros and cons, the choice depends on your requirements. More information can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
 
 The codebase also contains few experimental converters that are not ready and not published on NuGet yet:  
-- DocSharp.Renderer: provides basic DOCX and XLSX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
-- DocSharp.Epub: provides basic EPUB to DOCX (via HTML) conversion.
 - RTF to DOCX converter class in the DocSharp.Docx project
+- DocSharp.Renderer: provides DOCX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
+- DocSharp.Ebook: provides basic EPUB to DOCX (via HTML) conversion.
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
 You can consider using the Open XML SDK itself or other <a href="#recommended_libraries">recommended libraries</a> for documents creation and manipulation. Some of these are used in the sample app to test two-steps conversions, compare results, or generate documents in multiple formats with the same code.  
@@ -80,8 +80,10 @@ Others:
 <a id="recommended_libraries"></a>
 Other recommended libraries (some of these are used in the sample app, *not* dependencies when installing packages):  
 - Read, write, manipulate docuents: 
+    + [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) - DOCX, XLSX, PPTX
     + [OfficeIMO](https://github.com/EvotecIT/OfficeIMO) - DOCX, XLSX, PPTX, Markdown, CSV; can also merge, compare and convert some formats
     + [Clippit](https://github.com/sergey-tihon/Clippit) - DOCX, XLSX, PPTX; can also merge, compare and convert some formats
+    + [Openize.OpenXML-SDK](https://github.com/openize-com/openize-open-xml-sdk-net) - DOCX, XLSX, PPTX
     + [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) - PPTX; can also render slides to images
     + [ClosedXML](https://github.com/ClosedXML/ClosedXML) - XLSX
     + [Sylvan.Data.Excel](https://github.com/MarkPflug/Sylvan.Data.Excel) - XLSX, XLS, XLSB
@@ -101,17 +103,14 @@ Other recommended libraries (some of these are used in the sample app, *not* dep
     + XLSX: [MiniExcel](https://github.com/mini-software/MiniExcel), [ClosedXML.Report](https://github.com/ClosedXML/ClosedXML.Report)
     + XLSX, ODS, CSV: [FreeDataExports](https://github.com/ryankueter/FreeDataExports)
 - Convert or render documents: 
-    + [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
-    + [PeachPdf](https://github.com/jhaygood86/PeachPDF)  
-    + [HTML-Renderer](https://github.com/ArthurHub/HTML-Renderer)
-    + [Html2OpenXml](https://github.com/onizet/html2openxml)
-    + [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
-    + [PDFtoImage](https://github.com/sungaila/PDFtoImage)
-    + [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia)
-    + [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
-    + [Markdig](https://github.com/xoofx/markdig)
-    + [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown)
-    + [VectSharp.Markdown + VectSharp.PDF](https://github.com/arklumpus/VectSharp)
+    + XLSX: [XlsxToHtmlConverter](https://github.com/Fei-Sheng-Wu/XlsxToHtmlConverter)  
+    + HTML to PDF/images: [HTML-Renderer](https://github.com/ArthurHub/HTML-Renderer), [PeachPdf](https://github.com/jhaygood86/PeachPDF), [Puppeteer Sharp](https://github.com/hardkoded/puppeteer-sharp), [Westwind.WebView](https://github.com/RickStrahl/Westwind.WebView)
+    + HTML to DOCX: [Html2OpenXml](https://github.com/onizet/html2openxml)
+    + HTML to Markdown: [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
+    + Markdown to HTML: [Markdig](https://github.com/xoofx/markdig)
+    + AsciiDoc to HTML: [NAsciidoc](https://github.com/rmannibucau/NAsciidoc)
+    + Markdown to PDF: [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown), [MarkdownToPdf](https://github.com/geertjanthomas/MarkdownToPdf), [VectSharp.Markdown + VectSharp.PDF](https://github.com/arklumpus/VectSharp)
+    + PDF to images/SVG: [PDFtoImage](https://github.com/sungaila/PDFtoImage), [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia), [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
 
 ### License
 

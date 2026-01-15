@@ -70,9 +70,6 @@
                     Click="DocxToImages_Click"
                     Content="Docx to images" />
                 <Button
-                    Click="XlsxToPdf_Click"
-                    Content="Xlsx to Pdf" />
-                <Button
                     Click="ViewDocx_Click"
                     Content="View Docx document" />
             </UniformGrid>
@@ -113,13 +110,7 @@
                     Content="Generate DOCX, PDF, RTF, HTML (via Open XML SDK)" />
                 <Button
                     Click="GenerateMigraDoc_Click"
-                    Content="Generate PDF, RTF, DOCX (via MigraDoc)" />
-                <Button
-                    Click="Generate_iTextSharpLGPL_Click"
-                    Content="Generate PDF, HTML, RTF, DOCX (via iTextSharp.LGPL)" />
-                <Button
-                    Click="GenerateXlsx_Click"
-                    Content="Generate XLSX + PDF (via ClosedXML)" />
+                    Content="Generate PDF, RTF, DOCX (via MigraDoc)" />                
             </UniformGrid>
         </Grid>
     </ScrollViewer>

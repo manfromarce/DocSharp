@@ -15,7 +15,7 @@ using QuestPDF.Infrastructure;
 
 namespace DocSharp.Renderer;
 
-public class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
+internal class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
 {
     static XlsxRenderer()
     {

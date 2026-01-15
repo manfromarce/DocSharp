@@ -11,7 +11,7 @@ using Document = QuestPDF.Fluent.Document;
 
 namespace DocSharp.Renderer;
 
-public static class QuestPdfXlsxRendererExtensions
+internal static class QuestPdfXlsxRendererExtensions
 {
     /// <summary>
     /// Save the rendered document as PDF.
