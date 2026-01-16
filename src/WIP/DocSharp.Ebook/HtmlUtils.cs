@@ -51,9 +51,28 @@ internal class HtmlUtils
         {
             var src = img.GetAttribute("src");
             if (!string.IsNullOrEmpty(src))
-            {
                 img.SetAttribute("src", FixImageSource(src, tempDir));
+        }
+
+        // Search for anchors (if any)
+        try
+        {            
+            // foreach (var element in document.Anchors)
+            foreach (var element in document.All.ToList())
+            {                
+                if (element.HasChildNodes && !string.IsNullOrEmpty(element.Id))
+                {
+                    element.SetAttribute("data-bookmark", element.Id);
+                }
+                
+                element.RemoveAttribute("id");
             }
+        }
+        catch(Exception ex)
+        {
+            #if DEBUG
+            Debug.WriteLine($"Error while replacing IDs: {ex.Message}");
+            #endif
         }
 
         // Return the normalized HTML. Use the full document element for compatibility.
@@ -102,9 +121,9 @@ internal class HtmlUtils
             else 
             {                
                 if (link.Contains('#')) // The URL is or contains an anchor
-                {                    
+                {
                     // Anchors will be preserved in the final document, 
-                    // but remove the URL (if any) because everything will in one file.
+                    // but remove the URL (if any) because everything will be in one file.
                     string anchor = link.Substring(link.LastIndexOf('#'));                
                     return anchor; // HtmlToOpenXml wil convert the anchor to a DOCX bookmark.
                 }

@@ -18,8 +18,8 @@ using DocSharp.Docx;
 
 namespace DocSharp.Ebook;
 
-// NOTE: internal links currently don't work due to the Html2OpenXml library not creating the necessary bookmarks 
-// for HTML ids. 
+// NOTE: internal links currently might throw exceptions in the Html2OpenXml library in some cases; 
+// we should also detect the cover and make it a full-page image.
 
 /// <summary>
 /// Basic experimental EPUB to DOCX converter that performs the following steps: 
@@ -62,15 +62,6 @@ public class EpubToDocxConverter : IBinaryToDocxConverter
 
     public async Task BuildDocxAsync(Stream input, WordprocessingDocument targetDocument)
     {
-        // Read EPUB
-        var book = EpubReader.Read(input, leaveOpen: true);
-
-        // Get chapters (or all html pages including cover and table of contents), 
-        // depending on the ChaptersOnly property.
-        var chapters = ChaptersOnly ? book.TableOfContents.Select(chapter => book.FetchHtmlFileForChapter(chapter)) : 
-                                      book.SpecialResources.HtmlInReadingOrder;
-        var chapterFileNames = chapters.Select(file => file.FileName).ToList();
-
         // Create temp directory
         var tempDir = Path.Combine(Path.GetTempPath(), "epub_extract_" + Path.GetRandomFileName());
         if (!tempDir.EndsWith(Path.DirectorySeparatorChar))
@@ -102,6 +93,15 @@ public class EpubToDocxConverter : IBinaryToDocxConverter
 
         try
         {
+            // Read EPUB
+            var book = EpubReader.Read(input, leaveOpen: true);
+
+            // Get chapters (or all html pages including cover and table of contents), 
+            // depending on the ChaptersOnly property.
+            var chapters = ChaptersOnly ? book.TableOfContents.Select(chapter => book.FetchHtmlFileForChapter(chapter)).ToList() : 
+                                        book.SpecialResources.HtmlInReadingOrder.ToList();
+            var chapterFileNames = chapters.Select(file => file.FileName).ToList();
+
             // Initialize document
             var mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
             mainPart.Document ??= new W.Document();
@@ -119,51 +119,61 @@ public class EpubToDocxConverter : IBinaryToDocxConverter
             // Enumerate chapters
             foreach (var chapter in chapters)
             {
-                // Get chapter file name and XHTML content
-                var fileName = chapter.FileName;
-                var htmlContent = chapter.TextContent;
+                try
+                {
+                    // Get chapter file name and XHTML content
+                    var fileName = chapter.FileName;
+                    var htmlContent = chapter.TextContent;
 
-                // Attempt to fix external images sources and links pointing to other chapters. 
-                var normalizedHtml = HtmlUtils.NormalizeHtml(htmlContent, tempDir, chapterFileNames);
+                    // Attempt to fix external images sources and links pointing to other chapters. 
+                    var normalizedHtml = HtmlUtils.NormalizeHtml(htmlContent, tempDir, chapterFileNames);
 
-                // HtmlToOpenXml can load external images, while styles should be moved inline: 
-                // https://github.com/onizet/html2openxml/wiki/Style
-                // Move styles inline using the PreMailer.Net library, unless style conversion is disabled.
-                var htmlWithInlinedCss = normalizedHtml;
-                if (PreserveCssStyles)
-                {   
-                    try
-                    {                        
-                        var inliner = new PreMailer.Net.PreMailer(normalizedHtml, new Uri(tempDir));
-                        var inlinerResult = inliner.MoveCssInline(
-                            removeStyleElements: true, 
-                            stripIdAndClassAttributes: true
-                        );
-                        htmlWithInlinedCss = inlinerResult.Html;                    
+                    // HtmlToOpenXml can load external images, while styles should be moved inline: 
+                    // https://github.com/onizet/html2openxml/wiki/Style
+                    // Move styles inline using the PreMailer.Net library, unless style conversion is disabled.
+                    var htmlWithInlinedCss = normalizedHtml;
+                    if (PreserveCssStyles)
+                    {   
+                        try
+                        {                        
+                            var inliner = new PreMailer.Net.PreMailer(normalizedHtml, new Uri(tempDir));
+                            var inlinerResult = inliner.MoveCssInline(
+                                removeStyleElements: true, 
+                                stripIdAndClassAttributes: true
+                            );
+                            htmlWithInlinedCss = inlinerResult.Html;                    
+                        }
+                        catch(Exception ex)
+                        {
+                            #if DEBUG
+                            Debug.WriteLine($"Error during style inlining. Details: {ex.Message}");
+                            #endif
+                        }
                     }
-                    catch(Exception ex)
+
+                    // Before each chapter, add a bookmark in DOCX to make internal links work
+                    string anchorName = $"_{fileName.Replace(' ', '_')}";
+                    int id = new Random().Next(100000, 999999); // TODO: improve id generation
+                    body.AppendChild(new W.Paragraph([
+                        new W.BookmarkStart() { Name = anchorName, Id = id.ToString() }, 
+                        new W.BookmarkEnd() { Id = id.ToString() }
+                    ]));
+
+                    // Parse the HTML body, convert to Open XML and append to the DOCX.
+                    await converter.ParseBody(htmlWithInlinedCss);                        
+
+                    if (PageBreakAfterChapters)
                     {
-                        #if DEBUG
-                        Debug.WriteLine($"Error during style inlining. Details: {ex.Message}");
-                        #endif
+                        // Add a page break after each chapter if desired.
+                        body.AppendChild(new W.Paragraph(new W.Run(new W.Break() { Type = W.BreakValues.Page })));
                     }
                 }
-
-                // Before each chapter, add a bookmark in DOCX to make internal links work
-                string anchorName = $"_{fileName.Replace(' ', '_')}";
-                int id = new Random().Next(100000, 999999); // TODO: improve id generation
-                body.AppendChild(new W.Paragraph([
-                    new W.BookmarkStart() { Name = anchorName, Id = id.ToString() }, 
-                    new W.BookmarkEnd() { Id = id.ToString() }
-                ]));
-
-                // Parse the HTML body, convert to Open XML and append to the DOCX.
-                await converter.ParseBody(htmlWithInlinedCss);
-
-                if (PageBreakAfterChapters)
+                catch (Exception chapterException)
                 {
-                    // Add a page break after each chapter if desired.
-                    body.AppendChild(new W.Paragraph(new W.Run(new W.Break() { Type = W.BreakValues.Page })));
+                    #if DEBUG
+                    Debug.WriteLine($"Exception in chapter: {chapter.FileName} - {chapterException.Message}");
+                    continue;
+                    #endif
                 }
             }            
 

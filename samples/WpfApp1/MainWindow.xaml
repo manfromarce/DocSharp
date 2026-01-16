@@ -70,6 +70,9 @@
                     Click="DocxToImages_Click"
                     Content="Docx to images" />
                 <Button
+                    Click="EpubToDocx_Click"
+                    Content="Epub to Docx" />
+                <Button
                     Click="ViewDocx_Click"
                     Content="View Docx document" />
             </UniformGrid>

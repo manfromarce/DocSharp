@@ -17,6 +17,7 @@ using HtmlToOpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using W = DocumentFormat.OpenXml.Wordprocessing;
+using DocSharp.Ebook;
 
 namespace WpfApp1;
 /// <summary>
@@ -414,7 +415,6 @@ public partial class MainWindow : Window
 
     private void MarkdownToRtf_Click(object sender, RoutedEventArgs e)
     {
-        // Currently achieved through a two steps conversion.
         var ofd = new OpenFileDialog()
         {
             Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn;*.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
@@ -440,6 +440,40 @@ public partial class MainWindow : Window
                                                                    // (possibly AVIF and JXL too in a future release) 
                     };
                     converter.ToRtf(markdown, sfd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private async void EpubToDocx_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "EPUB|*.epub",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Word OpenXML document|*.docx",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var epub = new EpubToDocxConverter()
+                    {
+                        ChaptersOnly = false, 
+                        PageBreakAfterChapters = true, 
+                        PreserveCssStyles = true
+                    };
+                    await epub.ConvertAsync(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)
                 {
