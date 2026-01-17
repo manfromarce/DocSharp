@@ -18,7 +18,7 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
         /// 
         ///     Value       Meaning
         ///     0x0000      The workbook uses the 1900 date system. The first date of the 1900 date 
-        ///                 system is 00:00:00 on January 1, 1900, specified by a serial value of 1.
+        ///                 system is 00:00:00 on January 1, 1900, specified by a serial value of 1 (0 is 1899-Dec-31).
         ///                 
         ///     0x0001      The workbook uses the 1904 date system. The first date of the 1904 date 
         ///                 system is 00:00:00 on January 1, 1904, specified by a serial value of 0.

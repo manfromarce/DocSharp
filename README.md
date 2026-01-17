@@ -71,11 +71,12 @@ Forked:
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
 - [markdig.docx](https://github.com/morincer/markdig.docx)
 
-Others:
+Others (credits for parts of the logic):
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.  
 - [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion  
 - [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion  
 - [RtfPipe](https://github.com/erdomke/RtfPipe), [FridaysForks.RtfPipe](https://github.com/cezarypiatek/FridaysForks.RtfPipe), [RtfConverter](https://github.com/jokecamp/RtfConverter) for part of the RTF parsing logic.  
+- [ExcelNumberFormat](https://github.com/andersnm/ExcelNumberFormat) for Excel format strings parsing logic.
 
 <a id="recommended_libraries"></a>
 Other recommended libraries (some of these are used in the sample app, *not* dependencies when installing packages):  

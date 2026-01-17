@@ -121,11 +121,14 @@ public static class XlsxHelpers
                                     format = customFormat.FormatCode.Value;
                                 break;
                         }
-                        var numberFormat = new NumberFormat(format);
-                        // TODO: retrieve culture and date setting from workbook
-                        var culture = CultureInfo.CurrentCulture;
-                        bool isDate1904 = false;
-                        numberFormat.Format(value, culture, isDate1904);
+                        if (format != null)
+                        {
+                            var numberFormat = new NumberFormat(format);
+                            // TODO: retrieve culture and date setting from workbook
+                            var culture = CultureInfo.CurrentCulture;
+                            bool isDate1904 = true;
+                            value = numberFormat.Format(value, culture, isDate1904);                            
+                        }
                     }
                 }
             }

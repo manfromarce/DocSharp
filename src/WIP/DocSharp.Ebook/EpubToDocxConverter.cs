@@ -160,7 +160,16 @@ public class EpubToDocxConverter : IBinaryToDocxConverter
                     ]));
 
                     // Parse the HTML body, convert to Open XML and append to the DOCX.
-                    await converter.ParseBody(htmlWithInlinedCss);                        
+                    try
+                    {
+                        await converter.ParseBody(htmlWithInlinedCss);                                            
+                    }
+                    catch (Exception internalEx)
+                    {
+                        #if DEBUG
+                        Debug.Write($"ParseBody exception (Html2OpenXml): {internalEx.Message}");
+                        #endif
+                    }
 
                     if (PageBreakAfterChapters)
                     {

@@ -22,8 +22,6 @@
 
     <PackageReference Include="CSharpMath.Rendering" Version="0.5.1" />
     <!-- <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" /> -->
-
-    <PackageReference Include="ExcelNumberFormat" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
