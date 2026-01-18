@@ -79,79 +79,60 @@ namespace DocSharp.Binary.Spreadsheet.XlsFileFormat.Records
             // assert that the correct record type is instantiated
             Debug.Assert(this.Id == ID);
 
-            this.ifnt = reader.ReadUInt16();
-            this.ifmt = reader.ReadUInt16();
-            this.ixfParent = reader.ReadUInt16();
-
+            this.ifnt = reader.ReadUInt16(); // index to font record
+            this.ifmt = reader.ReadUInt16(); // index to format recrod
+            this.ixfParent = reader.ReadUInt16(); // XF type, cell protection, and parent style
 
             this.fLocked = ((int)this.ixfParent & 0x01);
             this.fHidden = ((int)this.ixfParent & 0x02) >> 1; 
             this.fStyle = ((int)this.ixfParent & 0x04) >> 2; 
             this.f123Prefix = ((int)this.ixfParent & 0x08) >> 3; 
-
             this.ixfParent = this.ixfParent & 0xFFF0;
 
-            /// create a buffer value 
-            uint buffer = reader.ReadUInt16(); 
+            uint buffer = reader.ReadUInt16(); // alignment, text break, rotation
+            this.alc = (int)buffer & 0x00000007; // horizontal alignment
+            this.fWrap = (int)buffer & 0x00000008; // text wrap
+            this.alcV = (int)(buffer & 0x00000070) >> 0x04; // vertical alignment
+            this.fJustLast = (int)(buffer & 0x00000080) >> 0x07; // last line justify
+            this.trot = (int)(buffer & 0x0000FF00) >> 0x08; // text rotation
 
-            /// alc - fWrap - alcV - fJustLast - trot
-            /// Offset 10
-            this.alc = (int)buffer & 0x00000007;
-            this.fWrap = (int)buffer & 0x00000008;
-            this.alcV = (int)(buffer & 0x00000070) >> 0x04;
-            this.fJustLast = (int)(buffer & 0x00000080) >> 0x07;
-            this.trot = (int)(buffer & 0x0000FF00) >> 0x08;
-
-            /// 
-            /// Offset 12     
-            buffer = reader.ReadUInt16(); 
+            buffer = reader.ReadUInt16(); // indentation, shrink to cell size, text direction
             this.cIndent = (int)buffer & 0x0000000F;
             this.fShrinkToFit = (int)(buffer & 0x00000010) >> 0x04;
             this.fMergeCell = (int)(buffer & 0x00000020) >> 0x05;
             this.iReadOrder = (int)(buffer & 0x000000C0) >> 0x06;
+
+            // Used attribute groups
             this.fAtrNum = (int)(buffer & 0x00000400) >> 0x0A;
             this.fAtrFnt= (int)(buffer & 0x00000800) >> 0x0B;
             this.fAtrAlc= (int)(buffer & 0x00001000) >> 0x0C;
             this.fAtrBdr= (int)(buffer & 0x00002000) >> 0x0D;
             this.fAtrPat= (int)(buffer & 0x00004000) >> 0x0E;
             this.fAtrProt = (int)(buffer & 0x0008000) >> 0x0F;
-
             
-            /// 
-            /// Offset 14
-            buffer = reader.ReadUInt16();  
-            
-            this.dgLeft = (int)buffer & 0x0000000F;
-            this.dgRight = (int)(buffer & 0x000000F0) >> 0x04;
-            this.dgTop = (int)(buffer & 0x00000F00) >> 0x08;
-            this.dgBottom = (int)(buffer & 0x0000F000) >> 0x0C;
-            
-
-            /// 
-            /// Offset 16
-            buffer = reader.ReadUInt16();  
-            this.icvLeft = (int)buffer & 0x0000007F;
-            this.icvRight = (int)(buffer & 0x00003F80) >> 0x04;
-            this.grbitDiag = (int)(buffer & 0x0000C000) >> 0x0E;
-            
-
-            /// 
-            /// Offset 18
-            buffer = reader.ReadUInt32();  
-            this.icvTop = (int)buffer & 0x0000007F;
-            this.icvBottom = (int)(buffer & 0x00003F80) >> 0x04;
-            this.icvDiag = (int)(buffer & 0x001FC000) >> 0x0C;
-            this.dgDiag = (int)(buffer & 0x01E00000) >> 0x15;
-            this.fHasXFExt = (int)(buffer & 0x02000000) >> 0x18;
-            this.fls = (int)(buffer & 0xFC000000) >> 0x1A;
-
-            /// 
-            /// Offset 22
             buffer = reader.ReadUInt16();
-            this.icvFore = (int)buffer & 0x0000007F;
-	        this.icvBack = (int)(buffer & 0x00003F80) >> 0x07;
-            this.fSxButton = (int)(buffer & 0x00004000) >> 0x0C;
+            this.dgLeft = (int)buffer & 0x0000000F; // left line style
+            this.dgRight = (int)(buffer & 0x000000F0) >> 0x04; // right line style
+            this.dgTop = (int)(buffer & 0x00000F00) >> 0x08; // top line style
+            this.dgBottom = (int)(buffer & 0x0000F000) >> 0x0C; // bottom line style
 
+            buffer = reader.ReadUInt16();  
+            this.icvLeft = (int)buffer & 0x0000007F; // color index for left line
+            this.icvRight = (int)(buffer & 0x00003F80) >> 0x07; // color index for right line
+            this.grbitDiag = (int)(buffer & 0x0000C000) >> 0x0E; // diagonal line
+            
+            buffer = reader.ReadUInt32();  
+            this.icvTop = (int)buffer & 0x0000007F; // color index for top line
+            this.icvBottom = (int)(buffer & 0x00003F80) >> 0x07; // color index for bottom line
+            this.icvDiag = (int)(buffer & 0x001FC000) >> 0x0E; // color index for diagonal line
+            this.dgDiag = (int)(buffer & 0x01E00000) >> 0x15; // diagonal line style
+            this.fHasXFExt = (int)(buffer & 0x02000000) >> 0x18;
+            this.fls = (int)(buffer & 0xFC000000) >> 0x1A; // fill pattern
+
+            buffer = reader.ReadUInt16();
+            this.icvFore = (int)buffer & 0x0000007F; // color index for pattern foreground
+            this.icvBack = (int)(buffer & 0x00003F80) >> 0x07; // color index for pattern background
+            this.fSxButton = (int)(buffer & 0x00004000) >> 0x0C;
           
             // assert that the correct number of bytes has been read from the stream
             Debug.Assert(this.Offset + this.Length == this.Reader.BaseStream.Position); 
