@@ -109,8 +109,8 @@ Other recommended libraries (some of these are used in the sample app, *not* dep
     + HTML to DOCX: [Html2OpenXml](https://github.com/onizet/html2openxml)
     + HTML to Markdown: [ReverseMarkdown](https://github.com/mysticmind/reversemarkdown-net)
     + Markdown to HTML: [Markdig](https://github.com/xoofx/markdig)
-    + AsciiDoc to HTML: [NAsciidoc](https://github.com/rmannibucau/NAsciidoc)
-    + Markdown to PDF: [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown), [MarkdownToPdf](https://github.com/geertjanthomas/MarkdownToPdf), [VectSharp.Markdown + VectSharp.PDF](https://github.com/arklumpus/VectSharp)
+    + Markdown to PDF and other formats: [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown), [VectSharp.Markdown + VectSharp.PDF](https://github.com/arklumpus/VectSharp), [MarkdownToPdf](https://github.com/geertjanthomas/MarkdownToPdf)
+    + AsciiDoc to HTML: [NAsciidoc](https://github.com/rmannibucau/NAsciidoc), [AsciiDocSharp](https://github.com/AsciiDocSharp/AsciiDocSharp)
     + PDF to images/SVG: [PDFtoImage](https://github.com/sungaila/PDFtoImage), [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia), [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
 
 ### License
