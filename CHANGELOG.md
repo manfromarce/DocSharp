@@ -10,6 +10,7 @@
 - Added JPEG2000 support in image converters
 - Created DocSharp.MagickNET package as an alternative to System.Drawing.Common and ImageSharp
 - Implemented basic DOCX to PDF / images / XPS / SVG renderer via QuestPDF
+- Fix right, bottom and diagonal border in XLS converter
 - Other improvements
 
 ## 0.17.0 - 2025.12.04
