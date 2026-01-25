@@ -10,15 +10,21 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
-public interface ISaveOptions { }
+public interface ISaveOptions
+{
+    SaveFormat Format { get; }
+}
 
 public class DocxSaveOptions : ISaveOptions
 {
+    public SaveFormat Format => SaveFormat.Docx;
     public WordprocessingDocumentType DocumentType { get; set; } = WordprocessingDocumentType.Document;
 }
 
 public class RtfSaveOptions : ISaveOptions
 {
+    public SaveFormat Format => SaveFormat.Rtf;
+
     /// <summary>
     /// Gets or set the default font and paragraph properties used in (rare) cases where 
     /// they are not specified in in neither the document body, styles or default style. 
@@ -49,6 +55,8 @@ public class RtfSaveOptions : ISaveOptions
 
 public class HtmlSaveOptions : ISaveOptions
 {
+    public SaveFormat Format => SaveFormat.Html;
+
     /// <summary>
     /// Image converter to preserve TIFF, EMF and other image types when converting to HTML. 
     /// If the DocSharp.ImageSharp or DocSharp.SystemDrawing package is installed, 
@@ -107,6 +115,8 @@ public class HtmlSaveOptions : ISaveOptions
 
 public class MarkdownSaveOptions : ISaveOptions
 {
+    public SaveFormat Format => SaveFormat.Markdown;
+
     /// <summary>
     /// If this property is set to a directory, images will be exported to that folder
     /// and a reference will be added in Markdown syntax,
@@ -165,6 +175,8 @@ public class MarkdownSaveOptions : ISaveOptions
 
 public class TxtSaveOptions : ISaveOptions
 {
+    public SaveFormat Format => SaveFormat.Txt;
+
     /// <summary>
     /// Since plain text is not paginated, only the header of the first section and
     /// footer of the last section are exported.

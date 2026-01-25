@@ -34,6 +34,22 @@ public static class FileFormatHelpers
         }
     }
 
+    public static LoadFormat ExtensionToLoadFormat(string ext)
+    {
+        switch (ext.ToUpperInvariant())
+        {
+            case ".DOCX":
+            case ".DOTX":
+            case ".DOCM":
+            case ".DOTM":
+                return LoadFormat.Docx;
+            case ".RTF":
+                return LoadFormat.Rtf;           
+            default:
+                throw new NotImplementedException("Unrecognized load format. Please specify the LoadFormat explicitly.");
+        }
+    }
+
     public static SaveFormat ExtensionToSaveFormat(string ext)
     {
         switch (ext.ToUpperInvariant())
@@ -66,7 +82,7 @@ public static class FileFormatHelpers
             case ".TXT":
                 return SaveFormat.Txt;
             default:
-                throw new NotImplementedException("Unsupported save format.");
+                throw new NotImplementedException("Unrecognized save format. Please specify the SaveFormat explicitly.");
         }
     }
 

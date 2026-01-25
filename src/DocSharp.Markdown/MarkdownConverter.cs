@@ -300,7 +300,49 @@ public class MarkdownConverter
         RenderToRtf(markdown.Document, rtfBuilder, settings);
         return rtfBuilder.ToString();
     }
-    
+
+    /// <summary>
+    /// Convert Markdown to HTML and save to file.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="outputFilePath">The output HTML file path.</param>
+    public void ToHtml(MarkdownSource markdown, string outputFilePath)
+    {
+        using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+            ToHtml(markdown, sw);
+    }
+
+    /// <summary>
+    /// Convert Markdown to HTML and save to a Stream.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="outputStream">The output HTML stream.</param>
+    public void ToHtml(MarkdownSource markdown, Stream outputStream)
+    {
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
+            ToHtml(markdown, sw);
+    }
+
+    /// <summary>
+    /// Convert Markdown to HTML and write to a TextWriter.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="output">The output writer.</param>
+    public void ToHtml(MarkdownSource markdown, TextWriter output)
+    {
+        markdown.Document.ToHtml(output, MarkdownSource.DefaultPipeline);
+    }
+
+    /// <summary>
+    /// Convert Markdown to HTML and returns a string.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <returns>The HTML document as <see cref="string"/></returns>
+    public string ToHtmlString(MarkdownSource markdown)
+    {
+        return markdown.Document.ToHtml(MarkdownSource.DefaultPipeline);
+    }
+
     private void RenderToRtf(MarkdownDocument document, RtfStringWriter rtfBuilder, MarkdownToRtfSettings settings)
     {
         var renderer = new RtfRenderer(rtfBuilder, settings)

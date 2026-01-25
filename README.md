@@ -71,11 +71,11 @@ Forked:
 - [b2xtranslator](https://github.com/EvolutionJobs/b2xtranslator)
 - [markdig.docx](https://github.com/morincer/markdig.docx)
 
-Others (credits for parts of the logic):
+Others (credits for parts of the logic, not direct dependencies):
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.  
 - [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion  
 - [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion  
-- [RtfPipe](https://github.com/erdomke/RtfPipe), [FridaysForks.RtfPipe](https://github.com/cezarypiatek/FridaysForks.RtfPipe), [RtfConverter](https://github.com/jokecamp/RtfConverter) for part of the RTF parsing logic.  
+- [RtfPipe](https://github.com/erdomke/RtfPipe) (and forks: [1](https://github.com/jasonwmeeks/RtfPipe), [2](https://github.com/cezarypiatek/FridaysForks.RtfPipe)), [RtfConverter](https://github.com/jokecamp/RtfConverter), [OpenRTFDoc](https://github.com/ChunbleBee/OpenRTFDoc), [ReasonableRTF.Standard](https://github.com/Flamifly/ReasonableRTF.Standard) for RTF parsing logic.  
 - [ExcelNumberFormat](https://github.com/andersnm/ExcelNumberFormat) for Excel format strings parsing logic.
 
 <a id="recommended_libraries"></a>

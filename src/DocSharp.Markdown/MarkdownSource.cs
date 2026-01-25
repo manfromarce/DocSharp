@@ -58,16 +58,18 @@ public class MarkdownSource
         }
     }
 
+    internal static readonly MarkdownPipeline DefaultPipeline = new MarkdownPipelineBuilder()
+                                                                        .UseAdvancedExtensions()
+                                                                        .UseEmojiAndSmiley()
+                                                                        .Build();
+
     /// <summary>
     /// Create a Markdown source from a Markdown string
     /// </summary>
     /// <param name="markdown">The Markdown content as string</param>
     public static MarkdownSource FromMarkdownString(string markdown)
     {
-        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions()
-                                                    .UseEmojiAndSmiley()
-                                                    .Build();
-        return Markdig.Markdown.Parse(markdown, pipeline);
+        return Markdig.Markdown.Parse(markdown, DefaultPipeline);
     }
 
     /// <summary>
