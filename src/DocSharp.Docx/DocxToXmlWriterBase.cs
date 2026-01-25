@@ -32,6 +32,7 @@ public abstract class DocxToXmlWriterBase<TWriter> : DocxToTextConverterBase<TWr
             {
                 ProcessDocument(document, tw);
             }
+            writer.Flush();
         }
     }
 }

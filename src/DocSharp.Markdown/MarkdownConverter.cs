@@ -331,6 +331,7 @@ public class MarkdownConverter
     public void ToHtml(MarkdownSource markdown, TextWriter output)
     {
         markdown.Document.ToHtml(output, MarkdownSource.DefaultPipeline);
+        output.Flush();
     }
 
     /// <summary>
@@ -343,6 +344,61 @@ public class MarkdownConverter
         return markdown.Document.ToHtml(MarkdownSource.DefaultPipeline);
     }
 
+    /// <summary>
+    /// Convert Markdown to plain text and save to file.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="outputFilePath">The output plain text (.txt) file path.</param>
+    public void ToPlainText(MarkdownSource markdown, string outputFilePath)
+    {
+        using (var sw = new StreamWriter(outputFilePath, append: false, encoding: Encodings.UTF8NoBOM))
+            ToPlainText(markdown, sw);
+    }
+
+    /// <summary>
+    /// Convert Markdown to plain text and save to a Stream.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="outputStream">The output plain text stream.</param>
+    public void ToPlainText(MarkdownSource markdown, Stream outputStream)
+    {
+        using (var sw = new StreamWriter(outputStream, encoding: Encodings.UTF8NoBOM, bufferSize: 1024, leaveOpen: true))
+            ToPlainText(markdown, sw);
+    }
+
+    /// <summary>
+    /// Convert Markdown to plain text and write to a TextWriter.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <param name="output">The output writer.</param>
+    public void ToPlainText(MarkdownSource markdown, TextWriter output)
+    {
+        var renderer = new Markdig.Renderers.HtmlRenderer(output)
+        {
+            EnableHtmlForBlock = false,
+            EnableHtmlForInline = false,
+            EnableHtmlEscape = false,
+        };
+        MarkdownSource.DefaultPipeline.Setup(renderer);
+
+        renderer.Render(markdown.Document);
+        renderer.Writer.Flush(); // output.Flush();
+    }
+
+    /// <summary>
+    /// Convert Markdown to plain text and returns a string.
+    /// </summary>
+    /// <param name="markdown">The markdown source.</param>
+    /// <returns>The plain text as <see cref="string"/></returns>
+    public string ToPlainTextString(MarkdownSource markdown)
+    {
+        using (var sw = new StringWriter())
+        {
+            ToPlainText(markdown, sw);
+            return sw.ToString();
+        }
+    }
+    
     private void RenderToRtf(MarkdownDocument document, RtfStringWriter rtfBuilder, MarkdownToRtfSettings settings)
     {
         var renderer = new RtfRenderer(rtfBuilder, settings)
@@ -366,6 +422,7 @@ public class MarkdownConverter
             renderer.MarginBottomTwips = (int)PageMargins.BottomTwips();
         }
         renderer.Render(document);
+        rtfBuilder.Flush();
     }
 
     private void ApplyPageSettingsToDocx(WordprocessingDocument document)
