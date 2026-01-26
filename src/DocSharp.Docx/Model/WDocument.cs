@@ -15,12 +15,6 @@ namespace DocSharp.Docx.Model;
 /// </summary>
 internal class WDocument : IDisposable
 {
-    /// <summary>
-    /// The underlying WordprocessingDocument instance. Cannot be set unless on open / initialization. 
-    /// Note that modifications will be applied to the original stream, if this is not desired call Clone(newStream) first.
-    /// </summary>
-    public WordprocessingDocument Document => _document; 
-
     private WordprocessingDocument _document;
     private Stream _originalStream;
     private LoadFormat? _originalFormat;
@@ -46,45 +40,13 @@ internal class WDocument : IDisposable
     // - use OpenXmlReader/Writer when possible to reduce memory usage.
     // - rather than calling SaveTo (that always uses clone), add an AsCopy parameter in Save methods, 
     // allowing to update the original stream if set to false.
-    internal WDocument(WordprocessingDocument document, Stream originalStream, LoadFormat? originalFormat, bool shouldDisposeStream, bool isReadOnly = false)
+    private WDocument(WordprocessingDocument document, Stream originalStream, LoadFormat? originalFormat, bool shouldDisposeStream, bool isReadOnly = false)
     {
         _document = document;
         _originalStream = originalStream;
         _originalFormat = originalFormat;
         _shouldDisposeStream = shouldDisposeStream;
         _isReadOnly = isReadOnly;
-    }
-
-    public void Dispose()
-    {
-        _document.Dispose();
-        if (_shouldDisposeStream)
-            _originalStream?.Dispose();
-    }
-
-    public static WDocument Open(Stream stream, LoadFormat format, bool forceReadOnly = false)
-    {
-        // Specifying the Load format is mandatory when loading from a stream.
-        return Open(stream, format, forceReadOnly, shouldDisposeStream: false);
-    }
-
-    public static WDocument Open(byte[] byteArray, LoadFormat format)
-    {
-        // Specifying the Load format is mandatory when loading from a byte array; 
-        // read-only is not supported as a new (writeable) MemoryStream is always created in this case.
-        var tempStream = new MemoryStream(byteArray);
-        return Open(tempStream, format, forceReadOnly: false, shouldDisposeStream: true);
-    }
-
-    public static WDocument Open(string filePath, bool forceReadOnly = false)
-    {
-        return Open(filePath, FileFormatHelpers.ExtensionToLoadFormat(Path.GetExtension(filePath)), forceReadOnly);
-    }
-
-    public static WDocument Open(string filePath, LoadFormat format, bool forceReadOnly = false)
-    {
-        var tempStream = File.Open(filePath, FileMode.Open, forceReadOnly ? FileAccess.Read : FileAccess.ReadWrite);
-        return Open(tempStream, format, forceReadOnly, shouldDisposeStream: true);
     }
 
     private static WDocument Open(Stream stream, LoadFormat format, bool forceReadOnly, bool shouldDisposeStream)
@@ -95,6 +57,9 @@ internal class WDocument : IDisposable
         {
             case LoadFormat.Docx: // also handles Docm, Dotx, Dotm
             {
+                if (!stream.CanWrite)
+                    forceReadOnly = true;
+
                 var document = WordprocessingDocument.Open(stream, !forceReadOnly);
                 return new WDocument(document, stream, format, shouldDisposeStream, forceReadOnly);
             }
@@ -108,6 +73,87 @@ internal class WDocument : IDisposable
             default:
                 throw new NotSupportedException($"Loading format {format} is not supported.");
         }
+    }
+
+#region Public API
+
+    /// <summary>
+    /// The underlying WordprocessingDocument instance. Cannot be set unless on open / initialization. 
+    /// Note that modifications will be applied to the original stream, if this is not desired call Clone(newStream) first.
+    /// </summary>
+    public WordprocessingDocument Document => _document; 
+
+    /// <summary>
+    /// Indicates whether the underlying Open XML document can be saved directly without disposing.
+    /// </summary>
+    public bool CanSave => _document.CanSave;
+
+    /// <summary>
+    /// Indicates whether the document is set to automatically save changes on dispose.
+    /// </summary>
+    public bool AutoSave => _document.AutoSave;
+
+    /// <summary>
+    /// Indicates whether the document is opened in read-only mode.
+    /// </summary>
+    public bool IsReadOnly => _isReadOnly;
+
+    public void Dispose()
+    {
+        _document.Dispose();
+        if (_shouldDisposeStream)
+            _originalStream?.Dispose();
+    }
+
+    /// <summary>
+    /// Opens a Word document from a stream in the specified format.
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="format"></param>
+    /// <param name="forceReadOnly"></param>
+    /// <returns></returns>
+    public static WDocument Open(Stream stream, LoadFormat format, bool forceReadOnly = false)
+    {
+        // Specifying the Load format is mandatory when loading from a stream.
+        return Open(stream, format, forceReadOnly, shouldDisposeStream: false);
+    }
+
+    /// <summary>
+    /// Opens a Word document from a byte array in the specified format.
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <param name="format"></param>
+    /// <returns></returns>
+    public static WDocument Open(byte[] bytes, LoadFormat format)
+    {
+        // Specifying the Load format is mandatory when loading from a byte array; 
+        // read-only is not supported as a new (writeable) MemoryStream is always created in this case.
+        var tempStream = new MemoryStream(bytes);
+        return Open(tempStream, format, forceReadOnly: false, shouldDisposeStream: true);
+    }
+
+    /// <summary>
+    /// Opens a Word document from file path.
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="forceReadOnly"></param>
+    /// <returns></returns>
+    public static WDocument Open(string filePath, bool forceReadOnly = false)
+    {
+        return Open(filePath, FileFormatHelpers.ExtensionToLoadFormat(Path.GetExtension(filePath)), forceReadOnly);
+    }
+
+    /// <summary>
+    /// Opens a Word document from a file in the specified format.
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="format"></param>
+    /// <param name="forceReadOnly"></param>
+    /// <returns></returns>
+    public static WDocument Open(string filePath, LoadFormat format, bool forceReadOnly = false)
+    {
+        var tempStream = File.Open(filePath, FileMode.Open, forceReadOnly ? FileAccess.Read : FileAccess.ReadWrite);
+        return Open(tempStream, format, forceReadOnly, shouldDisposeStream: true);
     }
 
     /// <summary>
@@ -204,6 +250,229 @@ internal class WDocument : IDisposable
         var options = FileFormatHelpers.ToSaveOptions(format.Value);
         Save(outputFilePath, options);
     }
+
+    /// <summary>
+    /// Get the document content as a byte array in the specified format.
+    /// </summary>
+    /// <param name="format"></param>
+    /// <returns></returns>
+    public byte[] ToByteArray(SaveFormat format)
+    {
+        var options = FileFormatHelpers.ToSaveOptions(format);
+        return ToByteArray(options);
+    }
+
+    /// <summary>
+    /// Get the document content as a byte array in the specified format and using the specified options.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public byte[] ToByteArray(ISaveOptions options)
+    {
+        using (var ms = new MemoryStream())
+        {
+            Save(ms, options);
+            return ms.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Get the document content as a Flat OPC XML document.
+    /// </summary>
+    /// <returns></returns>
+    public XDocument ToFlatOpc()
+    {
+        return _document.ToFlatOpcDocument();
+    }
+
+    /// <summary>
+    /// Get the document content as a Flat OPC XML string.
+    /// </summary>
+    /// <returns></returns>
+    public string ToFlatOpcString()
+    {
+        return _document.ToFlatOpcString();
+    }
+
+    /// <summary>
+    /// Get the document content as a Base64-encoded string in the specified format.
+    /// </summary>
+    /// <param name="format"></param>
+    public string AsBase64String(SaveFormat format)
+    {
+        var byteArray = ToByteArray(format);
+        return Convert.ToBase64String(byteArray);
+    }
+
+    /// <summary>
+    /// Get the document content as a Base64-encoded string in the specified format.
+    /// </summary>
+    /// <param name="format"></param>
+    public string AsBase64String(ISaveOptions options)
+    {
+        var byteArray = ToByteArray(options);
+        return Convert.ToBase64String(byteArray);
+    }
+
+    /// <summary>
+    /// Get the document content as an RTF string.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public string ToRtfString(RtfSaveOptions? options = null)
+    {
+        options ??= new RtfSaveOptions();
+        using (var sw = new StringWriter())
+        {
+            var converter = new DocxToRtfConverter()
+            {
+                DefaultSettings = options.DefaultSettings,
+                OutputFolderPath = options.OutputFolderPath,
+                ImageConverter = options.ImageConverter,
+                OriginalFolderPath = options.OriginalFolderPath
+            };
+            return converter.ConvertToString(_document);
+        }
+    }
+
+    /// <summary>
+    /// Get the document content as a Markdown string.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public string ToMarkdownString(MarkdownSaveOptions? options = null)
+    {
+        options ??= new MarkdownSaveOptions();
+        using (var sw = new StringWriter())
+        {
+            var converter = new DocxToMarkdownConverter()
+            {
+                ExportFootnotesEndnotes = options.ExportFootnotesEndnotes,
+                ExportHeaderFooter = options.ExportHeaderFooter,
+                OriginalFolderPath = options.OriginalFolderPath,
+                ImageConverter = options.ImageConverter,
+                ImagesBaseUriOverride = options.ImagesBaseUriOverride,
+                ImagesOutputFolder = options.ImagesOutputFolder
+            };
+            return converter.ConvertToString(_document);
+        }
+    }
+
+    /// <summary>
+    /// Get the document content as an HTML string.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public string ToHtmlString(HtmlSaveOptions? options = null)
+    {
+        options ??= new HtmlSaveOptions();
+        using (var sw = new StringWriter())
+        {
+            var converter = new DocxToHtmlConverter()
+            {
+                ExportFootnotesEndnotes = options.ExportFootnotesEndnotes,
+                ExportHeaderFooter = options.ExportHeaderFooter,
+                OriginalFolderPath = options.OriginalFolderPath,
+                ImageConverter = options.ImageConverter,
+                ImagesBaseUriOverride = options.ImagesBaseUriOverride,
+                ImagesOutputFolder = options.ImagesOutputFolder
+            };
+            return converter.ConvertToString(_document);
+        }
+    }
+
+    /// <summary>
+    /// Get the document content as a plain text string.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public string ToPlainTextString(TxtSaveOptions? options = null)
+    {
+        options ??= new TxtSaveOptions();
+        using (var sw = new StringWriter())
+        {
+            var converter = new DocxToTxtConverter()
+            {
+                ExportFootnotesEndnotes = options.ExportFootnotesEndnotes,
+                ExportHeaderFooter = options.ExportHeaderFooter,
+                OriginalFolderPath = options.OriginalFolderPath,
+            };
+            return converter.ConvertToString(_document);
+        }
+    }
+
+    /// <summary>
+    /// Clones the document to a new stream. Note that both documents should be disposed separately.
+    /// </summary>
+    /// <param name="newStream"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public WDocument Clone(Stream newStream)
+    {
+        if (IsSameStream(newStream))
+            throw new InvalidOperationException("Cannot clone to the same stream.");
+
+        var isReadOnly = _isReadOnly || !newStream.CanWrite;
+        var newDocument = _document.Clone(newStream, isReadOnly);
+        return new WDocument(newDocument, newStream, _originalFormat, shouldDisposeStream: false, isReadOnly);
+    }
+
+    /// <summary>
+    /// Clones the document to a memory stream. Note that both documents should be disposed separately.
+    /// </summary>
+    /// <param name="newStream"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public WDocument Clone()
+    {
+        var newStream = new MemoryStream();
+        var newDocument = _document.Clone(newStream, _isReadOnly);
+        return new WDocument(newDocument, newStream, _originalFormat, shouldDisposeStream: true, _isReadOnly);
+    }
+
+    public string Title
+    {
+        get
+        {
+            return _document.PackageProperties?.Title ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Title = value;
+        }
+    }
+
+    public string Author
+    {
+        get
+        {
+            return _document.PackageProperties?.Creator ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Creator = value;
+        }
+    }
+
+    public string Language
+    {
+        get
+        {
+            return _document.PackageProperties?.Language ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Language = value;
+        }
+    }
+
+#endregion
 
     private bool IsSameFormat(SaveFormat outputFormat)
     {
