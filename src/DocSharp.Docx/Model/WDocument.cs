@@ -21,25 +21,10 @@ internal class WDocument : IDisposable
     private bool _shouldDisposeStream = false;
     private bool _isReadOnly = false;
 
-    // Logic: 
-    // - When loading DOCX, use the WordprocessingDocument instance directly.
-    // - When loading other formats (e.g. RTF) call the appropriate converter to populate a new WordprocessingDocument instance.
-    // - When saving to DOCX, save the WordprocessingDocument instance directly.
-    // - When saving to other formats (e.g. RTF), call the appropriate converter to convert from the WordprocessingDocument instance.
-    // 
     // The Open XML SDK requires different handling for saving to the same stream vs a different stream: Save() vs Clone(newStream). 
     // The latter is wrapped in the SaveTo extension method.
     // Therefore, we need to track the original stream used to open the document and determine if the output stream is the same.
-    // A public constructor from WordprocessingDocument is currently not provided, as we cannot track the original stream in that case.
-    //
-    // Alternatively, other libraries always create WordprocessingDocument in an isolated memory stream, so that saving is easier, 
-    // but this approach has performance implications.
-    // 
-    // Possible future improvements:
-    // - add methods for manipulating the document directly in this class (e.g. AddParagraph, GetSections, etc.).
-    // - use OpenXmlReader/Writer when possible to reduce memory usage.
-    // - rather than calling SaveTo (that always uses clone), add an AsCopy parameter in Save methods, 
-    // allowing to update the original stream if set to false.
+    // (For this reason, a public constructor from WordprocessingDocument is currently not provided, as we cannot track the original stream in that case.)
     private WDocument(WordprocessingDocument document, Stream originalStream, LoadFormat? originalFormat, bool shouldDisposeStream, bool isReadOnly = false)
     {
         _document = document;
