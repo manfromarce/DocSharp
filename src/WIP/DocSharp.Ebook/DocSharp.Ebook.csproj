@@ -19,7 +19,7 @@
   
   <ItemGroup>
     <PackageReference Include="EpubCore" Version="1.6.2" />
-    <PackageReference Include="HtmlToOpenXml.dll" Version="3.3.0" />
+    <PackageReference Include="HtmlToOpenXml.dll" Version="3.3.1" />
     <PackageReference Include="PreMailer.Net" Version="2.7.2" />
   </ItemGroup>
 
