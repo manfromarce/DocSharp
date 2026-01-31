@@ -18,27 +18,17 @@ namespace DocSharp.Docx;
 
 public class RtfToDocxConverter : ITextToDocxConverter
 {
-    /// <summary>
-    /// RTF files typically use ASCII (chars 0-127) and escape other chars using 
-    /// code pages (e.g. \'e0 for "à") or Unicode (e.g. \u915 for Γ). 
-    /// Code pages specify chars 128-255, depend on the system region and are also called "ANSI". 
-    /// Unicode can encode many more characters and is often called "non-ANSI" in the RTF specification.  
-    /// The code page is specified by the \ansi (default), \mac, \pc or \pca control in the RTF header, 
-    /// optionally followed by \ansicpgN. For example \ansicpg1252 indicates Windows-1252 and is used by U.S. Windows 
-    /// (extends ASCII with other letters and symbols related to the english alphabet). 
-    /// If the code page is not specified, ANSI based on the system culture is assumed 
-    /// (to force english code page by default, set CultureInfo.CurrentCulture = CultureInfo.InvariantCulture 
-    /// before calling the converter). 
-    /// Despite this, it's possible the some old RTF files use non-ASCII-based code pages, 
-    /// or that some RTF writers directly write non-ASCII letters such as à into text tokens, 
-    /// although it's not standard. 
-    /// Therefore, the DefaultEncoding property exist, it can be set by passing a different inputEncoding parameter 
-    /// to the Convert methods; alternatively a TextReader initialized with the correct encoding can be directly passed. 
-    /// Libraries such as https://github.com/CharsetDetector/UTF-unknown can be used to detect uncommon encodings;  
-    /// they require the stream to be seekable, so DocSharp is not using this approach by default. 
+#if !NETFRAMEWORK
+    static RtfToDocxConverter()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    }
+#endif
+
     /// Note: the DefaultEncoding property only affects how the raw RTF file is read 
-    /// (in particular the RTF header and control words), it does not change how text tokens are handled: 
+    /// (in particular the RTF header and control words, which should be ASCII), it does not change how text tokens are handled: 
     /// special characters such as \'xx are still interpreted based on the code page detected by RtfReader. 
+    /// Therefore, it should be left as ASCII unless there is a specific reason to change it (not conformant document).
     /// </summary>
     public Encoding DefaultEncoding => Encoding.ASCII;
 
@@ -55,18 +45,40 @@ public class RtfToDocxConverter : ITextToDocxConverter
         if (targetDocument.MainDocumentPart!.Document == null)
             targetDocument.MainDocumentPart.Document = new Document();
 
+        targetDocument.MainDocumentPart.Document.Body = new Body();
+
         var rtfDocument = RtfReader.ReadRtf(input);
-        foreach (var token in rtfDocument.Root.Tokens)
-        {
-            // TODO    
-        }
+        ConvertGroup(rtfDocument.Root, targetDocument.MainDocumentPart.Document.Body, targetDocument.MainDocumentPart);
     }
 
-    
-#if !NETFRAMEWORK
-    static RtfToDocxConverter()
+    private void ConvertGroup(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument)
     {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        // DOCX:
+        // - The parent element is a container such as Body, table cell, header, footer, endnote, footnote. 
+        // - Each container can contain blocks such as Paragraph or Table. Text runs cannot be inside the container directly.
+        // - Each paragraph can contain runs, hyperlinks/fields (may contain multiple runs), bookmarks, paragraph properties (line spacing, space before/after, alignment...)
+        // - Each run can contain text, breaks, tabs, images, run properties (bold, italic, font size, font family, color...)
+        // - Each table can contain table properties and table rows
+        // - Each table row can contain table row properties and table cells
+        // - Each table cell can contain table cell properties and the same content as body (paragraphs or nested tables)
+        // - Headers, footers, list numbering properties, styles, document settings are defined in separate parts (NumberingDefinitionsPart, StyleDefinitionsPart, HeaderPart, FooterPart, ...).
+        // - Document information such as author and title should be set in WordprocessingDocument.PackageProperties
+        // - Sections are defined by SectionProperties in ParagraphProperties of the last paragraph of the section, and a last SectionProperties in Body represents the default section properties for the last and all new sections.
+        // 
+        // RTF: 
+        // - Groups starting with special control words are destinations and specify that the content should not go into the main document body, for example: header, footer, headerf, headerl, headerr, footerf, footerl, footerr, footnote
+        //   Other groups are assumed to be part of the main document body.
+        // - Destinations starting with "*" should be ignored for now (parsed as RtfIgnorableDestination classes). 
+        //   In the future, we should support at list \listtable and \listoverridetable.
+        // - Some destinations need special handling: \stylesheet and \info should be mapped to StyleDefintionsPart and PackageProperties; 
+        //   for font table and color table we need to keep a reference and use them when \fN or \cfN control words are found.
+        // - Containers such as body, header, footer, footnote contains paragraphs or table rows (there is no dedicated table element in RTF). 
+        //   Compared to DOCX, special control words are used to specify that a paragraph is inside a table cell, or that a table is nested.
+        // - Paragraphs are terminated by \par, and \pard optionally resets paragraph properties.
+        // - Runs are terminated can be terminated by \b0, \i0 and similar (turns off bold, italic, ...) or by closing the current group. 
+        //   When parsing the RTF, the value 0 or other int values for e.g. font size are stored in the RtfControlWord.HasValue and RtfControlWord.Value properties.
+        // - Sections are terminated by \sect, and \sectd optionally resets section properties. If no section is defined, the whole document is a single section.
+
+
     }
-#endif
 }
