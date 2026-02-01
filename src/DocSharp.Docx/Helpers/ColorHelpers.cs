@@ -43,14 +43,57 @@ public static class ColorHelpers
             return "000080";
         else if (highlight.Val == W.HighlightColorValues.DarkYellow)
             return "808000";
-        else if (highlight.Val == W.HighlightColorValues.DarkMagenta)
-            return "800080";
         else if (highlight.Val == W.HighlightColorValues.DarkCyan)
             return "008080";
+        else if (highlight.Val == W.HighlightColorValues.DarkMagenta)
+            return "800080";
         else if (highlight.Val == W.HighlightColorValues.DarkGray)
             return "808080";
         else if (highlight.Val == W.HighlightColorValues.LightGray)
             return "C0C0C0";
+        else
+            return null;
+    }
+
+    public static W.HighlightColorValues? HexToHighlight(string hexColor)
+    {
+        if (hexColor == null || string.IsNullOrWhiteSpace(hexColor))
+            return null;
+
+        hexColor = hexColor.TrimStart('#');
+
+        if (hexColor == "000000")
+            return W.HighlightColorValues.Black;
+        else if (hexColor == "FFFFFF")
+            return W.HighlightColorValues.White;
+        else if (hexColor == "FF0000")
+            return W.HighlightColorValues.Red;
+        else if (hexColor == "00FF00")
+            return W.HighlightColorValues.Green;
+        else if (hexColor == "0000FF")
+            return W.HighlightColorValues.Blue;
+        else if (hexColor == "FFFF00")
+            return W.HighlightColorValues.Yellow;
+        else if (hexColor == "00FFFF")
+            return W.HighlightColorValues.Cyan;
+        else if (hexColor == "FF00FF")
+            return W.HighlightColorValues.Magenta;
+        else if (hexColor == "800000")
+            return W.HighlightColorValues.DarkRed;
+        else if (hexColor == "008000")
+            return W.HighlightColorValues.DarkGreen;
+        else if (hexColor == "000080")
+            return W.HighlightColorValues.DarkBlue;
+        else if (hexColor == "808000")
+            return W.HighlightColorValues.DarkYellow;
+        else if (hexColor == "008080")
+            return W.HighlightColorValues.DarkCyan;
+        else if (hexColor == "800080")
+            return W.HighlightColorValues.DarkMagenta;
+        else if (hexColor == "808080")
+            return W.HighlightColorValues.DarkGray;
+        else if (hexColor == "C0C0C0")
+            return W.HighlightColorValues.LightGray;      
         else
             return null;
     }

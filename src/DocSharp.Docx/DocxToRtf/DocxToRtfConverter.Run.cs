@@ -6,10 +6,10 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Shadow14 = DocumentFormat.OpenXml.Office2010.Word.Shadow;
 using Outline14 = DocumentFormat.OpenXml.Office2010.Word.TextOutlineEffect;
 using DocSharp.Helpers;
-using DocSharp.Docx.Rtf;
 using DocumentFormat.OpenXml;
 using DocSharp.Writers;
 using W14 = DocumentFormat.OpenXml.Office2010.Word;
+using DocSharp.Rtf;
 
 namespace DocSharp.Docx;
 

@@ -4,7 +4,7 @@ internal class RtfControlWord : RtfToken
 {
     public string Name { get; set; }
     public int? Value { get; set; }
-    public bool HasValue { get; set; }
+    public bool HasValue => Value != null;
     public bool DelimitedBySpace { get; set; }
     public RtfControlWord(string name)
     {

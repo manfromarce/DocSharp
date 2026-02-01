@@ -19,6 +19,7 @@ using System.Globalization;
 using DocSharp.Helpers;
 using System.IO;
 using DocSharp.IO;
+using DocSharp.Rtf;
 
 namespace DocSharp.Docx;
 

@@ -427,7 +427,7 @@ internal static class RtfReader
                                 stack.Peek().Tokens.Add(new RtfText("\u2011"));
                                 break;
                             default:
-                                stack.Peek().Tokens.Add(new RtfControlWord(sym) { HasValue = false });
+                                stack.Peek().Tokens.Add(new RtfControlWord(sym));
                                 break;
                         }
                     }
@@ -477,7 +477,7 @@ internal static class RtfReader
                 int p3 = PeekChar();
                 if (p3 != -1 && (char)p3 == ' ') { delimitedBySpace = true; ReadChar(); }
 
-                var cw = new RtfControlWord(name) { HasValue = hasNumber, Value = hasNumber ? (int?)value : null, DelimitedBySpace = delimitedBySpace };
+                var cw = new RtfControlWord(name) { Value = hasNumber ? (int?)value : null, DelimitedBySpace = delimitedBySpace };
 
                 // map certain control words to text tokens (spaces, dashes, quotes)
                 bool handledAsText = false;
@@ -536,7 +536,6 @@ internal static class RtfReader
                     // move any tokens that might already exist inside the group
                     dest.Tokens.AddRange(old.Tokens);
                     // preserve numeric parameter when present (some destinations like pnseclvl carry a value)
-                    dest.HasValue = cw.HasValue;
                     dest.Value = cw.Value;
                     // replace the last token in parent with the destination
                     int idx = parent.Tokens.Count - 1;
@@ -583,5 +582,5 @@ internal static class RtfReader
 #else
         return char.IsAsciiLetter(c);
 #endif
-    }
+    }    
 }

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocSharp.Helpers;
-using DocSharp.Docx.Rtf;
 using DocSharp.Writers;
 
 namespace DocSharp.Docx;
