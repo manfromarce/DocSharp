@@ -560,9 +560,10 @@ internal static class RtfReader
             }
             else if (c == '\r' || c == '\n')
             {
-                // Ignore unless in \binN
+                // Ignore unless in \binN (or picture ^)
             }
-            else
+            // else if (c != '\0')
+            else if (!char.IsControl(c))
             {    
                 textBuf.Append(c);
                 groupJustOpened = false;             
