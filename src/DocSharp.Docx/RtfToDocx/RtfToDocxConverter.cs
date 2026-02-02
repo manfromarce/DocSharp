@@ -85,9 +85,10 @@ public class RtfToDocxConverter : ITextToDocxConverter
         // Use a stack of formatting states so changes inside a group are scoped to that group
         var fmtStack = new Stack<FormattingState>();
         fmtStack.Push(new FormattingState());
+        var pPr = new ParagraphProperties();
         Paragraph? currentParagraph = null;
         Run? currentRun = null;
-        ConvertGroupInner(group, parentElement, targetDocument, ref fmtStack, ref currentParagraph, ref currentRun);
+        ConvertGroupInner(group, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
     }
 
     private FormattingState TryPeek(Stack<FormattingState> stack)
@@ -103,7 +104,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
             stack.Pop();
     }
 
-    private void ConvertGroupInner(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument, ref Stack<FormattingState> fmtStack, ref Paragraph? currentParagraph, ref Run? currentRun)
+    private void ConvertGroupInner(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument, Stack<FormattingState> fmtStack, ParagraphProperties pPr, ref Paragraph? currentParagraph, ref Run? currentRun)
     {
         // push a clone for this group's local modifications
         fmtStack.Push(TryPeek(fmtStack).Clone());
@@ -121,6 +122,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                         }
                         else 
                         { 
+                            // This subgroup is a destination not marked by '*'
                             var dname = (destination.Name ?? string.Empty).ToLowerInvariant();
                             if (dname == "fonttbl")
                             {
@@ -132,21 +134,38 @@ public class RtfToDocxConverter : ITextToDocxConverter
                                 ParseColorTable(destination);
                                 continue;
                             }
-                            else // TODO: other destinations 
+                            else if (dname == "upr")
+                            {
+                                // Process the Unicode group only, ignore the ANSI equivalent
+                                var udGroup = group.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name == "ud");
+                                if (udGroup != null)
+                                    ConvertGroupInner(udGroup, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
+                                
                                 continue;
+                            }
+                            else if (dname == "ud")
+                            {
+                                // Handle as regular group (it can contain \u or any control word such as bkmkstart)
+                            }
+                            else
+                            {
+                                // TODO: other destinations 
+                                continue;
+                            }
                         }
                     }
-                    // Recurse: the callee will push its own clone
-                    ConvertGroupInner(subGroup, parentElement, targetDocument, ref fmtStack, ref currentParagraph, ref currentRun);
+                    
+                    // Recurse
+                    ConvertGroupInner(subGroup, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
                     break;
                 case RtfControlWord cw:
-                    HandleControlWord(cw, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack));
+                    HandleControlWord(cw, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
                     break;
                 case RtfText text:
                     // Ensure paragraph and run exist
                     if (currentParagraph == null)
                     {
-                        currentParagraph = new Paragraph();
+                        currentParagraph = CreateParagraphWithProperties(pPr);
                         parentElement.Append(currentParagraph);
                     }
                     currentRun = CreateRunWithProperties(TryPeek(fmtStack));
@@ -163,29 +182,46 @@ public class RtfToDocxConverter : ITextToDocxConverter
         TryPop(fmtStack);
     }
 
-    private void HandleControlWord(RtfControlWord cw, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState state)
+    private void HandleControlWord(RtfControlWord cw, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
     {
         var name = (cw.Name ?? string.Empty).ToLowerInvariant();
         switch (name)
         {
+            case "sect":
+                // end current section
+                // TODO
+                break;
             case "par":
                 // end current paragraph
                 currentParagraph = null;
                 currentRun = null;
                 break;
+
+            case "sectd":  // reset section formatting
+                // sectionState.Clear();
+                break;
+            case "pard":  // reset paragraph formatting
+                pPr.RemoveAllChildren();
+                pPr.ClearAllAttributes();
+                break;
+            case "plain": // reset character formatting
+                currentRun = null;
+                runState.Clear();
+                break;
+
             case "line":
             case "page":
             case "column":
                 // soft line break inside run
                 if (currentParagraph == null)
                 {
-                    currentParagraph = new Paragraph();
+                    currentParagraph = CreateParagraphWithProperties(pPr);
                     parentElement.Append(currentParagraph);
                     currentRun = null;
                 }
                 if (currentRun == null)
                 {
-                    currentRun = CreateRunWithProperties(state);
+                    currentRun = CreateRunWithProperties(runState);
                     currentParagraph.Append(currentRun);
                 }
                 currentRun.Append(new Break() { Type = name == "line" ? BreakValues.TextWrapping : (name == "page" ? BreakValues.Page : BreakValues.Column) });
@@ -193,35 +229,63 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "tab":
                 if (currentParagraph == null)
                 {
-                    currentParagraph = new Paragraph();
+                    currentParagraph = CreateParagraphWithProperties(pPr);
                     parentElement.Append(currentParagraph);
                     currentRun = null;
                 }
                 if (currentRun == null)
                 {
-                    currentRun = CreateRunWithProperties(state);
+                    currentRun = CreateRunWithProperties(runState);
                     currentParagraph.Append(currentRun);
                 }
                 currentRun.Append(new TabChar());
                 break;
+             case "u":
+                if (cw.HasValue)
+                {
+                    if (currentParagraph == null)
+                    {
+                        currentParagraph = CreateParagraphWithProperties(pPr);
+                        parentElement.Append(currentParagraph);
+                        currentRun = null;
+                    }
+                    if (currentRun == null)
+                    {
+                        currentRun = CreateRunWithProperties(runState);
+                        currentParagraph.Append(currentRun);
+                    }
 
+                    int charCode = cw.Value!.Value;
+                    if (charCode < 0)
+                    {
+                        // Unicode values greater than 32767 are expressed as negative numbers.
+                        // For example, U+F020 would be \u-4064 in RTF: 
+                        // sum 65536 to get 61472.
+                        charCode += 65536;
+                    }
+                    string unicodeChar = char.ConvertFromUtf32(charCode);
+                    currentRun.Append(new Text() { Text = unicodeChar });
+                }
+                break;
+
+            // Character formatting
             case "accnone":
-                state.Emphasis = EmphasisMarkValues.None;
+                runState.Emphasis = EmphasisMarkValues.None;
                 break;
             case "acccircle":
-                state.Emphasis = EmphasisMarkValues.Circle;
+                runState.Emphasis = EmphasisMarkValues.Circle;
                 break;
             case "acccomma":
-                state.Emphasis = EmphasisMarkValues.Comma;
+                runState.Emphasis = EmphasisMarkValues.Comma;
                 break;
             case "accdot":
-                state.Emphasis = EmphasisMarkValues.Dot;
+                runState.Emphasis = EmphasisMarkValues.Dot;
                 break;
             case "accunderdot":
-                state.Emphasis = EmphasisMarkValues.UnderDot;
+                runState.Emphasis = EmphasisMarkValues.UnderDot;
                 break;
             case "b":
-                state.Bold = cw.HasValue ? cw.Value != 0 : true;
+                runState.Bold = cw.HasValue ? cw.Value != 0 : true;
                 // starting new run to apply formatting
                 break;
             case "brdrcf":
@@ -231,42 +295,42 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     {
                         var c = colorTable[cw.Value.Value];
                         var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
-                        state.CharacterBorder ??= new Border();
-                        state.CharacterBorder.Color = hex;
+                        runState.CharacterBorder ??= new Border();
+                        runState.CharacterBorder.Color = hex;
                     }
                 }
                 break;
             case "brdrframe":
-                state.CharacterBorder ??= new Border();
-                state.CharacterBorder.Frame = true;
+                runState.CharacterBorder ??= new Border();
+                runState.CharacterBorder.Frame = true;
                 break;
             case "brdrsh":
-                state.CharacterBorder ??= new Border();
-                state.CharacterBorder.Shadow = true;
+                runState.CharacterBorder ??= new Border();
+                runState.CharacterBorder.Shadow = true;
                 break;
             case "brdrw":
                 if (cw.Value != null && cw.Value.Value >= 0)
                 {
-                    state.CharacterBorder ??= new Border();
-                    state.CharacterBorder.Size = (uint)Math.Round(cw.Value.Value / 2.5); // Open XML uses 1/8 points for border width, while RTF uses twips (1/20th of point)
+                    runState.CharacterBorder ??= new Border();
+                    runState.CharacterBorder.Size = (uint)Math.Round(cw.Value.Value / 2.5); // Open XML uses 1/8 points for border width, while RTF uses twips (1/20th of point)
                 }                    
                 break;
             case "brsp":
                 if (cw.Value != null && cw.Value.Value >= 0)
                 {
-                    state.CharacterBorder ??= new Border();
-                    state.CharacterBorder.Size = (uint)Math.Round(cw.Value.Value / 20.0); // Open XML uses points for border spacing, while RTF uses twips
+                    runState.CharacterBorder ??= new Border();
+                    runState.CharacterBorder.Size = (uint)Math.Round(cw.Value.Value / 20.0); // Open XML uses points for border spacing, while RTF uses twips
                 }                    
                 break;
             case "charscalex":
                 if (cw.HasValue)
-                    state.FontScaling = cw.Value;
+                    runState.FontScaling = cw.Value;
                 break;
             case "caps":
-                state.AllCaps = cw.HasValue ? cw.Value != 0 : true;
+                runState.AllCaps = cw.HasValue ? cw.Value != 0 : true;
                 break;
              case "chbrdr":
-                state.CharacterBorder ??= new Border();
+                runState.CharacterBorder ??= new Border();
                 break;                
             case "chcfpat":
             case "chcbpat":
@@ -276,194 +340,434 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     {
                         var c = colorTable[cw.Value.Value];
                         var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
-                        state.CharacterShading ??= new Shading();
+                        runState.CharacterShading ??= new Shading();
                         if (cw.Name == "chcfpat")
-                            state.CharacterShading.Color = hex;
+                        {
+                            runState.CharacterShading.Color = hex;
+                            if (runState.CharacterShading.Val == null)
+                                runState.CharacterShading.Val = ShadingPatternValues.Clear;
+                        }
                         else if (cw.Name == "chcbpat")
-                            state.CharacterShading.Fill = hex;
+                        {
+                            runState.CharacterShading.Fill = hex;
+                        }
+                    }
+                }
+                break;
+            case "cfpat":
+            case "cbpat":
+                if (cw.Value != null)
+                {
+                    if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
+                    {
+                        var c = colorTable[cw.Value.Value];
+                        var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
+                        pPr.Shading ??= new Shading();
+                        if (cw.Name == "cfpat")
+                        {
+                            pPr.Shading.Color = hex;
+                            if (pPr.Shading.Val == null)
+                                pPr.Shading.Val = ShadingPatternValues.Clear;
+                        }
+                        else if (cw.Name == "cbpat")
+                        {
+                            pPr.Shading.Fill = hex;
+                        }
                     }
                 }
                 break;
             case "cf":
                 if (cw.HasValue)
-                    state.FontColorIndex = cw.Value;
+                    runState.FontColorIndex = cw.Value;
                 break;
             case "dn":
                 if (cw.HasValue)
-                    state.VerticalOffset = -cw.Value;
+                    runState.VerticalOffset = -cw.Value;
                 break;
             case "embo":
-                state.Emboss = cw.HasValue ? cw.Value != 0 : true;
+                runState.Emboss = cw.HasValue ? cw.Value != 0 : true;
                 break;
             case "expnd":
                 if (cw.HasValue)
-                    state.FontSpacing = cw.Value / 5; // convert quarter-points to twips (1/20th of point)
+                    runState.FontSpacing = cw.Value / 5; // convert quarter-points to twips (1/20th of point)
                 break;
             case "expndtw":
                 if (cw.HasValue)
-                    state.FontSpacing = cw.Value;
+                    runState.FontSpacing = cw.Value;
                 break;
             case "fittext":
                 if (cw.HasValue && cw.Value >= 0) // TODO: handle -1 properly
-                    state.FitText = cw.Value;
+                    runState.FitText = cw.Value;
                 break;
             case "fs":
                 if (cw.HasValue)
-                    state.FontSize = cw.Value;
+                    runState.FontSize = cw.Value;
                 break;
             case "f":
                 if (cw.HasValue)
-                    state.FontIndex = cw.Value;
+                    runState.FontIndex = cw.Value;
                 break;
             case "highlight":
                 if (cw.HasValue)
-                    state.HighlightColorIndex = cw.Value == 0 ? null : cw.Value;
+                    runState.HighlightColorIndex = cw.Value == 0 ? null : cw.Value;
                 break;
             case "i":
-                state.Italic = cw.HasValue ? cw.Value != 0 : true;
+                runState.Italic = cw.HasValue ? cw.Value != 0 : true;
                 break;
             case "impr":
-                state.Imprint = cw.HasValue ? cw.Value != 0 : true;
+                runState.Imprint = cw.HasValue ? cw.Value != 0 : true;
                 break;
             case "kerning":
                 if (cw.HasValue && cw.Value > 0)
-                    state.Kerning = cw.Value;
+                    runState.Kerning = cw.Value;
                 break;
             case "nosupersub":
-                state.Subscript = false;
-                state.Superscript = false;
+                runState.Subscript = false;
+                runState.Superscript = false;
                 break;
             case "outl":
-                state.Outline = cw.HasValue ? cw.Value != 0 : true;
+                runState.Outline = cw.HasValue ? cw.Value != 0 : true;
                 break;
              case "scaps":
-                state.SmallCaps = cw.HasValue ? cw.Value != 0 : true;
+                runState.SmallCaps = cw.HasValue ? cw.Value != 0 : true;
                 break;
             case "shad":
-                state.Shadow = cw.HasValue ? cw.Value != 0 : true;
+                runState.Shadow = cw.HasValue ? cw.Value != 0 : true;
                 break;  
             case "strike":
-                state.Strike = cw.HasValue ? cw.Value != 0 : true;
+                runState.Strike = cw.HasValue ? cw.Value != 0 : true;
                 break;
             case "striked":
                 // striked1 or striked0 necessary in this case (no striked alone)
                 if (cw.HasValue)
-                    state.DoubleStrike = cw.Value != 0;
+                    runState.DoubleStrike = cw.Value != 0;
                 break;
             case "sub":
-                state.Subscript = cw.HasValue ? cw.Value != 0 : true;
+                runState.Subscript = cw.HasValue ? cw.Value != 0 : true;
                 break;
             case "super":
-                state.Superscript = cw.HasValue ? cw.Value != 0 : true;
+                runState.Superscript = cw.HasValue ? cw.Value != 0 : true;
                 break;            
             case "ul":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Single : null) : UnderlineValues.Single;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Single : null) : UnderlineValues.Single;
                 break;
             case "ulc":
                 if (cw.HasValue)
-                    state.UnderlineColorIndex = cw.Value;
+                    runState.UnderlineColorIndex = cw.Value;
                 break;
             case "uld":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Dotted : null) : UnderlineValues.Dotted;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Dotted : null) : UnderlineValues.Dotted;
                 break;
             case "uldash":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Dash : null) : UnderlineValues.Dash;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Dash : null) : UnderlineValues.Dash;
                 break;                
             case "uldashd":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DotDash : null) : UnderlineValues.DotDash;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DotDash : null) : UnderlineValues.DotDash;
                 break;
             case "uldashdd":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DotDotDash : null) : UnderlineValues.DotDotDash;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DotDotDash : null) : UnderlineValues.DotDotDash;
                 break;
             case "uldb":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Double : null) : UnderlineValues.Double;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Double : null) : UnderlineValues.Double;
                 break;
             case "ulldash":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashLong : null) : UnderlineValues.DashLong;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashLong : null) : UnderlineValues.DashLong;
                 break;
             case "ulth":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Thick : null) : UnderlineValues.Thick;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Thick : null) : UnderlineValues.Thick;
                 break;
             case "ulthd":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DottedHeavy : null) : UnderlineValues.DottedHeavy;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DottedHeavy : null) : UnderlineValues.DottedHeavy;
                 break;
             case "ulthdash":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashedHeavy : null) : UnderlineValues.DashedHeavy;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashedHeavy : null) : UnderlineValues.DashedHeavy;
                 break;
             case "ulthdashd":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashDotHeavy : null) : UnderlineValues.DashDotHeavy;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashDotHeavy : null) : UnderlineValues.DashDotHeavy;
                 break;
             case "ulthdashdd":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashDotDotHeavy : null) : UnderlineValues.DashDotDotHeavy;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashDotDotHeavy : null) : UnderlineValues.DashDotDotHeavy;
                 break;
             case "ulthldash":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashLongHeavy : null) : UnderlineValues.DashLongHeavy;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashLongHeavy : null) : UnderlineValues.DashLongHeavy;
                 break;
             case "ululdbwave":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.WavyDouble : null) : UnderlineValues.WavyDouble;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.WavyDouble : null) : UnderlineValues.WavyDouble;
                 break;
             case "ulw":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Words : null) : UnderlineValues.Words;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Words : null) : UnderlineValues.Words;
                 break;
             case "ulwave":
-                state.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Wave : null) : UnderlineValues.Wave;
+                runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Wave : null) : UnderlineValues.Wave;
                 break;
             case "ulnone":
-                state.Underline = UnderlineValues.None;
+                runState.Underline = UnderlineValues.None;
                 break;
             case "up":
                 if (cw.HasValue)
-                    state.VerticalOffset = cw.Value;
+                    runState.VerticalOffset = cw.Value;
                 break;
             case "v":
-                state.Hidden = cw.HasValue ? cw.Value != 0 : true;
-                break;                    
+                // TODO: special handling for paragraphs
+                runState.Hidden = cw.HasValue ? cw.Value != 0 : true;
+                break;   
 
-            case "pard":  // reset paragraph-level formatting; for now reset inline formatting too
-            case "plain": // reset font formatting
-                state.Bold = false;
-                state.Italic = false;
-                state.Strike = false;
-                state.DoubleStrike = false;
-                state.Underline = UnderlineValues.None;
-                state.Emphasis = EmphasisMarkValues.None;
-                state.Subscript = false;
-                state.Superscript = false;
-                state.SmallCaps = false;
-                state.AllCaps = false;
-                state.Hidden = false;
-                state.Emboss = false;
-                state.Imprint = false;
-                state.Outline = false;
-                state.Shadow = false;
-                
-                state.FontSize = null;
-                state.FontScaling = null;
-                state.FontSpacing = null;
-                state.Kerning = null;
-                state.VerticalOffset = null;
-                state.FitText = null;
-
-                state.FontIndex = null;
-                state.FontColorIndex = null;
-                state.HighlightColorIndex = null;
-                state.UnderlineColorIndex = null;
-
-                state.CharacterShading = null;
-                state.CharacterBorder = null;
-
-                currentRun = null;
+            // Paragraph formatting
+            case "adjustright":
+                pPr.AdjustRightIndent = new AdjustRightIndent();
                 break;
-            default:
-                if (cw.Name?.StartsWith("brdr") == true)
+            case "aspalpha":
+                pPr.AutoSpaceDE = new AutoSpaceDE();
+                break;
+            case "aspnum":
+                pPr.AutoSpaceDN = new AutoSpaceDN();
+                break;
+            case "contextualspace":
+                pPr.ContextualSpacing = new ContextualSpacing();
+                break;
+            case "cufi":
+                if (cw.HasValue)
                 {
-                    state.CharacterBorder ??= new Border();
-                    state.CharacterBorder.Val = RtfBorderMapper.GetBorderType(cw.Name + (cw.HasValue ? cw.Value!.Value.ToStringInvariant() : string.Empty));;
+                    pPr.Indentation ??= new Indentation();
+                    if (cw.Value >= 0)
+                        pPr.Indentation.FirstLineChars = cw.Value;
+                    else 
+                        pPr.Indentation.HangingChars = Math.Abs(cw.Value!.Value);
+                }
+                break;
+            case "culi":
+                if (cw.HasValue)
+                {
+                    pPr.Indentation ??= new Indentation();
+                    pPr.Indentation.LeftChars = cw.Value;
+                }
+                break;
+            case "curi":
+                if (cw.HasValue)
+                {
+                    pPr.Indentation ??= new Indentation();
+                    pPr.Indentation.RightChars = cw.Value;
+                }
+                break;
+            case "faauto":
+                pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Auto };
+                break;
+            case "faroman":
+                pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Baseline };
+                break;
+            case "favar":
+                pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Bottom };
+                break;
+            case "facenter":
+                pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Center };
+                break;
+            case "fahang":
+                pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Top };
+                break;
+             case "fi":
+                if (cw.HasValue)
+                {
+                    pPr.Indentation ??= new Indentation();
+                    if (cw.Value >= 0)
+                        pPr.Indentation.FirstLine = cw.Value!.Value.ToStringInvariant();
+                    else 
+                        pPr.Indentation.Hanging = Math.Abs(cw.Value!.Value).ToStringInvariant();
+                }
+                break;
+            case "hyphpar":
+                if (cw.HasValue && cw.Value == 0)
+                    pPr.SuppressAutoHyphens = new SuppressAutoHyphens();
+                break;
+            case "indmirror":
+                pPr.MirrorIndents = new MirrorIndents();
+                break;
+            case "keep":
+                pPr.KeepLines = new KeepLines();
+                break;
+            case "keepn":
+                pPr.KeepNext = new KeepNext();
+                break;
+            case "li":
+                if (cw.HasValue)
+                {
+                    pPr.Indentation ??= new Indentation();
+                    pPr.Indentation.Left = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "lin":
+                if (cw.HasValue)
+                {
+                    pPr.Indentation ??= new Indentation();
+                    pPr.Indentation.Start = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "lisa":
+                if (cw.HasValue)
+                {
+                    pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                    pPr.SpacingBetweenLines.AfterLines = cw.Value;
+                }
+                break;
+            case "lisb":
+                if (cw.HasValue)
+                {
+                    pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                    pPr.SpacingBetweenLines.BeforeLines = cw.Value;
+                }
+                break;
+            case "ltrpar":
+                pPr.BiDi = new BiDi() { Val = false };
+                break;
+            case "noline":
+                pPr.SuppressLineNumbers = new SuppressLineNumbers();
+                break;
+            case "nooverflow":
+                pPr.OverflowPunctuation = new OverflowPunctuation() { Val = false };
+                break;
+            case "nosnaplinegrid":
+                pPr.SnapToGrid = new SnapToGrid() { Val = false };
+                break;
+            case "nowidctlpar":
+                pPr.WidowControl = new WidowControl() { Val = false };
+                break;
+            case "nowwrap":
+                pPr.WordWrap = new WordWrap() { Val = false };
+                break;
+            case "outline":
+                if (cw.HasValue && cw.Value != null)
+                    pPr.OutlineLevel = new OutlineLevel() { Val = cw.Value.Value };
+                break;
+            case "pagebb":
+                pPr.PageBreakBefore = new PageBreakBefore();
+                break;
+            case "ql":
+                pPr.Justification = new Justification() { Val = JustificationValues.Left };
+                break;
+            case "qc":
+                pPr.Justification = new Justification() { Val = JustificationValues.Center };
+                break;
+            case "qr":
+                pPr.Justification = new Justification() { Val = JustificationValues.Right };
+                break;
+            case "qj":
+                pPr.Justification = new Justification() { Val = JustificationValues.Both };
+                break;
+            case "qd":
+                pPr.Justification = new Justification() { Val = JustificationValues.Distribute };
+                break;
+            case "qt":
+                pPr.Justification = new Justification() { Val = JustificationValues.ThaiDistribute };
+                break;
+            case "ri":
+                if (cw.HasValue)
+                {
+                    pPr.Indentation ??= new Indentation();
+                    pPr.Indentation.Right = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "rin":
+                if (cw.HasValue)
+                {
+                    pPr.Indentation ??= new Indentation();
+                    pPr.Indentation.End = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "rtlpar":
+                pPr.BiDi = new BiDi() { Val = true };
+                break;
+            case "sa":
+                if (cw.HasValue)
+                {
+                    pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                    pPr.SpacingBetweenLines.After = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "sb":
+                if (cw.HasValue)
+                {
+                    pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                    pPr.SpacingBetweenLines.Before = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "saauto":
+                pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                pPr.SpacingBetweenLines.AfterAutoSpacing = cw.HasValue && cw.Value == 1;
+                break;
+            case "sbauto":
+                pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                pPr.SpacingBetweenLines.BeforeAutoSpacing = cw.HasValue && cw.Value == 1;
+                break;
+            case "sl":
+                if (cw.HasValue)
+                {
+                    pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                    int val  = cw.Value!.Value;
+                    // If slmult is 0, set AtLeast if \sl > 0, Exact if \sl < 0
+                    if (pPr.SpacingBetweenLines.LineRule == null || pPr.SpacingBetweenLines.LineRule != LineSpacingRuleValues.Auto)
+                    {
+                        if (val >= 0)
+                        {
+                            pPr.SpacingBetweenLines.LineRule = LineSpacingRuleValues.AtLeast;
+                        }
+                        else
+                        {
+                            pPr.SpacingBetweenLines.LineRule = LineSpacingRuleValues.Exact;
+                        }                        
+                    }
+                    pPr.SpacingBetweenLines.Line = Math.Abs(val).ToStringInvariant();
+                }
+                break;
+            case "slmult":
+                if (cw.HasValue && cw.Value == 1)
+                {
+                    pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
+                    pPr.SpacingBetweenLines.LineRule = LineSpacingRuleValues.Auto;
+                }
+                break;
+            case "toplinepunct":
+                pPr.TopLinePunctuation = new TopLinePunctuation();
+                break;
+            case "txbxtwalways":
+                pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.AllLines};
+                break;
+            case "txbxtwfirstlast":
+                pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.FirstAndLastLine};
+                break;
+            case "txbxtwfirst":
+                pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.FirstLineOnly};
+                break;
+            case "txbxtwlast":
+                pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.LastLineOnly};
+                break;
+            case "txbxtwno":
+                pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.None};
+                break;
+            case "widctlpar":
+                pPr.WidowControl = new WidowControl() { Val = true };
+                break;
+
+            default:
+                // TODO: paragraph borders
+                if (cw.Name?.StartsWith("brdr") == true && runState.CharacterBorder != null)
+                {
+                    // TODO: these should be handled differently depending on type (character/paragraph/table).
+                    // The first control word is different (e.g. chbrdr, brdrt, brdrl, ..., 
+                    // while the subsequent words for style/thickness/color are the same)
+                    runState.CharacterBorder.Val = RtfBorderMapper.GetBorderType(cw.Name + (cw.HasValue ? cw.Value!.Value.ToStringInvariant() : string.Empty));;
                 }
                 else if (cw.Name?.StartsWith("chshdng") == true || cw.Name?.StartsWith("chbg") == true)
                 {
-                    state.CharacterShading ??= new Shading();
-                    state.CharacterShading.Val = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    runState.CharacterShading ??= new Shading();
+                    var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    if (shadingType != null)
+                        runState.CharacterShading.Val = shadingType;
+                }
+                else if (cw.Name?.StartsWith("shading") == true || cw.Name?.StartsWith("bg") == true)
+                {
+                    pPr.Shading ??= new Shading();
+                    var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    if (shadingType != null)
+                        pPr.Shading.Val = shadingType;
                 }
 
                 // ignore other control words for now
@@ -471,38 +775,48 @@ public class RtfToDocxConverter : ITextToDocxConverter
         }
     }
 
+    private Paragraph CreateParagraphWithProperties(ParagraphProperties pPr)
+    {
+        var par = new Paragraph();
+
+        if (pPr.HasChildren)
+            par.Append(pPr.CloneNode(true));
+
+        return par;
+    }
+
     private Run CreateRunWithProperties(FormattingState state)
     {
         var run = new Run();
         
-        var rp = new RunProperties();
-        if (state.Bold) rp.Append(new Bold());
-        if (state.Italic) rp.Append(new Italic());
-        if (state.Strike) rp.Append(new Strike());
-        if (state.DoubleStrike) rp.Append(new DoubleStrike());        
+        var rPr = new RunProperties();
+        if (state.Bold) rPr.Append(new Bold());
+        if (state.Italic) rPr.Append(new Italic());
+        if (state.Strike) rPr.Append(new Strike());
+        if (state.DoubleStrike) rPr.Append(new DoubleStrike());        
 
-        if (state.Subscript) rp.Append(new VerticalTextAlignment() { Val = VerticalPositionValues.Subscript });
-        else if (state.Subscript) rp.Append(new VerticalTextAlignment() { Val = VerticalPositionValues.Superscript });
+        if (state.Subscript) rPr.Append(new VerticalTextAlignment() { Val = VerticalPositionValues.Subscript });
+        else if (state.Subscript) rPr.Append(new VerticalTextAlignment() { Val = VerticalPositionValues.Superscript });
 
-        if (state.SmallCaps) rp.Append(new SmallCaps());
-        if (state.AllCaps) rp.Append(new Caps());
-        if (state.Hidden) rp.Append(new Vanish());
-        if (state.Emboss) rp.Append(new Emboss());
-        if (state.Imprint) rp.Append(new Imprint());
-        if (state.Outline) rp.Append(new Outline());
-        if (state.Shadow) rp.Append(new Shadow());
+        if (state.SmallCaps) rPr.Append(new SmallCaps());
+        if (state.AllCaps) rPr.Append(new Caps());
+        if (state.Hidden) rPr.Append(new Vanish());
+        if (state.Emboss) rPr.Append(new Emboss());
+        if (state.Imprint) rPr.Append(new Imprint());
+        if (state.Outline) rPr.Append(new Outline());
+        if (state.Shadow) rPr.Append(new Shadow());
 
-        if (state.Emphasis.HasValue) rp.Append(new Emphasis() { Val = state.Emphasis.Value });
-        if (state.FontSize.HasValue) rp.Append(new FontSize() { Val = state.FontSize.Value.ToStringInvariant()});
-        if (state.VerticalOffset.HasValue) rp.Append(new Position() { Val = state.VerticalOffset.Value.ToStringInvariant()});        
-        if (state.FontScaling.HasValue) rp.Append(new CharacterScale() { Val = state.FontScaling.Value});
-        if (state.FontSpacing.HasValue) rp.Append(new Spacing() { Val = state.FontSpacing.Value});
-        if (state.FitText.HasValue) rp.Append(new FitText() { Val = (uint)state.FitText.Value});
-        if (state.Kerning.HasValue) rp.Append(new Kern() { Val = (uint)state.Kerning.Value});
+        if (state.Emphasis.HasValue) rPr.Append(new Emphasis() { Val = state.Emphasis.Value });
+        if (state.FontSize.HasValue) rPr.Append(new FontSize() { Val = state.FontSize.Value.ToStringInvariant()});
+        if (state.VerticalOffset.HasValue) rPr.Append(new Position() { Val = state.VerticalOffset.Value.ToStringInvariant()});        
+        if (state.FontScaling.HasValue) rPr.Append(new CharacterScale() { Val = state.FontScaling.Value});
+        if (state.FontSpacing.HasValue) rPr.Append(new Spacing() { Val = state.FontSpacing.Value});
+        if (state.FitText.HasValue) rPr.Append(new FitText() { Val = (uint)state.FitText.Value});
+        if (state.Kerning.HasValue) rPr.Append(new Kern() { Val = (uint)state.Kerning.Value});
 
         // Get font family from font table
         if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fname) && !string.IsNullOrEmpty(fname))
-            rp.Append(new RunFonts() { Ascii = fname, HighAnsi = fname, EastAsia = fname, ComplexScript = fname });
+            rPr.Append(new RunFonts() { Ascii = fname, HighAnsi = fname, EastAsia = fname, ComplexScript = fname });
 
         // Get colors from color table
         if (state.FontColorIndex.HasValue)
@@ -512,7 +826,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
             {
                 var c = colorTable[idx];
                 var hex = c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
-                rp.Append(new Color() { Val = hex });
+                rPr.Append(new Color() { Val = hex });
             }
         }
         if (state.HighlightColorIndex.HasValue)
@@ -522,7 +836,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
             {
                 var c = colorTable[idx];
                 var hex = c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
-                rp.Append(new Highlight() { Val = ColorHelpers.HexToHighlight(hex) });
+                rPr.Append(new Highlight() { Val = ColorHelpers.HexToHighlight(hex) });
             }
         }
 
@@ -539,14 +853,14 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     u.Color = hex;
                 }
             }
-            rp.Append(u);
+            rPr.Append(u);
         }
         
-        if (state.CharacterBorder != null) rp.Append(state.CharacterBorder);
-        if (state.CharacterShading != null) rp.Append(state.CharacterShading);
+        if (state.CharacterBorder != null) rPr.Append(state.CharacterBorder);
+        if (state.CharacterShading != null) rPr.Append(state.CharacterShading);
 
-        if (rp.HasChildren)
-            run.Append(rp);
+        if (rPr.HasChildren)
+            run.Append(rPr);
         
         return run;
     }
@@ -629,74 +943,5 @@ public class RtfToDocxConverter : ITextToDocxConverter
         }
 
         static int Clamp(int v) => Math.Max(0, Math.Min(255, v));
-    }
-
-    private class FormattingState
-    {
-        public bool Bold { get; set; }
-        public bool Italic { get; set; }
-        public UnderlineValues? Underline { get; set; }
-        public bool Strike { get; set; }
-        public bool DoubleStrike { get; set; }
-        public bool Subscript { get; set; }
-        public bool Superscript { get; set; }
-        public bool SmallCaps { get; set; }
-        public bool AllCaps { get; set; }
-        public bool Hidden { get; set; }
-        public bool Emboss { get; set; }
-        public bool Imprint { get; set; }
-        public bool Outline { get; set; }
-        public bool Shadow { get; set; }
-        public EmphasisMarkValues? Emphasis { get; set; }
-
-        public Border? CharacterBorder { get; set; }
-        public Shading? CharacterShading { get; set; }
-
-        public int? FontIndex { get; set; }
-        public int? FontColorIndex { get; set; }
-        public int? HighlightColorIndex { get; set; }
-        public int? UnderlineColorIndex { get; set; }
-
-        public int? FontSize { get; set; }
-        public int? FontScaling { get; set; }
-        public int? FontSpacing { get; set; }
-        public int? FitText { get; set; }
-        public int? Kerning { get; set; }
-        public int? VerticalOffset { get; set; }
-
-        public FormattingState Clone()
-        {            
-            return new FormattingState 
-            { 
-                Bold = this.Bold, 
-                Italic = this.Italic, 
-                Strike = this.Strike, 
-                DoubleStrike = this.DoubleStrike,
-                Underline = this.Underline,
-                SmallCaps = this.SmallCaps,
-                AllCaps = this.AllCaps,
-                Hidden = this.Hidden,
-                Emboss = this.Emboss,
-                Imprint = this.Imprint,
-                Outline = this.Outline,
-                Shadow = this.Shadow,
-                Emphasis = this.Emphasis,
-
-                CharacterBorder = this.CharacterBorder,
-                CharacterShading = this.CharacterShading,
-
-                FontIndex = this.FontIndex,
-                FontColorIndex = this.FontColorIndex,
-                HighlightColorIndex = this.HighlightColorIndex,
-                UnderlineColorIndex = this.UnderlineColorIndex,
-                
-                FontSize = this.FontSize,
-                FontScaling = this.FontScaling,
-                FontSpacing = this.FontSpacing,
-                FitText = this.FitText,
-                Kerning = this.Kerning,
-                VerticalOffset = this.VerticalOffset,
-            };
-        }
     }
 }

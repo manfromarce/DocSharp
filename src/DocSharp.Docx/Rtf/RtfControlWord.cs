@@ -10,5 +10,11 @@ internal class RtfControlWord : RtfToken
     {
         Name = name;
     }
+
+    public RtfControlWord(string name, int value)
+    {
+        Name = name;
+        Value = value;
+    }
 }
 

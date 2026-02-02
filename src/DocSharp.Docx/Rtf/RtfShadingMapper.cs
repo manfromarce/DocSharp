@@ -10,7 +10,7 @@ namespace DocSharp.Rtf;
 
 internal static class RtfShadingMapper
 {
-    internal static EnumValue<ShadingPatternValues> GetShadingType(string word, int? value)
+    internal static EnumValue<ShadingPatternValues>? GetShadingType(string word, int? value)
     {
         switch (word)
         {
@@ -133,6 +133,6 @@ internal static class RtfShadingMapper
                 }
                 break;
         }
-        return ShadingPatternValues.Clear;
+        return null;
     }
 }

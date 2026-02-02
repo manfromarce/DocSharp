@@ -314,7 +314,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\nosnaplinegrid");
         }
         var outlineLevel = paragraph.GetEffectiveProperty<OutlineLevel>();
-        if (outlineLevel?.Val != null &&  outlineLevel.Val.HasValue)
+        if (outlineLevel?.Val != null && outlineLevel.Val.HasValue)
         {
             sb.Write($"\\outline{outlineLevel.Val.Value}");
         }

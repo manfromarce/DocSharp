@@ -11,7 +11,7 @@ internal class RtfDestination : RtfGroup
 	public int? Value { get; set; }
     public bool HasValue { get; set; }
 
-	public RtfDestination(string name, bool isIgnorable = false)
+    public RtfDestination(string name, bool isIgnorable = false)
 	{
 		Name = name ?? string.Empty;
 		IsIgnorable = isIgnorable;
