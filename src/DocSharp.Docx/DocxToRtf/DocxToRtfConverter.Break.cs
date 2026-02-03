@@ -17,6 +17,15 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         else if (@break.Type != null && @break.Type == BreakValues.Column)
             sb.Write(@"\column ");
         else
-            sb.Write(@"\line ");
+        {
+            if (@break.Clear != null && @break.Clear.Value == BreakTextRestartLocationValues.Left)
+                sb.Write(@"\line\lbr1 ");
+            else if (@break.Clear != null && @break.Clear.Value == BreakTextRestartLocationValues.Right)
+                sb.Write(@"\line\lbr2 ");
+            else if (@break.Clear != null && @break.Clear.Value == BreakTextRestartLocationValues.All)
+                sb.Write(@"\line\lbr3 ");
+            else
+                sb.Write(@"\line ");
+        }
     }
 }

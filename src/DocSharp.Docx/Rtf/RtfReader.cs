@@ -384,10 +384,10 @@ internal static class RtfReader
                     int h2 = ReadChar();
                     if (h1 != -1 && h2 != -1)
                     {
-                        string hex = new string(new[] { (char)h1, (char)h2 });
-                        if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out int v))
+                        string hex = new string([(char)h1, (char)h2]);
+                        if (byte.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out byte v))
                         {
-                            stack.Peek().Tokens.Add(new RtfText(((char)v).ToString()));
+                            stack.Peek().Tokens.Add(new RtfChar(v));
                         }
                     }
                     groupJustOpened = false;

@@ -20,6 +20,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
 {
     private Dictionary<int, string> fontTable = new();
     private List<(int R, int G, int B)> colorTable = new();
+    private Encoding? codePageEncoding;
 
 #if !NETFRAMEWORK
     static RtfToDocxConverter()
@@ -28,12 +29,25 @@ public class RtfToDocxConverter : ITextToDocxConverter
     }
 #endif
 
+    /// <summary>
     /// Note: the DefaultEncoding property only affects how the raw RTF file is read 
     /// (in particular the RTF header and control words, which should be ASCII), it does not change how text tokens are handled: 
     /// special characters such as \'xx are still interpreted based on the code page detected by RtfReader. 
     /// Therefore, it should be left as ASCII unless there is a specific reason to change it (not conformant document).
     /// </summary>
     public Encoding DefaultEncoding => Encoding.ASCII;
+
+    /// <summary>
+    /// Set the DefaultCodePage to a value greater than 0 to use a custom code page as default. 
+    /// Note: the RTF reader will still try to detect the encoding (ANSI code page) from the RTF header, 
+    /// and Microsoft Word always writes the code page in the header. 
+    /// However, if the code page is not specified, the documentation is unclear about the default value, 
+    /// so at this time the RTF reader uses the code page for the current culture (as detected by .NET).
+    /// This property allows to set a different code page, for example you might want to force 1252 (Windows western code page) 
+    /// (when the code page is not specified in the RTF header) if your system culture uses a different alphabet 
+    /// but you expect to process English documents. 
+    /// </summary>
+    public int? DefaultCodePage;
 
     /// <summary>
     /// Populate the target DOCX document with converted RTF content.
@@ -161,25 +175,36 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 case RtfControlWord cw:
                     HandleControlWord(cw, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
                     break;
-                case RtfText text:
+                case RtfChar ch:
                     // Ensure paragraph and run exist
-                    if (currentParagraph == null)
-                    {
-                        currentParagraph = CreateParagraphWithProperties(pPr);
-                        parentElement.Append(currentParagraph);
-                    }
-                    currentRun = CreateRunWithProperties(TryPeek(fmtStack));
-                    currentParagraph.Append(currentRun);
-                    var t = new Text(text.Text ?? string.Empty)
-                    {
-                        Space = SpaceProcessingModeValues.Preserve
-                    };
-                    currentRun.Append(t);
+                    var encoding = codePageEncoding ?? Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
+                    string s = encoding.GetString([ch.CharCode]);
+                    HandleText(s, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
+                    break;
+                case RtfText text:
+                    HandleText(text.Text, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
                     break;
             }
         }
         // restore parent formatting state
         TryPop(fmtStack);
+    }
+
+    private void HandleText(string text, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    {
+        // Ensure paragraph and run exist
+        if (currentParagraph == null)
+        {
+            currentParagraph = CreateParagraphWithProperties(pPr);
+            parentElement.Append(currentParagraph);
+        }
+        currentRun = CreateRunWithProperties(runState);
+        currentParagraph.Append(currentRun);
+        var t = new Text(text ?? string.Empty)
+        {
+            Space = SpaceProcessingModeValues.Preserve
+        };
+        currentRun.Append(t);
     }
 
     private void HandleControlWord(RtfControlWord cw, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
@@ -209,52 +234,115 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 runState.Clear();
                 break;
 
+            case "ansi":
+                // If ANSI is specified, use the system ANSI code page, 
+                // unless the DefaultCodePage value is set to a different value. 
+                // Note that this default encoding can still be superseded by the \ansicpgN control word, if found. 
+                int defaultCodePage;
+                if (DefaultCodePage != null && DefaultCodePage.Value > 0)
+                    defaultCodePage = DefaultCodePage.Value;
+                else 
+                    defaultCodePage = CultureInfo.CurrentCulture.TextInfo.ANSICodePage;
+
+                codePageEncoding = Encoding.GetEncoding(defaultCodePage);
+                break;
+            case "mac": // Legacy Mac encoding
+                codePageEncoding = Encoding.GetEncoding(10000);
+                // Note: 10000 is Mac Roman, but other encodings exist: 
+                // MAC Japan (10001), MAC Arabic (10004), MAC Hebrew (10005), MAC Greek (10006), MAC Cyrillic (10007), MAC Latin2 (10029), MAC Turkish (10081)
+                // For now, assume these would be specified in \ansicpg
+                break;
+            case "pc": // IBM PC code page 437
+                codePageEncoding = Encoding.GetEncoding(437);
+                break;
+            case "pca": // BM PC code page 850
+                codePageEncoding = Encoding.GetEncoding(850);
+                break;
+            case "ansicpg": // If present, this control word should be after \ansi or \mac
+                if (cw.HasValue && cw.Value!.Value >= 0)
+                {
+                    try
+                    {
+                        codePageEncoding = Encoding.GetEncoding(cw.Value.Value);                        
+                    }
+                    catch
+                    {
+#if DEBUG
+                        Debug.WriteLine($"Unsupported code page: {cw.Value.Value}");
+#endif                        
+                    }
+                }
+                break;
+
             case "line":
             case "page":
             case "column":
-                // soft line break inside run
-                if (currentParagraph == null)
-                {
-                    currentParagraph = CreateParagraphWithProperties(pPr);
-                    parentElement.Append(currentParagraph);
-                    currentRun = null;
-                }
-                if (currentRun == null)
-                {
-                    currentRun = CreateRunWithProperties(runState);
-                    currentParagraph.Append(currentRun);
-                }
-                currentRun.Append(new Break() { Type = name == "line" ? BreakValues.TextWrapping : (name == "page" ? BreakValues.Page : BreakValues.Column) });
+                // break inside run
+                EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                currentRun!.Append(new Break() { Type = name == "line" ? BreakValues.TextWrapping : (name == "page" ? BreakValues.Page : BreakValues.Column) });
                 break;
-            case "tab":
-                if (currentParagraph == null)
-                {
-                    currentParagraph = CreateParagraphWithProperties(pPr);
-                    parentElement.Append(currentParagraph);
-                    currentRun = null;
-                }
-                if (currentRun == null)
-                {
-                    currentRun = CreateRunWithProperties(runState);
-                    currentParagraph.Append(currentRun);
-                }
-                currentRun.Append(new TabChar());
-                break;
-             case "u":
+            case "lbr":
+                // line break 
                 if (cw.HasValue)
                 {
-                    if (currentParagraph == null)
+                    if (cw.Value!.Value == 0)
                     {
-                        currentParagraph = CreateParagraphWithProperties(pPr);
-                        parentElement.Append(currentParagraph);
-                        currentRun = null;
+                        EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                        currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.None });
                     }
-                    if (currentRun == null)
+                    else if (cw.Value.Value == 1)
                     {
-                        currentRun = CreateRunWithProperties(runState);
-                        currentParagraph.Append(currentRun);
+                        EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                        currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.Left });
                     }
+                    else if (cw.Value.Value == 2)
+                    {
+                        EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                        currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.Right });
+                    }
+                    else if (cw.Value.Value == 3)
+                    {
+                        EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                        currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.All });
+                    }
+                }
+                break;
 
+            // TODO: create using fields
+            // case "chdate": 
+            // case "chdpl": 
+            // case "chdpa": 
+            // case "chtime": 
+            // case "sectnum": 
+            //     break;
+
+            // TODO: create comments and footnotes/endnotes (followed by the content group)
+            // case "chatn": 
+            //     break;
+            // case "chftn": 
+            //     break;
+            case "chftnsep": 
+                EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                currentRun!.Append(new SeparatorMark());
+                break;
+            case "chftnsepc":
+                EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                currentRun!.Append(new ContinuationSeparatorMark());
+                break;
+            case "chpgn": 
+                EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                currentRun!.Append(new PageNumber());
+                break;
+            case "tab":
+                EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                currentRun!.Append(new TabChar());
+                break;
+            case "uc":
+                // TODO
+                break;
+            case "u":
+                if (cw.HasValue)
+                {
                     int charCode = cw.Value!.Value;
                     if (charCode < 0)
                     {
@@ -263,8 +351,9 @@ public class RtfToDocxConverter : ITextToDocxConverter
                         // sum 65536 to get 61472.
                         charCode += 65536;
                     }
-                    string unicodeChar = char.ConvertFromUtf32(charCode);
-                    currentRun.Append(new Text() { Text = unicodeChar });
+                    string s = char.ConvertFromUtf32(charCode);
+                    HandleText(s, ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                    // TODO: skip other characters based on the stack of \ucN values
                 }
                 break;
 
@@ -772,6 +861,21 @@ public class RtfToDocxConverter : ITextToDocxConverter
 
                 // ignore other control words for now
                 break;
+        }
+    }
+
+    private void EnsureRun(ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    {
+        if (currentParagraph == null)
+        {
+            currentParagraph = CreateParagraphWithProperties(pPr);
+            parentElement.Append(currentParagraph);
+            currentRun = null;
+        }
+        if (currentRun == null)
+        {
+            currentRun = CreateRunWithProperties(runState);
+            currentParagraph.Append(currentRun);
         }
     }
 
