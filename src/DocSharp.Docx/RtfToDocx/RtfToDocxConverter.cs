@@ -22,6 +22,8 @@ public class RtfToDocxConverter : ITextToDocxConverter
     private List<(int R, int G, int B)> colorTable = new();
     private Encoding? codePageEncoding;
     private BorderType? currentBorder;
+    private SectionProperties? defaultSectPr;
+    private SectionProperties? currentSectPr;
 
 #if !NETFRAMEWORK
     static RtfToDocxConverter()
@@ -57,6 +59,13 @@ public class RtfToDocxConverter : ITextToDocxConverter
     /// <param name="targetDocument"></param>
     public void BuildDocx(TextReader input, WordprocessingDocument targetDocument)
     {        
+        fontTable = new();
+        colorTable = new();
+        codePageEncoding = null;
+        currentBorder = null;
+        defaultSectPr = null;
+        currentSectPr = null;
+
         if (targetDocument.MainDocumentPart == null)
             targetDocument.AddMainDocumentPart();
 
@@ -67,6 +76,23 @@ public class RtfToDocxConverter : ITextToDocxConverter
 
         var rtfDocument = RtfReader.ReadRtf(input);
         ConvertGroup(rtfDocument.Root, targetDocument.MainDocumentPart.Document.Body, targetDocument.MainDocumentPart);
+
+        if (!targetDocument.MainDocumentPart.Document.Body.Descendants<SectionProperties>().Any())
+        {
+            // If the document does not contain sections, add the default section properties as last body element, 
+            // so that it's applied by default in DOCX too. 
+            // This preserves page size and other properties if they are specified as document-level settings only (\paperw, \paperh, ...) 
+            // but no section is present. 
+            if (defaultSectPr != null)
+                targetDocument.MainDocumentPart.Document.Body.AppendChild(defaultSectPr.CloneNode(true));
+        }
+        else
+        {
+            // If at least a section was created, add the last section properties (that was not added to a paragraph) 
+            // as last body element, so that it's applied by default to new DOCX sections. 
+            if (currentSectPr != null)
+                targetDocument.MainDocumentPart.Document.Body.AppendChild(currentSectPr.CloneNode(true));
+        }
     }
 
     private void ConvertGroup(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument)
@@ -103,7 +129,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
         var pPr = new ParagraphProperties();
         Paragraph? currentParagraph = null;
         Run? currentRun = null;
-        ConvertGroupInner(group, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
+        ConvertGroupInner(group, parentElement, targetDocument, fmtStack, pPr, currentParagraph, currentRun);
     }
 
     private FormattingState TryPeek(Stack<FormattingState> stack)
@@ -119,7 +145,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
             stack.Pop();
     }
 
-    private void ConvertGroupInner(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument, Stack<FormattingState> fmtStack, ParagraphProperties pPr, ref Paragraph? currentParagraph, ref Run? currentRun)
+    private void ConvertGroupInner(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument, Stack<FormattingState> fmtStack, ParagraphProperties pPr, Paragraph? currentParagraph, Run? currentRun)
     {
         // push a clone for this group's local modifications
         fmtStack.Push(TryPeek(fmtStack).Clone());
@@ -133,7 +159,8 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     {
                         if (destination.IsIgnorable)
                         {
-                            // This subgroup is an ignorable destination (starts with *), skip it for now                            
+                            // This subgroup is an ignorable destination (starts with *), skip it for now.
+                            // In the future, we should support at least listtable and listoverridetable. 
                             continue;
                         }
                         else 
@@ -150,12 +177,36 @@ public class RtfToDocxConverter : ITextToDocxConverter
                                 ParseColorTable(destination);
                                 continue;
                             }
+                            else if (dname == "header")
+                            {
+                            }
+                            else if (dname == "headerf")
+                            {
+                            }
+                            else if (dname == "headerl")
+                            {
+                            }
+                            else if (dname == "headerr")
+                            {
+                            }
+                            else if (dname == "footer")
+                            {
+                            }
+                            else if (dname == "footerf")
+                            {
+                            }
+                            else if (dname == "footerl")
+                            {
+                            }
+                            else if (dname == "footerr")
+                            {
+                            }
                             else if (dname == "upr")
                             {
                                 // Process the Unicode group only, ignore the ANSI equivalent
                                 var udGroup = group.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name == "ud");
                                 if (udGroup != null)
-                                    ConvertGroupInner(udGroup, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
+                                    ConvertGroupInner(udGroup, parentElement, targetDocument, fmtStack, pPr, currentParagraph, currentRun);
                                 
                                 continue;
                             }
@@ -172,7 +223,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     }
                     
                     // Recurse
-                    ConvertGroupInner(subGroup, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
+                    ConvertGroupInner(subGroup, parentElement, targetDocument, fmtStack, pPr, currentParagraph, currentRun);
                     break;
                 case RtfControlWord cw:
                     HandleControlWord(cw, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
@@ -181,10 +232,10 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     // Ensure paragraph and run exist
                     var encoding = codePageEncoding ?? Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
                     string s = encoding.GetString([ch.CharCode]);
-                    HandleText(s, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
+                    HandleText(s, currentParagraph, currentRun, parentElement, TryPeek(fmtStack), pPr);
                     break;
                 case RtfText text:
-                    HandleText(text.Text, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
+                    HandleText(text.Text, currentParagraph, currentRun, parentElement, TryPeek(fmtStack), pPr);
                     break;
             }
         }
@@ -192,7 +243,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
         TryPop(fmtStack);
     }
 
-    private void HandleText(string text, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    private void HandleText(string text, Paragraph? currentParagraph, Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
     {
         text ??= string.Empty;
 
@@ -232,17 +283,23 @@ public class RtfToDocxConverter : ITextToDocxConverter
         switch (name)
         {
             case "sect":
-                // end current section
-                // TODO
+                // End current section
+                if (parentElement is Body body)
+                {
+                    EnsureParagraph(ref currentParagraph, ref currentRun, parentElement, pPr);
+                    currentParagraph!.ParagraphProperties ??= new ParagraphProperties();
+                    currentSectPr ??= new SectionProperties();
+                    currentParagraph.ParagraphProperties.SectionProperties = (SectionProperties)currentSectPr.CloneNode(true);
+                }
                 break;
             case "par":
-                // end current paragraph
+                // End current paragraph
                 currentParagraph = null;
                 currentRun = null;
                 break;
 
             case "sectd":  // reset section formatting
-                // sectionState.Clear();
+                ResetSectionProperties();
                 break;
             case "pard":  // reset paragraph formatting
                 pPr.RemoveAllChildren();
@@ -253,6 +310,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 runState.Clear();
                 break;
 
+            // RTF header
             case "ansi":
                 // If ANSI is specified, use the system ANSI code page, 
                 // unless the DefaultCodePage value is set to a different value. 
@@ -293,6 +351,123 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 }
                 break;
 
+            // Document settings
+            case "paperw":
+                if (cw.HasValue)
+                {
+                    defaultSectPr ??= new SectionProperties();
+                    var pageSize = defaultSectPr.GetFirstChild<PageSize>() ?? defaultSectPr.AppendChild(new PageSize());
+                    pageSize.Width = (uint)cw.Value!.Value;
+                }
+                break;
+            case "paperh":
+                if (cw.HasValue)
+                {
+                    defaultSectPr ??= new SectionProperties();
+                    var pageSize = defaultSectPr.GetFirstChild<PageSize>() ?? defaultSectPr.AppendChild(new PageSize());
+                    pageSize.Height = (uint)cw.Value!.Value;
+                }
+                break;
+
+            // Section properties
+            case "lndscpsxn":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var pageSize = currentSectPr.GetFirstChild<PageSize>() ?? currentSectPr.AppendChild(new PageSize());
+                    pageSize.Orient = PageOrientationValues.Landscape;
+                }
+                break;
+            case "margbsxn":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
+                    pageMargin.Bottom = cw.Value!.Value;
+                }
+                break;
+            case "marglsxn":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
+                    pageMargin.Left = (uint)cw.Value!.Value;
+                }
+                break;
+            case "margrsxn":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
+                    pageMargin.Right = (uint)cw.Value!.Value;
+                }
+                break;
+            case "margtsxn":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
+                    pageMargin.Top = cw.Value!.Value;
+                }
+                break;
+            case "pgwsxn":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var pageSize = currentSectPr.GetFirstChild<PageSize>() ?? currentSectPr.AppendChild(new PageSize());
+                    pageSize.Width = (uint)cw.Value!.Value;
+                }
+                break;
+            case "pghsxn":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var pageSize = currentSectPr.GetFirstChild<PageSize>() ?? currentSectPr.AppendChild(new PageSize());
+                    pageSize.Height = (uint)cw.Value!.Value;
+                }
+                break;            
+            case "sbknone":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var sectionType = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
+                    sectionType.Val = SectionMarkValues.Continuous;
+                }
+                break;
+            case "sbkcol":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var sectionType = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
+                    sectionType.Val = SectionMarkValues.NextColumn;
+                }
+                break;
+            case "sbkodd":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var sectionType = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
+                    sectionType.Val = SectionMarkValues.OddPage;
+                }
+                break;
+            case "sbkeven":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var sectionType = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
+                    sectionType.Val = SectionMarkValues.EvenPage;
+                }
+                break;
+            case "sbkpage":
+                if (cw.HasValue)
+                {
+                    currentSectPr ??= new SectionProperties();
+                    var sectionType = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
+                    sectionType.Val = SectionMarkValues.NextPage;
+                }
+                break;
+
+            // Breaks
             case "line":
                 // text-wrapping line break. Avoid emitting duplicate breaks when previous token
                 // already produced a text-wrapping break (some RTF producers emit both \line and \lbr).
@@ -341,6 +516,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 }
                 break;
 
+            // Special characters
             // TODO: use the current culture specified in RTF for the fallback string of chdate and chtime
             case "chdate": 
                 CreateField("date", DateTime.Now.ToShortDateString(), ref currentParagraph, ref currentRun, parentElement, runState, pPr);
@@ -360,7 +536,6 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "sectnum": // TODO: keep track of the current section number and write it as fallback
                 CreateSimpleField(" SECTION \\* MERGEFORMAT ", "1", ref currentParagraph, ref currentRun, parentElement, runState, pPr);
                 break;
-
             // TODO: create comments and footnotes/endnotes (followed by the content group)
             // case "chatn": 
             //     break;
@@ -412,7 +587,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                         charCode += 65536;
                     }
                     string s = char.ConvertFromUtf32(charCode);
-                    HandleText(s, ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                    HandleText(s, currentParagraph, currentRun, parentElement, runState, pPr);
                     // After emitting the Unicode character, the RTF specification says that
                     // the following "uc" ANSI characters should be ignored. Track how many
                     // to skip on the formatting state so subsequent text tokens can consume them.
@@ -711,6 +886,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Baseline };
                 break;
             case "favar":
+            case "fafixed":
                 pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Bottom };
                 break;
             case "facenter":
@@ -968,7 +1144,21 @@ public class RtfToDocxConverter : ITextToDocxConverter
         }
     }
 
-    private void EnsureRun(ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    private void ResetSectionProperties()
+    {
+        if (defaultSectPr != null)
+        {
+            currentSectPr = (SectionProperties)defaultSectPr.CloneNode(true);
+        }
+        else
+        {
+            currentSectPr ??= new SectionProperties();
+            currentSectPr.RemoveAllChildren();
+            currentSectPr.ClearAllAttributes();
+        }
+    }
+
+    private void EnsureParagraph(ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, ParagraphProperties pPr)
     {
         if (currentParagraph == null)
         {
@@ -976,10 +1166,15 @@ public class RtfToDocxConverter : ITextToDocxConverter
             parentElement.Append(currentParagraph);
             currentRun = null;
         }
+    }
+
+    private void EnsureRun(ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    {
+        EnsureParagraph(ref currentParagraph, ref currentRun, parentElement, pPr);
         if (currentRun == null)
         {
             currentRun = CreateRunWithProperties(runState);
-            currentParagraph.Append(currentRun);
+            currentParagraph!.Append(currentRun);
         }
     }
 
