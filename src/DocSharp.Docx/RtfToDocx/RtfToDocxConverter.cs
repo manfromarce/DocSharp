@@ -192,7 +192,24 @@ public class RtfToDocxConverter : ITextToDocxConverter
 
     private void HandleText(string text, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
     {
-        // Ensure paragraph and run exist
+        text ??= string.Empty;
+
+        // If a previous \u control word requested skipping a number of following ANSI chars (\ucN),
+        // consume them from the start of this text token. This handles the case where the parser
+        // produced a single RtfText token that contains both the ANSI fallback chars and the remainder.
+        if (runState.PendingAnsiSkip > 0 && text.Length > 0)
+        {
+            int toSkip = Math.Min(runState.PendingAnsiSkip, text.Length);
+            text = text.Substring(toSkip);
+            runState.PendingAnsiSkip -= toSkip;
+            if (text.Length == 0)
+            {
+                // Entire text token was consumed by skipping; nothing to append.
+                return;
+            }
+        }
+
+        // Ensure paragraph and run exist and append the (possibly trimmed) text
         if (currentParagraph == null)
         {
             currentParagraph = CreateParagraphWithProperties(pPr);
@@ -200,7 +217,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
         }
         currentRun = CreateRunWithProperties(runState);
         currentParagraph.Append(currentRun);
-        var t = new Text(text ?? string.Empty)
+        var t = new Text(text)
         {
             Space = SpaceProcessingModeValues.Preserve
         };
@@ -350,7 +367,22 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 currentRun!.Append(new TabChar());
                 break;
             case "uc":
-                // TODO
+                // Number of ANSI characters to skip after a following \uN control word
+                if (cw.HasValue)
+                {
+                    try
+                    {
+                        runState.Uc = Math.Max(0, cw.Value!.Value);
+                    }
+                    catch
+                    {
+                        runState.Uc = 1;
+                    }
+                }
+                else
+                {
+                    runState.Uc = 1;
+                }
                 break;
             case "u":
                 if (cw.HasValue)
@@ -365,7 +397,10 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     }
                     string s = char.ConvertFromUtf32(charCode);
                     HandleText(s, ref currentParagraph, ref currentRun, parentElement, runState, pPr);
-                    // TODO: skip other characters based on the stack of \ucN values
+                    // After emitting the Unicode character, the RTF specification says that
+                    // the following "uc" ANSI characters should be ignored. Track how many
+                    // to skip on the formatting state so subsequent text tokens can consume them.
+                    runState.PendingAnsiSkip = runState.Uc > 0 ? runState.Uc : 0;
                 }
                 break;
 

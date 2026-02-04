@@ -37,6 +37,11 @@ internal class FormattingState
     public int? VerticalOffset { get; set; }
 
     public int? CharacterStyleIndex { get; set; }
+    // Number of ANSI characters to skip after a \uN control word (per RTF \ucN)
+    public int Uc { get; set; } = 1;
+
+    // Remaining ANSI characters to skip because of a previously seen \u control word
+    public int PendingAnsiSkip { get; set; }
 
     public FormattingState Clone()
     {            
@@ -75,6 +80,9 @@ internal class FormattingState
             VerticalOffset = this.VerticalOffset,
 
             CharacterStyleIndex = this.CharacterStyleIndex
+            ,
+            Uc = this.Uc,
+            PendingAnsiSkip = this.PendingAnsiSkip
         };
     }
 
@@ -108,5 +116,7 @@ internal class FormattingState
         Kerning = null;
         VerticalOffset = null;
         CharacterStyleIndex = null;
+        Uc = 1;
+        PendingAnsiSkip = 0;
     }
 }
