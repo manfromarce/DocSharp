@@ -21,6 +21,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
     private Dictionary<int, string> fontTable = new();
     private List<(int R, int G, int B)> colorTable = new();
     private Encoding? codePageEncoding;
+    private BorderType? currentBorder;
 
 #if !NETFRAMEWORK
     static RtfToDocxConverter()
@@ -127,6 +128,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
             switch (token)
             {
                 case RtfGroup subGroup:
+                    currentBorder = null; // Don't inherit border context from parent group
                     if (subGroup is RtfDestination destination)
                     {
                         if (destination.IsIgnorable)
@@ -292,35 +294,49 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 break;
 
             case "line":
+                // text-wrapping line break. Avoid emitting duplicate breaks when previous token
+                // already produced a text-wrapping break (some RTF producers emit both \line and \lbr).
+                EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                if (!runState.LastWasLineBreak)
+                {
+                    currentRun!.Append(new Break() { Type = BreakValues.TextWrapping });
+                    runState.LastWasLineBreak = true;
+                }
+                break;
             case "page":
             case "column":
-                // break inside run
+                // page/column breaks are distinct; reset the line-break flag.
                 EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
-                currentRun!.Append(new Break() { Type = name == "line" ? BreakValues.TextWrapping : (name == "page" ? BreakValues.Page : BreakValues.Column) });
+                currentRun!.Append(new Break() { Type = name == "page" ? BreakValues.Page : BreakValues.Column });
+                runState.LastWasLineBreak = false;
                 break;
             case "lbr":
                 // line break 
-                if (cw.HasValue)
+                if (cw.HasValue && !runState.LastWasLineBreak)
                 {
                     if (cw.Value!.Value == 0)
                     {
                         EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
                         currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.None });
+                        runState.LastWasLineBreak = true;
                     }
                     else if (cw.Value.Value == 1)
                     {
                         EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
                         currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.Left });
+                        runState.LastWasLineBreak = true;
                     }
                     else if (cw.Value.Value == 2)
                     {
                         EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
                         currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.Right });
+                        runState.LastWasLineBreak = true;
                     }
                     else if (cw.Value.Value == 3)
                     {
                         EnsureRun(ref currentParagraph, ref currentRun, parentElement, runState, pPr);
                         currentRun!.Append(new Break() { Type = BreakValues.TextWrapping, Clear = BreakTextRestartLocationValues.All });
+                        runState.LastWasLineBreak = true;
                     }
                 }
                 break;
@@ -423,41 +439,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "b":
                 runState.Bold = cw.HasValue ? cw.Value != 0 : true;
                 // starting new run to apply formatting
-                break;
-            case "brdrcf":
-                if (cw.Value != null)
-                {
-                    if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
-                    {
-                        var c = colorTable[cw.Value.Value];
-                        var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
-                        runState.CharacterBorder ??= new Border();
-                        runState.CharacterBorder.Color = hex;
-                    }
-                }
-                break;
-            case "brdrframe":
-                runState.CharacterBorder ??= new Border();
-                runState.CharacterBorder.Frame = true;
-                break;
-            case "brdrsh":
-                runState.CharacterBorder ??= new Border();
-                runState.CharacterBorder.Shadow = true;
-                break;
-            case "brdrw":
-                if (cw.Value != null && cw.Value.Value >= 0)
-                {
-                    runState.CharacterBorder ??= new Border();
-                    runState.CharacterBorder.Size = (uint)Math.Round(cw.Value.Value / 2.5); // Open XML uses 1/8 points for border width, while RTF uses twips (1/20th of point)
-                }                    
-                break;
-            case "brsp":
-                if (cw.Value != null && cw.Value.Value >= 0)
-                {
-                    runState.CharacterBorder ??= new Border();
-                    runState.CharacterBorder.Size = (uint)Math.Round(cw.Value.Value / 20.0); // Open XML uses points for border spacing, while RTF uses twips
-                }                    
-                break;
+                break;            
             case "charscalex":
                 if (cw.HasValue)
                     runState.FontScaling = cw.Value;
@@ -467,6 +449,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 break;
              case "chbrdr":
                 runState.CharacterBorder ??= new Border();
+                currentBorder = runState.CharacterBorder;
                 break;                
             case "chcfpat":
             case "chcbpat":
@@ -515,6 +498,10 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "cf":
                 if (cw.HasValue)
                     runState.FontColorIndex = cw.Value;
+                break;
+            case "cs":
+                if (cw.HasValue)
+                    runState.CharacterStyleIndex = cw.Value;
                 break;
             case "dn":
                 if (cw.HasValue)
@@ -658,6 +645,38 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "aspnum":
                 pPr.AutoSpaceDN = new AutoSpaceDN();
                 break;
+            case "brdrl":
+                pPr.ParagraphBorders ??= new ParagraphBorders();
+                pPr.ParagraphBorders.LeftBorder = new LeftBorder();
+                currentBorder = pPr.ParagraphBorders.LeftBorder;
+                break;
+            case "brdrt":
+                pPr.ParagraphBorders ??= new ParagraphBorders();
+                pPr.ParagraphBorders.TopBorder = new TopBorder();
+                currentBorder = pPr.ParagraphBorders.TopBorder;
+                break;
+            case "brdrr":
+                pPr.ParagraphBorders ??= new ParagraphBorders();
+                pPr.ParagraphBorders.RightBorder = new RightBorder();
+                currentBorder = pPr.ParagraphBorders.RightBorder;
+                break;
+            case "brdrb":
+                pPr.ParagraphBorders ??= new ParagraphBorders();
+                pPr.ParagraphBorders.BottomBorder = new BottomBorder();
+                currentBorder = pPr.ParagraphBorders.BottomBorder;
+                break;
+            case "brdrbar":
+                pPr.ParagraphBorders ??= new ParagraphBorders();
+                pPr.ParagraphBorders.BarBorder = new BarBorder();
+                currentBorder = pPr.ParagraphBorders.BarBorder;
+                break;
+            case "brdrbtw":
+                pPr.ParagraphBorders ??= new ParagraphBorders();
+                pPr.ParagraphBorders.BetweenBorder = new BetweenBorder();
+                currentBorder = pPr.ParagraphBorders.BetweenBorder;
+                break;
+            // case "box":
+            //     break;
             case "contextualspace":
                 pPr.ContextualSpacing = new ContextualSpacing();
                 break;
@@ -811,6 +830,13 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "rtlpar":
                 pPr.BiDi = new BiDi() { Val = true };
                 break;
+            case "s":
+                if (cw.HasValue)
+                {
+                    // Requires conversion of the stylesheet table
+                    // pPr.ParagraphStyleId = 
+                }
+                break;
             case "sa":
                 if (cw.HasValue)
                 {
@@ -882,14 +908,45 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 pPr.WidowControl = new WidowControl() { Val = true };
                 break;
 
-            default:
-                // TODO: paragraph borders
-                if (cw.Name?.StartsWith("brdr") == true && runState.CharacterBorder != null)
+            // These are in common for character, paragraph and table borders
+            case "brdrcf":
+                if (cw.Value != null)
                 {
-                    // TODO: these should be handled differently depending on type (character/paragraph/table).
-                    // The first control word is different (e.g. chbrdr, brdrt, brdrl, ..., 
-                    // while the subsequent words for style/thickness/color are the same)
-                    runState.CharacterBorder.Val = RtfBorderMapper.GetBorderType(cw.Name + (cw.HasValue ? cw.Value!.Value.ToStringInvariant() : string.Empty));;
+                    if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
+                    {
+                        var c = colorTable[cw.Value.Value];
+                        var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
+                        if (currentBorder != null)
+                            currentBorder.Color = hex;
+                    }
+                }
+                break;
+            case "brdrframe":
+                if (currentBorder != null)
+                    currentBorder.Frame = true;
+                break;
+            case "brdrsh":
+                if (currentBorder != null)
+                    currentBorder.Shadow = true;
+                break;
+            case "brdrw":
+                if (cw.Value != null && cw.Value.Value >= 0 && currentBorder != null)
+                    currentBorder.Size = (uint)Math.Round(cw.Value.Value / 2.5m); // Open XML uses 1/8 points for border width, while RTF uses twips (1/20th of point)
+                break;
+            case "brsp":
+                if (cw.Value != null && cw.Value.Value >= 0 && currentBorder != null)
+                    currentBorder.Space = (uint)Math.Round(cw.Value.Value / 20.0m); // Open XML uses points for border spacing, while RTF uses twips (1/20th of point)
+                break;               
+
+            default:
+                // Map the border type (single, double, dashed, ...).
+                // (same for character, paragraph and tables).   
+                // Map the border type (single, double, dashed, ...).
+                // Prefer paragraph border side if present, otherwise use character border.
+                if (cw.Name?.StartsWith("brdr") == true && currentBorder != null)
+                {
+                    var val = RtfBorderMapper.GetBorderType(cw.Name + (cw.HasValue ? cw.Value!.Value.ToStringInvariant() : string.Empty));
+                    currentBorder.Val = val;
                 }
                 else if (cw.Name?.StartsWith("chshdng") == true || cw.Name?.StartsWith("chbg") == true)
                 {
@@ -1032,6 +1089,9 @@ public class RtfToDocxConverter : ITextToDocxConverter
         if (state.FontSpacing.HasValue) rPr.Append(new Spacing() { Val = state.FontSpacing.Value});
         if (state.FitText.HasValue) rPr.Append(new FitText() { Val = (uint)state.FitText.Value});
         if (state.Kerning.HasValue) rPr.Append(new Kern() { Val = (uint)state.Kerning.Value});
+
+        // Requires conversion of the stylesheet table
+        // if (state.CharacterStyleIndex.HasValue) rPr.Append(new RunStyle() { Val = ""});
 
         // Get font family from font table
         if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fname) && !string.IsNullOrEmpty(fname))

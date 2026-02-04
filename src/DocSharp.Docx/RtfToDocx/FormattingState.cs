@@ -42,6 +42,9 @@ internal class FormattingState
 
     // Remaining ANSI characters to skip because of a previously seen \u control word
     public int PendingAnsiSkip { get; set; }
+    // When true the last emitted break was a text-wrapping line break (from \line or \lbr).
+    // Used to avoid emitting duplicate breaks when both \line and \lbr are present.
+    public bool LastWasLineBreak { get; set; }
 
     public FormattingState Clone()
     {            
@@ -79,10 +82,11 @@ internal class FormattingState
             Kerning = this.Kerning,
             VerticalOffset = this.VerticalOffset,
 
-            CharacterStyleIndex = this.CharacterStyleIndex
-            ,
+            CharacterStyleIndex = this.CharacterStyleIndex,
+            
             Uc = this.Uc,
-            PendingAnsiSkip = this.PendingAnsiSkip
+            PendingAnsiSkip = this.PendingAnsiSkip,
+            LastWasLineBreak = this.LastWasLineBreak
         };
     }
 
@@ -118,5 +122,6 @@ internal class FormattingState
         CharacterStyleIndex = null;
         Uc = 1;
         PendingAnsiSkip = 0;
+        LastWasLineBreak = false;
     }
 }
