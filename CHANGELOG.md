@@ -9,7 +9,8 @@
 - Created GitHub Actions workflow for build, test and NuGet publish
 - Added JPEG2000 support in image converters
 - Created DocSharp.MagickNET package as an alternative to System.Drawing.Common and ImageSharp
-- Implemented basic DOCX to PDF / images / XPS / SVG renderer via QuestPDF
+- Implemented basic DOCX to PDF / images / XPS / SVG renderer via QuestPDF (separate package, not published yet)
+- Implemented basic RTF to DOCX converter
 - Fix right, bottom and diagonal border in XLS converter
 - Other improvements
 
