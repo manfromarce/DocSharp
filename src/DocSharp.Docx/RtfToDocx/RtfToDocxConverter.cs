@@ -308,13 +308,25 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 }
                 break;
 
-            // TODO: create using fields
-            // case "chdate": 
-            // case "chdpl": 
-            // case "chdpa": 
-            // case "chtime": 
-            // case "sectnum": 
-            //     break;
+            // TODO: use the current culture specified in RTF for the fallback string of chdate and chtime
+            case "chdate": 
+                CreateField("date", DateTime.Now.ToShortDateString(), ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                break;
+            case "chtime":
+                CreateField("time", DateTime.Now.ToShortTimeString(), ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                break;
+
+            // Note: these are formatted by Word using the English culture
+            case "chdpl": 
+                CreateField("date \\@ \"dddd, MMMM d, yyyy\"", DateTime.Now.ToString("dddd, MMMM d, yyyy"), ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                break;
+            case "chdpa": 
+                CreateField("date \\@ \"ddd, MMM d, yyyy\"", DateTime.Now.ToString("ddd, MMM d, yyyy"), ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                break;
+
+            case "sectnum": // TODO: keep track of the current section number and write it as fallback
+                CreateSimpleField(" SECTION \\* MERGEFORMAT ", "1", ref currentParagraph, ref currentRun, parentElement, runState, pPr);
+                break;
 
             // TODO: create comments and footnotes/endnotes (followed by the content group)
             // case "chatn": 
@@ -877,6 +889,74 @@ public class RtfToDocxConverter : ITextToDocxConverter
             currentRun = CreateRunWithProperties(runState);
             currentParagraph.Append(currentRun);
         }
+    }
+
+    private void CreateSimpleField(string instr, string currentValue, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    {
+        if (currentParagraph == null)
+        {
+            currentParagraph = CreateParagraphWithProperties(pPr);
+            parentElement.Append(currentParagraph);
+        }
+
+        currentRun = CreateRunWithProperties(runState);
+        currentParagraph.Append(currentRun);
+        currentRun.Append(new SimpleField(new Run(new Text(currentValue)))
+        {
+            Instruction = instr
+        });       
+
+        // Ensure that the following content is added to a new run
+        currentRun = null;
+    }
+    
+    private void CreateField(string instrText, string currentValue, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    {
+        if (currentParagraph == null)
+        {
+            currentParagraph = CreateParagraphWithProperties(pPr);
+            parentElement.Append(currentParagraph);
+        }
+
+        // Part 1 - Begin
+        currentRun = CreateRunWithProperties(runState);
+        currentParagraph.Append(currentRun);
+        currentRun.Append(new FieldChar()
+        {
+            FieldCharType = FieldCharValues.Begin
+        });
+
+        // Part 2 - InstrText
+        currentRun = CreateRunWithProperties(runState);
+        currentParagraph.Append(currentRun);
+        currentRun.Append(new FieldCode(instrText ?? string.Empty));
+
+        // Part 3 - Separate
+        currentRun = CreateRunWithProperties(runState);
+        currentParagraph.Append(currentRun);
+        currentRun.Append(new FieldChar()
+        {
+            FieldCharType = FieldCharValues.Separate
+        });
+
+        // Part 4 - Current value
+        currentRun = CreateRunWithProperties(runState);
+        currentParagraph.Append(currentRun);
+        currentRun.Append(new Text(currentValue ?? string.Empty)
+        {
+            Space = SpaceProcessingModeValues.Preserve
+        });
+
+        // Part 5 - End
+        currentRun = CreateRunWithProperties(runState);
+        currentParagraph.Append(currentRun);
+        currentRun.Append(new FieldChar()
+        {
+            FieldCharType = FieldCharValues.End
+        });
+
+        // Ensure that the following content is added to a new run
+        currentRun = null;
     }
 
     private Paragraph CreateParagraphWithProperties(ParagraphProperties pPr)
