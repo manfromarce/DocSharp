@@ -94,7 +94,38 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 
 ## RTF to DOCX
 
-⌛ Work in progress
+- ✅ Character formatting
+- ✅ Paragraph formatting
+- ❌ Paragraph positioning / frame properties
+- ❌ Paragraph group formatting
+- ❌ Styles (however the formatting is usually written inline in RTF for compatibility reasons, even if there is an associated style too)  
+- ❌ Lists
+- ❌ Tables
+- 🟡 Section properties
+- 🟡 Default section properties / document-level formatting and settings
+- 🟡 Fields (supported but additional work may be needed for some complex fields or form fields)
+- ✅ Hyperlinks (fields in RTF)
+- ✅ Bookmarks
+- ✅ Special characters (symbols, page number, section number, current date/time)
+- ❌ Custom tabs
+- ❌ Header and footer
+- ❌ Footnotes and endnotes
+- ❌ Pictures
+- ❌ Drawings (text boxes, shapes, diagrams, WordArt)
+- ❌ Table of contents (in RTF can be a dedicated structure, while in DOCX it's a group of fields)
+- ❌ Index entries
+- ❌ OLE objects
+- ❌ Math formulas
+- ✅ Document information
+- ❌ Document protection
+- ❌ Document background
+- ❌ Comments
+- ❌ Revisions
+- ❌ Mail merge
+- ❌ Sub-documents
+- ❌ Encapsulated HTML
+- ❌ Theme data
+- ❌ Colore scheme
 
 ## DOCX to QuestPDF renderer
 
@@ -130,10 +161,6 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
         - in some cases, a footnote might be rendered in the previous/next page than expected (QuestPDF lacks an easy way to retrieve the current page number, currently we use a workaround that is not always accurate).
         - footnotes are always rendered at page bottom, which is the default in DOCX, but can be changed to *below text* or *end of section*. This is currently ignored by the renderer, while the setting *end of section*/*end of document* for endnotes is implemented.
         - footnotes and endnotes IDs are always rendered as arabic numbers and roman numbers respectively. The number format can be customized in DOCX, but is not implemented yet in the renderer.
-
-## XLSX to QuestPDF renderer
-
-⌛ Work in progress
 
 ## Markdown renderers
 
