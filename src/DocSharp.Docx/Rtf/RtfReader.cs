@@ -394,6 +394,15 @@ internal static class RtfReader
                     continue;
                 }
 
+                // Handle escaped backslash and escaped braces as literal characters
+                // e.g. \\ => literal '\', \{ => literal '{', \} => literal '}'
+                if (next == '\\' || next == '{' || next == '}')
+                {
+                    stack.Peek().Tokens.Add(new RtfText(next.ToString()));
+                    groupJustOpened = false;
+                    continue;
+                }
+
                 if (!IsEnglishLetter(next))
                 {
                     string sym = next.ToString();
