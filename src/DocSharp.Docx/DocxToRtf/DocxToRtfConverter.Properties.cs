@@ -49,6 +49,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.WriteRtfEscaped(packageProps.Keywords!);
             sb.Write('}');
         }
+        if (!string.IsNullOrEmpty(packageProps.LastModifiedBy))
+        {
+            sb.Write(@"{\operator ");
+            sb.WriteRtfEscaped(packageProps.LastModifiedBy!);
+            sb.Write('}');
+        }
         if (packageProps.Created != null)
         {
             sb.Write(@"{\creatim");

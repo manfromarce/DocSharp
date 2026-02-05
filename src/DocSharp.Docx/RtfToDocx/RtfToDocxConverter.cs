@@ -24,6 +24,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
     private BorderType? currentBorder;
     private SectionProperties? defaultSectPr;
     private SectionProperties? currentSectPr;
+    private Dictionary<string, int> bookmarks = new();
 
 #if !NETFRAMEWORK
     static RtfToDocxConverter()
@@ -61,6 +62,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
     {        
         fontTable = new();
         colorTable = new();
+        bookmarks = new();
         codePageEncoding = null;
         currentBorder = null;
         defaultSectPr = null;
@@ -129,7 +131,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
         var pPr = new ParagraphProperties();
         Paragraph? currentParagraph = null;
         Run? currentRun = null;
-        ConvertGroupInner(group, parentElement, targetDocument, fmtStack, pPr, currentParagraph, currentRun);
+        ConvertGroupInner(group, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
     }
 
     private FormattingState TryPeek(Stack<FormattingState> stack)
@@ -145,7 +147,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
             stack.Pop();
     }
 
-    private void ConvertGroupInner(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument, Stack<FormattingState> fmtStack, ParagraphProperties pPr, Paragraph? currentParagraph, Run? currentRun)
+    private void ConvertGroupInner(RtfGroup group, OpenXmlElement parentElement, MainDocumentPart targetDocument, Stack<FormattingState> fmtStack, ParagraphProperties pPr, ref Paragraph? currentParagraph, ref Run? currentRun)
     {
         // push a clone for this group's local modifications
         fmtStack.Push(TryPeek(fmtStack).Clone());
@@ -157,73 +159,230 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     currentBorder = null; // Don't inherit border context from parent group
                     if (subGroup is RtfDestination destination)
                     {
-                        if (destination.IsIgnorable)
+                        var dname = (destination.Name ?? string.Empty).ToLowerInvariant();
+                        if (dname == "colortbl")
                         {
-                            // This subgroup is an ignorable destination (starts with *), skip it for now.
-                            // In the future, we should support at least listtable and listoverridetable. 
+                            ParseColorTable(destination);
                             continue;
                         }
-                        else 
-                        { 
-                            // This subgroup is a destination not marked by '*'
-                            var dname = (destination.Name ?? string.Empty).ToLowerInvariant();
-                            if (dname == "fonttbl")
-                            {
-                                ParseFontTable(destination);
-                                continue;
-                            }
-                            else if (dname == "colortbl")
-                            {
-                                ParseColorTable(destination);
-                                continue;
-                            }
-                            else if (dname == "header")
-                            {
-                            }
-                            else if (dname == "headerf")
-                            {
-                            }
-                            else if (dname == "headerl")
-                            {
-                            }
-                            else if (dname == "headerr")
-                            {
-                            }
-                            else if (dname == "footer")
-                            {
-                            }
-                            else if (dname == "footerf")
-                            {
-                            }
-                            else if (dname == "footerl")
-                            {
-                            }
-                            else if (dname == "footerr")
-                            {
-                            }
-                            else if (dname == "upr")
-                            {
-                                // Process the Unicode group only, ignore the ANSI equivalent
-                                var udGroup = group.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name == "ud");
-                                if (udGroup != null)
-                                    ConvertGroupInner(udGroup, parentElement, targetDocument, fmtStack, pPr, currentParagraph, currentRun);
-                                
-                                continue;
-                            }
-                            else if (dname == "ud")
-                            {
-                                // Handle as regular group (it can contain \u or any control word such as bkmkstart)
-                            }
-                            else
-                            {
-                                // TODO: other destinations 
-                                continue;
-                            }
+                        else if (dname == "fonttbl")
+                        {
+                            ParseFontTable(destination);
+                            continue;
+                        }
+                        else if (dname == "listtable")
+                        {
+                            // TODO: lists
+                            continue;
+                        }
+                        else if (dname == "listoverridetable")
+                        {
+                            continue;
+                        }
+                        else if (dname == "stylesheet")
+                        {
+                            // TODO: styles
+                            continue;
+                        }
+                        else if (dname == "pgptbl") 
+                        {
+                            // TODO: paragraph group properties
+                            continue;
+                        }
+
+                        else if (dname == "info")
+                        {
+                            // Recurse as regular group
+                        }
+                        else if (dname == "author")
+                        {
+                            var builder = new StringBuilder();
+                            ConvertGroupInner(subGroup, builder, fmtStack);
+                            targetDocument.OpenXmlPackage.PackageProperties.Creator = builder.ToString();
+                            continue;
+                        }
+                        else if (dname == "category")
+                        {
+                            var builder = new StringBuilder();
+                            ConvertGroupInner(subGroup, builder, fmtStack);
+                            targetDocument.OpenXmlPackage.PackageProperties.Category = builder.ToString();
+                            continue;
+                        }
+                        else if (dname == "keywords")
+                        {
+                            var builder = new StringBuilder();
+                            ConvertGroupInner(subGroup, builder, fmtStack);
+                            targetDocument.OpenXmlPackage.PackageProperties.Keywords = builder.ToString();
+                            continue;
+                        }
+                        else if (dname == "operator") // Person who last made changes to the document
+                        {
+                            var builder = new StringBuilder();
+                            ConvertGroupInner(subGroup, builder, fmtStack);
+                            targetDocument.OpenXmlPackage.PackageProperties.LastModifiedBy = builder.ToString();
+                            continue;
+                        }
+                        else if (dname == "subject")
+                        {
+                            var builder = new StringBuilder();
+                            ConvertGroupInner(subGroup, builder, fmtStack);
+                            targetDocument.OpenXmlPackage.PackageProperties.Subject = builder.ToString();
+                            continue;
+                        }
+                        else if (dname == "title")
+                        {
+                            var builder = new StringBuilder();
+                            ConvertGroupInner(subGroup, builder, fmtStack);
+                            targetDocument.OpenXmlPackage.PackageProperties.Title = builder.ToString();
+                            continue;
+                        }
+                        else if (dname == "hlinkbase")
+                        {
+                            // TODO
+                        }
+
+                        else if (dname == "bkmkstart")
+                        {
+                            // TODO: support bookmarks inside Table / TableRow directly
+                            EnsureParagraph(ref currentParagraph, ref currentRun, parentElement, pPr);
+
+                            var bookmarkNameBuilder = new StringBuilder();
+                            ConvertGroupInner(subGroup, bookmarkNameBuilder, fmtStack);
+                            string bookmarkName = bookmarkNameBuilder.ToString();
+                            currentParagraph!.AppendChild(new BookmarkStart() { Id = bookmarks.Count.ToStringInvariant(), Name = bookmarkName });                            
+                            bookmarks.Add(bookmarkName, bookmarks.Count); // IDs starts from 0, so Count = previous id + 1
+
+                            // Force creating subsequent content in a new run.
+                            currentRun = null;
+                            continue;
+                        }
+                        else if (dname == "bkmkend")
+                        {
+                            // TODO: support bookmarks inside Table / TableRow directly
+                            EnsureParagraph(ref currentParagraph, ref currentRun, parentElement, pPr);
+
+                            // In RTF the bookmark end specifies the name, while in DOCX it uses the ID. 
+                            var bookmarkNameBuilder = new StringBuilder();
+                            ConvertGroupInner(subGroup, bookmarkNameBuilder, fmtStack);
+                            string bookmarkName = bookmarkNameBuilder.ToString();
+                            
+                            if (bookmarks.TryGetValue(bookmarkName, out int id))
+                                currentParagraph!.AppendChild(new BookmarkEnd() { Id = id.ToStringInvariant() });
+                            else 
+                                // If the name is not specified in bkmkend or is not contained in the document, 
+                                // for now just assume that the most recent bookmark is being closed. 
+                                currentParagraph!.AppendChild(new BookmarkEnd() { Id = (bookmarks.Count - 1).ToStringInvariant() });
+                            
+
+                            // Force creating subsequent content in a new run.
+                            currentRun = null;
+                            continue;
+                        }
+                        else if (dname == "defchp")
+                        {
+                            
+                        }
+                        else if (dname == "defpap")
+                        {
+                            
+                        }
+                        else if (dname == "field")
+                        {
+                            // Handle as regular group (it should contain fldinst and fldrslt, 
+                            // but it's safer to create the field in DOCX only when we find the actual field instruction)
+                        }
+                        else if (dname == "fldinst")
+                        {
+                            // Ensure we are in a paragraph
+                            EnsureParagraph(ref currentParagraph, ref currentRun, parentElement, pPr);
+                            
+                            // Create FieldChar of type Begin.
+                            // The formatting state is not relevant for the Begin and Separate runs.
+                            var beginRun = new Run();
+                            var beginChar = new FieldChar() { FieldCharType = FieldCharValues.Begin };
+                            beginRun.AppendChild(beginChar);
+                            currentParagraph!.AppendChild(beginRun);
+
+                            // Create FieldCode
+                            var instrTextBuilder = new StringBuilder();
+                            ConvertGroupInner(subGroup, instrTextBuilder, fmtStack);
+                            currentParagraph!.AppendChild(new Run(new FieldCode(instrTextBuilder.ToString())));
+
+                            // Create FieldChar of type Separate
+                            var separateRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.Separate });
+                            currentParagraph!.AppendChild(separateRun);
+                            
+                            // Force creating field content in a new run.
+                            // The formatting state is relevant for the content run and should not be reset.
+                            currentRun = null;
+                            continue;
+                        }
+                        else if (dname == "fldrslt")
+                        {
+                            // Handle as regular group (this is the current value of the field).
+                            ConvertGroupInner(subGroup, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
+                            
+                            // Ensure we are in a paragraph and add a field char of type End
+                            EnsureParagraph(ref currentParagraph, ref currentRun, parentElement, pPr);
+                            var endRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.End });
+                            currentParagraph!.AppendChild(endRun);
+
+                            // Force creating subsequent content in a new run.
+                            currentRun = null;
+                            continue;
+                        }
+                        else if (dname == "header")
+                        {
+                        }
+                        else if (dname == "headerf")
+                        {
+                        }
+                        else if (dname == "headerl")
+                        {
+                        }
+                        else if (dname == "headerr")
+                        {
+                        }
+                        else if (dname == "footer")
+                        {
+                        }
+                        else if (dname == "footerf")
+                        {
+                        }
+                        else if (dname == "footerl")
+                        {
+                        }
+                        else if (dname == "footerr")
+                        {
+                        }
+                        else if (dname == "footnote")
+                        {
+                        }
+                        else if (dname == "pict")
+                        {
+                        }
+                        else if (dname == "upr")
+                        {
+                            // Process the Unicode group only, ignore the ANSI equivalent
+                            var udGroup = group.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name == "ud");
+                            if (udGroup != null)
+                                ConvertGroupInner(udGroup, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
+                            
+                            continue;
+                        }
+                        else if (dname == "ud")
+                        {
+                            // Handle as regular group (it can contain \u or any control word such as bkmkstart)
+                        }
+                        else
+                        {
+                            // TODO: other destinations 
+                            continue;
                         }
                     }
                     
                     // Recurse
-                    ConvertGroupInner(subGroup, parentElement, targetDocument, fmtStack, pPr, currentParagraph, currentRun);
+                    ConvertGroupInner(subGroup, parentElement, targetDocument, fmtStack, pPr, ref currentParagraph, ref currentRun);
                     break;
                 case RtfControlWord cw:
                     HandleControlWord(cw, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
@@ -232,10 +391,10 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     // Ensure paragraph and run exist
                     var encoding = codePageEncoding ?? Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
                     string s = encoding.GetString([ch.CharCode]);
-                    HandleText(s, currentParagraph, currentRun, parentElement, TryPeek(fmtStack), pPr);
+                    HandleText(s, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
                     break;
                 case RtfText text:
-                    HandleText(text.Text, currentParagraph, currentRun, parentElement, TryPeek(fmtStack), pPr);
+                    HandleText(text.Text, ref currentParagraph, ref currentRun, parentElement, TryPeek(fmtStack), pPr);
                     break;
             }
         }
@@ -243,7 +402,61 @@ public class RtfToDocxConverter : ITextToDocxConverter
         TryPop(fmtStack);
     }
 
-    private void HandleText(string text, Paragraph? currentParagraph, Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
+    private void ConvertGroupInner(RtfGroup group, StringBuilder sb, Stack<FormattingState> fmtStack)
+    {
+        // Method to handle only text and special character
+        fmtStack.Push(TryPeek(fmtStack).Clone());
+        foreach (var token in group.Tokens)
+        {
+            switch (token)
+            {
+                case RtfGroup subGroup:
+                    if (subGroup is RtfDestination)
+                        continue; // destinations are ignored in this context as they cause incorrect handling (e.g. \*\datafield in fields)
+                    else 
+                        // Recurse
+                        ConvertGroupInner(subGroup, sb, fmtStack);
+                    break;
+                case RtfControlWord cw:
+                    HandleControlWord(cw, sb, TryPeek(fmtStack));
+                    break;
+                case RtfChar ch:
+                    // Ensure paragraph and run exist
+                    var encoding = codePageEncoding ?? Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
+                    string s = encoding.GetString([ch.CharCode]);
+                    HandleText(s, sb, TryPeek(fmtStack));
+                    break;
+                case RtfText text:
+                    HandleText(text.Text, sb, TryPeek(fmtStack));
+                    break;
+            }
+        }
+        TryPop(fmtStack);
+    }
+
+    private void HandleText(string text, StringBuilder sb, FormattingState runState)
+    {
+        text ??= string.Empty;
+
+        // If a previous \u control word requested skipping a number of following ANSI chars (\ucN),
+        // consume them from the start of this text token. This handles the case where the parser
+        // produced a single RtfText token that contains both the ANSI fallback chars and the remainder.
+        if (runState.PendingAnsiSkip > 0 && text.Length > 0)
+        {
+            int toSkip = Math.Min(runState.PendingAnsiSkip, text.Length);
+            text = text.Substring(toSkip);
+            runState.PendingAnsiSkip -= toSkip;
+            if (text.Length == 0)
+            {
+                // Entire text token was consumed by skipping; nothing to append.
+                return;
+            }
+        }
+
+        sb.Append(text);
+    }
+
+    private void HandleText(string text, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
     {
         text ??= string.Empty;
 
@@ -277,6 +490,51 @@ public class RtfToDocxConverter : ITextToDocxConverter
         currentRun.Append(t);
     }
 
+    private void HandleControlWord(RtfControlWord cw, StringBuilder sb, FormattingState runState)
+    {
+        var name = (cw.Name ?? string.Empty).ToLowerInvariant();
+        switch (name)
+        {
+            case "uc":
+                // Number of ANSI characters to skip after a following \uN control word
+                if (cw.HasValue)
+                {
+                    try
+                    {
+                        runState.Uc = Math.Max(0, cw.Value!.Value);
+                    }
+                    catch
+                    {
+                        runState.Uc = 1;
+                    }
+                }
+                else
+                {
+                    runState.Uc = 1;
+                }
+                break;
+            case "u":
+                if (cw.HasValue)
+                {
+                    int charCode = cw.Value!.Value;
+                    if (charCode < 0)
+                    {
+                        // Unicode values greater than 32767 are expressed as negative numbers.
+                        // For example, U+F020 would be \u-4064 in RTF: 
+                        // sum 65536 to get 61472.
+                        charCode += 65536;
+                    }
+                    string s = char.ConvertFromUtf32(charCode);
+                    HandleText(s, sb, runState);
+                    // After emitting the Unicode character, the RTF specification says that
+                    // the following "uc" ANSI characters should be ignored. Track how many
+                    // to skip on the formatting state so subsequent text tokens can consume them.
+                    runState.PendingAnsiSkip = runState.Uc > 0 ? runState.Uc : 0;
+                }
+                break;
+        }
+    }
+
     private void HandleControlWord(RtfControlWord cw, ref Paragraph? currentParagraph, ref Run? currentRun, OpenXmlElement parentElement, FormattingState runState, ParagraphProperties pPr)
     {
         var name = (cw.Name ?? string.Empty).ToLowerInvariant();
@@ -288,8 +546,11 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 {
                     EnsureParagraph(ref currentParagraph, ref currentRun, parentElement, pPr);
                     currentParagraph!.ParagraphProperties ??= new ParagraphProperties();
-                    currentSectPr ??= new SectionProperties();
+                    // If \sbk* is not specified in RTF, assume NextPage as default.
+                    currentSectPr ??= new SectionProperties(new SectionType() { Val = SectionMarkValues.NextPage });                     
                     currentParagraph.ParagraphProperties.SectionProperties = (SectionProperties)currentSectPr.CloneNode(true);
+                    currentParagraph = null;
+                    currentRun = null;
                 }
                 break;
             case "par":
@@ -587,7 +848,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
                         charCode += 65536;
                     }
                     string s = char.ConvertFromUtf32(charCode);
-                    HandleText(s, currentParagraph, currentRun, parentElement, runState, pPr);
+                    HandleText(s, ref currentParagraph, ref currentRun, parentElement, runState, pPr);
                     // After emitting the Unicode character, the RTF specification says that
                     // the following "uc" ANSI characters should be ignored. Track how many
                     // to skip on the formatting state so subsequent text tokens can consume them.

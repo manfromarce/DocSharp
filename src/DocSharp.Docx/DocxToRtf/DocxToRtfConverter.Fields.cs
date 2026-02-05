@@ -15,11 +15,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         sb.WriteLine(@"{\field");
         if (field.Instruction?.Value != null)
         {
-            // // TODO: FieldData
-            // if (field.FieldData != null)
-            // {
-            // }
-
             // Open field instruction group
             sb.Write(@"{\*\fldinst {");
 
