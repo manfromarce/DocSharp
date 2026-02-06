@@ -980,12 +980,18 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue && cw.Value > 0)
                     runState.Kerning = cw.Value;
                 break;
+            case "ltrch":
+                runState.RightToLeft = false;
+                break;
             case "nosupersub":
                 runState.Subscript = false;
                 runState.Superscript = false;
                 break;
             case "outl":
                 runState.Outline = cw.HasValue ? cw.Value != 0 : true;
+                break;
+            case "rtlch":
+                runState.RightToLeft = true;
                 break;
              case "scaps":
                 runState.SmallCaps = cw.HasValue ? cw.Value != 0 : true;
@@ -1345,7 +1351,202 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 pPr.WidowControl = new WidowControl() { Val = true };
                 break;
 
-            // These are in common for character, paragraph and table borders
+            // Paragraph position
+            case "absh":
+                if (cw.HasValue)
+                {
+                    if (cw.Value == 0)
+                    {
+                        pPr.FrameProperties ??= new FrameProperties();
+                        pPr.FrameProperties.HeightType = HeightRuleValues.Auto;
+                    }
+                    else if (cw.Value > 0)
+                    {
+                        pPr.FrameProperties ??= new FrameProperties();
+                        pPr.FrameProperties.HeightType = HeightRuleValues.AtLeast;
+                        pPr.FrameProperties.Height = (uint)cw.Value!.Value;
+                    }
+                    else if (cw.Value < 0)
+                    {
+                        pPr.FrameProperties ??= new FrameProperties();
+                        pPr.FrameProperties.HeightType = HeightRuleValues.Exact;
+                        pPr.FrameProperties.Height = (uint)(-cw.Value!.Value);
+                    }
+                }
+                break;
+            case "absw":
+                if (cw.HasValue)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.Width = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "abslock":
+                if (cw.HasValue && cw.Value == 0)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.AnchorLock = false;
+                }
+                else if (cw.HasValue && cw.Value == 1)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.AnchorLock = true;
+                }
+                break;
+            case "dfrmtxtx":
+                if (cw.HasValue)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.HorizontalSpace = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "dfrmtxty":
+                if (cw.HasValue)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.VerticalSpace = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "dropcapli":
+                if (cw.HasValue && cw.Value > 0)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.Lines = cw.Value!.Value;
+                }
+                break;
+            case "dropcapt":
+                if (cw.HasValue && cw.Value == 1)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.DropCap = DropCapLocationValues.Drop;
+                }
+                else if (cw.HasValue && cw.Value == 2)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.DropCap = DropCapLocationValues.Margin;
+                }
+                break;
+            case "phcol":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.HorizontalPosition = HorizontalAnchorValues.Text;
+                break;
+            case "phmrg":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.HorizontalPosition = HorizontalAnchorValues.Margin;
+                break;
+            case "phpg":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.HorizontalPosition = HorizontalAnchorValues.Page;
+                break;
+            case "posx":
+                if (cw.HasValue)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.X = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "posnegx":
+                if (cw.HasValue)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    // The value is not implicitly negated, so same as posx (?)
+                    pPr.FrameProperties.X = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "posxc":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Center;
+                break;
+            case "posxi":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Inside;
+                break;
+            case "posxl":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Left;
+                break;
+            case "posxo":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Outside;
+                break;
+            case "posxr":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Right;
+                break;
+            case "posy":
+                if (cw.HasValue)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    pPr.FrameProperties.Y = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "posnegy":
+                if (cw.HasValue)
+                {
+                    pPr.FrameProperties ??= new FrameProperties();
+                    // The value is not implicitly negated, so same as posy (?)
+                    pPr.FrameProperties.Y = cw.Value!.Value.ToStringInvariant();
+                }
+                break;
+            case "posyb":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.YAlign = VerticalAlignmentValues.Bottom;
+                break;
+            case "posyc":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.YAlign = VerticalAlignmentValues.Center;
+                break;
+            case "posyil":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.YAlign = VerticalAlignmentValues.Inline;
+                break;
+            case "posyin":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.YAlign = VerticalAlignmentValues.Inside;
+                break;
+            case "posyout":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.YAlign = VerticalAlignmentValues.Outside;
+                break;
+            case "posyt":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.YAlign = VerticalAlignmentValues.Top;
+                break;
+            case "pvmrg":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.VerticalPosition = VerticalAnchorValues.Margin;
+                break;
+            case "pvpara":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.VerticalPosition = VerticalAnchorValues.Text;
+                break;
+            case "pvpg":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.VerticalPosition = VerticalAnchorValues.Page;
+                break;
+            case "wraparound":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.Wrap = TextWrappingValues.Around;
+                break;
+            case "wrapthrough":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.Wrap = TextWrappingValues.Through;
+                break;
+            case "wraptight":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.Wrap = TextWrappingValues.Tight;
+                break;
+            case "wrapdefault":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.Wrap = TextWrappingValues.Auto;
+                break;
+            case "nowrap":
+                pPr.FrameProperties ??= new FrameProperties();
+                pPr.FrameProperties.Wrap = TextWrappingValues.None;
+                break;
+
+
+            // These are in common for character, paragraph, table and page borders
             case "brdrcf":
                 if (cw.Value != null)
                 {
@@ -1537,6 +1738,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
         if (state.Imprint) rPr.Append(new Imprint());
         if (state.Outline) rPr.Append(new Outline());
         if (state.Shadow) rPr.Append(new Shadow());
+        if (state.RightToLeft) rPr.Append(new RightToLeftText());
 
         if (state.Emphasis.HasValue) rPr.Append(new Emphasis() { Val = state.Emphasis.Value });
         if (state.FontSize.HasValue) rPr.Append(new FontSize() { Val = state.FontSize.Value.ToStringInvariant()});

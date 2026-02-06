@@ -15,7 +15,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         if (fp.Width?.Value != null && int.TryParse(fp.Width.Value, out int w))
         {
-            sb.WriteWordWithValue("absh", w);
+            sb.WriteWordWithValue("absw", w);
         }
         if (fp.HeightType != null)
         {
@@ -78,7 +78,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             if (x > 0)
                 sb.WriteWordWithValue("posx", x);
             else
-                sb.WriteWordWithValue("posnegx", x);
+                sb.WriteWordWithValue("posnegx", x); // The value should still have the "-" sign (?)
         }
         if (fp.HorizontalSpace?.Value != null && int.TryParse(fp.HorizontalSpace?.Value, out int h))
         {
@@ -131,7 +131,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             if (y > 0)
                 sb.WriteWordWithValue("posy", y);
             else
-                sb.WriteWordWithValue("posnegy", y);
+                sb.WriteWordWithValue("posnegy", y); // The value should still have the "-" sign (?)
         }
         if (fp.AnchorLock != null && ((!fp.AnchorLock.HasValue) || fp.AnchorLock.Value))
         {

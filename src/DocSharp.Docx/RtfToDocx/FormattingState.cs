@@ -17,6 +17,7 @@ internal class FormattingState
     public bool Imprint { get; set; }
     public bool Outline { get; set; }
     public bool Shadow { get; set; }
+    public bool RightToLeft { get; set; }
 
     public UnderlineValues? Underline { get; set; }
     public EmphasisMarkValues? Emphasis { get; set; }
@@ -63,6 +64,7 @@ internal class FormattingState
             Imprint = this.Imprint,
             Outline = this.Outline,
             Shadow = this.Shadow,
+            RightToLeft = this.RightToLeft,
 
             Underline = this.Underline,
             Emphasis = this.Emphasis,
@@ -105,6 +107,7 @@ internal class FormattingState
         Imprint = false;
         Outline = false;
         Shadow = false;
+        RightToLeft = false;
         Underline = null;
         Emphasis = null;
         CharacterBorder = null;

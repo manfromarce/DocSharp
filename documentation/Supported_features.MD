@@ -96,7 +96,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 
 - ✅ Character formatting
 - ✅ Paragraph formatting
-- ❌ Paragraph positioning / frame properties
+- ✅ Paragraph positioning / frame properties / drop cap
 - ❌ Paragraph group formatting
 - ❌ Styles (however the formatting is usually written inline in RTF for compatibility reasons, even if there is an associated style too)  
 - ❌ Lists
