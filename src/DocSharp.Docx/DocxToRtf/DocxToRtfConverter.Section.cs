@@ -88,8 +88,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 sb.Write(@"\sbkpage");
             }
         }
-
-        if (sectionProperties.GetFirstChild<NoProof>().ToBool())
+        
+        if (sectionProperties.GetFirstChild<BiDi>().ToBool())
         {
             // Left to right by default; right to left if the element is present unless explicitly set to false
             sb.Write(@"\rtlsect");
@@ -409,7 +409,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
             if (pageNumberType.ChapterStyle != null)
             {
-                sb.Write($"\\pgnhnN{pageNumberType.ChapterStyle.Value}");
+                sb.Write($"\\pgnhn{pageNumberType.ChapterStyle.Value}");
             }
             if (pageNumberType.ChapterSeparator != null)
             {
@@ -433,9 +433,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             {
                 sb.Write($"\\linestarts{lineNumber.Start.Value}");
             }
-            if (lineNumber.Distance != null)
+            if (lineNumber.Distance.ToLong() is long dist)
             {
-                sb.Write($"\\linex{lineNumber.Distance.Value}");
+                sb.Write($"\\linex{dist}");
             }
             if (lineNumber.Restart?.Value != null)
             {
