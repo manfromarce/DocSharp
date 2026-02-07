@@ -13,17 +13,21 @@ internal class FormattingState
     public bool SmallCaps { get; set; }
     public bool AllCaps { get; set; }
     public bool Hidden { get; set; }
+    public bool WebHidden { get; set; }
     public bool Emboss { get; set; }
     public bool Imprint { get; set; }
     public bool Outline { get; set; }
     public bool Shadow { get; set; }
     public bool RightToLeft { get; set; }
+    public bool SnapToGrid { get; set; }
+    public bool NoProof { get; set; }
 
     public UnderlineValues? Underline { get; set; }
     public EmphasisMarkValues? Emphasis { get; set; }
 
     public Border? CharacterBorder { get; set; }
     public Shading? CharacterShading { get; set; }
+    public Languages? Languages { get; set; }
 
     public int? FontIndex { get; set; }
     public int? FontColorIndex { get; set; }
@@ -60,17 +64,21 @@ internal class FormattingState
             SmallCaps = this.SmallCaps,
             AllCaps = this.AllCaps,
             Hidden = this.Hidden,
+            WebHidden = this.WebHidden,
             Emboss = this.Emboss,
             Imprint = this.Imprint,
             Outline = this.Outline,
             Shadow = this.Shadow,
             RightToLeft = this.RightToLeft,
+            SnapToGrid = this.SnapToGrid,
+            NoProof = this.NoProof,
 
             Underline = this.Underline,
             Emphasis = this.Emphasis,
 
             CharacterBorder = this.CharacterBorder,
             CharacterShading = this.CharacterShading,
+            Languages = this.Languages,
 
             FontIndex = this.FontIndex,
             FontColorIndex = this.FontColorIndex,
@@ -103,11 +111,15 @@ internal class FormattingState
         SmallCaps = false;
         AllCaps = false;
         Hidden = false;
+        WebHidden = false;
         Emboss = false;
         Imprint = false;
         Outline = false;
         Shadow = false;
         RightToLeft = false;
+        SnapToGrid = false;
+        NoProof = false;
+
         Underline = null;
         Emphasis = null;
         CharacterBorder = null;
@@ -123,6 +135,8 @@ internal class FormattingState
         Kerning = null;
         VerticalOffset = null;
         CharacterStyleIndex = null;
+        Languages = null;
+
         Uc = 1;
         PendingAnsiSkip = 0;
         LastWasLineBreak = false;

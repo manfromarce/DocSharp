@@ -1190,10 +1190,11 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "accunderdot":
                 runState.Emphasis = EmphasisMarkValues.UnderDot;
                 break;
+            // case "animtext": // No longer supported by Word
+            //     break;
             case "b":
                 runState.Bold = cw.HasValue ? cw.Value != 0 : true;
-                // starting new run to apply formatting
-                break;            
+                break;
             case "charscalex":
                 if (cw.HasValue)
                     runState.FontScaling = cw.Value;
@@ -1227,8 +1228,8 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     }
                 }
                 break;
-            case "cfpat":
             case "cbpat":
+            case "cfpat":
                 if (cw.Value != null)
                 {
                     if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
@@ -1249,9 +1250,14 @@ public class RtfToDocxConverter : ITextToDocxConverter
                     }
                 }
                 break;
+            // case "cb": // Not supported by Word, use chcbpat to specify background color
+            //     break;
             case "cf":
                 if (cw.HasValue)
                     runState.FontColorIndex = cw.Value;
+                break;
+            case "cgrid":
+                runState.SnapToGrid = cw.HasValue && cw.Value == 0; // enabled by default in DOCX, but not in RTF                
                 break;
             case "cs":
                 if (cw.HasValue)
@@ -1298,8 +1304,42 @@ public class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue && cw.Value > 0)
                     runState.Kerning = cw.Value;
                 break;
+            case "lang":
+            case "langnp":
+                if (cw.HasValue)
+                {
+                    if (cw.Value == 1024)
+                    {
+                        runState.NoProof = true;
+                    }
+                    else if (RtfHelpers.GetLanguageId(cw.Value!.Value) is string langId && !string.IsNullOrWhiteSpace(langId))
+                    {
+                        runState.Languages ??= new Languages();
+                        runState.Languages.Val = langId;
+                    }
+                }
+                break;
+            case "langfe":
+            case "langfenp":
+                if (cw.HasValue)
+                {
+                    if (cw.Value == 1024)
+                    {
+                        runState.NoProof = true;
+                    }
+                    else if (RtfHelpers.GetLanguageId(cw.Value!.Value) is string langId && !string.IsNullOrWhiteSpace(langId))
+                    {
+                        runState.Languages ??= new Languages();
+                        runState.Languages.Bidi = langId;
+                        runState.Languages.EastAsia = langId;
+                    }
+                }
+                break;
             case "ltrch":
                 runState.RightToLeft = false;
+                break;
+            case "noproof":
+                runState.NoProof = true;
                 break;
             case "nosupersub":
                 runState.Subscript = false;
@@ -1393,7 +1433,12 @@ public class RtfToDocxConverter : ITextToDocxConverter
             case "v":
                 // TODO: special handling for paragraphs
                 runState.Hidden = cw.HasValue ? cw.Value != 0 : true;
-                break;   
+                break;  
+            // case "g":
+            // case "gcw":
+            // case "gridtbl":
+            // case "nosectexpand":
+            //     break; // TODO 
 
             // Paragraph formatting
             case "adjustright":
@@ -2080,11 +2125,14 @@ public class RtfToDocxConverter : ITextToDocxConverter
         if (state.SmallCaps) rPr.Append(new SmallCaps());
         if (state.AllCaps) rPr.Append(new Caps());
         if (state.Hidden) rPr.Append(new Vanish());
+        if (state.WebHidden) rPr.Append(new WebHidden());
         if (state.Emboss) rPr.Append(new Emboss());
         if (state.Imprint) rPr.Append(new Imprint());
         if (state.Outline) rPr.Append(new Outline());
         if (state.Shadow) rPr.Append(new Shadow());
         if (state.RightToLeft) rPr.Append(new RightToLeftText());
+        if (state.NoProof) rPr.Append(new NoProof());
+        if (!state.SnapToGrid) rPr.Append(new SnapToGrid() { Val = false }); // enabled by default in DOCX, but not in RTF
 
         if (state.Emphasis.HasValue) rPr.Append(new Emphasis() { Val = state.Emphasis.Value });
         if (state.FontSize.HasValue) rPr.Append(new FontSize() { Val = state.FontSize.Value.ToStringInvariant()});
@@ -2141,6 +2189,7 @@ public class RtfToDocxConverter : ITextToDocxConverter
         
         if (state.CharacterBorder != null) rPr.Append(state.CharacterBorder);
         if (state.CharacterShading != null) rPr.Append(state.CharacterShading);
+        if (state.Languages != null) rPr.Append(state.Languages);
 
         if (rPr.HasChildren)
             run.Append(rPr);

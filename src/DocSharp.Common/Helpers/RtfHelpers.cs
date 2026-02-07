@@ -113,4 +113,17 @@ public static class RtfHelpers
             return 1024; // None/unspecified
         }
     }
+
+    public static string? GetLanguageId(int langCode)
+    {
+        try
+        {
+            var culture = new CultureInfo(langCode);
+            return culture.Name;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

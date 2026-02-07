@@ -288,9 +288,13 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (run.GetEffectiveProperty<Vanish>().ToBool())
+        if (run.GetEffectiveProperty<Vanish>().ToBool() || run.GetEffectiveProperty<SpecVanish>().ToBool())
         {
             sb.Write(@"\v");
+        }
+        if (run.GetEffectiveProperty<WebHidden>().ToBool())
+        {
+            sb.Write(@"\webhidden");
         }
 
         if (run.GetEffectiveProperty<Border>() is Border border)
