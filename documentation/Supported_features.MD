@@ -122,6 +122,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ❌ Comments
 - ❌ Revisions
 - ❌ Mail merge
+- ❌ Custom XML (smart tags)
 - ❌ Sub-documents
 - ❌ Encapsulated HTML
 - ❌ Theme data

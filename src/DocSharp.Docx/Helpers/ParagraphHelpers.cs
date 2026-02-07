@@ -56,6 +56,7 @@ public static class ParagraphHelpers
     {
         var p = CreateParagraph(text);
 
+        mainDocumentPart.Document ??= new Document();
         mainDocumentPart.Document.Body ??= new Body();
         mainDocumentPart.Document.Body.AppendChild(p);
 

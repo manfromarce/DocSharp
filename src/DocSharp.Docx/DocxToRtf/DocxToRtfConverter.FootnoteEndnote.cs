@@ -405,7 +405,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(footnoteReference);
         if (footnoteReference.Id != null &&
-            mainPart?.FootnotesPart?.Footnotes.Elements<Footnote>()
+            mainPart?.FootnotesPart?.Footnotes?.Elements<Footnote>()
             .FirstOrDefault(fn => fn.Id != null && fn.Id == footnoteReference.Id) is Footnote footnote)
         {
             sb.WriteLine("\\chftn");
@@ -422,7 +422,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(endnoteReference);
         if (endnoteReference.Id != null && 
-            mainPart?.EndnotesPart?.Endnotes.Elements<Endnote>()
+            mainPart?.EndnotesPart?.Endnotes?.Elements<Endnote>()
             .FirstOrDefault(en => en.Id != null && en.Id == endnoteReference.Id) is Endnote endnote)
         {
             sb.WriteLine("\\chftn");

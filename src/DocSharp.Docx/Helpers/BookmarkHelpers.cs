@@ -11,7 +11,7 @@ public static class BookmarkHelpers
 {
     public static string? GetBookmarkName(this BookmarkEnd bookmarkEnd)
     {
-        return bookmarkEnd.GetMainDocumentPart()?.Document.Descendants<BookmarkStart>()
+        return bookmarkEnd.GetMainDocumentPart()?.Document?.Descendants<BookmarkStart>()
                .FirstOrDefault(b => b.Id == bookmarkEnd.Id)?.Name;
     }
 }

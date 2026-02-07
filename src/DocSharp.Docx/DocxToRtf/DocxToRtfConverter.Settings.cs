@@ -62,7 +62,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         // These control words have the opposite meaning in RTF;
         // the default value in DOCX is still false (which means show xml errors, **don't** embed system fonts...),
-        // in RTF it it may vary so always write the value for clarity
+        // in RTF it may vary so always write the value for clarity
         writer.WriteWordWithValue("showxmlerrors", !(settings?.GetFirstChild<DoNotDemarcateInvalidXml>()).ToBool());
         writer.WriteWordWithValue("validatexml", !(settings?.GetFirstChild<DoNotValidateAgainstSchema>()).ToBool());
         writer.WriteWordWithValue("donotembedsysfont", !(settings?.GetFirstChild<EmbedSystemFonts>()).ToBool());
