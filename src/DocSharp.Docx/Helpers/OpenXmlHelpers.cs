@@ -1621,4 +1621,18 @@ public static class OpenXmlHelpers
         // A4 page size is 210 mm x 297 mm = 11906 x 16838
         return new Size(11906, 16838);
     }
+
+    public static string GetAvailablePartId(MainDocumentPart mainPart)
+    {
+        var rIds = mainPart.Parts.Where(part => part.RelationshipId.StartsWith("rId")).ToList();
+        if (!rIds.Any())
+            return "rId0";
+
+        var maxId = rIds.Max(part => part.RelationshipId).TrimStart("rId");
+        if (!string.IsNullOrWhiteSpace(maxId) && long.TryParse(maxId, NumberStyles.Integer, CultureInfo.InvariantCulture, out long id))
+            return $"rId{id + 1}";
+        else
+            // Unexpected rId format, return a random ID
+            return $"rId{new Random().Next(1000, 999999999)}";
+    }
 }

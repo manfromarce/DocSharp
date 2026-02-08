@@ -95,21 +95,22 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         var rtfDocument = RtfReader.ReadRtf(input);
         ConvertGroup(rtfDocument.Root);
 
-        if (!mainPart.Document.Body.Descendants<SectionProperties>().Any())
+        if (currentSectPr != null)
         {
-            // If the document does not contain sections, add the default section properties as last body element, 
-            // so that it's applied by default in DOCX too. 
-            // This preserves page size and other properties if they are specified as document-level settings only (\paperw, \paperh, ...) 
-            // but no section is present. 
-            if (defaultSectPr != null)
-                mainPart.Document.Body.AppendChild(defaultSectPr.CloneNode(true));
-        }
-        else
-        {
-            // If at least a section was created, add the last section properties (that was not added to a paragraph) 
+            // currentSectPr is not null if at least a section formatting control word was found 
+            // (even if \sect is not found because the document has only one section).
+            // In this case, add the last (or only) section properties (that was not added to a paragraph) 
             // as last body element, so that it's applied by default to new DOCX sections. 
             if (currentSectPr != null)
                 mainPart.Document.Body.AppendChild(currentSectPr.CloneNode(true));
+        }
+        else
+        {
+            // If currentSectPr is null, the document does not contain section specific formatting. 
+            // In this case, add the default section properties as last body element, 
+            // so that document-level settings (\paperw, \paperh, ...) are preserved in DOCX. 
+            if (defaultSectPr != null)
+                mainPart.Document.Body.AppendChild(defaultSectPr.CloneNode(true));
         }
     }
 
@@ -323,39 +324,61 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             continue;
                         }
 
-                        // TODO (essential destinations)
                         else if (dname == "header")
                         {
+                            // If different header/footer for odd and even pages are enabled, ignore this destination
+                            if (!(settingsPart?.Settings?.GetFirstChild<EvenAndOddHeaders>()).ToBool())
+                            {
+                                ProcessHeader(subGroup, HeaderFooterValues.Default);
+                            }
                             continue;
                         }
                         else if (dname == "headerf")
                         {
+                            // Convert header for first page anyway; the word processor will ignore them if TitlePage is not present
+                            ProcessHeader(subGroup, HeaderFooterValues.First);
                             continue;
                         }
                         else if (dname == "headerl")
                         {
+                            // Convert header for even pages anyway; the word processor will ignore them if EvenAndOddHeaders is not present
+                            ProcessHeader(subGroup, HeaderFooterValues.Even);
                             continue;
                         }
                         else if (dname == "headerr")
                         {
+                            // TODO: if different header/footer for odd and even pages are *not* enabled, give priority to "header" if present
+                            ProcessHeader(subGroup, HeaderFooterValues.Default);
                             continue;
                         }
                         else if (dname == "footer")
                         {
+                            // If different header/footer for odd and even pages are enabled, ignore this destination
+                            if (!(settingsPart?.Settings?.GetFirstChild<EvenAndOddHeaders>()).ToBool())
+                            {
+                                ProcessFooter(subGroup, HeaderFooterValues.Default);
+                            }
                             continue;
                         }
                         else if (dname == "footerf")
                         {
+                            // Convert footer for first page anyway; the word processor will ignore it if TitlePage is not present
+                            ProcessFooter(subGroup, HeaderFooterValues.First);
                             continue;
                         }
                         else if (dname == "footerl")
                         {
+                            // Convert footer for even pages anyway; the word processor will ignore them if EvenAndOddHeaders is not present
+                            ProcessFooter(subGroup, HeaderFooterValues.Even);
                             continue;
                         }
                         else if (dname == "footerr")
                         {
+                            // TODO: if different header/footer for odd and even pages are *not* enabled, give priority to "footer" if present
+                            ProcessFooter(subGroup, HeaderFooterValues.Default);
                             continue;
                         }
+                        // TODO
                         else if (dname == "footnote")
                         {
                             continue;
@@ -584,8 +607,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 {
                     EnsureParagraph();
                     currentParagraph!.ParagraphProperties ??= new ParagraphProperties();
+                    currentSectPr ??= CreateSectionProperties();
                     // If \sbk* is not specified in RTF, assume NextPage as default.
-                    currentSectPr ??= new SectionProperties(new SectionType() { Val = SectionMarkValues.NextPage });                     
+                    currentSectPr.AppendChild(new SectionType() { Val = SectionMarkValues.NextPage });                     
                     currentParagraph.ParagraphProperties.SectionProperties = (SectionProperties)currentSectPr.CloneNode(true);
                     currentParagraph = null;
                     currentRun = null;
@@ -693,7 +717,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var format = RtfPageNumberMapper.GetPageNumberFormat(cw.Name);
                     if (format != null)
                     {
-                        currentSectPr ??= new SectionProperties();
+                        currentSectPr ??= CreateSectionProperties();
                         var pageNumbers = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                         pageNumbers.Format = format;
                     }

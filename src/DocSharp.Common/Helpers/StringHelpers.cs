@@ -22,6 +22,33 @@ public static class StringHelpers
     }
 #endif
 
+    public static string TrimStart(this string source, string trimString)
+    {
+        if (string.IsNullOrEmpty(trimString)) return source;
+
+        string result = source;
+        while (result.StartsWith(trimString))
+        {
+            result = result.Substring(trimString.Length);
+        }
+
+        return result;
+    }
+
+    public static string TrimEnd(this string source, string trimString)
+    {
+        if (string.IsNullOrEmpty(trimString)) return source;
+
+        string result = source;
+        while (result.EndsWith(trimString))
+        {
+            result = result.Substring(0, result.Length - trimString.Length);
+        }
+
+        return result;
+    }
+
+
     public static bool EndsWithNewLine(this StringBuilder stringBuilder)
     {
         if (stringBuilder.Length == 0)
