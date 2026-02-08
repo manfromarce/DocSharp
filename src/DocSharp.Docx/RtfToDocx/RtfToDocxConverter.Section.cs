@@ -30,7 +30,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var cols1 = currentSectPr.GetFirstChild<Columns>() ?? currentSectPr.AppendChild(new Columns());
                     cols1.ColumnCount = (short)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "colsx":
                 if (cw.HasValue)
                 {
@@ -38,12 +38,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var cols2 = currentSectPr.GetFirstChild<Columns>() ?? currentSectPr.AppendChild(new Columns());
                     cols2.Space = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             // case "colno":
             // case "colsr":
             // case "colw":
             // // TODO: columns with custom (not equal) width
-                // break;
+                // return true;
             case "footery":
                 if (cw.HasValue)
                 {
@@ -51,7 +51,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
                     pageMargin.Footer = (uint)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "guttersxn":
                 if (cw.HasValue)
                 {
@@ -59,7 +59,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
                     pageMargin.Gutter = (uint)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "headery":
                 if (cw.HasValue)
                 {
@@ -67,27 +67,27 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
                     pageMargin.Header = (uint)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "linebetcol":
                 currentSectPr ??= CreateSectionProperties();
                 var columns = currentSectPr.GetFirstChild<Columns>() ?? currentSectPr.AppendChild(new Columns());
                 columns.Separator = true;
-                break;
+                return true;
             case "linecont":
                 currentSectPr ??= CreateSectionProperties();
                 var lineNumbers1 = currentSectPr.GetFirstChild<LineNumberType>() ?? currentSectPr.AppendChild(new LineNumberType());
                 lineNumbers1.Restart = LineNumberRestartValues.Continuous;
-                break;
+                return true;
             case "lineppage":
                 currentSectPr ??= CreateSectionProperties();
                 var lineNumbers2 = currentSectPr.GetFirstChild<LineNumberType>() ?? currentSectPr.AppendChild(new LineNumberType());
                 lineNumbers2.Restart = LineNumberRestartValues.NewPage;
-                break;
+                return true;
             case "linerestart":
                 currentSectPr ??= CreateSectionProperties();
                 var lineNumbers3 = currentSectPr.GetFirstChild<LineNumberType>() ?? currentSectPr.AppendChild(new LineNumberType());
                 lineNumbers3.Restart = LineNumberRestartValues.NewSection;
-                break;
+                return true;
             case "linemod":
                 if (cw.HasValue && cw.Value > 0)
                 {
@@ -95,7 +95,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var lineNumbers = currentSectPr.GetFirstChild<LineNumberType>() ?? currentSectPr.AppendChild(new LineNumberType());
                     lineNumbers.CountBy = (short)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "linestarts":
                 if (cw.HasValue && cw.Value > 0)
                 {
@@ -103,7 +103,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var lineNumbers = currentSectPr.GetFirstChild<LineNumberType>() ?? currentSectPr.AppendChild(new LineNumberType());
                     lineNumbers.Start = (short)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "linex":
                 if (cw.HasValue && cw.Value > 0)
                 {
@@ -111,17 +111,17 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var lineNumbers = currentSectPr.GetFirstChild<LineNumberType>() ?? currentSectPr.AppendChild(new LineNumberType());
                     lineNumbers.Distance = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "lndscpsxn":
                 currentSectPr ??= CreateSectionProperties();
                 var pgSize = currentSectPr.GetFirstChild<PageSize>() ?? currentSectPr.AppendChild(new PageSize());
                 pgSize.Orient = PageOrientationValues.Landscape;
-                break;
+                return true;
             case "ltrsect":
                 currentSectPr ??= CreateSectionProperties();
                 var bidi = currentSectPr.GetFirstChild<BiDi>() ?? currentSectPr.AppendChild(new BiDi());
                 bidi.Val = true;
-                break;
+                return true;
             case "margbsxn":
                 if (cw.HasValue)
                 {
@@ -129,7 +129,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
                     pageMargin.Bottom = cw.Value!.Value;
                 }
-                break;
+                return true;
             case "marglsxn":
                 if (cw.HasValue)
                 {
@@ -137,7 +137,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
                     pageMargin.Left = (uint)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "margrsxn":
                 if (cw.HasValue)
                 {
@@ -145,7 +145,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
                     pageMargin.Right = (uint)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "margtsxn":
                 if (cw.HasValue)
                 {
@@ -153,12 +153,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageMargin = currentSectPr.GetFirstChild<PageMargin>() ?? currentSectPr.AppendChild(new PageMargin());
                     pageMargin.Top = cw.Value!.Value;
                 }
-                break;
+                return true;
             case "margmirsxn":
                 // MirrorMargins is not available as section-level setting in DOCX.
                 // Replace the document-level setting if found.
                 CreateSetting<MirrorMargins>(true);
-                break;
+                return true;
             case "pgwsxn":
                 if (cw.HasValue)
                 {
@@ -166,7 +166,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageSize = currentSectPr.GetFirstChild<PageSize>() ?? currentSectPr.AppendChild(new PageSize());
                     pageSize.Width = (uint)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "pghsxn":
                 if (cw.HasValue)
                 {
@@ -174,7 +174,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageSize = currentSectPr.GetFirstChild<PageSize>() ?? currentSectPr.AppendChild(new PageSize());
                     pageSize.Height = (uint)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "pgnstarts":
                 if (cw.HasValue)
                 {
@@ -182,7 +182,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageNumbers = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                     pageNumbers.Start = cw.Value!.Value;
                 }
-                break;
+                return true;
             case "pgnhn":
                 if (cw.HasValue && cw.Value > 0)
                 {
@@ -190,87 +190,87 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var pageNumbers = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                     pageNumbers.ChapterStyle = (byte)cw.Value!.Value;
                 }
-                break;
+                return true;
             case "pgnhnsc":
                 currentSectPr ??= CreateSectionProperties();
                 var pageNumbers1 = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                 pageNumbers1.ChapterSeparator = ChapterSeparatorValues.Colon;
-                break;
+                return true;
             case "pgnhnsm":
                 currentSectPr ??= CreateSectionProperties();
                 var pageNumbers2 = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                 pageNumbers2.ChapterSeparator = ChapterSeparatorValues.EmDash;
-                break;
+                return true;
             case "pgnhnsn":
                 currentSectPr ??= CreateSectionProperties();
                 var pageNumbers3 = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                 pageNumbers3.ChapterSeparator = ChapterSeparatorValues.EnDash;
-                break;
+                return true;
             case "pgnhnsh":
                 currentSectPr ??= CreateSectionProperties();
                 var pageNumbers4 = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                 pageNumbers4.ChapterSeparator = ChapterSeparatorValues.Hyphen;
-                break;
+                return true;
             case "pgnhnsp":
                 currentSectPr ??= CreateSectionProperties();
                 var pageNumbers5 = currentSectPr.GetFirstChild<PageNumberType>() ?? currentSectPr.AppendChild(new PageNumberType());
                 pageNumbers5.ChapterSeparator = ChapterSeparatorValues.Period;
-                break;
+                return true;
             case "rtlgutter":
                 currentSectPr ??= CreateSectionProperties();
                 var gutterOnRight = currentSectPr.GetFirstChild<GutterOnRight>() ?? currentSectPr.AppendChild(new GutterOnRight());
                 gutterOnRight.Val = true;
-                break;
+                return true;
             case "rtlsect":
                 currentSectPr ??= CreateSectionProperties();
                 var bidi2 = currentSectPr.GetFirstChild<BiDi>() ?? currentSectPr.AppendChild(new BiDi());
                 bidi2.Val = true;
-                break;
+                return true;
             case "sbknone":
                 currentSectPr ??= CreateSectionProperties();
                 var sectionType1 = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
                 sectionType1.Val = SectionMarkValues.Continuous;
-                break;
+                return true;
             case "sbkcol":
                 currentSectPr ??= CreateSectionProperties();
                 var sectionType2 = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
                 sectionType2.Val = SectionMarkValues.NextColumn;
-                break;
+                return true;
             case "sbkodd":
                 currentSectPr ??= CreateSectionProperties();
                 var sectionType3 = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
                 sectionType3.Val = SectionMarkValues.OddPage;
-                break;
+                return true;
             case "sbkeven":
                 currentSectPr ??= CreateSectionProperties();
                 var sectionType4 = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
                 sectionType4.Val = SectionMarkValues.EvenPage;
-                break;
+                return true;
             case "sbkpage":
                 currentSectPr ??= CreateSectionProperties();
                 var sectionType5 = currentSectPr.GetFirstChild<SectionType>() ?? currentSectPr.AppendChild(new SectionType());
                 sectionType5.Val = SectionMarkValues.NextPage;
-                break;
+                return true;
             case "sectdefaultcl":
                 currentSectPr ??= CreateSectionProperties();
                 var docGrid1 = currentSectPr.GetFirstChild<DocGrid>() ?? currentSectPr.AppendChild(new DocGrid());
                 docGrid1.Type = DocGridValues.Default;
-                break;
+                return true;
             case "sectspecifyl":
                 currentSectPr ??= CreateSectionProperties();
                 var docGrid2 = currentSectPr.GetFirstChild<DocGrid>() ?? currentSectPr.AppendChild(new DocGrid());
                 docGrid2.Type = DocGridValues.Lines;
-                break;
+                return true;
             case "sectspecifycl":
                 currentSectPr ??= CreateSectionProperties();
                 var docGrid3 = currentSectPr.GetFirstChild<DocGrid>() ?? currentSectPr.AppendChild(new DocGrid());
                 docGrid3.Type = DocGridValues.LinesAndChars;
-                break;
+                return true;
             case "sectspecifygenN": // Note that N is part of keyword here
                 currentSectPr ??= CreateSectionProperties();
                 var docGrid4 = currentSectPr.GetFirstChild<DocGrid>() ?? currentSectPr.AppendChild(new DocGrid());
                 docGrid4.Type = DocGridValues.SnapToChars;
-                break;
+                return true;
             case "sectlinegrid":
                 if (cw.HasValue)
                 {
@@ -278,7 +278,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var docGrid = currentSectPr.GetFirstChild<DocGrid>() ?? currentSectPr.AppendChild(new DocGrid());
                     docGrid.LinePitch = cw.Value!.Value;
                 }
-                break;
+                return true;
             case "sectexpand":
                 if (cw.HasValue)
                 {
@@ -286,12 +286,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var docGrid = currentSectPr.GetFirstChild<DocGrid>() ?? currentSectPr.AppendChild(new DocGrid());
                     docGrid.CharacterSpace = cw.Value!.Value;
                 }
-                break;
+                return true;
             case "sectunlocked":
                 currentSectPr ??= CreateSectionProperties();
                 var prot = currentSectPr.GetFirstChild<FormProtection>() ?? currentSectPr.AppendChild(new FormProtection());
                 prot.Val = false;
-                break;
+                return true;
             case "stextflow":
                 if (cw.HasValue)
                 {
@@ -332,33 +332,33 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         textDir.Val = TextDirectionValues.TopToBottomLeftToRightRotated;
                     }
                 }
-                break;
+                return true;
             case "titlepg":
                 currentSectPr ??= CreateSectionProperties();
                 var titlePg = currentSectPr.GetFirstChild<TitlePage>() ?? currentSectPr.AppendChild(new TitlePage());
                 titlePg.Val = true;
-                break;
+                return true;
             case "vertal":
             case "vertalb":
                 currentSectPr ??= CreateSectionProperties();
                 var vertAl1 = currentSectPr.GetFirstChild<VerticalTextAlignmentOnPage>() ?? currentSectPr.AppendChild(new VerticalTextAlignmentOnPage());
                 vertAl1.Val = VerticalJustificationValues.Bottom;
-                break;
+                return true;
             case "vertalc":
                 currentSectPr ??= CreateSectionProperties();
                 var vertAl2 = currentSectPr.GetFirstChild<VerticalTextAlignmentOnPage>() ?? currentSectPr.AppendChild(new VerticalTextAlignmentOnPage());
                 vertAl2.Val = VerticalJustificationValues.Center;
-                break;
+                return true;
             case "vertalj":
                 currentSectPr ??= CreateSectionProperties();
                 var vertAl3 = currentSectPr.GetFirstChild<VerticalTextAlignmentOnPage>() ?? currentSectPr.AppendChild(new VerticalTextAlignmentOnPage());
                 vertAl3.Val = VerticalJustificationValues.Both;
-                break;
+                return true;
             case "vertalt":
                 currentSectPr ??= CreateSectionProperties();
                 var vertAl4 = currentSectPr.GetFirstChild<VerticalTextAlignmentOnPage>() ?? currentSectPr.AppendChild(new VerticalTextAlignmentOnPage());
                 vertAl4.Val = VerticalJustificationValues.Top;
-                break;
+                return true;
             // TODO: page borders
         }
         return false;

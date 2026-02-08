@@ -32,14 +32,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     currentRun!.Append(new Break() { Type = BreakValues.TextWrapping });
                     runState.LastWasLineBreak = true;
                 }
-                break;
+                return true;
             case "page":
             case "column":
                 // page/column breaks are distinct; reset the line-break flag.
                 EnsureRun();
                 currentRun!.Append(new Break() { Type = name == "page" ? BreakValues.Page : BreakValues.Column });
                 runState.LastWasLineBreak = false;
-                break;
+                return true;
             case "lbr":
                 // line break 
                 if (cw.HasValue && !runState.LastWasLineBreak)
@@ -69,7 +69,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         runState.LastWasLineBreak = true;
                     }
                 }
-                break;
+                return true;
         }
         return false;
     }

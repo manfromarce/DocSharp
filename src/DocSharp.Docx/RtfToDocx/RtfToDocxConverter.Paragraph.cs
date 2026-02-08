@@ -45,48 +45,48 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         {
             case "adjustright":
                 pPr.AdjustRightIndent = new AdjustRightIndent();
-                break;
+                return true;
             case "aspalpha":
                 pPr.AutoSpaceDE = new AutoSpaceDE();
-                break;
+                return true;
             case "aspnum":
                 pPr.AutoSpaceDN = new AutoSpaceDN();
-                break;
+                return true;
             case "brdrl":
                 pPr.ParagraphBorders ??= new ParagraphBorders();
                 pPr.ParagraphBorders.LeftBorder = new LeftBorder();
                 currentBorder = pPr.ParagraphBorders.LeftBorder;
-                break;
+                return true;
             case "brdrt":
                 pPr.ParagraphBorders ??= new ParagraphBorders();
                 pPr.ParagraphBorders.TopBorder = new TopBorder();
                 currentBorder = pPr.ParagraphBorders.TopBorder;
-                break;
+                return true;
             case "brdrr":
                 pPr.ParagraphBorders ??= new ParagraphBorders();
                 pPr.ParagraphBorders.RightBorder = new RightBorder();
                 currentBorder = pPr.ParagraphBorders.RightBorder;
-                break;
+                return true;
             case "brdrb":
                 pPr.ParagraphBorders ??= new ParagraphBorders();
                 pPr.ParagraphBorders.BottomBorder = new BottomBorder();
                 currentBorder = pPr.ParagraphBorders.BottomBorder;
-                break;
+                return true;
             case "brdrbar":
                 pPr.ParagraphBorders ??= new ParagraphBorders();
                 pPr.ParagraphBorders.BarBorder = new BarBorder();
                 currentBorder = pPr.ParagraphBorders.BarBorder;
-                break;
+                return true;
             case "brdrbtw":
                 pPr.ParagraphBorders ??= new ParagraphBorders();
                 pPr.ParagraphBorders.BetweenBorder = new BetweenBorder();
                 currentBorder = pPr.ParagraphBorders.BetweenBorder;
-                break;
+                return true;
             // case "box":
-            //     break;
+            //     return true;
             case "contextualspace":
                 pPr.ContextualSpacing = new ContextualSpacing();
-                break;
+                return true;
             case "cufi":
                 if (cw.HasValue)
                 {
@@ -96,37 +96,37 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     else 
                         pPr.Indentation.HangingChars = Math.Abs(cw.Value!.Value);
                 }
-                break;
+                return true;
             case "culi":
                 if (cw.HasValue)
                 {
                     pPr.Indentation ??= new Indentation();
                     pPr.Indentation.LeftChars = cw.Value;
                 }
-                break;
+                return true;
             case "curi":
                 if (cw.HasValue)
                 {
                     pPr.Indentation ??= new Indentation();
                     pPr.Indentation.RightChars = cw.Value;
                 }
-                break;
+                return true;
             case "faauto":
                 pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Auto };
-                break;
+                return true;
             case "faroman":
                 pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Baseline };
-                break;
+                return true;
             case "favar":
             case "fafixed":
                 pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Bottom };
-                break;
+                return true;
             case "facenter":
                 pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Center };
-                break;
+                return true;
             case "fahang":
                 pPr.TextAlignment = new TextAlignment() { Val = VerticalTextAlignmentValues.Top };
-                break;
+                return true;
              case "fi":
                 if (cw.HasValue)
                 {
@@ -136,51 +136,51 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     else 
                         pPr.Indentation.Hanging = Math.Abs(cw.Value!.Value).ToStringInvariant();
                 }
-                break;
+                return true;
             case "hyphpar":
                 if (cw.HasValue && cw.Value == 0)
                     pPr.SuppressAutoHyphens = new SuppressAutoHyphens();
-                break;
+                return true;
             case "indmirror":
                 pPr.MirrorIndents = new MirrorIndents();
-                break;
+                return true;
             case "keep":
                 pPr.KeepLines = new KeepLines();
-                break;
+                return true;
             case "keepn":
                 pPr.KeepNext = new KeepNext();
-                break;
+                return true;
             case "li":
                 if (cw.HasValue)
                 {
                     pPr.Indentation ??= new Indentation();
                     pPr.Indentation.Left = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "lin":
                 if (cw.HasValue)
                 {
                     pPr.Indentation ??= new Indentation();
                     pPr.Indentation.Start = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "lisa":
                 if (cw.HasValue)
                 {
                     pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
                     pPr.SpacingBetweenLines.AfterLines = cw.Value;
                 }
-                break;
+                return true;
             case "lisb":
                 if (cw.HasValue)
                 {
                     pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
                     pPr.SpacingBetweenLines.BeforeLines = cw.Value;
                 }
-                break;
+                return true;
             case "ltrpar":
                 pPr.BiDi = new BiDi() { Val = false };
-                break;
+                return true;
             // case "listtext": // should be ignored, emitted for compatibility with old RTF readers that don't recognize \ls and \ilvl
             // Note: lists created by old RTF writers are destinations (pn, pntext), so they are not handled here.
             case "ls":
@@ -190,93 +190,93 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     // Requires conversion of the list table and list override table
                     // pPr.NumberingProperties = 
                 }
-                break;
+                return true;
             case "noline":
                 pPr.SuppressLineNumbers = new SuppressLineNumbers();
-                break;
+                return true;
             case "nooverflow":
                 pPr.OverflowPunctuation = new OverflowPunctuation() { Val = false };
-                break;
+                return true;
             case "nosnaplinegrid":
                 pPr.SnapToGrid = new SnapToGrid() { Val = false };
-                break;
+                return true;
             case "nowidctlpar":
                 pPr.WidowControl = new WidowControl() { Val = false };
-                break;
+                return true;
             case "nowwrap":
                 pPr.WordWrap = new WordWrap() { Val = false };
-                break;
+                return true;
             case "outline":
                 if (cw.HasValue && cw.Value != null)
                     pPr.OutlineLevel = new OutlineLevel() { Val = cw.Value.Value };
-                break;
+                return true;
             case "pagebb":
                 pPr.PageBreakBefore = new PageBreakBefore();
-                break;
+                return true;
             case "ql":
                 pPr.Justification = new Justification() { Val = JustificationValues.Left };
-                break;
+                return true;
             case "qc":
                 pPr.Justification = new Justification() { Val = JustificationValues.Center };
-                break;
+                return true;
             case "qr":
                 pPr.Justification = new Justification() { Val = JustificationValues.Right };
-                break;
+                return true;
             case "qj":
                 pPr.Justification = new Justification() { Val = JustificationValues.Both };
-                break;
+                return true;
             case "qd":
                 pPr.Justification = new Justification() { Val = JustificationValues.Distribute };
-                break;
+                return true;
             case "qt":
                 pPr.Justification = new Justification() { Val = JustificationValues.ThaiDistribute };
-                break;
+                return true;
             case "ri":
                 if (cw.HasValue)
                 {
                     pPr.Indentation ??= new Indentation();
                     pPr.Indentation.Right = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "rin":
                 if (cw.HasValue)
                 {
                     pPr.Indentation ??= new Indentation();
                     pPr.Indentation.End = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "rtlpar":
                 pPr.BiDi = new BiDi() { Val = true };
-                break;
+                return true;
             case "s":
                 if (cw.HasValue)
                 {
                     // Requires conversion of the stylesheet table
                     // pPr.ParagraphStyleId = 
                 }
-                break;
+                return true;
             case "sa":
                 if (cw.HasValue)
                 {
                     pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
                     pPr.SpacingBetweenLines.After = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "sb":
                 if (cw.HasValue)
                 {
                     pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
                     pPr.SpacingBetweenLines.Before = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "saauto":
                 pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
                 pPr.SpacingBetweenLines.AfterAutoSpacing = cw.HasValue && cw.Value == 1;
-                break;
+                return true;
             case "sbauto":
                 pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
                 pPr.SpacingBetweenLines.BeforeAutoSpacing = cw.HasValue && cw.Value == 1;
-                break;
+                return true;
             case "sl":
                 if (cw.HasValue)
                 {
@@ -296,35 +296,35 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     }
                     pPr.SpacingBetweenLines.Line = Math.Abs(val).ToStringInvariant();
                 }
-                break;
+                return true;
             case "slmult":
                 if (cw.HasValue && cw.Value == 1)
                 {
                     pPr.SpacingBetweenLines ??= new SpacingBetweenLines();
                     pPr.SpacingBetweenLines.LineRule = LineSpacingRuleValues.Auto;
                 }
-                break;
+                return true;
             case "toplinepunct":
                 pPr.TopLinePunctuation = new TopLinePunctuation();
-                break;
+                return true;
             case "txbxtwalways":
                 pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.AllLines};
-                break;
+                return true;
             case "txbxtwfirstlast":
                 pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.FirstAndLastLine};
-                break;
+                return true;
             case "txbxtwfirst":
                 pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.FirstLineOnly};
-                break;
+                return true;
             case "txbxtwlast":
                 pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.LastLineOnly};
-                break;
+                return true;
             case "txbxtwno":
                 pPr.TextBoxTightWrap = new TextBoxTightWrap() {Val = TextBoxTightWrapValues.None};
-                break;
+                return true;
             case "widctlpar":
                 pPr.WidowControl = new WidowControl() { Val = true };
-                break;
+                return true;
 
             // Paragraph position
             case "absh":
@@ -348,14 +348,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         pPr.FrameProperties.Height = (uint)(-cw.Value!.Value);
                     }
                 }
-                break;
+                return true;
             case "absw":
                 if (cw.HasValue)
                 {
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.Width = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "abslock":
                 if (cw.HasValue && cw.Value == 0)
                 {
@@ -367,28 +367,28 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.AnchorLock = true;
                 }
-                break;
+                return true;
             case "dfrmtxtx":
                 if (cw.HasValue)
                 {
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.HorizontalSpace = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "dfrmtxty":
                 if (cw.HasValue)
                 {
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.VerticalSpace = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "dropcapli":
                 if (cw.HasValue && cw.Value > 0)
                 {
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.Lines = cw.Value!.Value;
                 }
-                break;
+                return true;
             case "dropcapt":
                 if (cw.HasValue && cw.Value == 1)
                 {
@@ -400,26 +400,26 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.DropCap = DropCapLocationValues.Margin;
                 }
-                break;
+                return true;
             case "phcol":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.HorizontalPosition = HorizontalAnchorValues.Text;
-                break;
+                return true;
             case "phmrg":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.HorizontalPosition = HorizontalAnchorValues.Margin;
-                break;
+                return true;
             case "phpg":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.HorizontalPosition = HorizontalAnchorValues.Page;
-                break;
+                return true;
             case "posx":
                 if (cw.HasValue)
                 {
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.X = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "posnegx":
                 if (cw.HasValue)
                 {
@@ -427,34 +427,34 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     // The value is not implicitly negated, so same as posx (?)
                     pPr.FrameProperties.X = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "posxc":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Center;
-                break;
+                return true;
             case "posxi":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Inside;
-                break;
+                return true;
             case "posxl":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Left;
-                break;
+                return true;
             case "posxo":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Outside;
-                break;
+                return true;
             case "posxr":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.XAlign = HorizontalAlignmentValues.Right;
-                break;
+                return true;
             case "posy":
                 if (cw.HasValue)
                 {
                     pPr.FrameProperties ??= new FrameProperties();
                     pPr.FrameProperties.Y = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "posnegy":
                 if (cw.HasValue)
                 {
@@ -462,63 +462,63 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     // The value is not implicitly negated, so same as posy (?)
                     pPr.FrameProperties.Y = cw.Value!.Value.ToStringInvariant();
                 }
-                break;
+                return true;
             case "posyb":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.YAlign = VerticalAlignmentValues.Bottom;
-                break;
+                return true;
             case "posyc":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.YAlign = VerticalAlignmentValues.Center;
-                break;
+                return true;
             case "posyil":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.YAlign = VerticalAlignmentValues.Inline;
-                break;
+                return true;
             case "posyin":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.YAlign = VerticalAlignmentValues.Inside;
-                break;
+                return true;
             case "posyout":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.YAlign = VerticalAlignmentValues.Outside;
-                break;
+                return true;
             case "posyt":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.YAlign = VerticalAlignmentValues.Top;
-                break;
+                return true;
             case "pvmrg":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.VerticalPosition = VerticalAnchorValues.Margin;
-                break;
+                return true;
             case "pvpara":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.VerticalPosition = VerticalAnchorValues.Text;
-                break;
+                return true;
             case "pvpg":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.VerticalPosition = VerticalAnchorValues.Page;
-                break;
+                return true;
             case "wraparound":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.Wrap = TextWrappingValues.Around;
-                break;
+                return true;
             case "wrapthrough":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.Wrap = TextWrappingValues.Through;
-                break;
+                return true;
             case "wraptight":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.Wrap = TextWrappingValues.Tight;
-                break;
+                return true;
             case "wrapdefault":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.Wrap = TextWrappingValues.Auto;
-                break;
+                return true;
             case "nowrap":
                 pPr.FrameProperties ??= new FrameProperties();
                 pPr.FrameProperties.Wrap = TextWrappingValues.None;
-                break;
+                return true;
         }
         return false;
     }

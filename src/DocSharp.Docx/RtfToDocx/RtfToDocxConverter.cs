@@ -82,8 +82,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentRun = null;
         pPr = new ParagraphProperties();
         fmtStack.Clear();
-        package = targetDocument;
 
+        package = targetDocument;
         mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
         settingsPart = mainPart.DocumentSettingsPart;
         stylesPart = mainPart.StyleDefinitionsPart;
@@ -335,7 +335,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         }
                         else if (dname == "headerf")
                         {
-                            // Convert header for first page anyway; the word processor will ignore them if TitlePage is not present
+                            // Convert header for first page anyway; the word processor will ignore them if TitlePage is not present.
+                            // Note that if a first page header is hidden for a section, a subsequent section that has TitlePage enabled can still inherit from it.
                             ProcessHeader(subGroup, HeaderFooterValues.First);
                             continue;
                         }
@@ -362,7 +363,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         }
                         else if (dname == "footerf")
                         {
-                            // Convert footer for first page anyway; the word processor will ignore it if TitlePage is not present
+                            // Convert footer for first page anyway; the word processor will ignore it if TitlePage is not present.
+                            // Note that if a first page footer is hidden for a section, a subsequent section that has TitlePage enabled can still inherit from it.
                             ProcessFooter(subGroup, HeaderFooterValues.First);
                             continue;
                         }

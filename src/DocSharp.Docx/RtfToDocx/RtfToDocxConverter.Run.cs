@@ -124,35 +124,35 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         {
             case "accnone":
                 runState.Emphasis = EmphasisMarkValues.None;
-                break;
+                return true;
             case "acccircle":
                 runState.Emphasis = EmphasisMarkValues.Circle;
-                break;
+                return true;
             case "acccomma":
                 runState.Emphasis = EmphasisMarkValues.Comma;
-                break;
+                return true;
             case "accdot":
                 runState.Emphasis = EmphasisMarkValues.Dot;
-                break;
+                return true;
             case "accunderdot":
                 runState.Emphasis = EmphasisMarkValues.UnderDot;
-                break;
+                return true;
             // case "animtext": // No longer supported by Word
-            //     break;
+            //     return true;
             case "b":
                 runState.Bold = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "charscalex":
                 if (cw.HasValue)
                     runState.FontScaling = cw.Value;
-                break;
+                return true;
             case "caps":
                 runState.AllCaps = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
              case "chbrdr":
                 runState.CharacterBorder ??= new Border();
                 currentBorder = runState.CharacterBorder;
-                break;                
+                return true;                
             case "chcfpat":
             case "chcbpat":
                 if (cw.Value != null)
@@ -174,7 +174,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         }
                     }
                 }
-                break;
+                return true;
             case "cbpat":
             case "cfpat":
                 if (cw.Value != null)
@@ -196,61 +196,61 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         }
                     }
                 }
-                break;
+                return true;
             // case "cb": // Not supported by Word, use chcbpat to specify background color
-            //     break;
+            //     return true;
             case "cf":
                 if (cw.HasValue)
                     runState.FontColorIndex = cw.Value;
-                break;
+                return true;
             case "cgrid":
                 runState.SnapToGrid = cw.HasValue && cw.Value == 0; // enabled by default in DOCX, but not in RTF                
-                break;
+                return true;
             case "cs":
                 if (cw.HasValue)
                     runState.CharacterStyleIndex = cw.Value;
-                break;
+                return true;
             case "dn":
                 if (cw.HasValue)
                     runState.VerticalOffset = -cw.Value;
-                break;
+                return true;
             case "embo":
                 runState.Emboss = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "expnd":
                 if (cw.HasValue)
                     runState.FontSpacing = cw.Value / 5; // convert quarter-points to twips (1/20th of point)
-                break;
+                return true;
             case "expndtw":
                 if (cw.HasValue)
                     runState.FontSpacing = cw.Value;
-                break;
+                return true;
             case "fittext":
                 if (cw.HasValue && cw.Value >= 0) // TODO: handle -1 properly
                     runState.FitText = cw.Value;
-                break;
+                return true;
             case "fs":
                 if (cw.HasValue)
                     runState.FontSize = cw.Value;
-                break;
+                return true;
             case "f":
                 if (cw.HasValue)
                     runState.FontIndex = cw.Value;
-                break;
+                return true;
             case "highlight":
                 if (cw.HasValue)
                     runState.HighlightColorIndex = cw.Value == 0 ? null : cw.Value;
-                break;
+                return true;
             case "i":
                 runState.Italic = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "impr":
                 runState.Imprint = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "kerning":
                 if (cw.HasValue && cw.Value > 0)
                     runState.Kerning = cw.Value;
-                break;
+                return true;
             case "lang":
             case "langnp":
                 if (cw.HasValue)
@@ -265,7 +265,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         runState.Languages.Val = langId;
                     }
                 }
-                break;
+                return true;
             case "langfe":
             case "langfenp":
                 if (cw.HasValue)
@@ -281,112 +281,110 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         runState.Languages.EastAsia = langId;
                     }
                 }
-                break;
+                return true;
             case "ltrch":
                 runState.RightToLeft = false;
-                break;
+                return true;
             case "noproof":
                 runState.NoProof = true;
-                break;
+                return true;
             case "nosupersub":
                 runState.Subscript = false;
                 runState.Superscript = false;
-                break;
+                return true;
             case "outl":
                 runState.Outline = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "rtlch":
                 runState.RightToLeft = true;
-                break;
+                return true;
              case "scaps":
                 runState.SmallCaps = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "shad":
                 runState.Shadow = cw.HasValue ? cw.Value != 0 : true;
-                break;  
+                return true;  
             case "strike":
                 runState.Strike = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "striked":
                 // striked1 or striked0 necessary in this case (no striked alone)
                 if (cw.HasValue)
                     runState.DoubleStrike = cw.Value != 0;
-                break;
+                return true;
             case "sub":
                 runState.Subscript = cw.HasValue ? cw.Value != 0 : true;
-                break;
+                return true;
             case "super":
                 runState.Superscript = cw.HasValue ? cw.Value != 0 : true;
-                break;            
+                return true;            
             case "ul":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Single : null) : UnderlineValues.Single;
-                break;
+                return true;
             case "ulc":
                 if (cw.HasValue)
                     runState.UnderlineColorIndex = cw.Value;
-                break;
+                return true;
             case "uld":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Dotted : null) : UnderlineValues.Dotted;
-                break;
+                return true;
             case "uldash":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Dash : null) : UnderlineValues.Dash;
-                break;                
+                return true;                
             case "uldashd":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DotDash : null) : UnderlineValues.DotDash;
-                break;
+                return true;
             case "uldashdd":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DotDotDash : null) : UnderlineValues.DotDotDash;
-                break;
+                return true;
             case "uldb":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Double : null) : UnderlineValues.Double;
-                break;
+                return true;
             case "ulldash":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashLong : null) : UnderlineValues.DashLong;
-                break;
+                return true;
             case "ulth":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Thick : null) : UnderlineValues.Thick;
-                break;
+                return true;
             case "ulthd":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DottedHeavy : null) : UnderlineValues.DottedHeavy;
-                break;
+                return true;
             case "ulthdash":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashedHeavy : null) : UnderlineValues.DashedHeavy;
-                break;
+                return true;
             case "ulthdashd":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashDotHeavy : null) : UnderlineValues.DashDotHeavy;
-                break;
+                return true;
             case "ulthdashdd":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashDotDotHeavy : null) : UnderlineValues.DashDotDotHeavy;
-                break;
+                return true;
             case "ulthldash":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.DashLongHeavy : null) : UnderlineValues.DashLongHeavy;
-                break;
+                return true;
             case "ululdbwave":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.WavyDouble : null) : UnderlineValues.WavyDouble;
-                break;
+                return true;
             case "ulw":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Words : null) : UnderlineValues.Words;
-                break;
+                return true;
             case "ulwave":
                 runState.Underline = cw.HasValue ? (cw.Value != 0 ? UnderlineValues.Wave : null) : UnderlineValues.Wave;
-                break;
+                return true;
             case "ulnone":
                 runState.Underline = UnderlineValues.None;
-                break;
+                return true;
             case "up":
                 if (cw.HasValue)
                     runState.VerticalOffset = cw.Value;
-                break;
+                return true;
             case "v":
                 // TODO: special handling for paragraphs
                 runState.Hidden = cw.HasValue ? cw.Value != 0 : true;
-                break;  
+                return true;  
             // case "cchs":
-            // case "g":
             // case "gcw":
-            // case "gridtbl":
             // case "nosectexpand":
-            //     break; // TODO 
+            //     return true; // TODO 
         }
         return false;
     }
