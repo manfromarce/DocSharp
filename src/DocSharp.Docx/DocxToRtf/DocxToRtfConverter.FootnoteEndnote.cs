@@ -44,7 +44,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
             if (footnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Write($"\\sftn"); // Footnote number format
+                sb.Write($"\\ftn"); // Document-level footnotes number format
                 ProcessFootnoteNumberFormat(footnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -106,7 +106,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
             if (endnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Write($"\\aftn"); // Endnote number format
+                sb.Write($"\\aftn"); // Document-level endnotes number format
                 ProcessFootnoteNumberFormat(endnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -114,7 +114,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             {
                 if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
                 {
-                    // Restart at each page not available for endnotes in RTF
+                    // Restart at each page is not available for endnotes in RTF; fallback to restart at each section
                     sb.Write($"\\aftnrestart");
                 }
                 else if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
@@ -152,7 +152,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 }
                 else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.PageBottom)
                 {
-                    sb.Write("\\ftnbj");
+                    sb.Write("\\sftnbj");
                 }
                 else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.SectionEnd)
                 {
@@ -163,7 +163,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
             if (footnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Write($"\\sftn"); // Footnote number format
+                sb.Write($"\\sftn"); // Section-level footnotes number format
                 ProcessFootnoteNumberFormat(footnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -202,7 +202,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {            
             if (endnoteProperties.NumberingFormat?.Val != null)
             {
-                sb.Write($"\\saftn"); // Endnote number format
+                sb.Write($"\\saftn"); // Section-level endnotes number format
                 ProcessFootnoteNumberFormat(endnoteProperties.NumberingFormat.Val, sb); // Append number format
             }
 
@@ -210,7 +210,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             {
                 if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachPage)
                 {
-                    // Restart at each page is not available for endnotes in RTF
+                    // Restart at each page is not available for endnotes in RTF; fallback to restart at each section
                     sb.Write($"\\saftnrestart");
                 }
                 else if (endnoteProperties.NumberingRestart.Val == RestartNumberValues.EachSection)
