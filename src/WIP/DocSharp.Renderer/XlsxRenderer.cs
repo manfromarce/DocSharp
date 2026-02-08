@@ -116,7 +116,7 @@ internal class XlsxRenderer : IDocumentRenderer<QuestPDF.Fluent.Document>
             if ((WorksheetNumber < 1 || WorksheetNumber == i) && worksheet?.Worksheet != null)
             {
                 string worksheetName = "";
-                var sheets = workbookPart.Workbook.Sheets;
+                var sheets = workbookPart.Workbook?.Sheets;
                 if (sheets != null && sheets.Elements<Sheet>().ElementAtOrDefault(i - 1) is Sheet sheet)
                     worksheetName = sheet.Name?.Value ?? "";
 

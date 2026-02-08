@@ -29,7 +29,7 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
                                             renderer.Styles.MarkdownStyles["ListBulletItem"];
         listInfo.StyleId = listItemStyle;
 
-        var abstractNum = numbering.Elements<AbstractNum>().FirstOrDefault(e => e.StyleLink?.Val == listItemStyle);
+        var abstractNum = numbering?.Elements<AbstractNum>().FirstOrDefault(e => e.StyleLink?.Val == listItemStyle);
         if (abstractNum?.AbstractNumberId != null) // TODO: Fallback and create this; or try to get try to get style --> numPr --> numId --> abstractNumId instead.
         {
             int abstractNumId = abstractNum.AbstractNumberId.Value;
@@ -38,7 +38,7 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
             //                                                                     n.AbstractNumId.Val == abstractNumId)
             //                                                         .FirstOrDefault();
 
-            var newNumberingId = numbering.Elements<NumberingInstance>().Select(n => n.NumberID?.Value ?? 0).DefaultIfEmpty(0).Max() + 1;
+            var newNumberingId = numbering!.Elements<NumberingInstance>().Select(n => n.NumberID?.Value ?? 0).DefaultIfEmpty(0).Max() + 1;
             var numberingInstance = new NumberingInstance
             {
                 NumberID = newNumberingId,

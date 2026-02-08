@@ -62,7 +62,7 @@ public static class ParagraphHelpers
 
         if (!string.IsNullOrEmpty(styleId))
         {
-            mainDocumentPart.Document.ApplyStyleToParagraph(styleId, p);
+            mainDocumentPart.Document.ApplyStyleToParagraph(styleId!, p);
         }
         return p;
     }
@@ -119,7 +119,7 @@ public static class ParagraphHelpers
 
     public static Paragraph? FindParagraphContainingText(WordprocessingDocument document, string text)
     {
-        if (document.MainDocumentPart == null || document.MainDocumentPart.Document.Body == null) return null;
+        if (document.MainDocumentPart?.Document?.Body == null) return null;
 
         var textElement = document.MainDocumentPart.Document.Body
             .Descendants<Text>().FirstOrDefault(t => t.Text.Contains(text));

@@ -70,7 +70,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
             }
             else
             {
-                renderer.Document.MainDocumentPart.AddHyperlinkRelationship(uri!, true, linkId);
+                renderer.Document.MainDocumentPart?.AddHyperlinkRelationship(uri!, true, linkId);
                 hl = new Hyperlink()
                 {
                     Id = linkId,
@@ -167,7 +167,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
     private string TryGetBookmark(DocxDocumentRenderer renderer, string anchorId)
     {
         // To be improved
-        var bookmarkName = renderer.Document.MainDocumentPart?.Document.Body?
+        var bookmarkName = renderer.Document.MainDocumentPart?.Document?.Body?
                            .Descendants<BookmarkStart>()
                            .Select(bs => bs.Name)
                            .Where(name => name != null &&

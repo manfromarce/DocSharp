@@ -428,6 +428,8 @@ public class MarkdownConverter
     private void ApplyPageSettingsToDocx(WordprocessingDocument document)
     {
         if (document?.MainDocumentPart == null) return;
+        document.MainDocumentPart.Document ??= new W.Document();
+        document.MainDocumentPart.Document.Body ??= document.MainDocumentPart.Document.AppendChild(new W.Body());
 
         var sect = document.MainDocumentPart.Document.Body.Elements<W.SectionProperties>().LastOrDefault();
         if (sect == null)

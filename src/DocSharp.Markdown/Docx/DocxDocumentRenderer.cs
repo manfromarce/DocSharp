@@ -46,7 +46,7 @@ public class DocxDocumentRenderer : RendererBase
         Document = document;
 
         Debug.Assert(Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
-        Debug.Assert(Document.MainDocumentPart.Document.Body != null, "Document.MainDocumentPart.Document.Body != null");
+        Debug.Assert(Document.MainDocumentPart?.Document?.Body != null, "Document.MainDocumentPart.Document.Body != null");
         
         Cursor = new DocumentTreeCursor(Document.MainDocumentPart.Document.Body, 
             Document.MainDocumentPart.Document.Body.Elements<Paragraph>().LastOrDefault());
