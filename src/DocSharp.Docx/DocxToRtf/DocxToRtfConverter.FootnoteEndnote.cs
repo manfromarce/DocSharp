@@ -333,7 +333,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         // This method handles separator and continuationSeparator types only,
         // the actual footnotes are processed when a reference to them is found in the document.
-        if (footnotesPart != null)
+        if (footnotesPart?.Footnotes != null)
         {
             foreach (var footnote in footnotesPart.Footnotes.OfType<Footnote>())
             {
@@ -369,7 +369,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         // This method handles separator and continuationSeparator types only,
         // the actual endnotes are processed when a reference to them is found in the document.
-        if (endnotesPart != null)
+        if (endnotesPart?.Endnotes != null)
         {
             foreach (var endnote in endnotesPart.Endnotes.OfType<Endnote>())
             {

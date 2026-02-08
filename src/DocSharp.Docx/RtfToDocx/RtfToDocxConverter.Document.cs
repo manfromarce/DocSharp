@@ -65,6 +65,20 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
 
             // Document settings
+            case "bookfold":
+                CreateSetting<BookFoldPrinting>(true); 
+                return true;
+            case "bookfoldrev":
+                CreateSetting<BookFoldReversePrinting>(true); 
+                return true;
+            // TODO: default fonts
+            // case "deff":
+            // case "adeff":
+            // case "stshfdbch":
+            // case "stshfloch":
+            // case "stshfhich":
+            // case "stshfbi":
+            //     return true;
             case "deflang":
             case "deflangfe":
             case "adeflang":
@@ -79,12 +93,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     if (name == "adeflang")
                         defaultLang.Bidi = defaultLangId;
                 }
-                return true;
-            case "bookfold":
-                CreateSetting<BookFoldPrinting>(true); 
-                return true;
-            case "bookfoldrev":
-                CreateSetting<BookFoldReversePrinting>(true); 
                 return true;
             case "deftab":
                 if (cw.HasValue && cw.Value > 0)
