@@ -158,8 +158,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(contentPart);
         if (id?.Value != null)
         {
-            var part = mainDocumentPart?.GetPartById(id.Value);
-            if (part != null)
+            if (mainDocumentPart?.TryGetPartById(id.Value, out OpenXmlPart? part) == true)
             {
                 // Read the part content
                 using (var stream = part.GetStream())
@@ -200,8 +199,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(altChunk);
         if (id?.Value != null)
         {
-            var part = mainDocumentPart?.GetPartById(id.Value);
-            if (part is AlternativeFormatImportPart alternativeFormatImportPart)
+            if (mainDocumentPart?.TryGetPartById(id.Value, out OpenXmlPart? part) == true && part is AlternativeFormatImportPart alternativeFormatImportPart)
             {
                 try
                 {

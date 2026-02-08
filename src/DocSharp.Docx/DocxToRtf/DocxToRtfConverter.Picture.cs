@@ -18,7 +18,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 {
     internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, PictureProperties properties, RtfStringWriter sb, string shapeProperties = "", (int borderWidth, int borderColor)? borderInfo = null)
     {
-        if (rootPart?.GetPartById(relId) is ImagePart imagePart)
+        if (rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
         {
             using (var stream = imagePart.GetStream(FileMode.Open, FileAccess.Read))
             {
@@ -182,7 +182,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // Get dimensions from the image file
         long imageWidth = 0;
         long imageHeight = 0;
-        if (rootPart?.GetPartById(rId) is ImagePart imagePart)
+        if (rootPart?.TryGetPartById(rId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
         {
             var stream = new MemoryStream();
             using (var originalStream = imagePart.GetStream(FileMode.Open, FileAccess.Read))

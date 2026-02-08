@@ -42,7 +42,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         foreach (var headerReference in headers)
         {
             if (headerReference?.Id?.Value is string headerId &&
-                mainPart.GetPartById(headerId) is HeaderPart headerPart && 
+                !string.IsNullOrWhiteSpace(headerId) && 
+                mainPart.TryGetPartById(headerId, out OpenXmlPart? part) == true && 
+                part is HeaderPart headerPart && 
                 headerPart.Header != null)
             {
                 ProcessHeader(headerPart.Header, writer, headerReference);
@@ -51,7 +53,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         foreach (var footerReference in footers)
         {
             if (footerReference?.Id?.Value is string footerId &&
-                mainPart.GetPartById(footerId) is FooterPart footerPart && 
+                !string.IsNullOrWhiteSpace(footerId) && 
+                mainPart.TryGetPartById(footerId, out OpenXmlPart? part) == true && 
+                part is FooterPart footerPart && 
                 footerPart.Footer != null)
             {
                 ProcessFooter(footerPart.Footer, writer, footerReference);

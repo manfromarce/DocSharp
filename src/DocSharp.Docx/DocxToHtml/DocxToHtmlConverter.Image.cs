@@ -28,7 +28,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         try
         {
-            if (rootPart?.GetPartById(relId!) is ImagePart imagePart)
+            if (rootPart?.TryGetPartById(relId!, out OpenXmlPart? part) == true && part is ImagePart imagePart)
             {
                 if (string.IsNullOrWhiteSpace(ImagesOutputFolder))
                 {

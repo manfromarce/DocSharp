@@ -514,7 +514,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         try
         {
             if (ImagesOutputFolder != null &&
-                rootPart?.GetPartById(relId!) is ImagePart imagePart)
+                rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
             {
                 try
                 {

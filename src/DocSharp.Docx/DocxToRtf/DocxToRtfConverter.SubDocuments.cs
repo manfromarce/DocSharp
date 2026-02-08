@@ -119,8 +119,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(altChunk);
         if (id?.Value != null)
         {
-            var part = mainDocumentPart?.GetPartById(id.Value);
-            if (part is AlternativeFormatImportPart alternativeFormatImportPart)
+            if (mainDocumentPart?.TryGetPartById(id.Value, out OpenXmlPart? part) == true && part is AlternativeFormatImportPart alternativeFormatImportPart)
             {
                 try
                 {

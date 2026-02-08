@@ -376,8 +376,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
         var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(altChunk);
         if (id?.Value != null)
         {
-            var part = mainDocumentPart?.GetPartById(id.Value);
-            if (part is AlternativeFormatImportPart alternativeFormatImportPart)
+            if (mainDocumentPart?.TryGetPartById(id.Value, out OpenXmlPart? part) == true && part is AlternativeFormatImportPart alternativeFormatImportPart)
             {
                 // Read the part content
                 using (var stream = part.GetStream())
