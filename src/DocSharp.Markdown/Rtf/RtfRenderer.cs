@@ -94,7 +94,7 @@ public class RtfRenderer : RendererBase
         RtfWriter.WriteLine($"\\paperw{paperw}\\paperh{paperh}\\margl{margl}\\margr{margr}\\margt{margt}\\margb{margb}");
 
         // Enable endnotes
-        RtfWriter.WriteLine(@"\enddoc\aenddoc");
+        RtfWriter.WriteLine(@"\fet2\enddoc\aenddoc");
 
         // Font table
         RtfWriter.Write($"{{\\fonttbl{{\\f0 {Settings.DefaultFont};}}");

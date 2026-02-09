@@ -85,12 +85,12 @@ Other recommended libraries (some of these are used in the sample app, *not* dep
     + [OfficeIMO](https://github.com/EvotecIT/OfficeIMO) - DOCX, XLSX, PPTX, Markdown, CSV; can also merge, compare and convert some formats
     + [Clippit](https://github.com/sergey-tihon/Clippit) - DOCX, XLSX, PPTX; can also merge, compare and convert some formats
     + [Openize.OpenXML-SDK](https://github.com/openize-com/openize-open-xml-sdk-net) - DOCX, XLSX, PPTX
-    + [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) - PPTX; can also render slides to images
     + [ClosedXML](https://github.com/ClosedXML/ClosedXML) - XLSX
     + [Sylvan.Data.Excel](https://github.com/MarkPflug/Sylvan.Data.Excel) - XLSX, XLS, XLSB
+    + [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) - PPTX; can also render slides to images
     + [NPOI](https://github.com/nissl-lab/npoi) - DOCX, XLSX, XLS; partial port of Apache POI
     + [FluentNPOI](https://github.com/HouseAlwaysWin/FluentNPOI) - XLSX, XLS; HTML/PDF export
-- Extract data: 
+- Read only / Extract data: 
     + [GustavoHennig/b2xtranslator](https://github.com/GustavoHennig/b2xtranslator) - DOC prior to Office 97
     + [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader) - XLS (pre-97 too), XLSB, XLSX, CSV
     + [PdfPig](https://github.com/UglyToad/PdfPig), [Tabula.Csv](https://github.com/BobLd/tabula-sharp) - PDF
@@ -111,7 +111,7 @@ Other recommended libraries (some of these are used in the sample app, *not* dep
     + Markdown to HTML: [Markdig](https://github.com/xoofx/markdig)
     + Markdown to PDF and other formats: [QuestPDF.Markdown](https://github.com/christiaanderidder/QuestPDF.Markdown), [VectSharp.Markdown + VectSharp.PDF](https://github.com/arklumpus/VectSharp), [MarkdownToPdf](https://github.com/geertjanthomas/MarkdownToPdf)
     + AsciiDoc to HTML: [NAsciidoc](https://github.com/rmannibucau/NAsciidoc), [AsciiDocSharp](https://github.com/AsciiDocSharp/AsciiDocSharp)
-    + PDF to images/SVG: [PDFtoImage](https://github.com/sungaila/PDFtoImage), [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia), [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
+    + PDF to images/SVG: [PDFtoImage](https://github.com/sungaila/PDFtoImage), [PdfPig.Rendering.Skia](https://github.com/BobLd/PdfPig.Rendering.Skia), [Melville.Pdf](https://github.com/DrJohnMelville/Pdf), [PdfToSvg.NET](https://github.com/dmester/pdftosvg.net)
 
 ### License
 
