@@ -289,188 +289,124 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
         if (numberingFormat.Val == NumberFormatValues.Decimal)
-        {
             sb.Write(@"\levelnfc0"); // 1, 2, 3
-        }
         else if (numberingFormat.Val == NumberFormatValues.UpperRoman)
-        {
             sb.Write(@"\levelnfc1"); // I, II, III
-        }
         else if (numberingFormat.Val == NumberFormatValues.LowerRoman)
-        {
             sb.Write(@"\levelnfc2"); // i, ii, iii
-        }
         else if (numberingFormat.Val == NumberFormatValues.UpperLetter)
-        {
             sb.Write(@"\levelnfc3"); // A, B, C
-        }
         else if (numberingFormat.Val == NumberFormatValues.LowerLetter)
-        {
             sb.Write(@"\levelnfc4"); // a, b, c
-        }
         else if (numberingFormat.Val == NumberFormatValues.Ordinal)
-        {
             sb.Write(@"\levelnfc5"); // 1st, 2nd, 3rd
-        }
         else if (numberingFormat.Val == NumberFormatValues.CardinalText)
-        {
             sb.Write(@"\levelnfc6"); // One, Two Three
-        }
         else if (numberingFormat.Val == NumberFormatValues.OrdinalText)
-        {
             sb.Write(@"\levelnfc7"); // First, Second, Third
-        }
+        else if (numberingFormat.Val == NumberFormatValues.Hex)
+            sb.Write(@"\levelnfc8"); // Hex number
         else if (numberingFormat.Val == NumberFormatValues.Chicago)
-        {
             sb.Write(@"\levelnfc9"); // *, †, ‡, §
-        }
-        else if (numberingFormat.Val == NumberFormatValues.ChineseCounting ||
-                 numberingFormat.Val == NumberFormatValues.IdeographDigital ||
-                 numberingFormat.Val == NumberFormatValues.KoreanDigital ||
-                 numberingFormat.Val == NumberFormatValues.TaiwaneseCounting)
-        {
+        else if (numberingFormat.Val == NumberFormatValues.IdeographDigital)
             sb.Write(@"\levelnfc10"); // Kanji numbering without the digit character (DBNUM1)
-        }
-        else if (numberingFormat.Val == NumberFormatValues.ChineseLegalSimplified ||
-                 numberingFormat.Val == NumberFormatValues.IdeographLegalTraditional ||
-                 numberingFormat.Val == NumberFormatValues.JapaneseCounting ||
-                 numberingFormat.Val == NumberFormatValues.KoreanCounting)
-        {
+        else if (numberingFormat.Val == NumberFormatValues.JapaneseCounting)
             sb.Write(@"\levelnfc11"); // Kanji numbering with the digit character (DBNUM2)
-        }
         else if (numberingFormat.Val == NumberFormatValues.Aiueo)
-        {
             sb.Write(@"\levelnfc12"); // 46 phonetic katakana characters in "aiueo" order (AIUEO) (newer form – “あいうえお。。。” based on phonem matrix) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.Iroha)
-        {
             sb.Write(@"\levelnfc13"); // 46 phonetic katakana characters in "iroha" order (IROHA) (old form – “いろはにほへとちりぬるお。。。” based on haiku from long ago) 
-        }
-        else if (numberingFormat.Val == NumberFormatValues.ChineseCountingThousand ||
-                numberingFormat.Val == NumberFormatValues.JapaneseLegal ||
-                numberingFormat.Val == NumberFormatValues.KoreanLegal ||
-                numberingFormat.Val == NumberFormatValues.TaiwaneseCountingThousand)
-        {
-            sb.Write(@"\levelnfc14"); // Kanji numbering 3 (DBNUM3)
-        }
-        else if (numberingFormat.Val == NumberFormatValues.KoreanDigital2 ||
-                numberingFormat.Val == NumberFormatValues.TaiwaneseDigital)
-        {
-            sb.Write(@"\levelnfc15"); // Kanji numbering 4 (DBNUM4)
-        }
-        else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedCircle)
-        {
+        else if (numberingFormat.Val == NumberFormatValues.DecimalFullWidth)
+            sb.Write(@"\levelnfc14");
+        else if (numberingFormat.Val == NumberFormatValues.DecimalHalfWidth)
+            sb.Write(@"\levelnfc15");
+        else if (numberingFormat.Val == NumberFormatValues.JapaneseLegal)
+            sb.Write(@"\levelnfc16"); // Kanji numbering 3 (DBNUM3)
+        else if (numberingFormat.Val == NumberFormatValues.JapaneseLegal)
+            sb.Write(@"\levelnfc17"); // Kanji numbering 4 (DBNUM4)
+        else if (numberingFormat.Val == NumberFormatValues.JapaneseDigitalTenThousand)
             sb.Write(@"\levelnfc18"); // Circle numbering (CIRCLENUM) 
-        }
-        else if (numberingFormat.Val == NumberFormatValues.DecimalFullWidth || 
-                 numberingFormat.Val == NumberFormatValues.DecimalFullWidth2)
-        {
+        else if (numberingFormat.Val == NumberFormatValues.DecimalFullWidth2)
             sb.Write(@"\levelnfc19"); // Double-byte Arabic numbering 
-        }
+        else if (numberingFormat.Val == NumberFormatValues.AiueoFullWidth)
+            sb.Write(@"\levelnfc20");
+        else if (numberingFormat.Val == NumberFormatValues.IrohaFullWidth)
+            sb.Write(@"\levelnfc21");
         else if (numberingFormat.Val == NumberFormatValues.DecimalZero)
-        {
             sb.Write(@"\levelnfc22"); // Leading zero (01, 02, 03, ...)
-        }
         else if (numberingFormat.Val == NumberFormatValues.Bullet)
-        {
             sb.Write(@"\levelnfc23"); // Bullet (no number)
-        }
         else if (numberingFormat.Val == NumberFormatValues.Ganada)
-        {
             sb.Write(@"\levelnfc24"); // Korean numbering 2 (GANADA) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.Chosung)
-        {
             sb.Write(@"\levelnfc25"); // Korean numbering 1 (Chosung) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedFullstop)
-        {
             sb.Write(@"\levelnfc26"); // Chinese numbering 1 (GB1)
-        }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedParen)
-        {
             sb.Write(@"\levelnfc27"); // Chinese numbering 2 (GB2)
-        }
         else if (numberingFormat.Val == NumberFormatValues.DecimalEnclosedCircleChinese)
-        {
             sb.Write(@"\levelnfc28"); // Chinese numbering 3 (GB3)
-        }
         else if (numberingFormat.Val == NumberFormatValues.IdeographEnclosedCircle)
-        {
             sb.Write(@"\levelnfc29"); // Chinese numbering 4 (GB4)
-        }
         else if (numberingFormat.Val == NumberFormatValues.IdeographTraditional)
-        {
             sb.Write(@"\levelnfc30"); // Chinese Zodiac numbering 1 (ZODIAC1) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.IdeographZodiac)
-        {
             sb.Write(@"\levelnfc31"); // Chinese Zodiac numbering 2 (ZODIAC2) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.IdeographZodiacTraditional)
-        {
             sb.Write(@"\levelnfc32"); // Chinese Zodiac numbering 3 (ZODIAC3) 
-        }
+        else if (numberingFormat.Val == NumberFormatValues.TaiwaneseCounting)
+            sb.Write(@"\levelnfc33");
+        else if (numberingFormat.Val == NumberFormatValues.IdeographLegalTraditional)
+            sb.Write(@"\levelnfc34");
+        else if (numberingFormat.Val == NumberFormatValues.TaiwaneseCountingThousand)
+            sb.Write(@"\levelnfc35");
+        else if (numberingFormat.Val == NumberFormatValues.TaiwaneseDigital)
+            sb.Write(@"\levelnfc36");
+        else if (numberingFormat.Val == NumberFormatValues.ChineseCounting)
+            sb.Write(@"\levelnfc37");
+            // sb.Write(@"\levelnfc40");
+        else if (numberingFormat.Val == NumberFormatValues.ChineseLegalSimplified)
+            sb.Write(@"\levelnfc38");
+        else if (numberingFormat.Val == NumberFormatValues.ChineseCountingThousand)
+            sb.Write(@"\levelnfc39");
+        else if (numberingFormat.Val == NumberFormatValues.KoreanDigital)
+            sb.Write(@"\levelnfc41");
+        else if (numberingFormat.Val == NumberFormatValues.KoreanCounting)
+            sb.Write(@"\levelnfc42");
+        else if (numberingFormat.Val == NumberFormatValues.KoreanLegal)
+            sb.Write(@"\levelnfc43");
+        else if (numberingFormat.Val == NumberFormatValues.KoreanDigital2)
+            sb.Write(@"\levelnfc44");
         else if (numberingFormat.Val == NumberFormatValues.Hebrew1)
-        {
             sb.Write(@"\levelnfc45"); // Hebrew non-standard decimal 
-        }
         else if (numberingFormat.Val == NumberFormatValues.ArabicAlpha)
-        {
             sb.Write(@"\levelnfc46"); // Arabic Alif Ba Tah
-        }
         else if (numberingFormat.Val == NumberFormatValues.Hebrew2)
-        {
             sb.Write(@"\levelnfc47"); // Hebrew Biblical standard
-        }
         else if (numberingFormat.Val == NumberFormatValues.ArabicAbjad)
-        {
             sb.Write(@"\levelnfc48"); // Arabic Abjad style 
-        }
         else if (numberingFormat.Val == NumberFormatValues.HindiVowels)
-        {
             sb.Write(@"\levelnfc49");
-        }
         else if (numberingFormat.Val == NumberFormatValues.HindiConsonants)
-        {
             sb.Write(@"\levelnfc50"); 
-        }
         else if (numberingFormat.Val == NumberFormatValues.HindiNumbers)
-        {
             sb.Write(@"\levelnfc51");
-        }
         else if (numberingFormat.Val == NumberFormatValues.HindiCounting)
-        {
             sb.Write(@"\levelnfc52"); // Hindi descriptive (cardinals) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.ThaiLetters)
-        {
             sb.Write(@"\levelnfc53");
-        }
         else if (numberingFormat.Val == NumberFormatValues.ThaiNumbers)
-        {
             sb.Write(@"\levelnfc54");
-        }
         else if (numberingFormat.Val == NumberFormatValues.ThaiCounting)
-        {
             sb.Write(@"\levelnfc55"); // Thai descriptive (cardinals) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.VietnameseCounting)
-        {
             sb.Write(@"\levelnfc56"); // Vietnamese descriptive (cardinals) 
-        }
         else if (numberingFormat.Val == NumberFormatValues.NumberInDash)
-        {
             sb.Write(@"\levelnfc57"); // Page number format - # -
-        }
         else if (numberingFormat.Val == NumberFormatValues.RussianLower)
-        {
             sb.Write(@"\levelnfc58"); 
-        }
         else if (numberingFormat.Val == NumberFormatValues.RussianUpper)
-        {
             sb.Write(@"\levelnfc59"); 
-        }
         else if (numberingFormat.Val == NumberFormatValues.Custom)
         {
             if (numberingFormat.Format?.Value != null)
@@ -494,14 +430,11 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
         else if (numberingFormat.Val == NumberFormatValues.None)
-        {
             sb.Write(@"\levelnfc255");
-        }
         else
-        {
             // Default (decimal numbers)
+            // (DollartText and BahtText are not available in RTF)
             sb.Write(@"\levelnfc0");
-        }
     }
 
     private void ProcessLevelText(LevelText levelText, string levelTemplateId, RtfStringWriter sb)

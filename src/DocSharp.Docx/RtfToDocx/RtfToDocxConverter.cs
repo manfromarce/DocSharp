@@ -716,7 +716,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 }
                 else if (cw.Name?.StartsWith("pgn") == true)
                 {
-                    var format = RtfPageNumberMapper.GetPageNumberFormat(cw.Name);
+                    var format = RtfNumberFormatMapper.GetNumberFormat(cw.Name);
                     if (format != null)
                     {
                         currentSectPr ??= CreateSectionProperties();
