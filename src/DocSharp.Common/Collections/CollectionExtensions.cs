@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DocSharp.Collections;
+namespace DocSharp.Helpers;
 
 public static class CollectionExtensions
 {
@@ -29,4 +29,12 @@ public static class CollectionExtensions
         return dictionary.TryGetValue(key, out TValue? value) ? value : defaultValue;
     }
 #endif
+
+    public static Stack<T> Clone<T>(this Stack<T> original) 
+    {
+        var arr = new T[original.Count];
+        original.CopyTo(arr, 0);
+        Array.Reverse(arr);
+        return new Stack<T>(arr);
+    }
 }

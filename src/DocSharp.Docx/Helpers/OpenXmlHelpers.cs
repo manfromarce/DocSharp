@@ -20,6 +20,12 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlHelpers
 {
+    public static void Clear(this OpenXmlElement element)
+    {
+        element.RemoveAllChildren();
+        element.ClearAllAttributes();
+    }
+
     public static int GetLinksCount(WordprocessingDocument document)
     {
         return document.MainDocumentPart?.HyperlinkRelationships.Count() ?? 0;

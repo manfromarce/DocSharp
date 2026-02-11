@@ -18,6 +18,31 @@ namespace DocSharp.Docx;
 
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
+    private void ProcessPartContent(RtfGroup group, Func<OpenXmlCompositeElement> createPart)
+    {
+        // Save current state
+        var oldContainer = container;
+        var oldParagraph = currentParagraph;
+        var oldPr = pPr.CloneNode(true);
+        var oldFmtStack = fmtStack.Clone();
+
+        // Set context to a different document part (header, footer, footnote, endnote)
+        container = createPart();
+        currentParagraph = null;
+        currentRun = null;
+        pPr.Clear();
+        fmtStack.Clear();
+
+        // Add content to the specified part
+        ConvertGroup(group);        
+        
+        // Restore previous context; create subsequent content in a new run
+        container = oldContainer;
+        currentParagraph = oldParagraph;
+        pPr = (ParagraphProperties)oldPr.CloneNode(true);
+        fmtStack = oldFmtStack;
+    }
+
     private void ParseFontTable(RtfDestination dest)
     {
         if (dest == null) return;

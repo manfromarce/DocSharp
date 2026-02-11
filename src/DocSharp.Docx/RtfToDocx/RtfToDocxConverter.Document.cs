@@ -312,4 +312,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         var setting = settingsPart.Settings.GetFirstChild<T>() ?? settingsPart.Settings.AppendChild(new T());
         setting.Val = value;
     }
+
+    private T EnsureSetting<T>() where T : OpenXmlElement, new()
+    {
+        settingsPart ??= mainPart.AddNewPart<DocumentSettingsPart>();
+        settingsPart.Settings ??= new Settings();
+        return settingsPart.Settings.GetFirstChild<T>() ?? settingsPart.Settings.AppendChild(new T());
+    }
 }

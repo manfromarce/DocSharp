@@ -29,6 +29,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private Dictionary<string, int> bookmarks = new();
     private Encoding? codePageEncoding;
 
+    private bool pendingFootnoteEndnoteRef = false;
+
     private BorderType? currentBorder;
     private SectionProperties? defaultSectPr;
     private SectionProperties? currentSectPr;
@@ -80,6 +82,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentSectPr = null;
         currentParagraph = null;
         currentRun = null;
+        pendingFootnoteEndnoteRef = false;
         pPr = new ParagraphProperties();
         fmtStack.Clear();
 
@@ -380,15 +383,49 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             ProcessFooter(subGroup, HeaderFooterValues.Default);
                             continue;
                         }
-                        // TODO
+
                         else if (dname == "footnote")
                         {
+                            ProcessFootnoteEndnote(subGroup);
                             continue;
                         }
+                        else if (dname == "ftncn")
+                        {                        
+                            ProcessFootnoteContinuationNotice(subGroup);
+                            continue;
+                        }
+                        else if (dname == "ftnsep")
+                        {
+                            ProcessFootnoteSeparator(subGroup);
+                            continue;
+                        }
+                        else if (dname == "ftnsepc")
+                        {
+                            ProcessFootnoteContinuationSeparator(subGroup);
+                            continue;
+                        }
+                        else if (dname == "aftncn")
+                        {                        
+                            ProcessEndnoteContinuationNotice(subGroup);
+                            continue;
+                        }
+                        else if (dname == "aftnsep")
+                        {
+                            ProcessEndnoteSeparator(subGroup);
+                            continue;
+                        }
+                        else if (dname == "aftnsepc")
+                        {
+                            ProcessEndnoteContinuationSeparator(subGroup);
+                            continue;
+                        }
+
+                        // TODO
                         else if (dname == "pict")
                         {
                             continue;
                         }
+
                         else if (dname == "pn")
                         {
                             continue;
@@ -443,6 +480,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
             }
         }
+        pendingFootnoteEndnoteRef = false;
         // Restore parent formatting state
         TryPop(fmtStack);
     }
@@ -535,19 +573,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             }
         }
 
-        // Ensure paragraph and run exist and append the (possibly trimmed) text
-        if (currentParagraph == null)
-        {
-            currentParagraph = CreateParagraphWithProperties(pPr);
-            container.Append(currentParagraph);
-        }
-        currentRun = CreateRunWithProperties(runState);
-        currentParagraph.Append(currentRun);
-        var t = new Text(text)
+        // Append the (possibly trimmed) text
+        CreateRun().Append(new Text(text)
         {
             Space = SpaceProcessingModeValues.Preserve
-        };
-        currentRun.Append(t);
+        });
     }
 
     private void HandleControlWord(RtfControlWord cw, StringBuilder sb)
@@ -627,8 +657,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 ResetSectionProperties();
                 break;
             case "pard":  // reset paragraph formatting
-                pPr.RemoveAllChildren();
-                pPr.ClearAllAttributes();
+                pPr.Clear();
                 break;
             case "plain": // reset character formatting
                 currentRun = null;
@@ -686,6 +715,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
                 }
                 else if (ProcessBreakControlWord(cw, runState))
+                {
+                    break;
+                }
+                else if (ProcessFootnoteEndnoteControlWord(cw, runState))
                 {
                     break;
                 }

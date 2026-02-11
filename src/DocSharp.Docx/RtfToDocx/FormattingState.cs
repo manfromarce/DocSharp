@@ -42,11 +42,13 @@ internal class FormattingState
     public int? VerticalOffset { get; set; }
 
     public int? CharacterStyleIndex { get; set; }
+
     // Number of ANSI characters to skip after a \uN control word (per RTF \ucN)
     public int Uc { get; set; } = 1;
 
     // Remaining ANSI characters to skip because of a previously seen \u control word
     public int PendingAnsiSkip { get; set; }
+    
     // When true the last emitted break was a text-wrapping line break (from \line or \lbr).
     // Used to avoid emitting duplicate breaks when both \line and \lbr are present.
     public bool LastWasLineBreak { get; set; }

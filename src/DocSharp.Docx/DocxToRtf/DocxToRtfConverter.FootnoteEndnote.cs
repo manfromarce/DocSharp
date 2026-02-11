@@ -156,7 +156,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 }
                 else if (footnoteProperties.FootnotePosition.Val == FootnotePositionValues.SectionEnd)
                 {
-                    // Not supported in RTF.
+                    // Not supported at section level in RTF.
                     // At document level we can add \endnotes to treat footnotes as endnotes.
                 }
             }
@@ -199,7 +199,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         // Don't add EndnoteProperties is there are no endnotes 
         if (FootnotesEndnotes != FootnotesEndnotesType.FootnotesOnlyOrNothing)
-        {            
+        {
+            if (endnoteProperties.EndnotePosition?.Val != null)
+            {
+                // Not supported at section level in RTF.
+            }
+
             if (endnoteProperties.NumberingFormat?.Val != null)
             {
                 sb.Write($"\\saftn"); // Section-level endnotes number format

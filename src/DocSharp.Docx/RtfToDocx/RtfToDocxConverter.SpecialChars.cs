@@ -42,26 +42,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "sectnum": // TODO: keep track of the current section number and write it as fallback
                 CreateSimpleField(" SECTION \\* MERGEFORMAT ", "1");
                 break;
-            // TODO: create comments and footnotes/endnotes (followed by the content group)
+            // TODO: create comment (followed by the content group)
             // case "chatn": 
             //     break;
-            // case "chftn": 
-            //     break;
-            case "chftnsep": 
-                EnsureRun();
-                currentRun!.Append(new SeparatorMark());
-                break;
-            case "chftnsepc":
-                EnsureRun();
-                currentRun!.Append(new ContinuationSeparatorMark());
-                break;
             case "chpgn": 
-                EnsureRun();
-                currentRun!.Append(new PageNumber());
+                CreateRun().Append(new PageNumber());
                 break;
             case "tab":
-                EnsureRun();
-                currentRun!.Append(new TabChar());
+                EnsureRun().Append(new TabChar());
                 break;
             case "uc":
                 // Number of ANSI characters to skip after a following \uN control word

@@ -20,17 +20,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 {
     private void CreateSimpleField(string instr, string currentValue)
     {
-        var runState = TryPeek(fmtStack);
-
-        if (currentParagraph == null)
-        {
-            currentParagraph = CreateParagraphWithProperties(pPr);
-            container.Append(currentParagraph);
-        }
-
-        currentRun = CreateRunWithProperties(runState);
-        currentParagraph.Append(currentRun);
-        currentRun.Append(new SimpleField(new Run(new Text(currentValue)))
+        CreateRun().Append(new SimpleField(new Run(new Text(currentValue)))
         {
             Instruction = instr
         });       
@@ -41,47 +31,29 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     
     private void CreateField(string instrText, string currentValue)
     {
-        var runState = TryPeek(fmtStack);
-
-        if (currentParagraph == null)
-        {
-            currentParagraph = CreateParagraphWithProperties(pPr);
-            container.Append(currentParagraph);
-        }
-
         // Part 1 - Begin
-        currentRun = CreateRunWithProperties(runState);
-        currentParagraph.Append(currentRun);
-        currentRun.Append(new FieldChar()
+        CreateRun().Append(new FieldChar()
         {
             FieldCharType = FieldCharValues.Begin
         });
 
         // Part 2 - InstrText
-        currentRun = CreateRunWithProperties(runState);
-        currentParagraph.Append(currentRun);
-        currentRun.Append(new FieldCode(instrText ?? string.Empty));
+        CreateRun().Append(new FieldCode(instrText ?? string.Empty));
 
         // Part 3 - Separate
-        currentRun = CreateRunWithProperties(runState);
-        currentParagraph.Append(currentRun);
-        currentRun.Append(new FieldChar()
+        CreateRun().Append(new FieldChar()
         {
             FieldCharType = FieldCharValues.Separate
         });
 
         // Part 4 - Current value
-        currentRun = CreateRunWithProperties(runState);
-        currentParagraph.Append(currentRun);
-        currentRun.Append(new Text(currentValue ?? string.Empty)
+        CreateRun().Append(new Text(currentValue ?? string.Empty)
         {
             Space = SpaceProcessingModeValues.Preserve
         });
 
         // Part 5 - End
-        currentRun = CreateRunWithProperties(runState);
-        currentParagraph.Append(currentRun);
-        currentRun.Append(new FieldChar()
+        CreateRun().Append(new FieldChar()
         {
             FieldCharType = FieldCharValues.End
         });

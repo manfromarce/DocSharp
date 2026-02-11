@@ -109,7 +109,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Special characters (symbols, page number, section number, current date/time)
 - ❌ Custom tabs
 - ✅ Header and footer
-- ❌ Footnotes and endnotes
+- ✅ Footnotes and endnotes
 - ❌ Pictures
 - ❌ Drawings (text boxes, shapes, diagrams, WordArt)
 - ❌ Table of contents (in RTF can be a dedicated structure, while in DOCX it's a group of fields)

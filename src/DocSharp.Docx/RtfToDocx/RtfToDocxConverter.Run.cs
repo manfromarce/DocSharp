@@ -18,7 +18,7 @@ namespace DocSharp.Docx;
 
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
-    private void EnsureRun()
+    private Run EnsureRun()
     {
         EnsureParagraph();
         if (currentRun == null)
@@ -26,6 +26,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             currentRun = CreateRunWithProperties(TryPeek(fmtStack));
             currentParagraph!.Append(currentRun);
         }
+        return currentRun;
+    }
+
+    private Run CreateRun()
+    {
+        if (currentParagraph == null)
+        {
+            currentParagraph = CreateParagraphWithProperties(pPr);
+            container.Append(currentParagraph);
+        }
+        currentRun = CreateRunWithProperties(TryPeek(fmtStack));
+        currentParagraph.Append(currentRun);
+        return currentRun;
     }
 
     private Run CreateRunWithProperties(FormattingState state)
@@ -39,7 +52,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (state.DoubleStrike) rPr.Append(new DoubleStrike());        
 
         if (state.Subscript) rPr.Append(new VerticalTextAlignment() { Val = VerticalPositionValues.Subscript });
-        else if (state.Subscript) rPr.Append(new VerticalTextAlignment() { Val = VerticalPositionValues.Superscript });
+        else if (state.Superscript) rPr.Append(new VerticalTextAlignment() { Val = VerticalPositionValues.Superscript });
 
         if (state.SmallCaps) rPr.Append(new SmallCaps());
         if (state.AllCaps) rPr.Append(new Caps());

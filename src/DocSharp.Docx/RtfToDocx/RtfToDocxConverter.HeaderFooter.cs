@@ -45,14 +45,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             headerRef.Id = mainPart.GetIdOfPart(headerPart);
         }
         headerPart.Header ??= new Header();
-        headerPart.Header.RemoveAllChildren();
-        headerPart.Header.ClearAllAttributes();
+        headerPart.Header.Clear();
 
         // Add content to the header
-        var oldContainer = container;
-        container = headerPart.Header;
-        ConvertGroup(group);
-        container = oldContainer;
+        ProcessPartContent(group, () => headerPart.Header);
     }
 
     private void ProcessFooter(RtfGroup group, HeaderFooterValues type)
@@ -82,13 +78,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             footerRef.Id = mainPart.GetIdOfPart(footerPart);
         }
         footerPart.Footer ??= new Footer();
-        footerPart.Footer.RemoveAllChildren();
-        footerPart.Footer.ClearAllAttributes();
+        footerPart.Footer.Clear();
 
         // Add content to the footer
-        var oldContainer = container;
-        container = footerPart.Footer;
-        ConvertGroup(group);
-        container = oldContainer;
+        ProcessPartContent(group, () => footerPart.Footer);
     }
 }
