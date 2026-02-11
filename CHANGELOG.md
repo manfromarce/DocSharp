@@ -12,6 +12,7 @@
 - Implemented basic DOCX to PDF / images / XPS / SVG renderer via QuestPDF (separate package, not published yet)
 - Implemented basic RTF to DOCX converter
 - Fix right, bottom and diagonal border in XLS converter
+- Fix bugs in DOCX to RTF converter
 - Other improvements
 
 ## 0.17.0 - 2025.12.04
