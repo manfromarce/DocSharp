@@ -4,7 +4,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using DocSharp.Docx;
-using DocSharp.Collections;
+using DocSharp.Helpers;
 
 namespace Markdig.Renderers.Docx;
 

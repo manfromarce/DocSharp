@@ -6,7 +6,7 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using DocSharp.Markdown;
 using DocSharp.Markdown.Common;
-using DocSharp.Collections;
+using DocSharp.Helpers;
 using DocSharp.Docx;
 using BookmarkHelpers = DocSharp.Markdown.Common.BookmarkHelpers;
 
