@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -19,6 +20,19 @@ public static class HyperlinkHelpers
         return null;
     }
 
+    public static void SetUrl(this Hyperlink hyperlink, string url)
+    {
+        if (OpenXmlHelpers.GetMainDocumentPart(hyperlink) is MainDocumentPart mainPart)
+        {
+            if (hyperlink.Id?.Value is string rId && mainPart.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+                mainPart.DeleteReferenceRelationship(relationship);
+
+            var rel = mainPart.AddHyperlinkRelationship(new Uri(url), true);
+            hyperlink.Anchor = null;
+            hyperlink.Id = rel.Id;
+        }
+    }
+
     public static string? GetAnchor(this Hyperlink hyperlink)
     {
         if (hyperlink.Anchor?.Value is string anchor)
@@ -26,5 +40,17 @@ public static class HyperlinkHelpers
             return anchor;
         }
         return null;
+    }
+
+    public static void SetAnchor(this Hyperlink hyperlink, string anchor)
+    {
+        if (OpenXmlHelpers.GetMainDocumentPart(hyperlink) is MainDocumentPart mainPart)
+        {
+            if (hyperlink.Id?.Value is string rId && mainPart.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+                mainPart.DeleteReferenceRelationship(relationship);
+
+            hyperlink.Anchor = anchor;
+            hyperlink.Id = null;
+        }
     }
 }

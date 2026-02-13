@@ -382,13 +382,13 @@ public static class ListHelpers
 
     public static void AddAbstractNumbering(this Numbering numbering, AbstractNum abstractNum)
     {
-        numbering.InsertAfterLastOfType(abstractNum);
+        numbering.InsertAfterLastOfType<AbstractNum>(abstractNum);
         numbering.Save();
     }
 
     public static void AddNumberingInstance(this Numbering numbering, NumberingInstance numberingInstance)
     {
-        numbering.InsertAfterLastOfType(numberingInstance);
+        numbering.InsertAfterLastOfType<NumberingInstance>(numberingInstance);
         numbering.Save();
     }
 

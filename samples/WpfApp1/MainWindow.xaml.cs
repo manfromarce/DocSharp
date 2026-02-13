@@ -504,6 +504,7 @@ public partial class MainWindow : Window
                         ImageConverter = new ImageSharpConverter()
                     };
                     converter.Convert(ofd.FileName, ms);
+                    ms.Position = 0;
                     var rtbWindow = new Window()
                     {
                         Owner = this,

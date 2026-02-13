@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using DocSharp.Helpers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -16,44 +19,44 @@ namespace DocSharp.Docx.Model;
 internal class WDocument : IDisposable
 {
     private WordprocessingDocument _document;
+    private MainDocumentPart _mainPart;
+    private Body _body;
     private Stream _originalStream;
     private LoadFormat? _originalFormat;
     private bool _shouldDisposeStream = false;
-    private bool _isReadOnly = false;
 
     // The Open XML SDK requires different handling for saving to the same stream vs a different stream: Save() vs Clone(newStream). 
     // The latter is wrapped in the SaveTo extension method.
     // Therefore, we need to track the original stream used to open the document and determine if the output stream is the same.
-    // (For this reason, a public constructor from WordprocessingDocument is currently not provided, as we cannot track the original stream in that case.)
-    private WDocument(WordprocessingDocument document, Stream originalStream, LoadFormat? originalFormat, bool shouldDisposeStream, bool isReadOnly = false)
+    private WDocument(WordprocessingDocument document, Stream originalStream, LoadFormat? originalFormat, bool shouldDisposeStream)
     {
         _document = document;
+        // Initialize main document part, Document and Body
+        _mainPart = document.MainDocumentPart ?? document.AddMainDocumentPart();
+        _mainPart.Document ??= new Document();
+        _body = _mainPart.Document.Body ?? _mainPart.Document.AppendChild(new Body());
         _originalStream = originalStream;
         _originalFormat = originalFormat;
         _shouldDisposeStream = shouldDisposeStream;
-        _isReadOnly = isReadOnly;
     }
 
-    private static WDocument Open(Stream stream, LoadFormat format, bool forceReadOnly, bool shouldDisposeStream)
+    private static WDocument Open(Stream stream, LoadFormat format, bool shouldDisposeStream)
     {
-        // Force read-only and shouldDisposeStream are only relevant when opening DOCX files, 
+        //SshouldDisposeStream is only relevant when opening DOCX files, 
         // for other formats a new writeable MemoryStream is always created by the converter.
         switch (format)
         {
             case LoadFormat.Docx: // also handles Docm, Dotx, Dotm
             {
-                if (!stream.CanWrite)
-                    forceReadOnly = true;
-
-                var document = WordprocessingDocument.Open(stream, !forceReadOnly);
-                return new WDocument(document, stream, format, shouldDisposeStream, forceReadOnly);
+                var document = WordprocessingDocument.Open(stream, stream.CanWrite);
+                return new WDocument(document, stream, format, shouldDisposeStream);
             }
             case LoadFormat.Rtf:
             {
                 var converter = new RtfToDocxConverter();
                 var tempStream = new MemoryStream();
                 var document = converter.ConvertToWordProcessingDocument(stream, tempStream);
-                return new WDocument(document, tempStream, format, shouldDisposeStream: true, isReadOnly: false);
+                return new WDocument(document, tempStream, format, shouldDisposeStream: true);
             }
             default:
                 throw new NotSupportedException($"Loading format {format} is not supported.");
@@ -78,11 +81,6 @@ internal class WDocument : IDisposable
     /// </summary>
     public bool AutoSave => _document.AutoSave;
 
-    /// <summary>
-    /// Indicates whether the document is opened in read-only mode.
-    /// </summary>
-    public bool IsReadOnly => _isReadOnly;
-
     public void Dispose()
     {
         _document.Dispose();
@@ -95,12 +93,11 @@ internal class WDocument : IDisposable
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="format"></param>
-    /// <param name="forceReadOnly"></param>
     /// <returns></returns>
-    public static WDocument Open(Stream stream, LoadFormat format, bool forceReadOnly = false)
+    public static WDocument Open(Stream stream, LoadFormat format)
     {
         // Specifying the Load format is mandatory when loading from a stream.
-        return Open(stream, format, forceReadOnly, shouldDisposeStream: false);
+        return Open(stream, format, shouldDisposeStream: false);
     }
 
     /// <summary>
@@ -111,21 +108,20 @@ internal class WDocument : IDisposable
     /// <returns></returns>
     public static WDocument Open(byte[] bytes, LoadFormat format)
     {
-        // Specifying the Load format is mandatory when loading from a byte array; 
-        // read-only is not supported as a new (writeable) MemoryStream is always created in this case.
+        // Specifying the Load format is mandatory when loading from a byte array. 
+        // TODO: try to detect format from magic numbers. 
         var tempStream = new MemoryStream(bytes);
-        return Open(tempStream, format, forceReadOnly: false, shouldDisposeStream: true);
+        return Open(tempStream, format, shouldDisposeStream: true);
     }
 
     /// <summary>
     /// Opens a Word document from file path.
     /// </summary>
     /// <param name="filePath"></param>
-    /// <param name="forceReadOnly"></param>
     /// <returns></returns>
-    public static WDocument Open(string filePath, bool forceReadOnly = false)
+    public static WDocument Open(string filePath)
     {
-        return Open(filePath, FileFormatHelpers.ExtensionToLoadFormat(Path.GetExtension(filePath)), forceReadOnly);
+        return Open(filePath, FileFormatHelpers.ExtensionToLoadFormat(Path.GetExtension(filePath)));
     }
 
     /// <summary>
@@ -133,12 +129,26 @@ internal class WDocument : IDisposable
     /// </summary>
     /// <param name="filePath"></param>
     /// <param name="format"></param>
-    /// <param name="forceReadOnly"></param>
     /// <returns></returns>
-    public static WDocument Open(string filePath, LoadFormat format, bool forceReadOnly = false)
+    public static WDocument Open(string filePath, LoadFormat format)
     {
-        var tempStream = File.Open(filePath, FileMode.Open, forceReadOnly ? FileAccess.Read : FileAccess.ReadWrite);
-        return Open(tempStream, format, forceReadOnly, shouldDisposeStream: true);
+        var tempStream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite);
+        return Open(tempStream, format, shouldDisposeStream: true);
+    }
+
+    public static WDocument Open(WordprocessingDocument document, Stream originalStream)
+    {
+        // In this method the original stream is passed by the user so that we can track it.
+        return new WDocument(document, originalStream, LoadFormat.Docx, false);
+    }
+
+    public static WDocument Open(WordprocessingDocument document)
+    {
+        // In this case we have no other choice than cloning the document, because we can't track the original stream. 
+        // The previous method is preferable for performance reasons. 
+        var tempStream = new MemoryStream();
+        var clone = document.Clone(tempStream, true);
+        return new WDocument(clone, tempStream, LoadFormat.Docx, false);
     }
 
     /// <summary>
@@ -149,11 +159,7 @@ internal class WDocument : IDisposable
     {
         var tempStream = new MemoryStream();
         var document = WordprocessingDocument.Create(tempStream, WordprocessingDocumentType.Document, autoSave: true);
-        // Initialize main document part, Document and Body
-        var mainPart = document.AddMainDocumentPart();
-        mainPart.Document = new Document();
-        mainPart.Document.AppendChild(new Body());        
-        return new WDocument(document, tempStream, originalFormat: null, shouldDisposeStream: true, isReadOnly: false);
+        return new WDocument(document, tempStream, originalFormat: null, shouldDisposeStream: true);
     }
 
     /// <summary>
@@ -397,22 +403,20 @@ internal class WDocument : IDisposable
         if (IsSameStream(newStream))
             throw new InvalidOperationException("Cannot clone to the same stream.");
 
-        var isReadOnly = _isReadOnly || !newStream.CanWrite;
-        var newDocument = _document.Clone(newStream, isReadOnly);
-        return new WDocument(newDocument, newStream, _originalFormat, shouldDisposeStream: false, isReadOnly);
+        var newDocument = _document.Clone(newStream, true);
+        return new WDocument(newDocument, newStream, _originalFormat, shouldDisposeStream: false);
     }
 
     /// <summary>
     /// Clones the document to a memory stream. Note that both documents should be disposed separately.
     /// </summary>
-    /// <param name="newStream"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     public WDocument Clone()
     {
         var newStream = new MemoryStream();
-        var newDocument = _document.Clone(newStream, _isReadOnly);
-        return new WDocument(newDocument, newStream, _originalFormat, shouldDisposeStream: true, _isReadOnly);
+        var newDocument = _document.Clone(newStream, true);
+        return new WDocument(newDocument, newStream, _originalFormat, shouldDisposeStream: true);
     }
 
     public string Title
@@ -443,6 +447,62 @@ internal class WDocument : IDisposable
         }
     }
 
+    public string Subject
+    {
+        get
+        {
+            return _document.PackageProperties?.Subject ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Subject = value;
+        }
+    }
+
+    public string LastModifiedBy
+    {
+        get
+        {
+            return _document.PackageProperties?.LastModifiedBy ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.LastModifiedBy = value;
+        }
+    }
+
+    public string Keywords
+    {
+        get
+        {
+            return _document.PackageProperties?.Keywords ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Keywords = value;
+        }
+    }
+
+    public string Category
+    {
+        get
+        {
+            return _document.PackageProperties?.Category ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Category = value;
+        }
+    }
+
     public string Language
     {
         get
@@ -454,6 +514,72 @@ internal class WDocument : IDisposable
             var props = _document.PackageProperties;
             if (props != null)
                 props.Language = value;
+        }
+    }
+
+    public string Version
+    {
+        get
+        {
+            return _document.PackageProperties?.Version ?? string.Empty;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Version = value;
+        }
+    }
+
+    public DateTime? CreationDate
+    {
+        get
+        {
+            return _document.PackageProperties?.Created;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Created = value;
+        }
+    }
+
+    public DateTime? ModificationDate
+    {
+        get
+        {
+            return _document.PackageProperties?.Modified;
+        }
+        set
+        {
+            var props = _document.PackageProperties;
+            if (props != null)
+                props.Modified = value;
+        }
+    }
+
+    public List<(List<OpenXmlElement> content, SectionProperties properties)> Sections
+    {
+        get
+        {
+            return _body.GetSections(); // Note: this is the same helper method used in DocxEnumerator         
+        }
+    }
+
+    public IEnumerable<Paragraph> Paragraphs
+    {
+        get
+        {
+            return _body.Elements<Paragraph>();
+        }
+    }
+
+    public IEnumerable<Table> Tables
+    {
+        get
+        {
+            return _body.Elements<Table>();
         }
     }
 

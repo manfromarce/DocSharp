@@ -26,4 +26,15 @@ public static class RunHelpers
 
         return run.RunProperties;
     }
+
+    public static void SetContent(this Run run, string text)
+    {
+        run.ClearExcept<RunProperties>();
+        run.AppendChild(new Text(text));
+    }
+
+    public static void ClearText(this Run run)
+    {
+        run.Clear<Text>();
+    }
 }

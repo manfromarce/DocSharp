@@ -26,6 +26,30 @@ public static class OpenXmlHelpers
         element.ClearAllAttributes();
     }
 
+    public static void Clear<T>(this OpenXmlElement element) where T : OpenXmlElement
+    {
+        var subElements = element.Elements<T>().ToArray();
+        int count = subElements.Length;
+        for (int i = count - 1; i >= 0; i--)
+        {
+            var subElement = subElements[count - 1];
+            subElement.Remove();
+        }    
+    }
+
+    public static void ClearExcept<T>(this OpenXmlElement element) where T : OpenXmlElement
+    {
+        element.ClearAllAttributes();
+        var subElements = element.Elements().ToArray();
+        int count = subElements.Length;
+        for (int i = count - 1; i >= 0; i--)
+        {
+            var subElement = subElements[count - 1];
+            if (subElement is not T)
+                subElement.Remove();
+        }
+    }
+
     public static int GetLinksCount(WordprocessingDocument document)
     {
         return document.MainDocumentPart?.HyperlinkRelationships.Count() ?? 0;
@@ -1541,7 +1565,7 @@ public static class OpenXmlHelpers
         return null;
     }
 
-    public static void InsertAfterLastOfType<T>(this OpenXmlCompositeElement parent, OpenXmlElement element)
+    public static void InsertBeforeLastOfType<T>(this OpenXmlCompositeElement parent, OpenXmlElement element)
         where T : OpenXmlElement
     {
         var refElement = parent.Elements<T>().LastOrDefault();
@@ -1551,13 +1575,14 @@ public static class OpenXmlHelpers
         }
         else
         {
-            parent.InsertAfter(element, refElement);
+            parent.InsertBefore(element, refElement);
         }
     }
 
-    public static void InsertAfterLastOfType(this OpenXmlCompositeElement parent, OpenXmlElement element)
+    public static void InsertAfterLastOfType<T>(this OpenXmlCompositeElement parent, OpenXmlElement element)
+        where T : OpenXmlElement
     {
-        var refElement = parent.Elements().LastOrDefault(e => e.GetType() == element.GetType());
+        var refElement = parent.Elements<T>().LastOrDefault();
         if (refElement == null)
         {
             parent.AppendChild(element);
