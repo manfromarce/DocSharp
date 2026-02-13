@@ -70,21 +70,6 @@ public static class OpenXmlHelpers
         return element.NamespaceUri.StartsWith(OpenXmlConstants.VmlNamespace, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static bool HasContent(this Paragraph p)
-    {
-        // If run contains only RunProperties or unsupported elements, return false
-        return p.HasChildren && !p.Elements().All(x => x is ParagraphProperties ||
-                                                       x is DeletedRun);
-    }
-
-    public static bool HasContent(this Run run)
-    {
-        // If run contains only RunProperties or unsupported elements, return false
-        return run.HasChildren && !run.Elements().All(x => x is RunProperties ||
-                                                              x is DeletedText ||
-                                                              x is DeletedFieldCode);
-    }
-
     public static T? NextElement<T>(this OpenXmlElement? element) where T : OpenXmlElement
     {
         if (element != null && element.GetFirstAncestor<Document>() is Document document)
@@ -1659,7 +1644,7 @@ public static class OpenXmlHelpers
         if (!rIds.Any())
             return "rId0";
 
-        var maxId = rIds.Max(part => part.RelationshipId).TrimStart("rId");
+        var maxId = rIds.Max(part => part.RelationshipId)?.TrimStart("rId");
         if (!string.IsNullOrWhiteSpace(maxId) && long.TryParse(maxId, NumberStyles.Integer, CultureInfo.InvariantCulture, out long id))
             return $"rId{id + 1}";
         else

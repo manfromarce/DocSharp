@@ -37,4 +37,12 @@ public static class RunHelpers
     {
         run.Clear<Text>();
     }
+
+    public static bool HasContent(this Run run)
+    {
+        // If run contains only RunProperties or unsupported elements, return false
+        return run.HasChildren && !run.Elements().All(x => x is RunProperties ||
+                                                              x is DeletedText ||
+                                                              x is DeletedFieldCode);
+    }
 }

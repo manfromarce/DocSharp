@@ -394,16 +394,10 @@ public static class ListHelpers
 
     public static Numbering GetOrCreateNumbering(this WordprocessingDocument document)
     {
-        Debug.Assert(document.MainDocumentPart != null, "document.MainDocumentPart != null");
-
-        if (document.MainDocumentPart.NumberingDefinitionsPart == null)
-        {
-            var part = document.MainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
-            part.Numbering = new Numbering();
-        }
-
-        var numbering = document.MainDocumentPart.NumberingDefinitionsPart!.Numbering;
-        return numbering;
+        var mainPart = document.MainDocumentPart ?? document.AddMainDocumentPart();
+        var numberingPart = mainPart.NumberingDefinitionsPart ?? mainPart.AddNewPart<NumberingDefinitionsPart>();
+        numberingPart.Numbering ??= new Numbering();
+        return numberingPart.Numbering;
     }
 
 }

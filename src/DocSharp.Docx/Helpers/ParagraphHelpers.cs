@@ -23,8 +23,14 @@ public static class ParagraphHelpers
 
     public static bool IsEmpty(this Paragraph paragraph)
     {
-        return paragraph.ChildElements.Count == 0 ||
-               (paragraph.ChildElements.Count == 1 && paragraph.ParagraphProperties != null);
+        return !paragraph.HasContent();
+    }
+
+    public static bool HasContent(this Paragraph p)
+    {
+        // If paragraph contains only ParagraphProperties or unsupported elements, return false
+        return p.HasChildren && !p.Elements().All(x => x is ParagraphProperties ||
+                                                       x is DeletedRun);
     }
 
     public static ParagraphProperties GetOrCreateProperties(this Paragraph p)
@@ -85,12 +91,10 @@ public static class ParagraphHelpers
                 run.AppendChild(br);
             }
 
-            Text t = new Text(s);
-
-            if (s.StartsWith(' ') || s.EndsWith(' '))
+            Text t = new Text(s)
             {
-                t.Space = SpaceProcessingModeValues.Preserve;
-            }
+                Space = SpaceProcessingModeValues.Preserve
+            };
 
             run.AppendChild(t);				
             afterNewline = true;

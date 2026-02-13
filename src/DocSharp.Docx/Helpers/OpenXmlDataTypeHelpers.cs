@@ -25,7 +25,7 @@ public static class OpenXmlDataTypeHelpers
         if (stringValue?.Value != null && 
             decimal.TryParse(stringValue.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal val))
         {
-            return (long)Math.Round(val);
+            return Math.Round(val).ToLong();
         }
         else 
         { 

@@ -9,36 +9,6 @@ namespace DocSharp.Docx;
 // while for RTF and other word processing formats a more accurate mapping to/from RTF is possible.
 public static class OpenXmlRenderingHelpers
 {
-    /// <summary>
-    /// Helper function to get paragraph spacing in points from paragraph properties, style or default style, 
-    /// considering also "contextual spacing" (if the next paragraph has the same style, then no spacing is applied).
-    /// </summary>
-    /// <param name="run"></param>
-    /// <param name="stylesPart"></param>
-    /// <returns></returns>
-    public static float GetEffectiveSpaceAfter(this Paragraph par, Styles? stylesPart = null)
-    {                    
-        // If the paragraph has ContextualSpacing enabled and the next paragraph has the same style, 
-        // return 0 (no spacing)
-        if (par.GetEffectiveProperty<ContextualSpacing>().ToBool() && 
-            par.NextSibling<Paragraph>() is Paragraph nextParagraph && 
-            StylesHelpers.IsSameStyle(par, nextParagraph))
-        {
-            return 0;
-        }
-
-        var spacing = par.GetEffectiveSpacing();
-        var spaceAfter = spacing?.After;
-        if (spaceAfter != null && spaceAfter.Value != null && 
-            float.TryParse(spaceAfter.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out float afterSpacing))
-        {
-            return afterSpacing / 20f; // Convert twips to points
-        }
-        // TODO: consider spacing.AfterAutoSpacing and spacing.AfterLines too.
-
-        return 0f; // no space after found
-    }
-    
     public static (float SpaceBefore, float SpaceAfter, float LineHeight) GetEffectiveSpacingValues(this Paragraph paragraph, Styles? stylesPart = null)
     {
         var spacing = paragraph.GetEffectiveSpacing(stylesPart);
