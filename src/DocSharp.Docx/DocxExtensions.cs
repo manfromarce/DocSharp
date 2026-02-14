@@ -17,7 +17,8 @@ public static class DocxExtensions
     /// <summary>
     /// Converts the document to another format or saves a DOCX copy.
     /// Note: the document cannot be exported in the same stream in which it was loaded using this method,
-    /// the Save() method should be used for that instead.
+    /// the Save() method should be used for that instead. 
+    /// Also, the original document is also saved when creating a DOCX clone (this is a limitation of the Open XML SDK.)
     /// </summary>
     /// <param name="document"></param>
     /// <param name="outputStream">The output file path.</param>
@@ -27,17 +28,18 @@ public static class DocxExtensions
         switch (options)
         {
             case DocxSaveOptions docxSaveOptions: 
-                // Confusingly enough, the Open XML SDK seems to save the original document even when creating a clone.
-                // To workaround this, we must copy all parts manually.
-                using (var newDocument = WordprocessingDocument.Create(outputStream, docxSaveOptions.DocumentType))
+                // Confusingly enough, the Open XML SDK seems to saves the original document too, 
+                // even when creating a clone and setting AutoSave to false to the original. 
+                // To workaround this, I tried to copy all parts manually, 
+                // but in that case the content is not updated with the latest changes if AutoSave was false 
+                // (because they are probably made in memory).
+                using (var clone = document.Clone(outputStream))
                 {
-                    foreach (var part in document.Parts)
-                        newDocument.AddPart(part.OpenXmlPart, part.RelationshipId);
-
-                    if (newDocument.DocumentType != docxSaveOptions.DocumentType)
+                    if (clone.DocumentType != docxSaveOptions.DocumentType)
                     {
-                        newDocument.ChangeDocumentType(docxSaveOptions.DocumentType);
+                        clone.ChangeDocumentType(docxSaveOptions.DocumentType);
                     }
+                    clone.Save();
                 }
                 break;
             case RtfSaveOptions rtfSaveOptions: 

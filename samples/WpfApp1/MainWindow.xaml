@@ -70,11 +70,11 @@
                     Click="DocxToImages_Click"
                     Content="Docx to images" />
                 <Button
-                    Click="EpubToDocx_Click"
-                    Content="Epub to Docx" />
-                <Button
                     Click="ViewDocx_Click"
-                    Content="View Docx document" />
+                    Content="View Docx document (via RTF)" />
+                <Button
+                    Click="ViewDocxFixed_Click"
+                    Content="View Docx document (via XPS)" />
             </UniformGrid>
             <TextBlock Grid.Row="2"
                 Margin="4,10,4,4"

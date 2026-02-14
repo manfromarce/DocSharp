@@ -45,12 +45,11 @@ public class DocxDocumentRenderer : RendererBase
     {
         Document = document;
 
-        Debug.Assert(Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
-        Debug.Assert(Document.MainDocumentPart?.Document?.Body != null, "Document.MainDocumentPart.Document.Body != null");
+        var mainPart = document.MainDocumentPart ?? document.AddMainDocumentPart();
+        mainPart.Document ??= new Document();
+        var body = mainPart.Document.Body ?? mainPart.Document.AppendChild(new Body());
         
-        Cursor = new DocumentTreeCursor(Document.MainDocumentPart.Document.Body, 
-            Document.MainDocumentPart.Document.Body.Elements<Paragraph>().LastOrDefault());
-        
+        Cursor = new DocumentTreeCursor(body, body.Elements<Paragraph>().LastOrDefault());
         Styles = styles;
             
         // Default block renderers

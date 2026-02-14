@@ -30,9 +30,8 @@ public class AutolinkInlineRenderer : DocxObjectRenderer<AutolinkInline>
         if (uri == null) return;
         
         var linkId = $"AL{OpenXmlHelpers.GetLinksCount(renderer.Document) + 1}";
-        Debug.Assert(renderer.Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
 
-        renderer.Document.MainDocumentPart.AddHyperlinkRelationship(uri, isAbsoluteUri, linkId);
+        renderer.Document.MainDocumentPart?.AddHyperlinkRelationship(uri, isAbsoluteUri, linkId);
         var hl = new Hyperlink
         {
             Id = linkId,

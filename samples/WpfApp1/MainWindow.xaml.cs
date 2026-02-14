@@ -17,7 +17,6 @@ using HtmlToOpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using W = DocumentFormat.OpenXml.Wordprocessing;
-using DocSharp.Ebook;
 
 namespace WpfApp1;
 /// <summary>
@@ -449,40 +448,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void EpubToDocx_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "EPUB|*.epub",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "Word OpenXML document|*.docx",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                try
-                {
-                    var epub = new EpubToDocxConverter()
-                    {
-                        ChaptersOnly = false, 
-                        PageBreakAfterChapters = true, 
-                        PreserveCssStyles = true
-                    };
-                    await epub.ConvertAsync(ofd.FileName, sfd.FileName);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
-    }
-
     private void ViewDocx_Click(object sender, RoutedEventArgs e)
     {
         // Please note that the WPF RichTextBox supports a subset of RTF features.
@@ -532,6 +497,50 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ViewDocxFixed_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            string tempFile = Path.GetTempFileName() + ".xps";
+            try
+            {
+                var renderer = new DocxRenderer();
+                renderer.SaveAsXps(ofd.FileName, tempFile);
+
+                var viewerWindow = new Window()
+                {
+                    Owner = this,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                }; 
+                var viewer = new DocumentViewer()
+                {
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
+                };
+                viewerWindow.Content = viewer;
+                var xps = new System.Windows.Xps.Packaging.XpsDocument(tempFile, FileAccess.Read);
+                viewer.Document = xps.GetFixedDocumentSequence();
+                viewerWindow.Closed += (_, __) =>
+                {
+                    xps.Close();
+                    File.Delete(tempFile);
+                };
+                viewerWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+            }
+        }
+    }
+
     private async void RtfToDocx_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
@@ -565,24 +574,6 @@ public partial class MainWindow : Window
 
     private async void RtfToHtml_Click(object sender, RoutedEventArgs e)
     {
-        // Please note that other libraries exist to convert RTF to HTML directly (e.g. RtfPipe), 
-        // but they are mostly not maintained. These can be used for internal tests/comparison; 
-        // DocSharp RTF -> DOCX -> HTML should produce similar or better results. 
-        // There is no plan of adding direct RTF --> HTML to DocSharp because: 
-        // - RTF is a complex format that is more similar to DOCX and DOC than HTML. 
-        // It supports most Word features, so mapping to DOCX is more natural, 
-        // and converting DOCX to HTML is more reliable thanks to the XML-based enumeration. 
-        // Libraries such as RtfPipe, while useful for simple RTF, 
-        // end up being inaccurate and hard to troubleshoot for complex RTF 
-        // (if an advanced RTF feature is not translated to HTML, understanding if the issues lies in the parser
-        // or in the converter is not easy, and often requires reworking large parts of the codebase).
-        // - To avoid duplicated work we would end up creating an intermediate DOM 
-        // (RTF -> DOM -> DOCX/HTML), losing the performance advantage over two-step conversion anyway. 
-        // Since we don't the intermediate DOCX to file during the RTF to HTML conversion, 
-        // the Open XML document effectively already works as an in-memory DOM 
-        // that we don't have to implement from scratch. 
-        // As written before, implementing a full RTF object model would be almost as complex as a 
-        // DOCX object model, thus reinventing parts of the Open XML SDK. 
         var ofd = new OpenFileDialog()
         {
             Filter = "Rich Text Format|*.rtf",
@@ -671,30 +662,29 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var tempFile = Path.GetTempFileName();
                 try
                 {
-                    using (var reader = new StructuredStorageReader(ofd.FileName))
-                    {
-                        var doc = new WordDocument(reader);
-                        using (var docx = DocSharp.Binary.OpenXmlLib.WordprocessingML.WordprocessingDocument.Create(tempFile, DocSharp.Binary.OpenXmlLib.WordprocessingDocumentType.Document))
+                    using (var ms = new MemoryStream())
+                    {                        
+                        using (var reader = new StructuredStorageReader(ofd.FileName))
                         {
-                            DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                            var doc = new WordDocument(reader);
+                            using (var docx = DocSharp.Binary.OpenXmlLib.WordprocessingML.WordprocessingDocument.Create(ms, DocSharp.Binary.OpenXmlLib.WordprocessingDocumentType.Document))
+                            {
+                                DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                            }
                         }
+                        var converter = new DocxToRtfConverter()
+                        {
+                            ImageConverter = new ImageSharpConverter()
+                        };
+                        ms.Position = 0;
+                        converter.Convert(ms, sfd.FileName);
                     }
-                    var converter = new DocxToRtfConverter()
-                    {
-                        ImageConverter = new ImageSharpConverter()
-                    };
-                    converter.Convert(tempFile, sfd.FileName);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
-                }
-                finally
-                {
-                    File.Delete(tempFile);
                 }
             }
         }
@@ -717,30 +707,29 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var tempFile = Path.GetTempFileName(); // or use MemoryStream
                 try
                 {
-                    using (var reader = new StructuredStorageReader(ofd.FileName))
-                    {
-                        var doc = new WordDocument(reader);
-                        using (var docx = DocSharp.Binary.OpenXmlLib.WordprocessingML.WordprocessingDocument.Create(tempFile, DocSharp.Binary.OpenXmlLib.WordprocessingDocumentType.Document))
+                    using (var ms = new MemoryStream())
+                    {                        
+                        using (var reader = new StructuredStorageReader(ofd.FileName))
                         {
-                            DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                            var doc = new WordDocument(reader);
+                            using (var docx = DocSharp.Binary.OpenXmlLib.WordprocessingML.WordprocessingDocument.Create(ms, DocSharp.Binary.OpenXmlLib.WordprocessingDocumentType.Document))
+                            {
+                                DocSharp.Binary.WordprocessingMLMapping.Converter.Convert(doc, docx);
+                            }
                         }
-                    }
-                    var converter = new DocxToHtmlConverter()
-                    {
-                        ImageConverter = new ImageSharpConverter()
-                    };
-                    converter.Convert(tempFile, sfd.FileName);
+                        var converter = new DocxToHtmlConverter()
+                        {
+                            ImageConverter = new ImageSharpConverter()
+                        };
+                        ms.Position = 0;
+                        converter.Convert(ms, sfd.FileName);
+                    }                    
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
-                }
-                finally
-                {
-                    File.Delete(tempFile);
                 }
             }
         }

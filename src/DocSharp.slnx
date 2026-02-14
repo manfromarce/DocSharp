@@ -6,7 +6,6 @@
     <Project Path="DocSharp.Binary/DocSharp.Binary.Xls/DocSharp.Binary.Xls.csproj" />
   </Folder>
   <Folder Name="/WIP/">
-    <Project Path="WIP/DocSharp.Ebook/DocSharp.Ebook.csproj" />
     <Project Path="WIP/DocSharp.Renderer/DocSharp.Renderer.csproj" />
   </Folder>
   <Folder Name="/Imaging/">

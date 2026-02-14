@@ -5,7 +5,7 @@ DocSharp is a pure C# library to convert between document formats without Office
 The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.  
-Note: pre-97 formats and XLSB are very different and not supported.
+Note: pre-97 formats (not documented) and XLSB (very different) are not supported.
 - DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors/services, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
 
@@ -21,7 +21,6 @@ The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages
 The codebase also contains few experimental converters that are not ready and not published on NuGet yet:  
 - RTF to DOCX converter class in the DocSharp.Docx project
 - DocSharp.Renderer: provides DOCX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
-- DocSharp.Ebook: provides basic EPUB to DOCX (via HTML) conversion.
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
 You can consider using the Open XML SDK itself or other <a href="#recommended_libraries">recommended libraries</a> for documents creation and manipulation. Some of these are used in the sample app to test two-steps conversions, compare results, or generate documents in multiple formats with the same code.  

@@ -57,7 +57,6 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
             }
             
             var linkId = $"L{OpenXmlHelpers.GetLinksCount(renderer.Document) + 1}";
-            Debug.Assert(renderer.Document.MainDocumentPart != null, "Document.MainDocumentPart != null");
 
             Hyperlink hl;
             if (isAnchor)
