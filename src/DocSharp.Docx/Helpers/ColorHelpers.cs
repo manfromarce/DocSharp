@@ -158,9 +158,19 @@ public static class ColorHelpers
             return EnsureHexColor(color.Val.Value);
     }
 
-    public static string ToHexString(this System.Drawing.Color color)
+    public static string? ToHexString(this System.Drawing.Color color)
     {
+        if (color == System.Drawing.Color.Empty)
+            return null;
         return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
+    public static string? ToHexString(this System.Drawing.Color? color)
+    {
+        if (color == null)
+            return null;
+        else 
+            return color.Value.ToHexString();
     }
 
     public static string RgbToHex(int r, int g, int b)
@@ -1038,7 +1048,7 @@ public static class ColorHelpers
     {
         if (systemColor.Val != null)
         {
-            string hex = string.Empty;
+            string? hex = string.Empty;
             if (systemColor.Val.Value == A.SystemColorValues.ActiveBorder)
                 hex = System.Drawing.SystemColors.ActiveBorder.ToHexString();
             else if (systemColor.Val.Value == A.SystemColorValues.ActiveCaption)

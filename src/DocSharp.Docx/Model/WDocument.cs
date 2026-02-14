@@ -22,13 +22,13 @@ internal class WDocument : IDisposable
     private MainDocumentPart _mainPart;
     private Body _body;
     private Stream _originalStream;
-    private LoadFormat? _originalFormat;
+    private LoadFormat _originalFormat;
     private bool _shouldDisposeStream = false;
 
     // The Open XML SDK requires different handling for saving to the same stream vs a different stream: Save() vs Clone(newStream). 
     // The latter is wrapped in the SaveTo extension method.
     // Therefore, we need to track the original stream used to open the document and determine if the output stream is the same.
-    private WDocument(WordprocessingDocument document, Stream originalStream, LoadFormat? originalFormat, bool shouldDisposeStream)
+    private WDocument(WordprocessingDocument document, Stream originalStream, LoadFormat originalFormat, bool shouldDisposeStream)
     {
         _document = document;
         // Initialize main document part, Document and Body
@@ -40,15 +40,15 @@ internal class WDocument : IDisposable
         _shouldDisposeStream = shouldDisposeStream;
     }
 
-    private static WDocument Open(Stream stream, LoadFormat format, bool shouldDisposeStream)
+    private static WDocument Open(Stream stream, LoadFormat format, bool shouldDisposeStream, bool autoSave)
     {
-        //SshouldDisposeStream is only relevant when opening DOCX files, 
+        // ShouldDisposeStream and AutoSave are only relevant when opening DOCX files, 
         // for other formats a new writeable MemoryStream is always created by the converter.
         switch (format)
         {
             case LoadFormat.Docx: // also handles Docm, Dotx, Dotm
             {
-                var document = WordprocessingDocument.Open(stream, stream.CanWrite);
+                var document = WordprocessingDocument.Open(stream, stream.CanWrite, new OpenSettings() { AutoSave = autoSave });
                 return new WDocument(document, stream, format, shouldDisposeStream);
             }
             case LoadFormat.Rtf:
@@ -94,10 +94,10 @@ internal class WDocument : IDisposable
     /// <param name="stream"></param>
     /// <param name="format"></param>
     /// <returns></returns>
-    public static WDocument Open(Stream stream, LoadFormat format)
+    public static WDocument Open(Stream stream, LoadFormat format, bool autoSave = true)
     {
         // Specifying the Load format is mandatory when loading from a stream.
-        return Open(stream, format, shouldDisposeStream: false);
+        return Open(stream, format, shouldDisposeStream: false, autoSave: autoSave);
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ internal class WDocument : IDisposable
         // Specifying the Load format is mandatory when loading from a byte array. 
         // TODO: try to detect format from magic numbers. 
         var tempStream = new MemoryStream(bytes);
-        return Open(tempStream, format, shouldDisposeStream: true);
+        return Open(tempStream, format, shouldDisposeStream: true, autoSave: true);
     }
 
     /// <summary>
@@ -119,9 +119,9 @@ internal class WDocument : IDisposable
     /// </summary>
     /// <param name="filePath"></param>
     /// <returns></returns>
-    public static WDocument Open(string filePath)
+    public static WDocument Open(string filePath, bool autoSave = true)
     {
-        return Open(filePath, FileFormatHelpers.ExtensionToLoadFormat(Path.GetExtension(filePath)));
+        return Open(filePath, FileFormatHelpers.ExtensionToLoadFormat(Path.GetExtension(filePath)), autoSave: autoSave);
     }
 
     /// <summary>
@@ -130,10 +130,10 @@ internal class WDocument : IDisposable
     /// <param name="filePath"></param>
     /// <param name="format"></param>
     /// <returns></returns>
-    public static WDocument Open(string filePath, LoadFormat format)
+    public static WDocument Open(string filePath, LoadFormat format, bool autoSave = true)
     {
         var tempStream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite);
-        return Open(tempStream, format, shouldDisposeStream: true);
+        return Open(tempStream, format, shouldDisposeStream: true, autoSave: autoSave);
     }
 
     public static WDocument Open(WordprocessingDocument document, Stream originalStream)
@@ -159,7 +159,28 @@ internal class WDocument : IDisposable
     {
         var tempStream = new MemoryStream();
         var document = WordprocessingDocument.Create(tempStream, WordprocessingDocumentType.Document, autoSave: true);
-        return new WDocument(document, tempStream, originalFormat: null, shouldDisposeStream: true);
+        return new WDocument(document, tempStream, originalFormat: LoadFormat.Docx, shouldDisposeStream: true);
+    }
+
+    /// <summary>
+    /// Creates a new empty Word document that can be modified and saved, or exported to other formats.
+    /// </summary>
+    /// <returns></returns>
+    public static WDocument Create(string filePath, bool autoSave = true)
+    {
+        var tempStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        var document = WordprocessingDocument.Create(tempStream, WordprocessingDocumentType.Document, autoSave: autoSave);
+        return new WDocument(document, tempStream, originalFormat: LoadFormat.Docx, shouldDisposeStream: true);
+    }
+
+        /// <summary>
+    /// Creates a new empty Word document that can be modified and saved, or exported to other formats.
+    /// </summary>
+    /// <returns></returns>
+    public static WDocument Create(Stream outputStream, bool autoSave = true)
+    {
+        var document = WordprocessingDocument.Create(outputStream, WordprocessingDocumentType.Document, autoSave: autoSave);
+        return new WDocument(document, outputStream, originalFormat: LoadFormat.Docx, shouldDisposeStream: false);
     }
 
     /// <summary>
@@ -169,7 +190,7 @@ internal class WDocument : IDisposable
     /// <param name="options">Conversion options for the output format.</param>
     public void Save(Stream outputStream, ISaveOptions options)
     {
-        if (_originalFormat == null || _originalFormat.Value != LoadFormat.Docx)
+        if (_originalFormat != LoadFormat.Docx)
         {
             // The WordprocessingDocument is backed by a temp MemoryStream when loading a different format (e.g. RTF) on Open.
             // Since the original stream passed by user is not in use, we can save using SaveTo (Clone or conversion).
@@ -213,9 +234,28 @@ internal class WDocument : IDisposable
     /// <param name="options">Conversion options for the output format.</param>
     public void Save(string outputFilePath, ISaveOptions options)
     {
-        using (var outputStream = File.Create(outputFilePath))
+        if (_originalFormat == LoadFormat.Docx && IsSameStream(outputFilePath))
         {
-            Save(outputStream, options);
+            if (IsSameFormat(options.Format))
+            {
+                // Same format and same stream, we can use Save() in the Open XML SDK directly (don't use clone in this case).
+                if (options is DocxSaveOptions docxSaveOptions && _document.DocumentType != docxSaveOptions.DocumentType)
+                {
+                    // Change the document type if required (e.g. Docx -> Dotx).
+                    _document.ChangeDocumentType(docxSaveOptions.DocumentType);
+                }
+                _document.Save();
+            }
+            else
+            {
+                // Different format but same stream, not supported.
+                throw new InvalidOperationException("Cannot save to the same stream when converting DOCX to a different format.");
+            }
+        }
+        else
+        {
+            using (var outputStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.ReadWrite))
+                Save(outputStream, options);
         }
     }
 
@@ -587,13 +627,31 @@ internal class WDocument : IDisposable
 
     private bool IsSameFormat(SaveFormat outputFormat)
     {
-        var inputFormat = _originalFormat ?? LoadFormat.Docx; // If the document is created from scratch, it behaves like a DOCX.
+        var inputFormat = _originalFormat;
         if ((outputFormat == SaveFormat.Docx || outputFormat == SaveFormat.Dotx || outputFormat == SaveFormat.Docm || outputFormat == SaveFormat.Dotm) && 
             inputFormat == LoadFormat.Docx)
             return true;
         if (outputFormat == SaveFormat.Rtf && inputFormat == LoadFormat.Rtf)
             return true;
         
+        return false;
+    }
+
+    private bool IsSameStream(string newFilePath)
+    {
+        if (_originalStream == null || newFilePath == null)
+            return false;
+
+        if (_originalStream is FileStream originalFileStream)
+        {
+#if !NETFRAMEWORK
+            if (!OperatingSystem.IsWindows())
+                return string.Equals(originalFileStream.Name, newFilePath);
+            else
+#endif
+                return string.Equals(originalFileStream.Name, newFilePath, StringComparison.OrdinalIgnoreCase);
+        }
+
         return false;
     }
 

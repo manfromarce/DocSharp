@@ -95,6 +95,11 @@ public static class OpenXmlHelpers
         return null;
     }
 
+    public static T? GetFirstDescendant<T>(this OpenXmlElement? element) where T : OpenXmlElement
+    {
+        return element?.Descendants<T>().FirstOrDefault();
+    }
+
     /// <summary>
     /// Helper function to retrieve main document part from an Open XML element.
     /// </summary>
@@ -125,12 +130,7 @@ public static class OpenXmlHelpers
 
     public static WordprocessingDocument? GetWordprocessingDocument(this OpenXmlElement element)
     {
-        var root = element.GetRoot();
-        if (root is OpenXmlPartRootElement rootElement)
-        {
-            return rootElement.OpenXmlPart?.OpenXmlPackage as WordprocessingDocument;
-        }
-        return null;
+        return element.GetRootPart()?.OpenXmlPackage as WordprocessingDocument;
     }
 
     public static OpenXmlElement GetRoot(this OpenXmlElement element)

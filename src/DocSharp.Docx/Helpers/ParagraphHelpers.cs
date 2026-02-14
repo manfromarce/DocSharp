@@ -35,11 +35,7 @@ public static class ParagraphHelpers
 
     public static ParagraphProperties GetOrCreateProperties(this Paragraph p)
     {
-        if (p.ParagraphProperties == null)
-        {
-            p.ParagraphProperties = new ParagraphProperties();
-        }
-
+        p.ParagraphProperties ??= new ParagraphProperties();
         return p.ParagraphProperties;
     }
 
@@ -64,12 +60,13 @@ public static class ParagraphHelpers
 
         mainDocumentPart.Document ??= new Document();
         mainDocumentPart.Document.Body ??= new Body();
-        mainDocumentPart.Document.Body.AppendChild(p);
+        if (mainDocumentPart.Document.Body.LastChild is SectionProperties sp)
+            mainDocumentPart.Document.Body.InsertBefore(p, sp);
+        else
+            mainDocumentPart.Document.Body.AppendChild(p);
 
         if (!string.IsNullOrEmpty(styleId))
-        {
             mainDocumentPart.Document.ApplyStyleToParagraph(styleId!, p);
-        }
         return p;
     }
 

@@ -27,13 +27,17 @@ public static class DocxExtensions
         switch (options)
         {
             case DocxSaveOptions docxSaveOptions: 
-                using (var clone = document.Clone(outputStream))
+                // Confusingly enough, the Open XML SDK seems to save the original document even when creating a clone.
+                // To workaround this, we must copy all parts manually.
+                using (var newDocument = WordprocessingDocument.Create(outputStream, docxSaveOptions.DocumentType))
                 {
-                    if (clone.DocumentType != docxSaveOptions.DocumentType)
+                    foreach (var part in document.Parts)
+                        newDocument.AddPart(part.OpenXmlPart, part.RelationshipId);
+
+                    if (newDocument.DocumentType != docxSaveOptions.DocumentType)
                     {
-                        clone.ChangeDocumentType(docxSaveOptions.DocumentType);
+                        newDocument.ChangeDocumentType(docxSaveOptions.DocumentType);
                     }
-                    clone.Save();
                 }
                 break;
             case RtfSaveOptions rtfSaveOptions: 

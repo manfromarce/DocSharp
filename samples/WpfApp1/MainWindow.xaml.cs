@@ -512,8 +512,8 @@ public partial class MainWindow : Window
                     };
                     var rtb = new RichTextBox()
                     {
-                        HorizontalAlignment = HorizontalAlignment.Stretch,
-                        VerticalAlignment = VerticalAlignment.Stretch,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,
+                        VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
                         IsInactiveSelectionHighlightEnabled = true,
                         AutoWordSelection = false,
                         AcceptsReturn = true,
