@@ -24,7 +24,7 @@
     <PackageReference Include="VectSharp.SVG" Version="1.10.2" />
     <PackageReference Include="VectSharp.Raster.ImageSharp" Version="2.1.0" />
     <PackageReference Include="VectSharp.ImageSharpUtils" Version="2.0.1" />
-    <PackageReference Include="CoreJ2K.ImageSharp-Official" Version="2.1.0.101" />
+    <PackageReference Include="CoreJ2K.ImageSharp-Official" Version="2.1.2.38" />
     <PackageReference Include="ExCSS" Version="4.3.1" /> <!-- not a direct dependency, just to updated the ExCSS version required by VectSharp.SVG -->
   </ItemGroup>
   <ItemGroup>
