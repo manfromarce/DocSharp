@@ -60,7 +60,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                     }
 
                     // Save image to disk and append URI to HTML
-                    string imageUri = WriteImageToDisk(imagePart, relId);
+                    string? imageUri = WriteImageToDisk(imagePart, relId);
                     if (!string.IsNullOrEmpty(imageUri))
                     {
                         sb.WriteStartElement("img");
@@ -92,11 +92,23 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 imagePart.ContentType != ImagePartType.Svg.ContentType &&
                 imagePart.ContentType != ImagePartType.Icon.ContentType)
             {
-                var pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
-                if (pngData.Length > 0)
+                if (ImageConverter is NonGdiImageConverter nonGdiImageConverter && imagePart.ContentType == ImagePartType.Wmf.ContentType)
                 {
-                    mimeType = "image/png";
-                    return System.Convert.ToBase64String(pngData);
+                    var svgData = nonGdiImageConverter.WmfToSvgBytes(stream);
+                    if (svgData.Length > 0)
+                    {
+                        mimeType = "image/svg+xml";
+                        return System.Convert.ToBase64String(svgData);
+                    }
+                }
+                else
+                {
+                    var pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
+                    if (pngData.Length > 0)
+                    {
+                        mimeType = "image/png";
+                        return System.Convert.ToBase64String(pngData);
+                    }
                 }
             }
             else
@@ -115,7 +127,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         return string.Empty;
     }
 
-    private string WriteImageToDisk(ImagePart imagePart, string relId)
+    private string? WriteImageToDisk(ImagePart imagePart, string relId)
     {
         string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
 #if NETFRAMEWORK
@@ -132,11 +144,23 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 imagePart.ContentType != ImagePartType.Svg.ContentType &&
                 imagePart.ContentType != ImagePartType.Icon.ContentType)
             {
-                var pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
-                if (pngData.Length > 0)
+                if (ImageConverter is NonGdiImageConverter nonGdiImageConverter && imagePart.ContentType == ImagePartType.Wmf.ContentType)
+                {
+                    actualFilePath = Path.ChangeExtension(actualFilePath, ".svg");
+                    fileName = Path.ChangeExtension(fileName, ".svg");
+                    using (var imageStream = File.Create(actualFilePath))
+                    {
+                        nonGdiImageConverter.WmfToSvg(stream, imageStream);
+                    }
+                }
+                else
                 {
                     actualFilePath = Path.ChangeExtension(actualFilePath, ".png");
-                    File.WriteAllBytes(actualFilePath, pngData);
+                    fileName = Path.ChangeExtension(fileName, ".png");
+                    using (var imageStream = File.Create(actualFilePath))
+                    {
+                        ImageConverter.ConvertToPng(stream, imageStream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
+                    }
                 }
             }
             else
@@ -148,14 +172,19 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             }
         }
 
-        if (ImagesBaseUriOverride is null)
+        if (File.Exists(actualFilePath))
         {
-            return new Uri(actualFilePath, UriKind.Absolute).ToString();
+            if (ImagesBaseUriOverride is null)
+            {
+                return new Uri(actualFilePath, UriKind.Absolute).ToString();
+            }
+            else
+            {
+                string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
+                return new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute).ToString();
+            }
         }
-        else
-        {
-            string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
-            return new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute).ToString();
-        }
+
+        return null;
     }
 }

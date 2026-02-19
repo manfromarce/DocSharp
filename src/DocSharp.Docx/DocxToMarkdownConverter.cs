@@ -548,37 +548,47 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                         imagePart.ContentType != ImagePartType.Svg.ContentType &&
                         imagePart.ContentType != ImagePartType.Icon.ContentType)
                     {
-                        var pngData = ImageConverter.ConvertToPngBytes(stream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
-                        if (pngData.Length > 0)
+                        if (ImageConverter is NonGdiImageConverter nonGdiImageConverter && imagePart.ContentType == ImagePartType.Wmf.ContentType)
                         {
-                            actualFilePath = Path.ChangeExtension(actualFilePath, ".png");
-                            fileName = Path.ChangeExtension(fileName, ".png");
-                            File.WriteAllBytes(actualFilePath, pngData);
+                            actualFilePath = Path.ChangeExtension(actualFilePath, ".svg");
+                            fileName = Path.ChangeExtension(fileName, ".svg");
+                            using (var imageStream = File.Create(actualFilePath))
+                            {
+                                nonGdiImageConverter.WmfToSvg(stream, imageStream);
+                            }
                         }
                         else
                         {
-                            return;
+                            actualFilePath = Path.ChangeExtension(actualFilePath, ".png");
+                            fileName = Path.ChangeExtension(fileName, ".png");
+                            using (var imageStream = File.Create(actualFilePath))
+                            {
+                                ImageConverter.ConvertToPng(stream, imageStream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
+                            }
                         }
                     }
                     else
                     {
-                        using (var fileStream = new FileStream(actualFilePath, FileMode.Create, FileAccess.Write))
+                        using (var fileStream = File.Create(actualFilePath))
                         {
                             stream.CopyTo(fileStream);
                         }
                     }
                 }
-                Uri uri;
-                if (ImagesBaseUriOverride is null)
+                if (File.Exists(actualFilePath))
                 {
-                    uri = new Uri(actualFilePath, UriKind.Absolute);
+                    Uri uri;
+                    if (ImagesBaseUriOverride is null)
+                    {
+                        uri = new Uri(actualFilePath, UriKind.Absolute);
+                    }
+                    else
+                    {
+                        string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
+                        uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
+                    }
+                    sb.Write($" ![{relId}]({uri}) ");
                 }
-                else
-                {
-                    string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
-                    uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
-                }
-                sb.Write($" ![{relId}]({uri}) ");
             }
         }
         catch (Exception ex)

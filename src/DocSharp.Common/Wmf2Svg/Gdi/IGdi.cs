@@ -1,0 +1,80 @@
+namespace DocSharp.Wmf2Svg.Gdi;
+
+public interface IGdi
+{
+    void PlaceableHeader(int wsx, int wsy, int wex, int wey, int dpi);
+    void Header();
+    void AnimatePalette(IGdiPalette palette, int startIndex, int[] entries);
+    void Arc(int sxr, int syr, int exr, int eyr, int sxa, int sya, int exa, int eya);
+    void BitBlt(byte[] image, int dx, int dy, int dw, int dh, int sx, int sy, long rop);
+    void Chord(int sxr, int syr, int exr, int eyr, int sxa, int sya, int exa, int eya);
+    IGdiBrush CreateBrushIndirect(int style, int color, int hatch);
+
+    IGdiFont CreateFontIndirect(int height, int width, int escapement, int orientation, int weight, bool italic, bool underline, bool strikeout, int charset, int outPrecision, int clipPrecision, int quality, int pitchAndFamily,
+        byte[] faceName);
+
+    IGdiPalette CreatePalette(int version, int[] palEntry);
+    IGdiPatternBrush CreatePatternBrush(byte[] image);
+    IGdiPen CreatePenIndirect(int style, int width, int color);
+    IGdiRegion CreateRectRgn(int left, int top, int right, int bottom);
+    void DeleteObject(IGdiObject obj);
+    void DibBitBlt(byte[] image, int dx, int dy, int dw, int dh, int sx, int sy, long rop);
+    IGdiPatternBrush DibCreatePatternBrush(byte[] image, int usage);
+    void DibStretchBlt(byte[] image, int dx, int dy, int dw, int dh, int sx, int sy, int sw, int sh, long rop);
+    void Ellipse(int sx, int sy, int ex, int ey);
+    void Escape(byte[] data);
+    int ExcludeClipRect(int left, int top, int right, int bottom);
+    void ExtFloodFill(int x, int y, int color, int type);
+    void ExtTextOut(int x, int y, int options, int[]? rect, byte[] text, int[]? lpdx);
+    void FillRgn(IGdiRegion rgn, IGdiBrush brush);
+    void FloodFill(int x, int y, int color);
+    void FrameRgn(IGdiRegion rgn, IGdiBrush brush, int w, int h);
+    void IntersectClipRect(int left, int top, int right, int bottom);
+    void InvertRgn(IGdiRegion rgn);
+    void LineTo(int ex, int ey);
+    void MoveToEx(int x, int y, Point? old);
+    void OffsetClipRgn(int x, int y);
+    void OffsetViewportOrgEx(int x, int y, Point? point);
+    void OffsetWindowOrgEx(int x, int y, Point? point);
+    void PaintRgn(IGdiRegion rgn);
+    void PatBlt(int x, int y, int width, int height, long rop);
+    void Pie(int sxr, int syr, int exr, int eyr, int sxa, int sya, int exa, int eya);
+    void Polygon(Point[] points);
+    void Polyline(Point[] points);
+    void PolyPolygon(Point[][] points);
+    void RealizePalette();
+    void RestoreDC(int savedDC);
+    void Rectangle(int sx, int sy, int ex, int ey);
+    void ResizePalette(IGdiPalette palette);
+    void RoundRect(int sx, int sy, int ex, int ey, int rw, int rh);
+    void SaveDC();
+    void ScaleViewportExtEx(int x, int xd, int y, int yd, Size? old);
+    void ScaleWindowExtEx(int x, int xd, int y, int yd, Size? old);
+    void SelectClipRgn(IGdiRegion? rgn);
+    void SelectObject(IGdiObject obj);
+    void SelectPalette(IGdiPalette palette, bool mode);
+    void SetBkColor(int color);
+    void SetBkMode(int mode);
+    void SetDIBitsToDevice(int dx, int dy, int dw, int dh, int sx, int sy, int startscan, int scanlines, byte[] image, int colorUse);
+    void SetLayout(long layout);
+    void SetMapMode(int mode);
+    void SetMapperFlags(long flags);
+    void SetPaletteEntries(IGdiPalette palette, int startIndex, int[] entries);
+    void SetPixel(int x, int y, int color);
+    void SetPolyFillMode(int mode);
+    void SetRelAbs(int mode);
+    void SetROP2(int mode);
+    void SetStretchBltMode(int mode);
+    void SetTextAlign(int align);
+    void SetTextCharacterExtra(int extra);
+    void SetTextColor(int color);
+    void SetTextJustification(int breakExtra, int breakCount);
+    void SetViewportExtEx(int x, int y, Size? old);
+    void SetViewportOrgEx(int x, int y, Point? old);
+    void SetWindowExtEx(int width, int height, Size? old);
+    void SetWindowOrgEx(int x, int y, Point? old);
+    void StretchBlt(byte[] image, int dx, int dy, int dw, int dh, int sx, int sy, int sw, int sh, long rop);
+    void StretchDIBits(int dx, int dy, int dw, int dh, int sx, int sy, int sw, int sh, byte[] image, int usage, long rop);
+    void TextOut(int x, int y, byte[] text);
+    void Footer();
+}

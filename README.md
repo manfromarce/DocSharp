@@ -70,6 +70,7 @@ Forked:
 - [markdig.docx](https://github.com/morincer/markdig.docx)
 
 Others (credits for parts of the logic, not direct dependencies):
+- [wmf-to-svg](https://github.com/kemsky/wmf-to-svg) for the WMF parser
 - [Html2OpenXml](https://github.com/onizet/html2openxml) for images header decoding and unit conversions.  
 - [dwml_cs](https://github.com/m-x-d/dwml_cs) for Office Math (OMML) to LaTex conversion  
 - [addFormula2docx](https://github.com/Sun-ZhenXing/addFormula2docx) for Office Math (OMML) to MathML conversion  

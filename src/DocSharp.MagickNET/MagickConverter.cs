@@ -8,9 +8,9 @@ using ImageMagick;
 
 namespace DocSharp.Imaging;
 
-public class MagickConverter : IImageConverter
+public class MagickConverter : NonGdiImageConverter
 {
-    public bool ConvertToPng(Stream input, Stream output, IO.ImageFormat inputFormat)
+    public override bool ConvertToPng(Stream input, Stream output, IO.ImageFormat inputFormat)
     {
         try
         {
@@ -43,6 +43,36 @@ public class MagickConverter : IImageConverter
             Debug.WriteLine($"ConvertToPng error: {ex.Message}");
 #endif
             return false;
+        }
+    }
+
+    public override byte[]? BmpToPng(byte[] imageData, bool verticalFlip)
+    {
+        try
+        {
+            using (var image = new MagickImage(imageData))
+            {
+                // Flip vertically if requested
+                if (verticalFlip)
+                {
+                    image.Flip();
+                }
+
+                // Return PNG bytes
+                using (var ms = new MemoryStream())
+                {
+                    // Convert to 24-bit color (remove alpha channel)
+                    image.Write(ms, MagickFormat.Png24);
+                    return ms.ToArray();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+#if DEBUG
+            Debug.WriteLine($"BmpToPng error: {ex.Message}");
+#endif
+            return null;
         }
     }
 }

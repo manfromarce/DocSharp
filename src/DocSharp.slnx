@@ -12,6 +12,7 @@
     <Project Path="DocSharp.ImageSharp/DocSharp.ImageSharp.csproj" />
     <Project Path="DocSharp.SystemDrawing/DocSharp.SystemDrawing.csproj" />
     <Project Path="DocSharp.MagickNET/DocSharp.MagickNET.csproj" />
+    <Project Path="DocSharp.SkiaSharp/DocSharp.SkiaSharp.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="../samples/WpfApp1/WpfApp1.csproj" />

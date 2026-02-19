@@ -420,12 +420,24 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             continue;
                         }
 
-                        // TODO
                         else if (dname == "pict")
                         {
+                            // TODO: picture
+                            continue;                            
+                        }
+                        else if (dname == "shppict")
+                        {
+                            // Handle as regular group
+                            // (recurse to retrieve the pict element)
+                        }
+                        else if (dname == "nonshppict")
+                        {
+                            // Ignore nonshppict as it's emitted for compatibility for older RTF readers 
+                            // and contains the same inner \pict as \shppict
                             continue;
                         }
 
+                        // TODO: lists
                         else if (dname == "pn")
                         {
                             continue;

@@ -14,7 +14,8 @@ public class UriHelpers
         string url = uri.Trim('"');
         if (string.IsNullOrEmpty(url))
         {
-            return string.Empty; // Don't add trailing slash, it would be intended as root path.
+            // Same directory as the Markdown file
+            return "./"; 
         }
         else
         {

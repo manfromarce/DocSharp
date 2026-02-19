@@ -163,8 +163,8 @@ public partial class MainWindow : Window
                     {
                         ExportHeaderFooter = true,
                         ExportFootnotesEndnotes = true,
-                        ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
-                                                                       // (ImageSharp does not support WMF / EMF yet)
+                        ImageConverter = new ImageSharpConverter(), // Converts TIFF and WMF that are not supported by browsers
+                        // ImageConverter = new SystemDrawingConverter(), // Supports EMF too
                         OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);
@@ -199,8 +199,8 @@ public partial class MainWindow : Window
                     {
                         ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
                         ImagesBaseUriOverride = "",
-                        ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
-                                                                       // (ImageSharp does not support WMF / EMF yet)
+                        ImageConverter = new ImageSharpConverter(), // Converts TIFF and WMF that are not supported by browsers
+                        // ImageConverter = new SystemDrawingConverter(), // Supports EMF too
                         OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
                     };
                     converter.Convert(ofd.FileName, sfd.FileName);

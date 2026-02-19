@@ -64,4 +64,38 @@ public class SystemDrawingConverter : IImageConverter
             return false;
         }
     }
+
+    public byte[]? BmpToPng(byte[] imageData, bool verticalFlip)
+    {
+        try
+        {
+            var gdiConverter = new ImageConverter();
+            using (var image = (Bitmap?)gdiConverter.ConvertFrom(imageData))
+            {
+                if (image != null)
+                {
+                    // TODO: convert to 24-bit color (remove alpha channel)
+                    using (var ms = new MemoryStream())
+                    {
+                        // Flip vertically if requested
+                        if (verticalFlip)
+                        {
+                            image.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                        }
+
+                        // Return PNG bytes
+                        image.Save(ms, ImageFormat.Png);
+                        return ms.ToArray();
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+#if DEBUG
+            Debug.WriteLine($"BmpToPng error: {ex.Message}");
+#endif
+        }
+        return null;
+    }
 }
