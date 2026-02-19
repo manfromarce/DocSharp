@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="HtmlToOpenXml.dll" Version="3.3.1" />
     <PackageReference Include="PreMailer.Net" Version="2.7.2" />
-    <PackageReference Include="XlsxToHtmlConverter" Version="2.0.0" />
+    <PackageReference Include="XlsxToHtmlConverter" Version="2.1.1" />
     <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
   </ItemGroup>
