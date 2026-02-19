@@ -25,7 +25,6 @@
     <ProjectReference Include="..\..\src\DocSharp.ImageSharp\DocSharp.ImageSharp.csproj" />
     <ProjectReference Include="..\..\src\DocSharp.SystemDrawing\DocSharp.SystemDrawing.csproj" />
     <ProjectReference Include="..\..\src\WIP\DocSharp.Renderer\DocSharp.Renderer.csproj" />
-    <ProjectReference Include="..\..\src\WIP\DocSharp.Ebook\DocSharp.Ebook.csproj" />
   </ItemGroup>
 
 </Project>
