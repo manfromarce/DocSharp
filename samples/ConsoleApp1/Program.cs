@@ -378,25 +378,25 @@ public class ConsoleApp1
 
     private static void DocxToPdf(string inputFilePath, string outputFilePath)
     {
-        var converter = new DocxRenderer();
+        var converter = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
         converter.SaveAsPdf(inputFilePath, outputFilePath);
     }
 
     private static void DocxToJpg(string inputFilePath, string outputFilePath)
     {
-        var converter = new DocxRenderer();
+        var converter = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
         converter.SaveAsJpeg(1, inputFilePath, outputFilePath);
     }
 
     private static void DocxToPng(string inputFilePath, string outputFilePath)
     {
-        var converter = new DocxRenderer();
+        var converter = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
         converter.SaveAsPng(1, inputFilePath, outputFilePath);
     }
 
     private static void DocxToSvg(string inputFilePath, string outputFilePath)
     {
-        var converter = new DocxRenderer();
+        var converter = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
         converter.SaveAsSvg(1, inputFilePath, outputFilePath);
     }
 

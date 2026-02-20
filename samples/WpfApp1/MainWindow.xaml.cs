@@ -299,10 +299,8 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var converter = new DocxRenderer()
-                    {
-                    };
-                    converter.SaveAsPdf(ofd.FileName, sfd.FileName);
+                    var renderer = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
+                    renderer.SaveAsPdf(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)
                 {                    
@@ -329,10 +327,8 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var converter = new DocxRenderer()
-                    {
-                    };
-                    converter.SaveAllPagesAsPng(ofd.FileName, sfd.FolderName, Path.GetFileNameWithoutExtension(ofd.FileName));
+                    var renderer = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
+                    renderer.SaveAllPagesAsPng(ofd.FileName, sfd.FolderName, Path.GetFileNameWithoutExtension(ofd.FileName));
                 }
                 catch (Exception ex)
                 {
@@ -509,7 +505,7 @@ public partial class MainWindow : Window
             string tempFile = Path.GetTempFileName() + ".xps";
             try
             {
-                var renderer = new DocxRenderer();
+                var renderer = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
                 renderer.SaveAsXps(ofd.FileName, tempFile);
 
                 var viewerWindow = new Window()
@@ -894,10 +890,8 @@ public partial class MainWindow : Window
                                                                        // (ImageSharp does not support WMF / EMF yet)
                     });
                     // Render document to PDF
-                    var converter = new DocxRenderer()
-                    {
-                    };
-                    converter.SaveAsPdf(wordDocument, pdfFilePath);
+                    var renderer = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
+                    renderer.SaveAsPdf(wordDocument, pdfFilePath);
                 }
                 
             }

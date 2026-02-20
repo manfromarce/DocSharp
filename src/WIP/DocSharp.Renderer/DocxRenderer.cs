@@ -22,6 +22,11 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
     }
 
     /// <summary>
+    /// Optional image converter used to preserve GIF, TIFF, WMF and EMF images (QuestPDF supports JPEG, PNG and SVG only).
+    /// </summary>
+    public IImageConverter? ImageConverter { get; set; }
+
+    /// <summary>
     /// Customize properties for the output PDF, such as compression, compliance with the PDF/A standard, DPI, etc.
     /// </summary>
     public QuestPDF.Infrastructure.DocumentSettings? PdfSettings { get; set; }
