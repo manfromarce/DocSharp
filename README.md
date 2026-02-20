@@ -43,7 +43,7 @@ DocSharp provides methods to accept/return a WordprocessingDocument directly (in
 
 ### Usage
 
-You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki) or [sample app](https://github.com/manfromarce/DocSharp/tree/main/samples/WpfApp1).
+You can refer to the project [Wiki](https://github.com/manfromarce/DocSharp/wiki) or [sample apps](https://github.com/manfromarce/DocSharp/tree/main/samples/).
 
 ### Roadmap
 

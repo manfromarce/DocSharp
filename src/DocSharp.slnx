@@ -16,6 +16,7 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="../samples/WpfApp1/WpfApp1.csproj" />
+    <Project Path="../samples/ConsoleApp1/ConsoleApp1.csproj" />
   </Folder>
   <Folder Name="/Solution items/">
     <File Path="../.editorconfig" />

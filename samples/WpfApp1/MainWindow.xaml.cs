@@ -330,7 +330,7 @@ public partial class MainWindow : Window
                 try
                 {
                     var converter = new DocxRenderer()
-                    {                        
+                    {
                     };
                     converter.SaveAllPagesAsPng(ofd.FileName, sfd.FolderName, Path.GetFileNameWithoutExtension(ofd.FileName));
                 }
@@ -433,7 +433,7 @@ public partial class MainWindow : Window
                     var markdown = MarkdownSource.FromFile(ofd.FileName);
                     var converter = new MarkdownConverter()
                     {
-                        LinksBaseUri = Path.GetDirectoryName(ofd.FileName), // this will make links absolute
+                        LinksBaseUri = Path.GetDirectoryName(ofd.FileName), // this will make links absolute (optional)
                         ImagesBaseUri = Path.GetDirectoryName(ofd.FileName),
                         ImageConverter = new ImageSharpConverter() // Convert WEBP and GIF images which are not supported in RTF
                                                                    // (possibly AVIF and JXL too in a future release) 
@@ -559,9 +559,7 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var conv = new RtfToDocxConverter()
-                    {                         
-                    };
+                    var conv = new RtfToDocxConverter();
                     conv.Convert(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)
@@ -665,7 +663,7 @@ public partial class MainWindow : Window
                 try
                 {
                     using (var ms = new MemoryStream())
-                    {                        
+                    {
                         using (var reader = new StructuredStorageReader(ofd.FileName))
                         {
                             var doc = new WordDocument(reader);
@@ -710,7 +708,7 @@ public partial class MainWindow : Window
                 try
                 {
                     using (var ms = new MemoryStream())
-                    {                        
+                    {
                         using (var reader = new StructuredStorageReader(ofd.FileName))
                         {
                             var doc = new WordDocument(reader);
