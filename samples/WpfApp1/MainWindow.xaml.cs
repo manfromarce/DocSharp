@@ -299,7 +299,11 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var renderer = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
+                    var renderer = new DocxRenderer()
+                    {
+                        // ImageConverter = new ImageSharpConverter(), // Converts GIF, TIFF and WMF that are not supported by QuestPDF
+                        ImageConverter = new SystemDrawingConverter(), // Supports EMF too
+                    };
                     renderer.SaveAsPdf(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)
@@ -327,7 +331,11 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var renderer = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
+                    var renderer = new DocxRenderer()
+                    {
+                        // ImageConverter = new ImageSharpConverter(), // Converts GIF, TIFF and WMF that are not supported by QuestPDF
+                        ImageConverter = new SystemDrawingConverter(), // Supports EMF too
+                    };
                     renderer.SaveAllPagesAsPng(ofd.FileName, sfd.FolderName, Path.GetFileNameWithoutExtension(ofd.FileName));
                 }
                 catch (Exception ex)
@@ -505,7 +513,10 @@ public partial class MainWindow : Window
             string tempFile = Path.GetTempFileName() + ".xps";
             try
             {
-                var renderer = new DocxRenderer() { ImageConverter = new ImageSharpConverter() };
+                var renderer = new DocxRenderer()
+                {
+                    ImageConverter = new SystemDrawingConverter(), // Converts GIF, TIFF, WMF and EMF that are not supported by QuestPDF
+                };
                 renderer.SaveAsXps(ofd.FileName, tempFile);
 
                 var viewerWindow = new Window()

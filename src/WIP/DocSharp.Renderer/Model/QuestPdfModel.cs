@@ -274,7 +274,7 @@ public class QuestPdfModel
         else
             item.Text(text =>
             {
-                if (paragraph.FirstLineIndent >= 0)
+                if (paragraph.FirstLineIndent > 0)
                 // currently "hanging" (negative) first line indent is not supported by QuestPDF
                 // (I have filled an issue on GitHub for this)
                 {
@@ -295,7 +295,6 @@ public class QuestPdfModel
                 {
                     if (inline is QuestPdfSpan span)
                     {
-                        // Why is LineHeight at the span level in QuestPDF rather than at the same level as ParagraphFirstLineIndentation?
                         text.Span(span.IsAllCaps ? span.Text.ToUpper() : span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);   
                     }
                     else if (inline is QuestPdfPageNumber pageNumber)
@@ -322,6 +321,13 @@ public class QuestPdfModel
                                     text.SectionLink(subSpan.Text, hyperlink.Anchor).Style(subSpan.Style).LineHeight(paragraph.LineHeight);                                    
                             }
                         }
+                    }
+                    else if (inline is QuestPdfImage image)
+                    {
+                        if (image.IsSvg && !string.IsNullOrEmpty(image.SvgText))
+                            text.Element().Width(image.Width).Height(image.Height).Svg(image.SvgText!).FitArea();
+                        else if (image.Bytes != null && (image.ImageType == IO.ImageFormat.Png || image.ImageType == IO.ImageFormat.Jpeg))
+                            text.Element().Width(image.Width).Height(image.Height).Image(image.Bytes).FitArea();
                     }
                 }
             });

@@ -146,8 +146,8 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
     - All sections cause a page break and start on the next page (continuous/odd/even section types are not implemented)
 - ✅ Hyperlinks
     - Limitation: not every type of bookmark is currently supported (but the most common work properly)
-- ⌛ Lists (currently rendered as regular paragraphs with indentation, without the bullet/number)
-- ⌛ Pictures
+- ✅ Lists
+- 🟡 Pictures - supported but text wrapping layouts and many properties written by Word are not recognized (always rendered in line with text)
 - ⌛ Math formulas
 - ✅ Tables
     - Not supported: external spacing between cells; cell border styles (double, dashed, shadow, ...); diagonal internal borders; vertical text; some options such as CantSplit, NoWrap, TableCellFitText; some advanced text wrapping / position properties; some types of cell/row width (percentage, or TableLayout set to Auto); space before/after single row (different from table)

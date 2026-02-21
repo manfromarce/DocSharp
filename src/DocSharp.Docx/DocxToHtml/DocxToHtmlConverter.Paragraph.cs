@@ -21,8 +21,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         {
             // Special handling of paragraphs with the vanish attribute 
             // (can be used by word processors to increment the list item numbers).
-            // In this case, just increment the counter in the levels dictionary and
-            // don't write the paragraph.
+            // In this case, just increment the counter in the levels dictionary and don't write the paragraph.
             if (numberingProperties != null)
             {
                 ProcessListItem(numberingProperties, sb, isHidden: true);

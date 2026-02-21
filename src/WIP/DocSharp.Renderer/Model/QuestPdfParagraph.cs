@@ -57,6 +57,11 @@ internal class QuestPdfParagraph : QuestPdfBlock, IQuestPdfRunContainer
         KeepTogether = keepTogether;
     }
 
+    public void PrependSpan(QuestPdfSpan span)
+    {
+        Elements.Insert(0, span);
+    }
+
     public void AddSpan(QuestPdfSpan span)
     {
         Elements.Add(span);

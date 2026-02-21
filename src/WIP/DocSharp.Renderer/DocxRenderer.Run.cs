@@ -17,10 +17,10 @@ namespace DocSharp.Renderer;
 
 public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRenderer<QuestPDF.Fluent.Document>
 {
-    internal override void ProcessRun(Run run, QuestPdfModel output)
+    internal QuestPdfSpan? ProcessRunProperties(Run run)
     {
         if (run.GetEffectiveProperty<Vanish>().ToBool())
-            return; // don't process hidden runs
+            return null; // don't process hidden runs
 
         // Process run properties and add them to a new QuestPdfSpan object
         bool bold = run.GetEffectiveProperty<Bold>().ToBool();
@@ -111,6 +111,15 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         float? letterSpacing = null;
 
         var span = new QuestPdfSpan(null, bold, italic, underline, strikethrough, supSuperscript, caps, fontFamily, fontSize, fontColor, bgColor, underlineColor, letterSpacing, thickUnderline);
+
+        return span;
+    }
+
+    internal override void ProcessRun(Run run, QuestPdfModel output)
+    {
+        var span = ProcessRunProperties(run);
+        if (span == null)
+            return; // skip processing
 
         // Add span to the paragraph/hyperlink.
         if (currentRunContainer.Count > 0)
