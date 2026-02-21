@@ -11,4 +11,3 @@ internal class RtfText : RtfToken
 
     public RtfText() : this(string.Empty) { }
 }
-

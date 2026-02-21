@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text;
 
@@ -320,6 +321,34 @@ internal static class RtfReader
         bool pendingDestinationMarker = false;
 
         var textBuf = new StringBuilder();
+        // when inside a \pict destination group, collect hex data here
+        var pictStack = new Stack<bool>();
+        pictStack.Push(false);
+        var hexBuf = new StringBuilder();
+
+        void FlushHex()
+        {
+            if (hexBuf.Length == 0) return;
+            // remove whitespace and parse pairs
+            var s = new string(hexBuf.ToString().Where(ch => !char.IsWhiteSpace(ch)).ToArray());
+            var bytes = new List<byte>();
+            for (int i = 0; i + 1 < s.Length; i += 2)
+            {
+                try
+                {
+                    bytes.Add(Convert.ToByte(s.Substring(i, 2), 16));
+                }
+                catch
+                {
+                    break; // stop on parse error
+                }
+            }
+            if (bytes.Count > 0)
+            {
+                stack.Peek().Tokens.Add(new RtfHexToken() { Data = bytes.ToArray() });
+            }
+            hexBuf.Clear();
+        }
 
         void FlushText()
         {
@@ -356,22 +385,27 @@ internal static class RtfReader
             char c = (char)r;
             if (c == '{')
             {
+                FlushHex();
                 FlushText();
                 var g = new RtfGroup();
                 stack.Peek().Tokens.Add(g);
                 stack.Push(g);
+                pictStack.Push(false);
                 groupJustOpened = true;
                 pendingDestinationMarker = false;
             }
             else if (c == '}')
             {
+                FlushHex();
                 FlushText();
                 if (stack.Count > 1) stack.Pop();
+                if (pictStack.Count > 0) pictStack.Pop();
                 groupJustOpened = false;
                 pendingDestinationMarker = false;
             }
             else if (c == '\\')
             {
+                FlushHex();
                 FlushText();
                 int pk = PeekChar();
                 if (pk == -1) break;
@@ -558,10 +592,28 @@ internal static class RtfReader
                     }
                     stack.Push(dest);
                     pendingDestinationMarker = false;
+                    // mark pict stack for this group if applicable
+                    if (string.Equals(name, "pict", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (pictStack.Count > 0)
+                        {
+                            var _ = pictStack.Pop();
+                            pictStack.Push(true);
+                        }
+                    }
                 }
                 else
                 {
                     stack.Peek().Tokens.Add(cw);
+                    if (string.Equals(name, "pict", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // if pict appears as a control word (not destination), mark current group
+                        if (pictStack.Count > 0)
+                        {
+                            var tmp = pictStack.Pop();
+                            pictStack.Push(true);
+                        }
+                    }
                 }
 
                 groupJustOpened = false;
@@ -573,11 +625,20 @@ internal static class RtfReader
             // else if (c != '\0')
             else if (!char.IsControl(c))
             {    
-                textBuf.Append(c);
+                if (pictStack.Count > 0 && pictStack.Peek())
+                {
+                    hexBuf.Append(c);
+                }
+                else
+                {
+                    textBuf.Append(c);
+                }
                 groupJustOpened = false;             
             }
         }
 
+        // flush any remaining buffers
+        FlushHex();
         if (textBuf.Length > 0) 
             stack.Peek().Tokens.Add(new RtfText(textBuf.ToString()));
 

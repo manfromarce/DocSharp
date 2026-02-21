@@ -37,6 +37,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private Paragraph? currentParagraph = null;
     private ParagraphProperties pPr = new();
     private Run? currentRun = null;
+    private bool isPictureOpen = false;
     private Stack<FormattingState> fmtStack = new();
 
 #if !NETFRAMEWORK
@@ -82,6 +83,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentSectPr = null;
         currentParagraph = null;
         currentRun = null;
+        isPictureOpen = false;
         pendingFootnoteEndnoteRef = false;
         pPr = new ParagraphProperties();
         fmtStack.Clear();
@@ -422,8 +424,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
                         else if (dname == "pict")
                         {
-                            // TODO: picture
-                            continue;                            
+                            // Handle as regular group
+                            // (retrieve essential control words for image format and dimensions)
+                            isPictureOpen = true;
                         }
                         else if (dname == "shppict")
                         {
@@ -490,8 +493,18 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 case RtfText text:
                     HandleText(text.Text);
                     break;
+                case RtfHexToken hexData:
+                    // The hex data (e.g. image bytes) must be handled depending on the current context.
+                    if (hexData.Data != null && hexData.Data.Length > 0)
+                    {
+                        ProcessPictureData(hexData.Data);
+                    }
+                    break;
             }
         }
+        // finalize picture if any pending data
+        FinishCurrentPicture();
+        isPictureOpen = false;
         pendingFootnoteEndnoteRef = false;
         // Restore parent formatting state
         TryPop(fmtStack);
@@ -731,6 +744,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
                 }
                 else if (ProcessFootnoteEndnoteControlWord(cw, runState))
+                {
+                    break;
+                }
+                else if (ProcessPictureControlWord(cw, runState))
                 {
                     break;
                 }
