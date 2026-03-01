@@ -23,7 +23,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
     {
         // Note: we don't produce real HTML lists (<ul> / <ol>) because they are very limited compared to DOCX,
         // and preserving the original list format would be complicated. 
-        var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
+        var numberingPart = numPr.GetNumberingPart();
         if (numberingPart != null && numPr.NumberingId?.Val != null)
         {
             int numberingId = numPr.NumberingId.Val;

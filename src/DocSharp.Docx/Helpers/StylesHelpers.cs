@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -23,20 +24,27 @@ public static class StylesHelpers
             return styleId1.Equals(styleId2, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static Styles GetOrCreateStylesPart(this MainDocumentPart mainDocumentPart)
+    public static Styles GetOrCreateStylesPart(this WordprocessingDocument document)
     {
-        var part = mainDocumentPart.StyleDefinitionsPart;
-        if (part == null)
-        {
-            part = mainDocumentPart.AddNewPart<StyleDefinitionsPart>();
-        }
-        var styles = part.Styles;
-        if (styles == null)
-        {
-            styles = new Styles();
-        }
-        return styles;
-    } 
+        var mainPart = document.MainDocumentPart ?? document.AddMainDocumentPart();
+        return mainPart.GetOrCreateStylesPart();
+    }
+
+    public static Styles GetOrCreateStylesPart(this MainDocumentPart mainPart)
+    {
+        var stylesPart = mainPart.StyleDefinitionsPart ?? mainPart.AddNewPart<StyleDefinitionsPart>();
+        stylesPart.Styles ??= new Styles();
+        return stylesPart.Styles;
+    }
+
+    /// <summary>
+    /// Helper function to retrieve styles part from an Open XML element.
+    /// </summary>
+    /// <returns></returns>
+    public static Styles? GetStylesPart(this OpenXmlElement element)
+    {
+        return element.GetMainDocumentPart()?.StyleDefinitionsPart?.Styles;
+    }
 
     public static Style? GetStyleFromId(this Styles? stylesPart, string? id, StyleValues styleType)
     {

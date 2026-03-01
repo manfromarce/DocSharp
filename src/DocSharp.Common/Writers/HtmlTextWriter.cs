@@ -537,10 +537,10 @@ public sealed class HtmlTextWriter : XmlWriter
         }
         else if (string.IsNullOrEmpty(prefix))
         {
-            prefix = LookupPrefix(ns);
+            prefix = LookupPrefix(ns!);
             if (prefix == null)
             {
-                _scopes.Add(new NamespaceScope() { Default = ns });
+                _scopes.Add(new NamespaceScope() { Default = ns! });
             }
             else
             {
@@ -825,7 +825,7 @@ private Task WriteInternalAsync(string value)
 
     private class NamespaceScope : List<Namespace>
     {
-        public string Default { get; set; }
+        public string Default { get; set; } = string.Empty;
         public bool DefaultWritten { get; set; }
     }
 

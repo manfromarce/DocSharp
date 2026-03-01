@@ -20,13 +20,26 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlHelpers
 {
-    public static void Clear(this OpenXmlElement element)
+    public static T? FirstOrDefault<T>(this OpenXmlElement element, Func<T, bool> condition) where T : OpenXmlElement
     {
-        element.RemoveAllChildren();
-        element.ClearAllAttributes();
+        return element.Elements<T>().FirstOrDefault(condition);
     }
 
-    public static void Clear<T>(this OpenXmlElement element) where T : OpenXmlElement
+    public static void RemoveAll<T>(this OpenXmlElement element, Func<T, bool> condition) where T : OpenXmlElement
+    {
+        var subElements = element.Elements<T>().ToArray();
+        int count = subElements.Length;
+        for (int i = count - 1; i >= 0; i--)
+        {
+            var subElement = subElements[count - 1];
+            if (condition.Invoke(subElement))
+            {
+                subElement.Remove();
+            }
+        }
+    }
+
+    public static void RemoveAll<T>(this OpenXmlElement element) where T : OpenXmlElement
     {
         var subElements = element.Elements<T>().ToArray();
         int count = subElements.Length;
@@ -34,7 +47,13 @@ public static class OpenXmlHelpers
         {
             var subElement = subElements[count - 1];
             subElement.Remove();
-        }    
+        }
+    }
+
+    public static void Clear(this OpenXmlElement element)
+    {
+        element.RemoveAllChildren();
+        element.ClearAllAttributes();
     }
 
     public static void ClearExcept<T>(this OpenXmlElement element) where T : OpenXmlElement
@@ -141,24 +160,6 @@ public static class OpenXmlHelpers
             rootElement = rootElement.Parent;
         }
         return rootElement;
-    }
-
-    /// <summary>
-    /// Helper function to retrieve styles part from an Open XML element.
-    /// </summary>
-    /// <returns></returns>
-    public static Styles? GetStylesPart(this OpenXmlElement element)
-    {
-        return GetMainDocumentPart(element)?.StyleDefinitionsPart?.Styles;
-    }
-
-    /// <summary>
-    /// Helper function to retrieve Numbering part from an Open XML element.
-    /// </summary>
-    /// <returns></returns>
-    public static Numbering? GetNumberingPart(this OpenXmlElement element)
-    {
-        return GetMainDocumentPart(element)?.NumberingDefinitionsPart?.Numbering;
     }
 
     /// <summary>
@@ -400,7 +401,7 @@ public static class OpenXmlHelpers
         //    return propertyValue;
         //}
 
-        stylesPart ??= GetStylesPart(paragraph);
+        stylesPart ??= paragraph.GetStylesPart();
 
         // Check conditional formatting, if any
         var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
@@ -491,7 +492,7 @@ public static class OpenXmlHelpers
         // Note: for all properties except left/firstLine/hanging indent, it's not clear if we should also check numbering styles
         // MergeAttributes(res, paragraph.GetListParagraphProperties()?.SpacingBetweenLines, attributes);
 
-        stylesPart ??= GetStylesPart(paragraph);
+        stylesPart ??= paragraph.GetStylesPart();
 
         // Check conditional formatting, if any
         var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
@@ -542,7 +543,7 @@ public static class OpenXmlHelpers
         // Check list style (numbering part), if any
         MergeAttributes(res, paragraph.GetListParagraphProperties()?.Indentation, attributes);
 
-        stylesPart ??= GetStylesPart(paragraph);
+        stylesPart ??= paragraph.GetStylesPart();
 
         // Check conditional formatting, if any
         var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
@@ -595,7 +596,7 @@ public static class OpenXmlHelpers
         //    return propertyValue;
         //}
 
-        stylesPart ??= GetStylesPart(paragraph);
+        stylesPart ??= paragraph.GetStylesPart();
 
         // Check conditional formatting, if any
         var conditionalFormattingType = paragraph.GetCombinedConditionalFormattingFlags();
@@ -651,7 +652,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(run);
+        stylesPart ??= run.GetStylesPart();
 
         // Check conditional formatting, if any
         var paragraph = run.GetFirstAncestor<Paragraph>();
@@ -777,7 +778,7 @@ public static class OpenXmlHelpers
         }
 
         // Get styles if not passed to the function.
-        stylesPart ??= GetStylesPart(run);
+        stylesPart ??= run.GetStylesPart();
 
         // Check conditional formatting, if any
         var paragraph = run.GetFirstAncestor<Paragraph>();
@@ -885,7 +886,7 @@ public static class OpenXmlHelpers
         }
 
         // Get styles if not passed to the function.
-        stylesPart ??= GetStylesPart(run);
+        stylesPart ??= run.GetStylesPart();
 
         // Check conditional formatting, if any
         var paragraph = run.GetFirstAncestor<Paragraph>();
@@ -982,7 +983,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(runPr);
+        stylesPart ??= runPr.GetStylesPart();
 
         // Check run style
         var runStyle = stylesPart.GetStyleFromId(runPr.RunStyle?.Val, StyleValues.Character) ??
@@ -1018,7 +1019,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(table);
+        stylesPart ??= table.GetStylesPart();
         var conditionalFormattingFlags = table.GetCombinedConditionalFormattingFlags();
 
         // Check table style
@@ -1082,7 +1083,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(row);
+        stylesPart ??= row.GetStylesPart();
         var conditionalFormattingFlags = row.GetCombinedConditionalFormattingFlags();
 
         // Check table style
@@ -1153,7 +1154,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(cell);
+        stylesPart ??= cell.GetStylesPart();
         var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
 
         // Check table style
@@ -1279,7 +1280,7 @@ public static class OpenXmlHelpers
         }
 
         // Check table style
-        stylesPart ??= GetStylesPart(cell);
+        stylesPart ??= cell.GetStylesPart();
         var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
@@ -1334,7 +1335,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(row);
+        stylesPart ??= row.GetStylesPart();
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
@@ -1383,7 +1384,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(table);
+        stylesPart ??= table.GetStylesPart();
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
@@ -1464,7 +1465,7 @@ public static class OpenXmlHelpers
 
         // Check table style
         var tableProperties = cell.GetFirstAncestor<Table>()?.GetFirstChild<TableProperties>();
-        stylesPart ??= GetStylesPart(cell);
+        stylesPart ??= cell.GetStylesPart();
         var conditionalFormattingFlags = cell.GetCombinedConditionalFormattingFlags();
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
         while (tableStyle != null)
@@ -1515,7 +1516,7 @@ public static class OpenXmlHelpers
             return propertyValue;
         }
 
-        stylesPart ??= GetStylesPart(row);
+        stylesPart ??= row.GetStylesPart();
 
         // Check table style
         var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);

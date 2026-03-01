@@ -101,4 +101,33 @@ public static class FileFormatHelpers
                 return WordprocessingDocumentType.Document;
         }
     }
+
+    internal static bool IsSameFormat(LoadFormat loadFormat, SaveFormat saveFormat)
+    {
+        if (loadFormat == LoadFormat.Docx)
+        {
+            return saveFormat == SaveFormat.Docx || saveFormat == SaveFormat.Dotx || saveFormat == SaveFormat.Docm || saveFormat == SaveFormat.Dotm;
+        }
+        else if (loadFormat == LoadFormat.Rtf)
+        {
+            return saveFormat == SaveFormat.Rtf;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    internal static LoadFormat DetectFormat(byte[] data)
+    {
+        // Simple heuristic: check for the ZIP file signature (PK) for DOCX, otherwise assume RTF
+        if (data.Length >= 4 && data[0] == 0x50 && data[1] == 0x4B)
+        {
+            return LoadFormat.Docx;
+        }
+        else
+        {
+            return LoadFormat.Rtf;
+        }
+    }
 }

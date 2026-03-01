@@ -24,7 +24,7 @@ public class ListRenderer : DocxObjectRenderer<ListBlock>
     protected override void WriteObject(DocxDocumentRenderer renderer, ListBlock obj)
     {
         var listInfo = new ListInfo();
-        var numbering = renderer.Document.GetOrCreateNumbering().NumberingDefinitionsPart!.Numbering;
+        var numbering = renderer.Document.GetOrCreateNumbering();
         var listItemStyle = obj.IsOrdered ? renderer.Styles.MarkdownStyles["ListOrderedItem"] : 
                                             renderer.Styles.MarkdownStyles["ListBulletItem"];
         listInfo.StyleId = listItemStyle;

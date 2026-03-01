@@ -35,7 +35,7 @@ public static class RunHelpers
 
     public static void ClearText(this Run run)
     {
-        run.Clear<Text>();
+        run.RemoveAll<Text>();
     }
 
     public static bool HasContent(this Run run)

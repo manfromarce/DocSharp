@@ -137,6 +137,7 @@ internal static class RtfNumberFormatMapper
             case "levelnfc22": // Arabic with leading zero (01, 02, 03, ..., 10, 11)
                 return NumberFormatValues.DecimalZero;
             case "levelnfc23": // Bullet (no number)
+            case "pnlvlblt":
                 return NumberFormatValues.Bullet;
             case "pgnganada": // Korean numbering 2 (GANADA)
             case "pnganada":

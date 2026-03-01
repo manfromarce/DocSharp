@@ -23,6 +23,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private OpenXmlElement container;
     private DocumentSettingsPart? settingsPart;
     private StyleDefinitionsPart? stylesPart;
+    private NumberingDefinitionsPart? numberingDefinitionsPart;
 
     private Dictionary<int, string> fontTable = new();
     private List<(int R, int G, int B)> colorTable = new();
@@ -36,6 +37,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private SectionProperties? currentSectPr;
     private Paragraph? currentParagraph = null;
     private ParagraphProperties pPr = new();
+    private Level? currentLevel = new();
     private Run? currentRun = null;
     private bool isPictureOpen = false;
     private Stack<FormattingState> fmtStack = new();
@@ -83,6 +85,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentSectPr = null;
         currentParagraph = null;
         currentRun = null;
+        currentLevel = null;
         isPictureOpen = false;
         pendingFootnoteEndnoteRef = false;
         pPr = new ParagraphProperties();
@@ -92,6 +95,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
         settingsPart = mainPart.DocumentSettingsPart;
         stylesPart = mainPart.StyleDefinitionsPart;
+        numberingDefinitionsPart = mainPart.NumberingDefinitionsPart;
 
         mainPart.Document ??= new Document();
         mainPart.Document.Body = new Body();
@@ -440,21 +444,56 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             continue;
                         }
 
-                        // TODO: lists
                         else if (dname == "pn")
                         {
-                            continue;
+                            // Enumerate the group normally to retrieve list level, number format, character style, text before/after, ...
+                            currentLevel = pPr.CreateListLevel(mainPart);
                         }
-                        else if (dname == "pntext")
+                        else if (dname == "pnseclvl")
                         {
-                            continue;
+                            if (destination.HasValue)
+                            {
+                                // Sets the default numbering style for each corresponding \pnlvlN control word within the section.
+                                // Ignored for now.
+                            }
                         }
                         else if (dname == "pntxta")
                         {
+                            // This group contains the text that follows the number
+                            var builder = new StringBuilder();
+                            ConvertGroupAsText(subGroup, builder);
+                            var level = EnsureLevel();
+                            var text = level.GetLevelText();
+                            // If the level text has not been set yet, and the number format is not bullet or not set, 
+                            // initialize the level text to %1 (replaced by the actual list item number by word processors). 
+                            // The %1 will be removed later if we find out that the list is bulleted.
+                            if ((level.NumberingFormat?.Val == null || level.NumberingFormat.Val != NumberFormatValues.Bullet) 
+                                 && text == string.Empty)
+                                level.SetLevelText("%1" + builder.ToString());
+                            else 
+                                level.AppendLevelText(builder.ToString());
                             continue;
                         }
                         else if (dname == "pntxtb")
                         {
+                            // This group contains the text that precedes the number, or the bullet text
+                            var builder = new StringBuilder();
+                            ConvertGroupAsText(subGroup, builder);
+                            var level = EnsureLevel();
+                            var text = level.GetLevelText();
+                            // If the level text has not been set yet, and the number format is not bullet or not set, 
+                            // initialize the level text to %1 (replaced by the actual list item number by word processors). 
+                            // The %1 will be removed later if we find out that the list is bulleted.
+                            if ((level.NumberingFormat?.Val == null || level.NumberingFormat.Val != NumberFormatValues.Bullet) 
+                                 && text == string.Empty)
+                                level.SetLevelText(builder.ToString() + "%1");
+                            else 
+                                level.PrependLevelText(builder.ToString());
+                            continue;
+                        }
+                        else if (dname == "pntext")
+                        {
+                            // Ignore, emitted for compatibility with older RTF readers only
                             continue;
                         }
 
@@ -683,6 +722,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 break;
             case "pard":  // reset paragraph formatting
                 pPr.Clear();
+                currentLevel = null;
                 break;
             case "plain": // reset character formatting
                 currentRun = null;
@@ -728,6 +768,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
                 }
                 else if (ProcessParagraphControlWord(cw))
+                {
+                    break;
+                }
+                else if (ProcessLegacyListControlWord(cw))
                 {
                     break;
                 }

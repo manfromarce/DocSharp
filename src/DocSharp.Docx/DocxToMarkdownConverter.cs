@@ -170,7 +170,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal void ProcessListItem(NumberingProperties numPr, MarkdownStringWriter sb)
     {
-        var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
+        var numberingPart = numPr.GetNumberingPart();
         if (numberingPart != null && numPr.NumberingId?.Val != null)
         {
             int levelIndex = numPr.NumberingLevelReference?.Val ?? 0;
@@ -623,7 +623,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             {
                 if (!string.IsNullOrEmpty(symbolChar?.Font?.Value))
                 {
-                    htmlEntity = FontConverter.ToUnicode(symbolChar.Font.Value, (char)decimalValue);
+                    htmlEntity = FontConverter.ToUnicode(symbolChar!.Font!.Value!, (char)decimalValue);
                 }
             }
             if (string.IsNullOrEmpty(htmlEntity)) // If htmlEntity is empty, use the original char code

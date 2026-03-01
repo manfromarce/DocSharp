@@ -274,7 +274,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal void ProcessListItem(NumberingProperties numPr, TxtStringWriter sb, bool isHidden = false)
     {
-        var numberingPart = OpenXmlHelpers.GetNumberingPart(numPr);
+        var numberingPart = numPr.GetNumberingPart();
         if (numberingPart != null && numPr.NumberingId?.Val != null)
         {
             int numberingId = numPr.NumberingId.Val;
