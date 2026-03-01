@@ -164,38 +164,39 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 }
                 return true;
             case "pnul": // Bullet/number is underlined
-                if (cw.HasValue && cw.Value == 0)
-                {
-                    // Disabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Underline = new Underline() { Val = UnderlineValues.None };
-                }
-                else
-                {
-                    // Enabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Underline = new Underline() { Val = UnderlineValues.Single };
-                }
+                SetListItemUnderline(cw, UnderlineValues.Single);
+                return true;
+            case "pnuld": // Bullet/number has dotted underline
+                SetListItemUnderline(cw, UnderlineValues.Dotted);
+                return true;
+            case "pnuldash": // Bullet/number has dashed underline
+                SetListItemUnderline(cw, UnderlineValues.Dash);
+                return true;
+            case "pnuldashd": // Bullet/number has dash-dotted underline
+                SetListItemUnderline(cw, UnderlineValues.DotDash);
+                return true;
+            case "pnuldashdd": // Bullet/number has dash-dot-dot underline
+                SetListItemUnderline(cw, UnderlineValues.DotDotDash);
+                return true;
+            case "pnulhair": // Bullet/number has hairline underline
+                SetListItemUnderline(cw, UnderlineValues.Single);
+                return true;
+            case "pnulth": // Bullet/number has thick underline
+                SetListItemUnderline(cw, UnderlineValues.Thick);
+                return true;
+            case "pnulwave": // Bullet/number has wavy underline
+                SetListItemUnderline(cw, UnderlineValues.Wave);
+                return true;
+            case "pnuldb": // Bullet/number has double underline
+                SetListItemUnderline(cw, UnderlineValues.Double);
                 return true;
             case "pnulw": // Bullet/number has word underline
-                if (cw.HasValue && cw.Value == 0)
-                {
-                    // Disabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Underline = new Underline() { Val = UnderlineValues.None };
-                }
-                else
-                {
-                    // Enabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Underline = new Underline() { Val = UnderlineValues.Words };
-                }
+                SetListItemUnderline(cw, UnderlineValues.Words);
                 return true;
-             case "pnstrike": // Bullet/number is strikethrough
+            case "pnulnone": // Bullet/number has no underline
+                SetListItemUnderline(cw, UnderlineValues.None);
+                return true;
+            case "pnstrike": // Bullet/number is strikethrough
                 if (cw.HasValue && cw.Value == 0)
                 {
                     // Disabled
@@ -252,10 +253,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         return false;
     }
 
-    private Numbering EnsureNumberingPart()
+    private void SetListItemUnderline(RtfControlWord cw, UnderlineValues underlineValue)
     {
-        numberingDefinitionsPart ??= mainPart.AddNewPart<NumberingDefinitionsPart>();
-        numberingDefinitionsPart.Numbering ??= new Numbering();
-        return numberingDefinitionsPart.Numbering;
+        var level = EnsureLevel();
+        level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
+        if (cw.HasValue && cw.Value == 0)
+        {
+            // Disabled
+            level.NumberingSymbolRunProperties.Underline = new Underline() { Val = UnderlineValues.None };
+        }
+        else
+        {
+            // Enabled
+            level.NumberingSymbolRunProperties.Underline = new Underline() { Val = underlineValue };
+        }
     }
 }
