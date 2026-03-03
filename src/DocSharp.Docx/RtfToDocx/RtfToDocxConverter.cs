@@ -28,7 +28,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private Dictionary<int, string> fontTable = new();
     private List<(int R, int G, int B)> colorTable = new();
     private Dictionary<string, int> bookmarks = new();
-    private Encoding? codePageEncoding;
 
     private bool pendingFootnoteEndnoteRef = false;
 
@@ -50,24 +49,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 #endif
 
     /// <summary>
-    /// Note: the DefaultEncoding property only affects how the raw RTF file is read 
-    /// (in particular the RTF header and control words, which should be ASCII), it does not change how text tokens are handled: 
-    /// special characters such as \'xx are still interpreted based on the code page detected by RtfReader. 
-    /// Therefore, it should be left as ASCII unless there is a specific reason to change it (not conformant document).
+    /// By default the system ANSI code page (as detected by .NET) is used to read the raw RTF stream, 
+    /// but it's replaced when relevant information is found in the RTF header. 
+    /// This property should not be changed except in special cases where the RTF is not conformant and the encoding is known. 
     /// </summary>
-    public Encoding DefaultEncoding => Encoding.ASCII;
+    public Encoding DefaultEncoding => Encodings.ANSI;
 
     /// <summary>
-    /// Set the DefaultCodePage to a value greater than 0 to use a custom code page as default. 
-    /// Note: the RTF reader will still try to detect the encoding (ANSI code page) from the RTF header, 
-    /// and Microsoft Word always writes the code page in the header. 
-    /// However, if the code page is not specified, the documentation is unclear about the default value, 
-    /// so at this time the RTF reader uses the code page for the current culture (as detected by .NET).
-    /// This property allows to set a different code page, for example you might want to force 1252 (Windows western code page) 
-    /// (when the code page is not specified in the RTF header) if your system culture uses a different alphabet 
-    /// but you expect to process English documents. 
+    /// By default the system ANSI code page (as detected by .NET) is used if \ansicpg is *not* specified in the RTF header. 
+    /// This property can be used to force another default value, such as Windows-1252. 
     /// </summary>
-    public int? DefaultCodePage;
+    public int DefaultCodePage { get; set; } = CultureInfo.CurrentCulture.TextInfo.ANSICodePage;
+
+    private Encoding? codePageEncoding;
 
     /// <summary>
     /// Populate the target DOCX document with converted RTF content.
@@ -525,8 +519,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
                 case RtfChar ch:
                     // Ensure paragraph and run exist
-                    var encoding = codePageEncoding ?? Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
-                    string s = encoding.GetString([ch.CharCode]);
+                    codePageEncoding ??= Encodings.ANSI;
+                    string s = codePageEncoding.GetString([ch.CharCode]);
                     HandleText(s);
                     break;
                 case RtfText text:
@@ -582,8 +576,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
                 case RtfChar ch:
                     // Ensure paragraph and run exist
-                    var encoding = codePageEncoding ?? Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
-                    string s = encoding.GetString([ch.CharCode]);
+                    codePageEncoding ??= Encodings.ANSI;
+                    string s = codePageEncoding.GetString([ch.CharCode]);
                     HandleText(s, sb);
                     break;
                 case RtfText text:

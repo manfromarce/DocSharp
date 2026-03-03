@@ -25,16 +25,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         {
             // RTF header
             case "ansi":
-                // If ANSI is specified, use the system ANSI code page, 
-                // unless the DefaultCodePage value is set to a different value. 
-                // Note that this default encoding can still be superseded by the \ansicpgN control word, if found. 
-                int defaultCodePage;
-                if (DefaultCodePage != null && DefaultCodePage.Value > 0)
-                    defaultCodePage = DefaultCodePage.Value;
-                else 
-                    defaultCodePage = CultureInfo.CurrentCulture.TextInfo.ANSICodePage;
-
-                codePageEncoding = Encoding.GetEncoding(defaultCodePage);
+                // If ANSI is specified, use the system ANSI code page which is already set by default, unless: 
+                // - \ansicpg has already been found before \ansi (not standard)
+                // - \ansicpg has not been found and a different default code page has been specified by the user
+                codePageEncoding ??= Encoding.GetEncoding(DefaultCodePage);
                 return true;
             case "mac": // Legacy Mac encoding
                 codePageEncoding = Encoding.GetEncoding(10000);
@@ -48,7 +42,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "pca": // BM PC code page 850
                 codePageEncoding = Encoding.GetEncoding(850);
                 return true;
-            case "ansicpg": // If present, this control word should be after \ansi or \mac
+            case "ansicpg": // If present, supersedes the default ANSI encoding
                 if (cw.HasValue && cw.Value!.Value >= 0)
                 {
                     try

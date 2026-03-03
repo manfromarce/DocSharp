@@ -439,6 +439,18 @@ internal static class RtfReader
 
                 if (!IsEnglishLetter(next))
                 {
+                    // If CR or LF is preceded by \, it should be interpreted as \par (new paragraph)
+                    if (next == '\r' || next == '\n')
+                    {
+                        // Consume a possible coupled CR-LF to avoid duplication
+                        int pk2 = PeekChar();
+                        if (pk2 != -1 && ((next == '\r' && (char)pk2 == '\n') || (next == '\n' && (char)pk2 == '\r')))
+                            ReadChar();
+                        stack.Peek().Tokens.Add(new RtfControlWord("par"));
+                        groupJustOpened = false;
+                        continue;
+                    }
+
                     string sym = next.ToString();
                     if (sym == "*")
                     {
