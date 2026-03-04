@@ -66,13 +66,28 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 CreateSetting<BookFoldReversePrinting>(true); 
                 return true;
             // TODO: default fonts
-            // case "deff":
-            // case "adeff":
-            // case "stshfdbch":
-            // case "stshfloch":
-            // case "stshfhich":
-            // case "stshfbi":
-            //     return true;
+            case "deff":
+                if (cw.HasValue)
+                {
+                    defaultFontIndex = cw.Value!.Value;
+                    // Update current formatting state so text before an explicit \fN uses the default font
+                    TryPeek(fmtStack).FontIndex = cw.Value.Value;
+                }
+                return true;
+            case "adeff":
+                // Asian default font index; for now treat same as deff (assign to defaultFontIndex so runs pick it up)
+                if (cw.HasValue)
+                {
+                    defaultFontIndex = cw.Value!.Value;
+                    TryPeek(fmtStack).FontIndex = cw.Value.Value;
+                }
+                return true;
+            // style handles for default fonts in stylesheet (not yet mapped to styles conversion)
+            case "stshfdbch":
+            case "stshfloch":
+            case "stshfhich":
+            case "stshfbi":
+                return true;
             case "deflang":
             case "deflangfe":
             case "adeflang":

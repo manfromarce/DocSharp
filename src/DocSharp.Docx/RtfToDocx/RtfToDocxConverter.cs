@@ -28,6 +28,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private Dictionary<int, string> fontTable = new();
     private List<(int R, int G, int B)> colorTable = new();
     private Dictionary<string, int> bookmarks = new();
+    private int? defaultFontIndex = null;
 
     private bool pendingFootnoteEndnoteRef = false;
 
@@ -74,6 +75,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         colorTable = new();
         bookmarks = new();
         codePageEncoding = null;
+        defaultFontIndex = null;
         currentBorder = null;
         defaultSectPr = null;
         currentSectPr = null;
@@ -146,7 +148,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         // - Sections are terminated by \sect, and \sectd optionally resets section properties. If no section is defined, the whole document is a single section.
 
         // Use a stack of formatting states so changes inside a group are scoped to that group        
-        fmtStack.Push(TryPeek(fmtStack).Clone()); // push a clone for this group's local modifications
+        var clonedState = TryPeek(fmtStack).Clone();
+        if (defaultFontIndex.HasValue && clonedState.FontIndex == null)
+            clonedState.FontIndex = defaultFontIndex;
+        fmtStack.Push(clonedState); // push a clone for this group's local modifications
         foreach (var token in group.Tokens)
         {
             switch (token)
@@ -275,11 +280,65 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         }
                         else if (dname == "defchp")
                         {
+                            // Parse default character properties and map them to Styles/DocDefaults -> RunPropertiesDefault
+                            var tempState = new FormattingState();
+                            var previousBorder = currentBorder;
+                            foreach (var t in destination.Tokens)
+                            {
+                                if (t is RtfControlWord rcw)
+                                {
+                                    ProcessRunControlWord(rcw, tempState);
+                                }
+                            }
+                            currentBorder = previousBorder;
+
+                            // Ensure styles and docDefaults exist
+                            stylesPart ??= mainPart.StyleDefinitionsPart;
+                            if (stylesPart == null)
+                                stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
+                            stylesPart.Styles ??= new Styles();
+                            var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
                             
+                            docDefaults.RunPropertiesDefault ??= new RunPropertiesDefault();
+                            docDefaults.RunPropertiesDefault.RunPropertiesBaseStyle?.Remove();
+                            var generatedRun = CreateRunWithProperties(tempState);
+                            var rp = generatedRun.GetFirstChild<RunProperties>();
+                            if (rp != null)
+                                // Note: we can't cast RunProperties to RunPropertiesBaseStyle, 
+                                // but adding them directly should work as they have the same XML name and structure
+                                docDefaults.RunPropertiesDefault.Append(rp.CloneNode(true));
+                            continue;
                         }
                         else if (dname == "defpap")
                         {
-                            
+                            // Parse default paragraph properties and map them to Styles/DocDefaults -> ParagraphPropertiesDefault
+                            var previousPPr = pPr;
+                            var previousBorder = currentBorder;
+                            pPr = new ParagraphProperties();
+                            foreach (var t in destination.Tokens)
+                            {
+                                if (t is RtfControlWord rcw)
+                                {
+                                    ProcessParagraphControlWord(rcw);
+                                }
+                            }
+                            var builtPPr = (ParagraphProperties)pPr.CloneNode(true);
+                            // restore
+                            pPr = previousPPr;
+                            currentBorder = previousBorder;
+
+                            stylesPart ??= mainPart.StyleDefinitionsPart;
+                            if (stylesPart == null)
+                                stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
+                            stylesPart.Styles ??= new Styles();
+                            var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
+
+                            docDefaults.ParagraphPropertiesDefault ??= new ParagraphPropertiesDefault();
+                            docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle?.Remove();
+                            // Note: we can't cast ParagraphProperties to ParagraphPropertiesBaseStyle, 
+                            // but adding them directly should work as they have the same XML name and structure
+                            docDefaults.ParagraphPropertiesDefault.Append(builtPPr.CloneNode(true));
+                            continue;
                         }
                         else if (dname == "field")
                         {
