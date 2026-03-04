@@ -5,7 +5,9 @@ namespace DocSharp.Docx;
 internal class FormattingState
 {
     public bool Bold { get; set; }
+    public bool AssociatedBold { get; set; }
     public bool Italic { get; set; }
+    public bool AssociatedItalic { get; set; }
     public bool Strike { get; set; }
     public bool DoubleStrike { get; set; }
     public bool Subscript { get; set; }
@@ -21,6 +23,7 @@ internal class FormattingState
     public bool RightToLeft { get; set; }
     public bool SnapToGrid { get; set; }
     public bool NoProof { get; set; }
+    public bool ComplexScript { get; set; }
 
     public UnderlineValues? Underline { get; set; }
     public EmphasisMarkValues? Emphasis { get; set; }
@@ -30,11 +33,13 @@ internal class FormattingState
     public Languages? Languages { get; set; }
 
     public int? FontIndex { get; set; }
+    public int? AssociatedFontIndex { get; set; }
     public int? FontColorIndex { get; set; }
     public int? HighlightColorIndex { get; set; }
     public int? UnderlineColorIndex { get; set; }
 
     public int? FontSize { get; set; }
+    public int? AssociatedFontSize { get; set; }
     public int? FontScaling { get; set; }
     public int? FontSpacing { get; set; }
     public int? FitText { get; set; }
@@ -58,7 +63,9 @@ internal class FormattingState
         return new FormattingState 
         { 
             Bold = this.Bold, 
+            AssociatedBold = this.AssociatedBold, 
             Italic = this.Italic, 
+            AssociatedItalic = this.AssociatedItalic, 
             Strike = this.Strike, 
             DoubleStrike = this.DoubleStrike,
             Subscript = this.Subscript,
@@ -74,6 +81,7 @@ internal class FormattingState
             RightToLeft = this.RightToLeft,
             SnapToGrid = this.SnapToGrid,
             NoProof = this.NoProof,
+            ComplexScript = this.ComplexScript,
 
             Underline = this.Underline,
             Emphasis = this.Emphasis,
@@ -83,11 +91,13 @@ internal class FormattingState
             Languages = this.Languages,
 
             FontIndex = this.FontIndex,
+            AssociatedFontIndex = this.AssociatedFontIndex,
             FontColorIndex = this.FontColorIndex,
             HighlightColorIndex = this.HighlightColorIndex,
             UnderlineColorIndex = this.UnderlineColorIndex,
             
             FontSize = this.FontSize,
+            AssociatedFontSize = this.AssociatedFontSize,
             FontScaling = this.FontScaling,
             FontSpacing = this.FontSpacing,
             FitText = this.FitText,
@@ -105,7 +115,9 @@ internal class FormattingState
     public void Clear()
     {
         Bold = false;
+        AssociatedBold = false;
         Italic = false;
+        AssociatedItalic = false;
         Strike = false;
         DoubleStrike = false;
         Subscript = false;
@@ -121,16 +133,19 @@ internal class FormattingState
         RightToLeft = false;
         SnapToGrid = false;
         NoProof = false;
+        this.ComplexScript = false;
 
         Underline = null;
         Emphasis = null;
         CharacterBorder = null;
         CharacterShading = null;
         FontIndex = null;
+        AssociatedFontIndex = null;
         FontColorIndex = null;
         HighlightColorIndex = null;
         UnderlineColorIndex = null;
         FontSize = null;
+        AssociatedFontSize = null;
         FontScaling = null;
         FontSpacing = null;
         FitText = null;

@@ -62,12 +62,18 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (state.Imprint) rPr.Append(new Imprint());
         if (state.Outline) rPr.Append(new Outline());
         if (state.Shadow) rPr.Append(new Shadow());
-        if (state.RightToLeft) rPr.Append(new RightToLeftText());
         if (state.NoProof) rPr.Append(new NoProof());
         if (!state.SnapToGrid) rPr.Append(new SnapToGrid() { Val = false }); // enabled by default in DOCX, but not in RTF
 
-        if (state.Emphasis.HasValue) rPr.Append(new Emphasis() { Val = state.Emphasis.Value });
+        if (state.RightToLeft) rPr.Append(new RightToLeftText());
+        if (state.ComplexScript) rPr.Append(new ComplexScript());
+        if (state.AssociatedBold) rPr.Append(new BoldComplexScript());
+        if (state.AssociatedItalic) rPr.Append(new ItalicComplexScript());
+        
         if (state.FontSize.HasValue) rPr.Append(new FontSize() { Val = state.FontSize.Value.ToStringInvariant()});
+        if (state.AssociatedFontSize.HasValue) rPr.Append(new FontSizeComplexScript() { Val = state.AssociatedFontSize.Value.ToStringInvariant()});
+
+        if (state.Emphasis.HasValue) rPr.Append(new Emphasis() { Val = state.Emphasis.Value });
         if (state.VerticalOffset.HasValue) rPr.Append(new Position() { Val = state.VerticalOffset.Value.ToStringInvariant()});        
         if (state.FontScaling.HasValue) rPr.Append(new CharacterScale() { Val = state.FontScaling.Value});
         if (state.FontSpacing.HasValue) rPr.Append(new Spacing() { Val = state.FontSpacing.Value});
@@ -79,7 +85,15 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
         // Get font family from font table
         if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fname) && !string.IsNullOrEmpty(fname))
-            rPr.Append(new RunFonts() { Ascii = fname, HighAnsi = fname, EastAsia = fname, ComplexScript = fname });
+            rPr.RunFonts = new RunFonts() { Ascii = fname, HighAnsi = fname, EastAsia = fname, ComplexScript = fname };
+
+        if (state.AssociatedFontIndex.HasValue && fontTable.TryGetValue(state.AssociatedFontIndex.Value, out var afName) && !string.IsNullOrEmpty(afName))
+        {
+            rPr.RunFonts ??= new RunFonts();
+            rPr.RunFonts.HighAnsi = afName;
+            rPr.RunFonts.EastAsia = afName;
+            rPr.RunFonts.ComplexScript = afName;
+        }
 
         // Get colors from color table
         if (state.FontColorIndex.HasValue)
@@ -155,6 +169,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "b":
                 runState.Bold = cw.HasValue ? cw.Value != 0 : true;
                 return true;
+            case "ab":
+                runState.AssociatedBold = cw.HasValue ? cw.Value != 0 : true;
+                return true;
             case "charscalex":
                 if (cw.HasValue)
                     runState.FontScaling = cw.Value;
@@ -217,7 +234,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     runState.FontColorIndex = cw.Value;
                 return true;
             case "cgrid":
-                runState.SnapToGrid = cw.HasValue && cw.Value == 0; // enabled by default in DOCX, but not in RTF                
+                runState.SnapToGrid = cw.HasValue && cw.Value == 0; // enabled by default in DOCX, but not in RTF
                 return true;
             case "cs":
                 if (cw.HasValue)
@@ -238,6 +255,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                     runState.FontSpacing = cw.Value;
                 return true;
+            case "fcs":
+                runState.ComplexScript = cw.HasValue && cw.Value == 1;
+                return true;
             case "fittext":
                 if (cw.HasValue && cw.Value >= 0) // TODO: handle -1 properly
                     runState.FitText = cw.Value;
@@ -246,9 +266,17 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                     runState.FontSize = cw.Value;
                 return true;
+            case "afs":
+                if (cw.HasValue)
+                    runState.AssociatedFontSize = cw.Value;
+                return true;
             case "f":
                 if (cw.HasValue)
                     runState.FontIndex = cw.Value;
+                return true;
+            case "af":
+                if (cw.HasValue)
+                    runState.AssociatedFontIndex = cw.Value;
                 return true;
             case "highlight":
                 if (cw.HasValue)
@@ -256,6 +284,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
             case "i":
                 runState.Italic = cw.HasValue ? cw.Value != 0 : true;
+                return true;
+            case "ai":
+                runState.AssociatedItalic = cw.HasValue ? cw.Value != 0 : true;
                 return true;
             case "impr":
                 runState.Imprint = cw.HasValue ? cw.Value != 0 : true;

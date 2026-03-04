@@ -49,6 +49,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\ltrch");
         }
 
+        bool forceComplexScript = run.GetEffectiveProperty<ComplexScript>().ToBool();
+        if (forceComplexScript)
+        {
+            sb.Write(@"\fcs1");
+        }
+
         var lang = run.GetEffectiveProperty<Languages>();
         if (!string.IsNullOrEmpty(lang?.Val?.Value))
         {
@@ -58,7 +64,13 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
         if (!string.IsNullOrEmpty(lang?.Bidi?.Value))
         {
-            int code = RtfHelpers.GetLanguageCode(lang!.Bidi!.Value!); // or EastAsia ?
+            int code = RtfHelpers.GetLanguageCode(lang!.Bidi!.Value!);
+            sb.WriteWordWithValue("langfe", code);
+            sb.WriteWordWithValue("langfenp", code);
+        }
+        else if (!string.IsNullOrEmpty(lang?.EastAsia?.Value))
+        {
+            int code = RtfHelpers.GetLanguageCode(lang!.EastAsia!.Value!);
             sb.WriteWordWithValue("langfe", code);
             sb.WriteWordWithValue("langfenp", code);
         }
@@ -69,16 +81,36 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
         // To be improved (Ascii value may not be present, although rare)
-        string? font = run.GetEffectiveProperty<RunFonts>()?.Ascii?.Value;
-        if (!string.IsNullOrEmpty(font))
+        var runFonts = run.GetEffectiveProperty<RunFonts>();
+        string? asciiFont = runFonts?.Ascii?.Value;       
+        if (!string.IsNullOrEmpty(asciiFont))
         {
-            fonts.TryAddAndGetIndex(font!, out int fontIndex);
+            fonts.TryAddAndGetIndex(asciiFont!, out int fontIndex);
             sb.WriteWordWithValue("f", fontIndex);
         }
         else
         {
             // Calibri is already in the font table as last resort
             sb.Write(@"\f0");
+        }
+
+        string? complexScriptFont = runFonts?.ComplexScript?.Value;        
+        if (!string.IsNullOrEmpty(complexScriptFont))
+        {        
+            fonts.TryAddAndGetIndex(complexScriptFont!, out int fontIndex);
+            sb.WriteWordWithValue("af", fontIndex);
+        }
+        string? eastAsiaFont = runFonts?.EastAsia?.Value;
+        if (!string.IsNullOrEmpty(eastAsiaFont))
+        {
+            fonts.TryAddAndGetIndex(eastAsiaFont!, out int fontIndex);
+            sb.WriteWordWithValue("af", fontIndex);
+        }
+        string? highAnsiFont = runFonts?.HighAnsi?.Value;
+        if (!string.IsNullOrEmpty(highAnsiFont))
+        {
+            fonts.TryAddAndGetIndex(highAnsiFont!, out int fontIndex);
+            sb.WriteWordWithValue("af", fontIndex);
         }
 
         if (run.GetEffectiveProperty<FontSize>()?.Val.ToLong() is long fontSize)
@@ -90,6 +122,16 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {
             sb.WriteWordWithValue("fs", DefaultSettings.FontSize * 2); // Font size is in half-points
         }
+
+        if (run.GetEffectiveProperty<FontSizeComplexScript>()?.Val.ToLong() is long fontSizeComplexScript)
+        {
+            // Font size is in half-points in both DOCX and RTF
+            sb.WriteWordWithValue("afs", fontSizeComplexScript);
+        }
+
+        // if (run.GetEffectiveProperty<EastAsianLayout>() is EastAsianLayout eastAsianLayout)
+        // {
+        // }
 
         string? color = run.GetEffectiveProperty<Color>()?.Val;
         var fill14 = run.GetEffectiveProperty<W14.FillTextEffect>();
@@ -176,10 +218,18 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {
             sb.Write(@"\b");
         }
+        if (run.GetEffectiveProperty<BoldComplexScript>().ToBool())
+        {
+            sb.Write(@"\ab");
+        }
 
         if (run.GetEffectiveProperty<Italic>().ToBool())
         {
             sb.Write(@"\i");
+        }
+        if (run.GetEffectiveProperty<ItalicComplexScript>().ToBool())
+        {
+            sb.Write(@"\ai");
         }
 
         if (run.GetEffectiveProperty<Underline>() is Underline u && u.Val != null)
