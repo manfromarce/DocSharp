@@ -14,26 +14,9 @@ public class MagickConverter : NonGdiImageConverter
     {
         try
         {
-            if (inputFormat == IO.ImageFormat.Wmf || inputFormat == IO.ImageFormat.Emf)
+            using (var image = new MagickImage(input))
             {
-                // Unfortunately, for some reason GDI+ fails when a metafile is in a ZipWrappingStream produced by Open XML SDK,
-                // so we need to copy all the bytes into a new stream and load that one.
-                using (var ms = new MemoryStream())
-                {
-                    input.CopyTo(ms);
-                    ms.Position = 0;
-                    using (var metafile = new MagickImage(ms))
-                    {
-                        metafile.Write(output, MagickFormat.Png);
-                    }
-                }
-            }
-            else
-            {
-                using (var image = new MagickImage(input))
-                {
-                    image.Write(output, MagickFormat.Png);
-                }
+                image.Write(output, MagickFormat.Png);
             }
             return true;
         }
