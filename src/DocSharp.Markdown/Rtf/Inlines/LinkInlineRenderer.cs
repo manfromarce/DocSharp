@@ -74,6 +74,38 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
 
     private void ProcessImage(RtfRenderer renderer, string url, string? label, string? title, long width, long height)
     {
+        // Support "data:" URIs (base64 inline images)
+        if (!string.IsNullOrEmpty(url) && url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            var comma = url.IndexOf(',');
+            if (comma > 0)
+            {
+                var metadata = url.Substring(5, comma - 5);
+                var isBase64 = metadata.IndexOf(";base64", StringComparison.OrdinalIgnoreCase) >= 0;
+                var dataPart = url.Substring(comma + 1);
+                if (isBase64)
+                {
+                    try
+                    {
+                        var base64 = Uri.UnescapeDataString(dataPart);
+                        var bytes = Convert.FromBase64String(base64);
+                        using (var ms = new MemoryStream(bytes))
+                        {
+                            InsertImage(renderer, ms, label, title, width, height);
+                        }
+                    }
+                    catch (FormatException)
+                    {
+                        #if DEBUG
+                        Console.WriteLine("Invalid base64 image data");
+                        #endif
+                    }
+                }
+            }
+
+            return;
+        }
+
         Uri? uri = UriHelpers.NormalizeImageUri(url, renderer.ImagesBaseUri);
         if (uri != null)
         {
