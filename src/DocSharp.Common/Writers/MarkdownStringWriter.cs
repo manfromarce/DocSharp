@@ -28,7 +28,15 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         WriteLine();
     }
 
-    public void WriteCharEscaped(char c, string font)
+    public void WriteTextEscaped(string text)
+    {
+        foreach (var c in text)
+        {
+            WriteCharEscaped(c, null);           
+        }
+    }
+
+    public void WriteCharEscaped(char c, string? font)
     {
         if (c == '\r')
         {
@@ -37,31 +45,29 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         else if (c == '\n')
         {
             if (SuppressEscaping)
-            {
                 Write(NewLine);
-            }
             else
-            {
                 Write("<br>");
-            }
         }
         else
         {
-            string s = FontConverter.ToUnicode(font, c);
+            string s = font == null ? c.ToString() : FontConverter.ToUnicode(font, c);
             if (s.Length == 1 && _specialChars.Contains(s[0]))
             {
                 if (SuppressEscaping)
-                {
                     Write(s);
-                }
                 else
-                {
                     Write("\\" + s[0]);
-                }
             }
-            else
+            else if (s.Length >= 2)
             {
-                Write(s);
+                foreach (char c2 in s)
+                {
+                    if (SuppressEscaping)
+                        Write(c2);
+                    else
+                        Write("\\" + c2);
+                }
             }
         }
     }
