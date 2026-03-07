@@ -48,6 +48,14 @@ public static class StringHelpers
         return result;
     }
 
+    public static bool EndsWithWhiteSpace(this StringBuilder stringBuilder)
+    {
+        if (stringBuilder.Length == 0)
+        {
+            return false;
+        }
+        return char.IsWhiteSpace(stringBuilder[stringBuilder.Length - 1]);
+    }
 
     public static bool EndsWithNewLine(this StringBuilder stringBuilder)
     {

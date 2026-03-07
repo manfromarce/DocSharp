@@ -21,7 +21,7 @@ public static class StylesHelpers
         if (string.IsNullOrEmpty(styleId1) || string.IsNullOrEmpty(styleId2))
             return false;
         else 
-            return styleId1.Equals(styleId2, StringComparison.OrdinalIgnoreCase);
+            return styleId1!.Equals(styleId2, StringComparison.OrdinalIgnoreCase);
     }
 
     public static Styles GetOrCreateStylesPart(this WordprocessingDocument document)
@@ -51,10 +51,10 @@ public static class StylesHelpers
         if (string.IsNullOrEmpty(id))
             return null;
 
-        return stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleId != null && 
-                                                                 s.StyleId == id &&
-                                                                 s.Type != null &&
-                                                                 s.Type == styleType);
+        return stylesPart?.FirstOrDefault<Style>(s => s.StyleId != null && 
+                                                      s.StyleId == id &&
+                                                      s.Type != null &&
+                                                      s.Type == styleType);
     }
 
     public static Style? GetStyleFromName(this Styles? stylesPart, string? name, StyleValues styleType)
@@ -62,10 +62,10 @@ public static class StylesHelpers
         if (string.IsNullOrEmpty(name))
             return null;
 
-        return stylesPart?.Elements<Style>().FirstOrDefault(s => s.StyleName != null && 
-                                                                 s.StyleName.Val == name && 
-                                                                 s.Type != null && 
-                                                                 s.Type == styleType);
+        return stylesPart?.FirstOrDefault<Style>(s => s.StyleName != null && 
+                                                      s.StyleName.Val == name && 
+                                                      s.Type != null && 
+                                                      s.Type == styleType);
     }
 
     public static Style? GetBaseStyle(this Styles? stylesPart, Style? childStyle)
@@ -87,24 +87,68 @@ public static class StylesHelpers
     }
 
     // Return true if the style id is in the document, false otherwise.
-    public static bool ContainsStyle(this Styles styles, string styleid, StyleValues styleType)
-    {        
-        return styles.GetStyleFromId(styleid, styleType) != null;
+    public static bool ContainsStyleId(this Styles styles, string styleId, StyleValues styleType)
+    {
+        return styles.GetStyleFromId(styleId, styleType) != null;
     }
 
-    // Return styleid that matches the styleName, or null when there's no match.
+    // Return true if the style name is in the document, false otherwise.
+    public static bool ContainsStyleName(this Styles styles, string styleName, StyleValues styleType)
+    {
+        return styles.GetStyleFromName(styleName, styleType) != null;
+    }
+
+    // Return styleId name that matches the specified style name, or null if there is no match.
     public static string? GetStyleIdFromStyleName(Document doc, string styleName, StyleValues styleType)
     {
-        var stylePart = doc.MainDocumentPart?.StyleDefinitionsPart;
-        var styleId = stylePart?.Styles?.Descendants<StyleName>()
-            .Where(s => styleName.Equals(s.Val?.Value)
-                        && s.Parent is Style parent
-                        && parent.Type != null
-                        && parent.Type == styleType)
-            .Select(n => n.Parent as Style)
-            .Where(n => n != null)
-            .Select(n => n!.StyleId).FirstOrDefault();
+        var styles = doc.MainDocumentPart?.StyleDefinitionsPart?.Styles;
+        if (styles == null) return null;
+        return GetStyleFromName(styles, styleName, styleType)?.StyleId?.Value;
+    }
 
-        return styleId;
+    // Return style name that matches the specified style id, or null if there is no match.
+    public static string? GetStyleNameFromStyleId(Document doc, string styleId, StyleValues styleType)
+    {
+        var styles = doc.MainDocumentPart?.StyleDefinitionsPart?.Styles;
+        if (styles == null) return null;
+        return GetStyleFromId(styles, styleId, styleType)?.StyleName?.Val?.Value;
+    }
+
+        // Return styleId name that matches the specified style name, or null if there is no match.
+    public static string? GetStyleIdFromStyleName(Styles styles, string styleName, StyleValues styleType)
+    {
+        return GetStyleFromName(styles, styleName, styleType)?.StyleId?.Value;
+    }
+
+    // Return style name that matches the specified style id, or null if there is no match.
+    public static string? GetStyleNameFromStyleId(Styles styles, string styleId, StyleValues styleType)
+    {
+        return GetStyleFromId(styles, styleId, styleType)?.StyleName?.Val?.Value;
+    }
+
+    public static string? GetStyleId(this Run run)
+    {
+        return run?.RunProperties?.RunStyle?.Val?.Value;
+    }
+
+    public static string? GetStyleName(this Run run)
+    {
+        var styles = run.GetStylesPart();
+        var styleId = run.GetStyleId();
+        if (styles == null || styleId == null) return null;
+        return GetStyleNameFromStyleId(styles, styleId, StyleValues.Character);
+    }
+
+    public static string? GetStyleId(this Paragraph paragraph)
+    {
+        return paragraph?.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
+    }
+
+    public static string? GetStyleName(this Paragraph paragraph)
+    {
+        var styles = paragraph.GetStylesPart();
+        var styleId = paragraph.GetStyleId();
+        if (styles == null || styleId == null) return null;
+        return GetStyleNameFromStyleId(styles, styleId, StyleValues.Paragraph);
     }
 }

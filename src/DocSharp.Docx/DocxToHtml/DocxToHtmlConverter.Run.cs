@@ -16,6 +16,30 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessRun(Run run, HtmlTextWriter sb)
     {
+        string tag = "span"; // Assume this is a regular span by default
+        bool isEmphasis = false;
+        bool isStrong = false;
+
+        // Check if the style can be mapped to a code/emphasis/strong element
+        var styleName = run.GetStyleName();
+        if (styleName != null)
+        {
+            switch (styleName.ToLowerInvariant())
+            {
+                case "html code": // This style is created by Microsoft Word when an HTML file is saved as DOCX
+                    tag = "code";
+                    break;
+                case "emphasis":
+                case "subtle emphasis":
+                case "intense emphasis":
+                    isEmphasis = true;
+                    break;
+                case "strong":
+                    isStrong = true;
+                    break;
+            }
+        }
+
         string? font = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run)?.Ascii?.Value;
         var bold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run);
         var italic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run);
@@ -351,13 +375,16 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add($"color: #{hexColor};");
         }
 
-        // Add HTML span with styles
-        sb.WriteStartElement("span");
+        // Start a new span / inline code element
+        sb.WriteStartElement(tag);
+        
+        // Add styles
         if (styles.Count > 0)
         {
             sb.WriteAttributeString("style", string.Join(" ", styles));
         }
 
+        // Add lang attribute
         var languages = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
         //var noProof = OpenXmlHelpers.GetEffectiveProperty<NoProof>(run);
         //if (noProof != null)
@@ -378,6 +405,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             //}
         }
 
+        // Enclose element in superscript/subscript and em/strong tags if necessary
         if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
         {
             sb.WriteStartElement("sup");
@@ -386,6 +414,14 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         {
             sb.WriteStartElement("sub");
         }
+        if (isEmphasis)
+        {
+            sb.WriteStartElement("em");
+        }
+        else if (isStrong)
+        {
+            sb.WriteStartElement("strong");
+        }
 
         // Process run content
         foreach (var element in run.Elements())
@@ -393,6 +429,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             base.ProcessRunElement(element, sb);            
         }
 
+        // Close superscript/subscript if necessary
         if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
         {
             sb.WriteEndElement("sup");
@@ -401,6 +438,16 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         {
             sb.WriteEndElement("sub");
         }
-        sb.WriteEndElement("span");
+        if (isEmphasis)
+        {
+            sb.WriteEndElement("em");
+        }
+        else if (isStrong)
+        {
+            sb.WriteEndElement("strong");
+        }                
+
+        // End of the current element
+        sb.WriteEndElement(tag);
     }
 }

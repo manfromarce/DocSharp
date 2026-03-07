@@ -58,7 +58,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         }
     }
 
-    internal override void EnsureSpace(TxtStringWriter sb)
+    internal override void EnsureEmptyLine(TxtStringWriter sb)
     {
         sb.EnsureEmptyLine();
     }
@@ -89,7 +89,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             return;
         }
 
-        EnsureSpace(sb); // Add a blank line before the table
+        EnsureEmptyLine(sb); // Add a blank line before the table
 
         var rows = table.Elements<TableRow>();
         int maxCellsPerRow = rows.Max(c => c.Elements<TableCell>().Count());
@@ -261,7 +261,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             return;
         }
 
-        EnsureSpace(sb); // Add a blank line before the paragraph
+        EnsureEmptyLine(sb); // Add a blank line before the paragraph
 
         if (numberingProperties != null)
         {
@@ -458,7 +458,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
                  shape.GetFirstChild<V.TextPath>() is V.TextPath textPath &&
                  textPath.String?.Value != null)
         {
-            EnsureSpace(sb);
+            EnsureEmptyLine(sb);
             ProcessText(new Text(textPath.String.Value), sb);
         }
     }
@@ -497,7 +497,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal override void ProcessBody(Body body, TxtStringWriter sb)
     {
-        EnsureSpace(sb); // For sub-documents / AltChunks
+        EnsureEmptyLine(sb); // For sub-documents / AltChunks
         base.ProcessBody(body, sb);
     }
 

@@ -104,11 +104,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         //}
     }
 
-    internal override void EnsureSpace(HtmlTextWriter sb)
+    internal override void EnsureEmptyLine(HtmlTextWriter sb)
     {
-        sb.WriteStartElement("p");
-        sb.WriteAttributeString("style", "margin-top: 10px;");
-        sb.WriteEndElement("p");
+        // Not relevant for this converter
     }
 
     private void ProcessTextDirection(TextDirectionValues textDirection, ref List<string> styles, out bool isVertical)

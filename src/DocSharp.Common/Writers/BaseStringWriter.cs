@@ -41,6 +41,22 @@ public abstract class BaseStringWriter : IDisposable
         }
     }
 
+    public virtual void EnsureWhiteSpace()
+    {
+        if (sb.Length == 0)
+            return; // Don't add space if we are just at the start of the document
+
+        if (!EndsWithWhiteSpace()) // If the string ends with 1 or 0 new line chars
+        {
+            Write(' ');
+        }
+    }
+
+    public virtual bool EndsWithWhiteSpace()
+    {
+        return sb.EndsWithWhiteSpace();
+    }
+
     public virtual bool EndsWithNewLine()
     {
         return sb.EndsWithNewLine();

@@ -133,5 +133,5 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
     internal override void ProcessPositionalTab(PositionalTab posTab, QuestPdfModel output) { }
 
-    internal override void EnsureSpace(QuestPdfModel output) { }
+    internal override void EnsureEmptyLine(QuestPdfModel output) { }
 }

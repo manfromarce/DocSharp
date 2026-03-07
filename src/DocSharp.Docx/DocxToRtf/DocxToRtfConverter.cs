@@ -208,9 +208,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    internal override void EnsureSpace(RtfStringWriter sb)
+    internal override void EnsureEmptyLine(RtfStringWriter sb)
     {
-        // Not needed in this converter
-        //sb.WriteLine(@"\par");
+        // Not relevant for this converter
     }
 }

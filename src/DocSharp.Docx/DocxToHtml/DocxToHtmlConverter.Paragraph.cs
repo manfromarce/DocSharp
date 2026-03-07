@@ -14,8 +14,52 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessParagraph(Paragraph paragraph, HtmlTextWriter sb)
     {
-        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
-        
+        string tag = "p"; // Assume this is a regular paragraph by default
+
+        var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>();
+        var styleName = paragraph.GetStyleName();
+
+        if (styleName != null)
+        {
+            // Check if the style can be mapped to heading, quote block or code block.
+            switch (styleName.ToLowerInvariant())
+            {
+                case "heading 1":
+                case "heading1":
+                case "title":
+                    tag = "h1";
+                    break;
+                case "heading 2":
+                case "heading2":
+                case "subtitle":
+                    tag = "h2";
+                    break;
+                case "heading 3":
+                case "heading3":
+                    tag = "h3";
+                    break;
+                case "heading 4":
+                case "heading4":
+                    tag = "h4";
+                    break;
+                case "heading 5":
+                case "heading5":
+                    tag = "h5";
+                    break;
+                case "heading 6":
+                case "heading6":
+                    tag = "h6";
+                    break;
+                case "quote":
+                case "intense quote":
+                    tag = "blockquote";
+                    break;
+                case "html preformatted": // This style is created by Microsoft Word when an HTML file is saved as DOCX
+                    tag = "pre";
+                    break;
+            }
+        }
+
         if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
             (h.Val is null || h.Val))
         {
@@ -174,8 +218,8 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add(@"hyphens: none;");
         }
 
-        // Start a new paragraph
-        sb.WriteStartElement("p");
+        // Start a new paragraph / heading / code block / quote block
+        sb.WriteStartElement(tag);
 
         // Add style attribute if not empty
         if (styles.Count > 0)
@@ -185,6 +229,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
         if (numberingProperties != null)
         {
+            // Process the bullet/number text and formatting to preserve Word list options with high fidelity.
             ProcessListItem(numberingProperties, sb);
         }
 
@@ -197,7 +242,8 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         sb.WriteString(" ");
         sb.WriteEndElement("span");
 
-        sb.WriteEndElement("p");
+        // End of the element
+        sb.WriteEndElement(tag);
     }
 
     internal void ProcessIndentation(Indentation indent, ref List<string> styles)

@@ -18,6 +18,9 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         // Use LF for Markdown by default, can be replaced for special cases (e.g. when forcing soft breaks or hard breaks for text)
     }
 
+    // When true, do not escape special Markdown characters and preserve raw newlines
+    public bool SuppressEscaping { get; set; } = false;
+
     public void WriteHorizontalLine()
     {
         EnsureEmptyLine();
@@ -25,7 +28,7 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         WriteLine();
     }
 
-    public void WriteCharEscaped(char c, string font, bool forceHtmlBreak = false)
+    public void WriteCharEscaped(char c, string font)
     {
         if (c == '\r')
         {
@@ -33,13 +36,13 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         }
         else if (c == '\n')
         {
-            if (forceHtmlBreak)
+            if (SuppressEscaping)
             {
-                Write("<br>");
+                Write(NewLine);
             }
             else
             {
-                WriteLine("  "); // Markdown soft break (2 trailing spaces).
+                Write("<br>");
             }
         }
         else
@@ -47,7 +50,14 @@ public sealed class MarkdownStringWriter : BaseStringWriter
             string s = FontConverter.ToUnicode(font, c);
             if (s.Length == 1 && _specialChars.Contains(s[0]))
             {
-                Write(new string(['\\', s[0]]));
+                if (SuppressEscaping)
+                {
+                    Write(s);
+                }
+                else
+                {
+                    Write("\\" + s[0]);
+                }
             }
             else
             {

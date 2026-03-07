@@ -27,6 +27,12 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     public override Encoding DefaultEncoding => Encodings.UTF8NoBOM;
 
     /// <summary>
+    /// This property can be used to optionally set font families (e.g. Courier New, Cascadia Code) 
+    /// that should be mapped to an inline code element in Markdown. 
+    /// </summary>
+    public string[]? CodeFontFamilies { get; set; } = null;
+
+    /// <summary>
     /// If this property is set to a directory, images will be exported to that folder
     /// and a reference will be added in Markdown syntax,
     /// otherwise images are not converted. 
@@ -77,6 +83,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     private bool isInEmphasis = false;
     private bool isAllCaps = false;
+    private bool isInCodeBlockParagraph = false;
 
     internal override void ProcessHeader(Header header, MarkdownStringWriter writer)
     {
@@ -95,7 +102,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, MarkdownStringWriter writer)
     {
-        EnsureSpace(writer);
+        EnsureEmptyLine(writer);
         base.ProcessSection(section, mainPart, writer);
 
         // Add horizontal rule between sections
@@ -120,52 +127,108 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             return;
         }
 
-        EnsureSpace(sb); // Add a blank line before the paragraph
+        EnsureEmptyLine(sb); // Add a blank line before the paragraph
 
         var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
-        if (numberingProperties != null)
+        bool isCode = false;
+
+        var styleName = paragraph.GetStyleName();
+        if (styleName != null)
+        {
+            // Check if the style can be mapped to heading, quote block or code block.
+            switch (styleName.ToLowerInvariant())
+            {
+                case "heading 1":
+                case "heading1":
+                case "title":
+                    sb.Write("# ");
+                    break;
+                case "heading 2":
+                case "heading2":
+                case "subtitle":
+                    sb.Write("## ");
+                    break;
+                case "heading 3":
+                case "heading3":
+                    sb.Write("### ");
+                    break;
+                case "heading 4":
+                case "heading4":
+                    sb.Write("#### ");
+                    break;
+                case "heading 5":
+                case "heading5":
+                    sb.Write("##### ");
+                    break;
+                case "heading 6":
+                case "heading6":
+                    sb.Write("###### ");
+                    break;
+                case "quote":
+                case "intense quote":
+                    sb.Write("> ");
+                    break;
+                case "html preformatted": // This style is created by Microsoft Word when an HTML file is saved as DOCX
+                    isCode = true;
+                    break;
+            }
+        }
+
+        if (isCode)
+        {
+            // Paragraph is a preformatted/code block
+            if (numberingProperties != null)
+            {
+                // Code block inside a list item: capture rendered paragraph and indent the fenced block
+                int levelIndex = numberingProperties.NumberingLevelReference?.Val ?? 0;
+                ProcessListItem(numberingProperties, sb); // write the list marker
+
+                var builder = new MarkdownStringWriter()
+                {
+                    NewLine = sb.NewLine,
+                    SuppressEscaping = true
+                };
+                this.isInCodeBlockParagraph = true;
+                base.ProcessParagraph(paragraph, builder);
+                this.isInCodeBlockParagraph = false;
+
+                // Start code block
+                sb.WriteLine(" ```");
+
+                // Calculate indent for subsequent lines of the fenced block
+                string indent = new string(' ', (levelIndex + 1) * 4);
+
+                var lines = builder.ToString().Split([builder.NewLine], StringSplitOptions.None);
+                foreach (var line in lines)
+                {
+                    sb.Write(indent);
+                    sb.WriteLine(line);
+                }
+
+                sb.Write(indent);
+                sb.WriteLine("```");
+                return;
+            }
+            else
+            {
+                // Simple code block: enable suppression for the paragraph render
+                sb.WriteLine("```");
+                this.isInCodeBlockParagraph = true;
+                base.ProcessParagraph(paragraph, sb);
+                this.isInCodeBlockParagraph = false;
+                sb.WriteLine();
+                sb.WriteLine("```");
+                return;
+            }
+        }
+
+        if (numberingProperties != null && !isCode)
         {
             ProcessListItem(numberingProperties, sb);
         }
-        else if (paragraph.ParagraphProperties?.ParagraphStyleId != null)
-        {
-            var styles = paragraph.GetStylesPart();
-            var style = styles.GetStyleFromId(paragraph.ParagraphProperties.ParagraphStyleId.Val, StyleValues.Paragraph);
-            if (style?.StyleName?.Val?.Value != null)
-            {
-                switch (style.StyleName.Val.Value.ToLowerInvariant())
-                {
-                    case "heading 1":
-                    case "heading1":
-                    case "title":
-                        sb.Write("# ");
-                        break;
-                    case "heading 2":
-                    case "heading2":
-                    case "subtitle":
-                        sb.Write("## ");
-                        break;
-                    case "heading 3":
-                    case "heading3":
-                        sb.Write("### ");
-                        break;
-                    case "heading 4":
-                    case "heading4":
-                        sb.Write("#### ");
-                        break;
-                    case "heading 5":
-                    case "heading5":
-                        sb.Write("##### ");
-                        break;
-                    case "heading 6":
-                    case "heading6":
-                        sb.Write("###### ");
-                        break;
-                }
-            }
-        }
-        
-        base.ProcessParagraph(paragraph, sb);        
+
+        // Process paragraph content
+        base.ProcessParagraph(paragraph, sb);
     }
 
     internal void ProcessListItem(NumberingProperties numPr, MarkdownStringWriter sb)
@@ -243,7 +306,6 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
             // Formatting options of type OnOffValue such as bold and italic are considered enabled
             // if the element is present, unless value is explicitly set to false.
-            // (e.g. <w:b /> without value means bold is enabled, otherwise it would not be present at all)
             isBold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run) is Bold b && (b.Val is null || b.Val);
             isItalic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run) is Italic i && (i.Val is null || i.Val);
 
@@ -264,70 +326,113 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             isSubscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Subscript;
             isSuperscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Superscript;
 
-            // Consecutive emphasis inlines such as *italic***bold** are sometimes not interpreted properly.
-            if (sb.EndsWithEmphasis() && string.IsNullOrEmpty(leadingSpaces) &&
-                (isBold | isItalic | isStrikethrough))
-                sb.Write(' ');
+            // Do not emit emphasis/formatting markers when inside a code paragraph
+            if (!this.isInCodeBlockParagraph)
+            {
+                // Consecutive emphasis inlines such as *italic***bold** are sometimes not interpreted properly.
+                // if (sb.EndsWithEmphasis() && string.IsNullOrEmpty(leadingSpaces) &&
+                //     (isBold | isItalic | isStrikethrough))
+                //     sb.Write(' ');
 
-            if (isItalic)
-                sb.Write('*');
+                if (isItalic)
+                    sb.Write('*');
 
-            if (isBold)
-                sb.Write("**");
+                if (isBold)
+                    sb.Write("**");
 
-            if (isStrikethrough)
-                sb.Write("~~");
+                if (isStrikethrough)
+                    sb.Write("~~");
 
-            if (isUnderline)
-                sb.Write("<u>");
+                if (isUnderline)
+                    sb.Write("<u>");
 
-            if (isHighlight)
-                sb.Write("<mark>");
+                if (isHighlight)
+                    sb.Write("<mark>");
 
-            if (isSubscript)
-                sb.Write("<sub>");
-            else if (isSuperscript)
-                sb.Write("<sup>");
+                if (isSubscript)
+                    sb.Write("<sub>");
+                else if (isSuperscript)
+                    sb.Write("<sup>");
+            }
+        }
+
+        // Check if the style should be mapped to an inline code element
+        var styleName = run.GetStyleName();
+        bool isCode = false;
+        if ((styleName != null && styleName.Equals("html code", StringComparison.OrdinalIgnoreCase)) || 
+            (CodeFontFamilies != null && 
+             run.GetEffectiveProperty<RunFonts>() is RunFonts rf && rf?.Ascii?.Value != null && 
+             CodeFontFamilies.Contains(rf.Ascii.Value)))
+             // (the "HTML Code" style is created by Microsoft Word when an HTML file is saved as DOCX)
+        {
+            isCode = true;
         }
 
         isAllCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run) is Caps caps && (caps.Val is null || caps.Val);
-        isInEmphasis = true;
+
+        bool inCodeContextRun = this.isInCodeBlockParagraph || isCode;
+        bool prevSuppress = sb.SuppressEscaping;
+        if (inCodeContextRun)
+            sb.SuppressEscaping = true;
+
+        isInEmphasis = !inCodeContextRun;
+
+        // For inline code emit backtick markers here (but not for code paragraph)
+        if (isCode && !this.isInCodeBlockParagraph)
+        {
+            sb.Write("`");
+        }
+
         foreach (var element in run.Elements())
         {
-            base.ProcessRunElement(element, sb);              
+            base.ProcessRunElement(element, sb);
         }
+
         isInEmphasis = false;
         isAllCaps = false;
+        if (inCodeContextRun)
+            sb.SuppressEscaping = prevSuppress;
 
         if (hasText)
         {
-            if (isSubscript)
-                sb.Write("</sub>");
-            else if (isSuperscript)
-                sb.Write("</sup>");
+            if (isCode && !this.isInCodeBlockParagraph)
+                sb.Write("`");
 
-            if (isHighlight)
-                sb.Write("</mark>");
+            if (!inCodeContextRun)
+            {
+                if (isSubscript)
+                    sb.Write("</sub>");
+                else if (isSuperscript)
+                    sb.Write("</sup>");
 
-            if (isUnderline)
-                sb.Write("</u>");
+                if (isHighlight)
+                    sb.Write("</mark>");
 
-            if (isStrikethrough)
-                sb.Write("~~");
+                if (isUnderline)
+                    sb.Write("</u>");
 
-            if (isBold)
-                sb.Write("**");
+                if (isStrikethrough)
+                    sb.Write("~~");
 
-            if (isItalic)
-                sb.Write('*');
+                if (isBold)
+                    sb.Write("**");
+
+                if (isItalic)
+                    sb.Write('*');
+            }
 
             sb.Write(trailingSpaces);
         }
     }
 
-    internal override void EnsureSpace(MarkdownStringWriter sb)
+    internal override void EnsureEmptyLine(MarkdownStringWriter sb)
     {
         sb.EnsureEmptyLine();
+    }
+
+    internal void EnsureWhiteSpace(MarkdownStringWriter sb)
+    {
+        sb.EnsureWhiteSpace();
     }
 
     internal override void ProcessBreak(Break br, MarkdownStringWriter sb)
@@ -338,7 +443,15 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         }
         else
         {
-            sb.WriteLine("  "); // soft break
+            if (isInCodeBlockParagraph)
+            {
+                sb.WriteLine();
+            }
+            else 
+            {
+                sb.Write("<br>");
+                // (avoid standard soft break with two trailing spaces as it causes issues in lists and tables)
+            }
         }
     }
 
@@ -370,7 +483,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             return;
         }
 
-        sb.EnsureEmptyLine();
+        EnsureEmptyLine(sb);
 
         int rowIndex = 0;
         foreach(var element in table.Elements())
@@ -587,7 +700,8 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                         string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
                         uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
                     }
-                    sb.Write($" ![{relId}]({uri}) ");
+                    EnsureWhiteSpace(sb);
+                    sb.Write($"![{relId}]({uri})");
                 }
             }
         }
@@ -771,7 +885,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessBody(Body body, MarkdownStringWriter sb)
     {
-        EnsureSpace(sb); // For sub-documents / AltChunks
+        EnsureEmptyLine(sb); // For sub-documents / AltChunks
         base.ProcessBody(body, sb);
     }
 

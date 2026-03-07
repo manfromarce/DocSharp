@@ -55,7 +55,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
 
         // Add header
         ProcessFirstHeader(Sections[0].properties, sb);
-        EnsureSpace(sb); // add empty space before the body content
+        EnsureEmptyLine(sb); // add empty space before the body content
 
         // Add sections
         var mainPart = body.GetMainDocumentPart();
@@ -65,13 +65,13 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
         }
 
         // Add footnotes and endnotes
-        EnsureSpace(sb);
+        EnsureEmptyLine(sb);
         ProcessFootnotes(mainPart?.FootnotesPart, sb);
-        EnsureSpace(sb);
+        EnsureEmptyLine(sb);
         ProcessEndnotes(mainPart?.EndnotesPart, sb);
 
         // Add the footer
-        EnsureSpace(sb);
+        EnsureEmptyLine(sb);
         ProcessLastFooter(Sections[Sections.Count - 1].properties, sb);
     }
 
@@ -562,14 +562,14 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
     {
         if (footnotesPart?.Footnotes is Footnotes footnotes)
         {
-            EnsureSpace(sb);
+            EnsureEmptyLine(sb);
             foreach (var footnote in footnotes.Elements<Footnote>().Where(e => e.Type == null || e.Type == FootnoteEndnoteValues.Normal))
             {
                 foreach (var element in footnote.Elements())
                 {
                     ProcessBodyElement(element, sb);
                 }
-                EnsureSpace(sb);
+                EnsureEmptyLine(sb);
             }
         }
     }
@@ -578,14 +578,14 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
     {
         if (endnotesPart?.Endnotes is Endnotes endnotes)
         {
-            EnsureSpace(sb);
+            EnsureEmptyLine(sb);
             foreach(var endnote in endnotes.Elements<Endnote>().Where(e => e.Type == null || e.Type == FootnoteEndnoteValues.Normal))
             {
                 foreach (var element in endnote.Elements())
                 {
                     ProcessBodyElement(element, sb);
                 }
-                EnsureSpace(sb);
+                EnsureEmptyLine(sb);
             }
         }
     }
@@ -887,7 +887,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
         {
             ProcessHeaderReference(headerRef, sb);
             // Add empty space before header and the document body
-            EnsureSpace(sb);
+            EnsureEmptyLine(sb);
         }
     }
 
@@ -1026,7 +1026,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
         }
     }
 
-    internal abstract void EnsureSpace(TOutput sb);
+    internal abstract void EnsureEmptyLine(TOutput sb);
 
     internal abstract void ProcessBreak(Break @break, TOutput sb);
     internal abstract void ProcessBookmarkStart(BookmarkStart bookmarkStart, TOutput sb);
