@@ -16,6 +16,7 @@
 - Support few more compex script / right-to-left options in DOCX to RTF converter
 - Better mapping of styles in DOCX to HTML / Markdown converter
 - Option to handle custom font families as code inline (preformatted text) in DOCX to Markdown converter
+- Support emphasis and images inside hyperlinks in DOCX to Markdown converter
 - Fix: unnecessary space was created in DOCX to Markdown converter in some cases
 - Fix other minor bugs and improve code structure
 
