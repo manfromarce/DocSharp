@@ -430,7 +430,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal override void ProcessMathElement(OpenXmlElement element, TxtStringWriter sb)
     {
-        // TODO
+        // TODO - produce AsciiMath representation
     }
 
     internal override void ProcessDrawing(Drawing drawing, TxtStringWriter sb)

@@ -566,26 +566,41 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     internal override void ProcessHyperlink(Hyperlink hyperlink, MarkdownStringWriter sb)
     {
         var displayTextBuilder = new MarkdownStringWriter();
-        foreach (var run in hyperlink.Elements<Run>())
+        foreach (var element in hyperlink.Elements())
         {
-            if (run != null && run.GetFirstChild<Text>() is Text runText)
-                ProcessText(runText, displayTextBuilder);
+            ProcessParagraphElement(element, displayTextBuilder);
         }
+
         if (hyperlink.Id?.Value is string rId)
         {
-            var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
-            if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+            var mainPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
+            if (mainPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                // Microsoft Word already escapes spaces, but other DOCX writers may not do it 
-                // causing the link not to be recognized properly in Markdown.
-                string url = relationship.Uri.OriginalString.Replace(" ", "%20");
-                sb.Write($"[{displayTextBuilder.ToString()}]({url})");
+                WriteHyperlink(displayTextBuilder.ToString(), relationship.Uri.OriginalString, false, hyperlink.Tooltip?.Value, sb);
             }
         }
         else if (hyperlink.Anchor?.Value is string anchor)
         {
-            sb.Write($"[{displayTextBuilder.ToString()}](#{anchor})");
+            WriteHyperlink(displayTextBuilder.ToString(), anchor, true, hyperlink.Tooltip?.Value, sb);
         }
+    }
+
+    internal void WriteHyperlink(string displayText, string target, bool isAnchor, string? tooltip, MarkdownStringWriter sb)
+    {
+        if (isAnchor)
+            target = "#" + target;
+        else 
+            // Microsoft Word already escapes spaces, but other DOCX writers may not do it, 
+            // causing the link not to be recognized properly by some Markdown processors.
+            target = target.Replace(" ", "%20");
+        
+        sb.Write($"[{displayText}]({target}");
+        if (!string.IsNullOrWhiteSpace(tooltip))
+        {
+            // Escape quotes (if any) and remove new line chars, they are not supported in tooltips.
+            sb.Write($" \"{tooltip!.Replace("\"", "\\\"").ReplaceLineEndings(string.Empty)}\"");
+        }
+        sb.Write(')');
     }
 
     internal override void ProcessDrawing(Drawing drawing, MarkdownStringWriter sb)
@@ -594,6 +609,9 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         {
             if (drawing.Inline?.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
             {
+                string? hyperlinkId = drawing.Inline.DocProperties?.HyperlinkOnClick?.Id?.Value;
+                string? tooltip = drawing.Inline.DocProperties?.HyperlinkOnClick?.Tooltip?.Value;
+
                 var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
                 if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip && 
                     svgBlip.Embed?.Value is string svgRelId)
@@ -603,7 +621,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 }
                 else if (blip.Embed?.Value is string relId)
                 {
-                    ProcessImagePart(mainDocumentPart, relId, sb);
+                    ProcessImagePart(mainDocumentPart, relId, sb, hyperlinkId, tooltip);
                 }
             }
         }
@@ -622,7 +640,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         }
     }
 
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, MarkdownStringWriter sb)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, MarkdownStringWriter sb, string? hyperlinkId = null, string? hyperlinkTooltip = null)
     {
         try
         {
@@ -701,7 +719,21 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                         uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
                     }
                     EnsureWhiteSpace(sb);
-                    sb.Write($"![{relId}]({uri})");
+                    
+                    if (hyperlinkId != null)
+                    {
+                        // Image with hyperlink
+                        var mainPart = (rootPart.OpenXmlPackage as WordprocessingDocument)?.MainDocumentPart;
+                        if (mainPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+                        {
+                            WriteHyperlink($"![{relId}]({uri})", relationship.Uri.OriginalString, false, hyperlinkTooltip, sb);
+                        }
+                    }
+                    else 
+                    {
+                        // Regular image
+                        sb.Write($"![{relId}]({uri})");
+                    }
                 }
             }
         }

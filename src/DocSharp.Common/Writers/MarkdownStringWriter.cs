@@ -52,21 +52,21 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         else
         {
             string s = font == null ? c.ToString() : FontConverter.ToUnicode(font, c);
-            if (s.Length == 1 && _specialChars.Contains(s[0]))
+            if (s.Length == 1)
             {
-                if (SuppressEscaping)
-                    Write(s);
-                else
+                if (_specialChars.Contains(s[0]) && !SuppressEscaping)
                     Write("\\" + s[0]);
+                else
+                    Write(s);
             }
             else if (s.Length >= 2)
             {
                 foreach (char c2 in s)
                 {
-                    if (SuppressEscaping)
-                        Write(c2);
-                    else
+                    if (_specialChars.Contains(s[0]) && !SuppressEscaping)
                         Write("\\" + c2);
+                    else
+                        Write(c2);
                 }
             }
         }
