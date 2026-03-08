@@ -140,6 +140,7 @@ internal static class ImageHelpers
                     try
                     {
                         imageConverter.ConvertToPng(imageData, outputStream, fileType);
+                        fileType = ImageFormat.Png;
                     }
                     catch (Exception ex)
                     {
