@@ -24,7 +24,9 @@ public class TableRenderer : DocxObjectRenderer<Markdig.Extensions.Tables.Table>
             table.Append(tableRow);
             foreach (var cell in row.OfType<Markdig.Extensions.Tables.TableCell>())
             {
-                var tableCell = new TableCell();
+                var tableCell = new TableCell(new TableCellProperties(
+                    new TableCellWidth() { Width = "2000", Type = TableWidthUnitValues.Dxa }));
+                    // TODO: improve cell width logic
                 tableRow.Append(tableCell);
                 renderer.Cursor.GoInto(tableCell);
                 if (cell.Count == 0)
