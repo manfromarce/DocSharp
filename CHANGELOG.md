@@ -2,7 +2,7 @@
 
 - Added conversion options to `WordprocessingDocument.SaveTo` extension methods
 - Added ability to append to existing Markdown / plain text when converting DOCX
-- Markdown to DOCX / RTF converter: added ability to configure page size and margins
+- Markdown ➡️ DOCX / RTF converter: added ability to configure page size and margins
 - Improved input/output encodings handling
 - Code refactor for maintainability and extensibility
 - Remove .NET 6 target, now out of support
@@ -10,15 +10,16 @@
 - Added JPEG2000 support in image converters
 - Created DocSharp.MagickNET and DocSharp.SkiaSharp packages as alternative graphics backends to System.Drawing.Common and ImageSharp
 - Added WMF support in non-GDI+ image converters thanks to a custom parser
-- Implemented basic DOCX to PDF / images / XPS / SVG renderer via QuestPDF (separate package, not published yet)
-- Implemented basic RTF to DOCX converter
+- Implemented basic DOCX ➡️ PDF / images / XPS / SVG renderer via QuestPDF in a separate package
+- Implemented basic RTF ➡️ DOCX converter
 - Fix right, bottom and diagonal border in XLS converter
-- Support few more compex script / right-to-left options in DOCX to RTF converter
-- Better mapping of styles in DOCX to HTML / Markdown converter
-- Option to handle custom font families as code inline (preformatted text) in DOCX to Markdown converter
-- Support emphasis and images inside hyperlinks in DOCX to Markdown converter
-- Support base64 images in Markdown to DOCX/RTF converter
-- Fix: unnecessary space was created in DOCX to Markdown converter in some cases
+- Support few more compex script / right-to-left options in DOCX ➡️ RTF converter
+- Better mapping of styles in DOCX ➡️ HTML / Markdown converter
+- Option to handle custom font families as code inline (preformatted text) in DOCX ➡️ Markdown converter
+- Support emphasis and images inside hyperlinks in DOCX ➡️ Markdown converter
+- Support base64 images in Markdown ➡️ DOCX/RTF converter
+- Fix various bugs with images in Markdown ↔️ DOCX converters
+- Fix: unnecessary space was created in DOCX ➡️ Markdown converter in some cases
 - Fix other minor bugs and improve code structure
 
 ## 0.17.0 - 2025.12.04
