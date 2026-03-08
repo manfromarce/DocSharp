@@ -22,9 +22,10 @@ internal static class UriHelpers
         {
             return null;
         }
+        url = url.Trim('"').Replace("%20", " ");
 
         Uri? uri = null;
-        var isAbsoluteUri = Uri.TryCreate(url.Trim('"'), UriKind.Absolute, out uri);
+        var isAbsoluteUri = Uri.TryCreate(url, UriKind.Absolute, out uri);
         // var isAbsoluteUri = Uri.TryCreate(url, UriKind.Absolute, out uri);
         if (!isAbsoluteUri)
         {
@@ -33,7 +34,7 @@ internal static class UriHelpers
             {
                 // Relative URI is well formatted, check ImagesBaseUri and add a final slash,
                 // otherwise it is interpreted as file and relative links starting with . or .. won't work properly.
-                // Note that ImagesPathUri should obviously not be a file path.
+                // Note that ImagesPathUri should obviously be a folder path, not a file path.
                 string normalizedBaseUri = imagesBaseUri!.TrimEnd('\\', '/') + @"/";
                 if (Uri.TryCreate(normalizedBaseUri, UriKind.Absolute, out Uri? baseUri) && baseUri != null)
                 {

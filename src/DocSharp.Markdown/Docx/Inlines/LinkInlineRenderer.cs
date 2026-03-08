@@ -188,6 +188,7 @@ public class LinkInlineRenderer : DocxObjectRenderer<LinkInline>
         }
         catch (Exception ex)
         {
+            //Do not stop the whole conversion
 #if DEBUG
             Debug.WriteLine($"Exception in InsertImage: {ex.Message}");
 #endif

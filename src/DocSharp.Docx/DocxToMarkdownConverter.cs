@@ -657,7 +657,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     Directory.CreateDirectory(ImagesOutputFolder);
 
                 string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
-                string actualFilePath = Path.Combine(ImagesOutputFolder, fileName);
+                string actualFilePath = Path.Combine(ImagesOutputFolder, fileName).Replace(" ", "%20");
 
                 try
                 {

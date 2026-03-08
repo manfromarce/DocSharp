@@ -132,7 +132,7 @@ public class LinkInlineRenderer : RtfObjectRenderer<LinkInline>
             }
             catch (Exception ex)
             {
-                //Probably non-existent file or permission issue, do not stop the conversion
+                //Do not stop the whole conversion
                 #if DEBUG
                 Console.WriteLine("InsertImage exception: " + ex.Message);
                 #endif
