@@ -173,7 +173,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    
     internal void ProcessPictureFill(string rId, OpenXmlPart rootPart, RtfStringWriter sb)
     {
         // This function is used for picture fill in ProcessDrawing and ProcessBackground.

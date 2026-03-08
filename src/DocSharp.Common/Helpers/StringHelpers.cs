@@ -22,6 +22,15 @@ public static class StringHelpers
     }
 #endif
 
+    public static string ReplaceAll(this string source, char[] charsToReplace, char newValue)
+    {
+        foreach(char c in charsToReplace)
+        {
+            source = source.Replace(c, newValue);
+        }
+        return source;
+    }
+
     public static string TrimStart(this string source, string trimString)
     {
         if (string.IsNullOrEmpty(trimString)) return source;

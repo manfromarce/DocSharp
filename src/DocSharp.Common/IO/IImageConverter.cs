@@ -12,7 +12,7 @@ namespace DocSharp;
 
 public interface IImageConverter
 {
-    bool ConvertToPng(Stream input, Stream output, ImageFormat inputFormat);
+    void ConvertToPng(Stream input, Stream output, ImageFormat inputFormat);
 
     // Special function that is used by the WMF parser
     byte[]? BmpToPng(byte[] imageData, bool verticalFlip);
@@ -20,25 +20,14 @@ public interface IImageConverter
 
 public abstract class NonGdiImageConverter : IImageConverter
 {
-    public abstract bool ConvertToPng(Stream input, Stream output, ImageFormat inputFormat);
+    public abstract void ConvertToPng(Stream input, Stream output, ImageFormat inputFormat);
     public abstract byte[]? BmpToPng(byte[] imageData, bool verticalFlip);
 
-    public bool WmfToSvg(Stream input, Stream output)
+    public void WmfToSvg(Stream input, Stream output)
     {
-        try
-        {
-            var parser = new WmfParser();
-            var gdi = parser.Parse(input, imageConverter: this);
-            gdi.Write(output);
-            return true;
-        }
-        catch (Exception ex)
-        {
-#if DEBUG
-            Debug.WriteLine($"WmfToSvg error: {ex.Message}");
-#endif
-        }
-        return false;
+        var parser = new WmfParser();
+        var gdi = parser.Parse(input, imageConverter: this);
+        gdi.Write(output);
     }
 }
 
@@ -48,7 +37,8 @@ public static class ImageConverterExtensions
     {
         using (var ms = new MemoryStream())
         {
-            return converter.ConvertToPng(imageStream, ms, format) ? ms.ToArray() : [];
+            converter.ConvertToPng(imageStream, ms, format);
+            return ms.ToArray();
         }
     }
 
@@ -67,7 +57,8 @@ public static class NonGdiImageConverterExtensions
     {
         using (var ms = new MemoryStream())
         {
-            return converter.WmfToSvg(imageStream, ms) ? ms.ToArray() : [];
+            converter.WmfToSvg(imageStream, ms);
+            return ms.ToArray();
         }
     }
 

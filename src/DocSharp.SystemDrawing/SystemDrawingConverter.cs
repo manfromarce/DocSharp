@@ -11,73 +11,53 @@ namespace DocSharp.Imaging;
 
 public class SystemDrawingConverter : IImageConverter
 {
-    public bool ConvertToPng(Stream input, Stream output, IO.ImageFormat inputFormat)
+    public void ConvertToPng(Stream input, Stream output, IO.ImageFormat inputFormat)
     {
-        try
+        if (inputFormat == IO.ImageFormat.Svg)
         {
-            if (inputFormat == IO.ImageFormat.Svg)
+            var svg = SvgDocument.Open<SvgDocument>(input);
+            using (var bmp = svg.Draw())
             {
-                var svg = SvgDocument.Open<SvgDocument>(input);
-                using (var bmp = svg.Draw())
-                {
-                    bmp.Save(output, ImageFormat.Png);
-                }
+                bmp.Save(output, ImageFormat.Png);
             }
-            else if (inputFormat == IO.ImageFormat.Jpeg2000)
-            {
-                using (var bmp = BitmapJ2kExtensions.FromJ2KStream(input))
-                {
-                    bmp.Save(output, ImageFormat.Png);
-                }
-            }
-            else
-            {
-                using (var image = Image.FromStream(input, false, false))
-                {
-                    image.Save(output, ImageFormat.Png);
-                }
-            }
-            return true;
         }
-        catch (Exception ex)
+        else if (inputFormat == IO.ImageFormat.Jpeg2000)
         {
-#if DEBUG
-            Debug.WriteLine($"ConvertToPng error: {ex.Message}");
-#endif
-            return false;
+            using (var bmp = BitmapJ2kExtensions.FromJ2KStream(input))
+            {
+                bmp.Save(output, ImageFormat.Png);
+            }
+        }
+        else
+        {
+            using (var image = Image.FromStream(input, false, false))
+            {
+                image.Save(output, ImageFormat.Png);
+            }
         }
     }
 
     public byte[]? BmpToPng(byte[] imageData, bool verticalFlip)
     {
-        try
+        var gdiConverter = new ImageConverter();
+        using (var image = (Bitmap?)gdiConverter.ConvertFrom(imageData))
         {
-            var gdiConverter = new ImageConverter();
-            using (var image = (Bitmap?)gdiConverter.ConvertFrom(imageData))
+            if (image != null)
             {
-                if (image != null)
+                // TODO: convert to 24-bit color (remove alpha channel)
+                using (var ms = new MemoryStream())
                 {
-                    // TODO: convert to 24-bit color (remove alpha channel)
-                    using (var ms = new MemoryStream())
+                    // Flip vertically if requested
+                    if (verticalFlip)
                     {
-                        // Flip vertically if requested
-                        if (verticalFlip)
-                        {
-                            image.RotateFlip(RotateFlipType.RotateNoneFlipY);
-                        }
-
-                        // Return PNG bytes
-                        image.Save(ms, ImageFormat.Png);
-                        return ms.ToArray();
+                        image.RotateFlip(RotateFlipType.RotateNoneFlipY);
                     }
+
+                    // Return PNG bytes
+                    image.Save(ms, ImageFormat.Png);
+                    return ms.ToArray();
                 }
             }
-        }
-        catch (Exception ex)
-        {
-#if DEBUG
-            Debug.WriteLine($"BmpToPng error: {ex.Message}");
-#endif
         }
         return null;
     }

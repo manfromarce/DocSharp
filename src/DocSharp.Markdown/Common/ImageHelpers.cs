@@ -135,14 +135,21 @@ internal static class ImageHelpers
             else
             {
                 outputStream = new MemoryStream();
-                if (!(imageConverter != null && imageConverter.ConvertToPng(imageData, outputStream, fileType)))
+                if (imageConverter != null)
                 {
-#if DEBUG
-                    Debug.WriteLine($"Error in ConvertAndScaleImage - conversion failed.");
-#endif
-                    calculatedWidth = 0;
-                    calculatedHeight = 0;
-                    return null;
+                    try
+                    {
+                        imageConverter.ConvertToPng(imageData, outputStream, fileType);
+                    }
+                    catch (Exception ex)
+                    {
+                        #if DEBUG
+                            Debug.WriteLine($"Error in ConvertAndScaleImage: {ex.Message}");
+                        #endif
+                            calculatedWidth = 0;
+                            calculatedHeight = 0;
+                            return null;
+                    }
                 }
             }
             outputStream.Position = 0;

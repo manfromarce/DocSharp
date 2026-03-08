@@ -39,7 +39,7 @@ internal class QuestPdfImage : QuestPdfInlineElement
             catch
             {
 #if DEBUG
-                Debug.WriteLine("QuestPdfImage - Image conversion to PNG failed, using original bytes. ImageType: " + imageType);
+                Debug.WriteLine("QuestPdfImage - Image conversion to PNG failed. ImageType: " + imageType);
 #endif
                 // Set bytes to null so that the image won't be created without throwing an exception.
                 Bytes = null;          

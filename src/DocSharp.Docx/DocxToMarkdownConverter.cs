@@ -644,68 +644,69 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     {
         try
         {
-            if (ImagesOutputFolder != null &&
+            if (!string.IsNullOrWhiteSpace(ImagesOutputFolder) &&
                 rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
             {
-                try
-                {
-                    // Try to create the output directory if it doesn't exist.
-                    if (!Directory.Exists(ImagesOutputFolder))
-                    {
-                        Directory.CreateDirectory(ImagesOutputFolder);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Filesystem error, don't stop the conversion.
-#if DEBUG
-                    Debug.WriteLine("ProcessImagePart - Directory.Create error: " + ex.Message);
-#endif
-                    return;
-                }
+                // Normalize output directory path
+                ImagesOutputFolder = ImagesOutputFolder!.ReplaceAll(['/', '\\'], Path.DirectorySeparatorChar);
+                if (!ImagesOutputFolder.EndsWith(Path.DirectorySeparatorChar))
+                    ImagesOutputFolder += Path.DirectorySeparatorChar;
+                
+                // Try to create the output directory if it doesn't exist.
+                if (!Directory.Exists(ImagesOutputFolder))
+                    Directory.CreateDirectory(ImagesOutputFolder);
 
                 string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
-#if NETFRAMEWORK
                 string actualFilePath = Path.Combine(ImagesOutputFolder, fileName);
-#else 
-                string actualFilePath = Path.Join(ImagesOutputFolder, fileName);
-#endif
-                using (var stream = imagePart.GetStream())
+
+                try
                 {
-                    if (ImageConverter != null &&
-                        imagePart.ContentType != ImagePartType.Jpeg.ContentType &&
-                        imagePart.ContentType != ImagePartType.Gif.ContentType &&
-                        imagePart.ContentType != ImagePartType.Png.ContentType &&
-                        imagePart.ContentType != ImagePartType.Svg.ContentType &&
-                        imagePart.ContentType != ImagePartType.Icon.ContentType)
+                    // Get the Open XML image stream and check the image format
+                    using (var stream = imagePart.GetStream())
                     {
-                        if (ImageConverter is NonGdiImageConverter nonGdiImageConverter && imagePart.ContentType == ImagePartType.Wmf.ContentType)
+                        if (imagePart.ContentType != ImagePartType.Jpeg.ContentType &&
+                            imagePart.ContentType != ImagePartType.Gif.ContentType &&
+                            imagePart.ContentType != ImagePartType.Png.ContentType &&
+                            imagePart.ContentType != ImagePartType.Svg.ContentType &&
+                            imagePart.ContentType != ImagePartType.Icon.ContentType)
                         {
-                            actualFilePath = Path.ChangeExtension(actualFilePath, ".svg");
-                            fileName = Path.ChangeExtension(fileName, ".svg");
-                            using (var imageStream = File.Create(actualFilePath))
+                            // If the image format is not supported by web browsers, try to convert to SVG or PNG.
+                            if (ImageConverter is NonGdiImageConverter nonGdiImageConverter && imagePart.ContentType == ImagePartType.Wmf.ContentType)
                             {
-                                nonGdiImageConverter.WmfToSvg(stream, imageStream);
+                                actualFilePath = Path.ChangeExtension(actualFilePath, ".svg");
+                                fileName = Path.ChangeExtension(fileName, ".svg");
+                                using (var imageStream = File.Create(actualFilePath))
+                                    nonGdiImageConverter.WmfToSvg(stream, imageStream);
+                            }
+                            else if (ImageConverter != null)
+                            {
+                                actualFilePath = Path.ChangeExtension(actualFilePath, ".png");
+                                fileName = Path.ChangeExtension(fileName, ".png");
+                                using (var imageStream = File.Create(actualFilePath))
+                                    ImageConverter.ConvertToPng(stream, imageStream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
                             }
                         }
                         else
                         {
-                            actualFilePath = Path.ChangeExtension(actualFilePath, ".png");
-                            fileName = Path.ChangeExtension(fileName, ".png");
-                            using (var imageStream = File.Create(actualFilePath))
-                            {
-                                ImageConverter.ConvertToPng(stream, imageStream, ImageFormatExtensions.FromMimeType(imagePart.ContentType));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        using (var fileStream = File.Create(actualFilePath))
-                        {
-                            stream.CopyTo(fileStream);
+                            // If the image format is supported by web browsers, copy the Open XML image stream to the target file path directly.
+                            using (var fileStream = File.Create(actualFilePath))
+                                stream.CopyTo(fileStream);
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    // Image retrieval failed (probably format is not supported by the image converter, or the output directory is not writeable).
+                    #if DEBUG
+                        Debug.WriteLine("ProcessImagePart error: " + ex.Message);
+                    #endif
+
+                    // Delete the image file and don't add a reference to it in Markdown.
+                    if (File.Exists(actualFilePath))
+                        File.Delete(actualFilePath);
+                    return;
+                }
+                
                 if (File.Exists(actualFilePath))
                 {
                     Uri uri;
@@ -739,12 +740,10 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         }
         catch (Exception ex)
         {
-            // Probably an issue with the output directory.
-            // Don't stop the conversion.
-#if DEBUG
-            Debug.WriteLine("ProcessImagePart error: " + ex.Message);
-            return;
-#endif
+            // Other generic error during image retrieval, don't stop the whole conversion.
+            #if DEBUG
+                Debug.WriteLine("ProcessImagePart error: " + ex.Message);
+            #endif
         }
     }
 
