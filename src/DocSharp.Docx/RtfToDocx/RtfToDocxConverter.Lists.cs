@@ -30,7 +30,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
     private Level EnsureLevel()
     {
-        currentLevel ??= pPr.GetOrCreateListLevel(mainPart);
+        currentLevel ??= currentParagraphPr.GetOrCreateListLevel(mainPart);
         return currentLevel;
     }
 

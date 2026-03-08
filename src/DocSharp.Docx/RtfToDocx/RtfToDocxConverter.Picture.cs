@@ -106,7 +106,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         long cx = picWidth.HasValue ? (long)picWidth.Value * EMU_PER_TWIP : 200 * EMU_PER_TWIP;
         long cy = picHeight.HasValue ? (long)picHeight.Value * EMU_PER_TWIP : 200 * EMU_PER_TWIP;
 
-        var run = CreateRun();
+        var run = AddRun();
         // Prefer VML <w:pict> picture for now (legacy). 
 
         // var element = new Drawing(

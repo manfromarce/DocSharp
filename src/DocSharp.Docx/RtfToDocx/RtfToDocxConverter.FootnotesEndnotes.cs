@@ -28,17 +28,17 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             // Run level
             case "chftn": 
                 if (container is Footnote || container.GetFirstAncestor<Footnote>() != null)
-                    CreateRun().Append(new FootnoteReferenceMark());                    
+                    AddRun().Append(new FootnoteReferenceMark());                    
                 else if (container is Endnote || container.GetFirstAncestor<Endnote>() != null)
-                    CreateRun().Append(new EndnoteReferenceMark());                    
+                    AddRun().Append(new EndnoteReferenceMark());                    
                 else
                     pendingFootnoteEndnoteRef = true;
                 return true;
             case "chftnsep": 
-                CreateRun().Append(new SeparatorMark());
+                AddRun().Append(new SeparatorMark());
                 return true;
             case "chftnsepc":
-                CreateRun().Append(new ContinuationSeparatorMark());
+                AddRun().Append(new ContinuationSeparatorMark());
                 return true;
 
             // Section level
@@ -258,7 +258,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         reference.Id = id;
 
         // Add foonote/endnote reference to a new run, ensuring proper formatting
-        CreateRun().Append(isEndnote ? new EndnoteReference() { Id = id } : new FootnoteReference() { Id = id });
+        AddRun().Append(isEndnote ? new EndnoteReference() { Id = id } : new FootnoteReference() { Id = id });
         pendingFootnoteEndnoteRef = false;
         
         // Add content to the footnote or endnote

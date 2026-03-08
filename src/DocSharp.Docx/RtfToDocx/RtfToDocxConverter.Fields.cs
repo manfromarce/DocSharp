@@ -20,7 +20,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 {
     private void CreateSimpleField(string instr, string currentValue)
     {
-        CreateRun().Append(new SimpleField(new Run(new Text(currentValue)))
+        AddRun().Append(new SimpleField(new Run(new Text(currentValue)))
         {
             Instruction = instr
         });       
@@ -32,28 +32,28 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private void CreateField(string instrText, string currentValue)
     {
         // Part 1 - Begin
-        CreateRun().Append(new FieldChar()
+        AddRun().Append(new FieldChar()
         {
             FieldCharType = FieldCharValues.Begin
         });
 
         // Part 2 - InstrText
-        CreateRun().Append(new FieldCode(instrText ?? string.Empty));
+        AddRun().Append(new FieldCode(instrText ?? string.Empty));
 
         // Part 3 - Separate
-        CreateRun().Append(new FieldChar()
+        AddRun().Append(new FieldChar()
         {
             FieldCharType = FieldCharValues.Separate
         });
 
         // Part 4 - Current value
-        CreateRun().Append(new Text(currentValue ?? string.Empty)
+        AddRun().Append(new Text(currentValue ?? string.Empty)
         {
             Space = SpaceProcessingModeValues.Preserve
         });
 
         // Part 5 - End
-        CreateRun().Append(new FieldChar()
+        AddRun().Append(new FieldChar()
         {
             FieldCharType = FieldCharValues.End
         });

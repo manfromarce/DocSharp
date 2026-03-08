@@ -29,15 +29,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         return currentRun;
     }
 
-    private Run CreateRun()
+    private Run AddRun()
     {
-        if (currentParagraph == null)
-        {
-            currentParagraph = CreateParagraphWithProperties(pPr);
-            container.Append(currentParagraph);
-        }
+        EnsureParagraph();
         currentRun = CreateRunWithProperties(TryPeek(fmtStack));
-        currentParagraph.Append(currentRun);
+        currentParagraph!.Append(currentRun);
         return currentRun;
     }
 
@@ -213,16 +209,16 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     {
                         var c = colorTable[cw.Value.Value];
                         var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
-                        pPr.Shading ??= new Shading();
+                        currentParagraphPr.Shading ??= new Shading();
                         if (name == "cfpat")
                         {
-                            pPr.Shading.Color = hex;
-                            if (pPr.Shading.Val == null)
-                                pPr.Shading.Val = ShadingPatternValues.Clear;
+                            currentParagraphPr.Shading.Color = hex;
+                            if (currentParagraphPr.Shading.Val == null)
+                                currentParagraphPr.Shading.Val = ShadingPatternValues.Clear;
                         }
                         else if (name == "cbpat")
                         {
-                            pPr.Shading.Fill = hex;
+                            currentParagraphPr.Shading.Fill = hex;
                         }
                     }
                 }

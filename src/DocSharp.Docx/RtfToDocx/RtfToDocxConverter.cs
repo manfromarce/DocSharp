@@ -32,11 +32,23 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
     private bool pendingFootnoteEndnoteRef = false;
 
-    private BorderType? currentBorder;
     private SectionProperties? defaultSectPr;
     private SectionProperties? currentSectPr;
+    private BorderType? currentBorder;
     private Paragraph? currentParagraph = null;
-    private ParagraphProperties pPr = new();
+    private ParagraphProperties currentParagraphPr
+    {
+        get
+        {
+            if (currentParagraph == null)
+            {
+                currentParagraph = new Paragraph();
+                container.Append(currentParagraph);
+            }
+            currentParagraph.ParagraphProperties ??= new ParagraphProperties();
+            return currentParagraph.ParagraphProperties;
+        }
+    }
     private Level? currentLevel = new();
     private Run? currentRun = null;
     private bool isPictureOpen = false;
@@ -84,7 +96,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentLevel = null;
         isPictureOpen = false;
         pendingFootnoteEndnoteRef = false;
-        pPr = new ParagraphProperties();
         fmtStack.Clear();
 
         package = targetDocument;
@@ -157,7 +168,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             switch (token)
             {
                 case RtfGroup subGroup:
-                    currentBorder = null; // Don't inherit border context from parent group
+                    currentBorder = null; // Don't inherit border context from parent group, as relevant control words should be written consecutively in the same group
                     if (subGroup is RtfDestination destination)
                     {
                         var dname = (destination.Name ?? string.Empty).ToLowerInvariant();
@@ -283,6 +294,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             // Parse default character properties and map them to Styles/DocDefaults -> RunPropertiesDefault
                             var tempState = new FormattingState();
                             var previousBorder = currentBorder;
+                            currentBorder = null;
                             foreach (var t in destination.Tokens)
                             {
                                 if (t is RtfControlWord rcw)
@@ -312,24 +324,21 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         else if (dname == "defpap")
                         {
                             // Parse default paragraph properties and map them to Styles/DocDefaults -> ParagraphPropertiesDefault
-                            var previousPPr = pPr;
+                            
                             var previousBorder = currentBorder;
-                            pPr = new ParagraphProperties();
+                            currentBorder = null;
+                            var defaultPr = new ParagraphProperties();
                             foreach (var t in destination.Tokens)
                             {
                                 if (t is RtfControlWord rcw)
                                 {
-                                    ProcessParagraphControlWord(rcw);
+                                    ProcessParagraphControlWord(rcw, defaultPr);
                                 }
                             }
-                            var builtPPr = (ParagraphProperties)pPr.CloneNode(true);
-                            // restore
-                            pPr = previousPPr;
                             currentBorder = previousBorder;
 
                             stylesPart ??= mainPart.StyleDefinitionsPart;
-                            if (stylesPart == null)
-                                stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
+                            stylesPart ??= mainPart.AddNewPart<StyleDefinitionsPart>();
                             stylesPart.Styles ??= new Styles();
                             var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
 
@@ -337,7 +346,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle?.Remove();
                             // Note: we can't cast ParagraphProperties to ParagraphPropertiesBaseStyle, 
                             // but adding them directly should work as they have the same XML name and structure
-                            docDefaults.ParagraphPropertiesDefault.Append(builtPPr.CloneNode(true));
+                            docDefaults.ParagraphPropertiesDefault.Append(defaultPr);
                             continue;
                         }
                         else if (dname == "field")
@@ -500,7 +509,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         else if (dname == "pn")
                         {
                             // Enumerate the group normally to retrieve list level, number format, character style, text before/after, ...
-                            currentLevel = pPr.CreateListLevel(mainPart);
+                            currentLevel = currentParagraphPr.CreateListLevel(mainPart);
                         }
                         else if (dname == "pnseclvl")
                         {
@@ -691,7 +700,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         }
 
         // Append the (possibly trimmed) text
-        CreateRun().Append(new Text(text)
+        AddRun().Append(new Text(text)
         {
             Space = SpaceProcessingModeValues.Preserve
         });
@@ -758,7 +767,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     currentParagraph!.ParagraphProperties ??= new ParagraphProperties();
                     currentSectPr ??= CreateSectionProperties();
                     // If \sbk* is not specified in RTF, assume NextPage as default.
-                    currentSectPr.AppendChild(new SectionType() { Val = SectionMarkValues.NextPage });                     
+                    if (currentSectPr.GetFirstChild<SectionType>() == null)
+                        currentSectPr.AppendChild(new SectionType() { Val = SectionMarkValues.NextPage });
+
+                    // TODO: should we preserve previous paragraph properties (except inner SectionProperties)? 
+                    // Starting a new section does not necessarily reset paragraph properties in RTF.
+
                     currentParagraph.ParagraphProperties.SectionProperties = (SectionProperties)currentSectPr.CloneNode(true);
                     currentParagraph = null;
                     currentRun = null;
@@ -766,16 +780,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 break;
             case "par":
                 // End current paragraph
-                currentParagraph = CreateParagraphWithProperties(pPr);
-                container.Append(currentParagraph);
-                currentRun = null;
+                AddParagraph();
                 break;
 
             case "sectd":  // reset section formatting
                 ResetSectionProperties();
                 break;
             case "pard":  // reset paragraph formatting
-                pPr.Clear();
+                currentParagraphPr.Clear();
                 currentLevel = null;
                 break;
             case "plain": // reset character formatting
@@ -870,8 +882,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
                     if (shadingType != null)
                     {
-                        pPr.Shading ??= new Shading();
-                        pPr.Shading.Val = shadingType;
+                        currentParagraphPr.Shading ??= new Shading();
+                        currentParagraphPr.Shading.Val = shadingType;
                     }
                 }
                 else if (cw.Name?.StartsWith("pgn") == true)

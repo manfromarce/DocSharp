@@ -46,7 +46,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             // case "chatn": 
             //     break;
             case "chpgn": 
-                CreateRun().Append(new PageNumber());
+                AddRun().Append(new PageNumber());
                 break;
             case "tab":
                 EnsureRun().Append(new TabChar());
