@@ -766,7 +766,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 break;
             case "par":
                 // End current paragraph
-                currentParagraph = null;
+                currentParagraph = CreateParagraphWithProperties(pPr);
+                container.Append(currentParagraph);
                 currentRun = null;
                 break;
 

@@ -28,13 +28,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         }
     }
 
-    private Paragraph CreateParagraphWithProperties(ParagraphProperties pPr)
+    private Paragraph CreateParagraphWithProperties(ParagraphProperties properties)
     {
         var par = new Paragraph();
 
-        if (pPr.HasChildren)
-            par.Append(pPr.CloneNode(true));
+        var newPr = par.AppendChild((ParagraphProperties)properties.CloneNode(true));
 
+        // Make pPr point to the new paragraph's properties so that they are synced.
+        pPr = newPr;
         return par;
     }
 
