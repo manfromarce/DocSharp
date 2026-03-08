@@ -657,7 +657,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     Directory.CreateDirectory(ImagesOutputFolder);
 
                 string fileName = Path.GetFileName(imagePart.Uri.OriginalString);
-                string actualFilePath = Path.Combine(ImagesOutputFolder, fileName).Replace(" ", "%20");
+                string actualFilePath = Path.Combine(ImagesOutputFolder, fileName);
 
                 try
                 {
@@ -716,24 +716,21 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     }
                     else
                     {
-                        string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
+                        string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);                        
                         uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
                     }
                     EnsureWhiteSpace(sb);
                     
-                    if (hyperlinkId != null)
+                    if (hyperlinkId != null && 
+                        (rootPart.OpenXmlPackage as WordprocessingDocument)?.MainDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
                     {
                         // Image with hyperlink
-                        var mainPart = (rootPart.OpenXmlPackage as WordprocessingDocument)?.MainDocumentPart;
-                        if (mainPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
-                        {
-                            WriteHyperlink($"![{relId}]({uri})", relationship.Uri.OriginalString, false, hyperlinkTooltip, sb);
-                        }
+                        WriteHyperlink($"![{relId}]({uri.ToString().Replace(" ", "%20")})", relationship.Uri.OriginalString, false, hyperlinkTooltip, sb);
                     }
                     else 
                     {
                         // Regular image
-                        sb.Write($"![{relId}]({uri})");
+                        sb.Write($"![{relId}]({uri.ToString().Replace(" ", "%20")})");
                     }
                 }
             }
