@@ -20,12 +20,12 @@
   <ItemGroup>
     <PackageReference Include="QuestPDF" Version="2026.2.3" />
 
-    <PackageReference Include="CSharpMath.Rendering" Version="0.5.1" />
+    <!-- <PackageReference Include="CSharpMath.Rendering" Version="0.5.1" /> -->
     <!-- <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" /> -->
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\DocSharp.Docx\DocSharp.Docx.csproj" />
+    <ProjectReference Include="..\DocSharp.Docx\DocSharp.Docx.csproj" />
   </ItemGroup>
 
 </Project>

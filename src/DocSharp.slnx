@@ -6,7 +6,6 @@
     <Project Path="DocSharp.Binary/DocSharp.Binary.Xls/DocSharp.Binary.Xls.csproj" />
   </Folder>
   <Folder Name="/WIP/">
-    <Project Path="WIP/DocSharp.Renderer/DocSharp.Renderer.csproj" />
   </Folder>
   <Folder Name="/Imaging/">
     <Project Path="DocSharp.ImageSharp/DocSharp.ImageSharp.csproj" />
@@ -31,4 +30,5 @@
   <Project Path="DocSharp.Common/DocSharp.Common.csproj" />
   <Project Path="DocSharp.Docx/DocSharp.Docx.csproj" />
   <Project Path="DocSharp.Markdown/DocSharp.Markdown.csproj" />
+  <Project Path="DocSharp.Renderer/DocSharp.Renderer.csproj" />
 </Solution>
