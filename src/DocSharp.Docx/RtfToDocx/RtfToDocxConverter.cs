@@ -51,7 +51,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     }
     private Level? currentLevel = new();
     private Run? currentRun = null;
-    private bool isPictureOpen = false;
     private Stack<FormattingState> fmtStack = new();
 
 #if !NETFRAMEWORK
@@ -94,7 +93,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentParagraph = null;
         currentRun = null;
         currentLevel = null;
-        isPictureOpen = false;
         pendingFootnoteEndnoteRef = false;
         fmtStack.Clear();
 
@@ -488,16 +486,17 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             continue;
                         }
 
-                        else if (dname == "pict")
-                        {
-                            // Handle as regular group
-                            // (retrieve essential control words for image format and dimensions)
-                            isPictureOpen = true;
-                        }
                         else if (dname == "shppict")
                         {
                             // Handle as regular group
                             // (recurse to retrieve the pict element)
+                        }
+                        else if (dname == "pict")
+                        {
+                            // Handle as regular group
+                            // (retrieve essential control words for image format and dimensions)
+                            ProcessPicture(destination);
+                            continue;
                         }
                         else if (dname == "nonshppict")
                         {
@@ -595,17 +594,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     HandleText(text.Text);
                     break;
                 case RtfHexToken hexData:
-                    // The hex data (e.g. image bytes) must be handled depending on the current context.
-                    if (hexData.Data != null && hexData.Data.Length > 0)
-                    {
-                        ProcessPictureData(hexData.Data);
-                    }
+                    // The hex data (e.g. image bytes) must be handled depending on the current context.                    
                     break;
             }
         }
-        // finalize picture if any pending data
-        FinishCurrentPicture();
-        isPictureOpen = false;
         pendingFootnoteEndnoteRef = false;
         // Restore parent formatting state
         TryPop(fmtStack);
@@ -854,10 +846,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
                 }
                 else if (ProcessFootnoteEndnoteControlWord(cw, runState))
-                {
-                    break;
-                }
-                else if (ProcessPictureControlWord(cw, runState))
                 {
                     break;
                 }

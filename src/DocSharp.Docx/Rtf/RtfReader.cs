@@ -238,6 +238,7 @@ internal static class RtfReader
         "nesttableprops",
         "nextfile",
         "nonesttables",
+        "nonshppict",
         "objalias",
         "objclass",
         "objdata",
