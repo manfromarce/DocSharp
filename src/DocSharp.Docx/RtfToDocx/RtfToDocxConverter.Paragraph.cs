@@ -192,11 +192,28 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             // case "listtext": // should be ignored, emitted for compatibility with old RTF readers that don't recognize \ls and \ilvl
             // Note: lists created by old RTF writers are destinations (pn, pntext), so they are not handled here.
             case "ls":
+                if (cw.HasValue)
+                {
+                    int? numberingId = null;
+                    if (rtfListTableMap.ContainsKey(cw.Value!.Value))
+                        numberingId = rtfListTableMap[cw.Value!.Value];
+                    else if (rtfListOverrideMap.ContainsKey(cw.Value!.Value))
+                        numberingId = rtfListOverrideMap[cw.Value!.Value];
+                    
+                    if (numberingId != null)
+                    {
+                        targetProperties.NumberingProperties ??= new NumberingProperties();
+                        targetProperties.NumberingProperties.NumberingId = new NumberingId() { Val = numberingId!.Value };
+                        if (targetProperties.NumberingProperties.NumberingLevelReference?.Val == null)
+                            targetProperties.NumberingProperties.NumberingLevelReference = new NumberingLevelReference() { Val = 0 };
+                    }
+                }
+                break;
             case "ilvl":
                 if (cw.HasValue)
                 {
-                    // Requires conversion of the list table and list override table
-                    // pPr.NumberingProperties = 
+                    targetProperties.NumberingProperties ??= new NumberingProperties();
+                    targetProperties.NumberingProperties.NumberingLevelReference = new NumberingLevelReference() { Val = cw.Value!.Value };
                 }
                 return true;
             case "noline":

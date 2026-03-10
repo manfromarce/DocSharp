@@ -18,254 +18,307 @@ namespace DocSharp.Docx;
 
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
+    private Dictionary<int, int> rtfListTableMap = new();
+    private Dictionary<int, int> rtfListOverrideMap = new();
+
     private void ParseListTable(RtfDestination dest)
     {
-        
+        // Ensure numbering part exists
+        var numbering = mainPart.GetOrCreateNumbering();
+        foreach (var token in dest.Tokens)
+        {
+            if (token is RtfDestination listDest && string.Equals(listDest.Name, "list", StringComparison.OrdinalIgnoreCase))
+            {
+                // Create an AbstractNum
+                var abstractNum = numbering.AddAbstractNumbering();
+                                
+                int? listId = null;
+                foreach (var lt in listDest.Tokens)
+                {
+                    if (lt is RtfControlWord cw)
+                    {
+                        string name = cw.Name.ToLowerInvariant();
+                        switch (name)
+                        {
+                            case "listid":
+                                if (cw.HasValue)
+                                    listId = cw.Value!.Value; 
+                                break;
+                            case "listsimple":
+                                if (cw.HasValue && cw.Value!.Value == 1)
+                                    abstractNum.MultiLevelType = new MultiLevelType() { Val = MultiLevelValues.SingleLevel };
+                                else 
+                                    abstractNum.MultiLevelType = new MultiLevelType() { Val = MultiLevelValues.HybridMultilevel };
+                                break;
+                            case "listhybrid":
+                                abstractNum.MultiLevelType = new MultiLevelType() { Val = MultiLevelValues.HybridMultilevel };
+                                break;                                
+                        }
+                    }
+                    else if (lt is RtfDestination subDest)                    
+                    {
+                        if (string.Equals(subDest.Name, "listlevel", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Add level with default values
+                            var lvl = abstractNum.AddLevel();
+                            lvl.StartNumberingValue = new StartNumberingValue() { Val = 1 };
+                            lvl.NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.Decimal };
+                            lvl.LevelText = new LevelText() { Val = "%1." };
+
+                            // Map level control words
+                            ProcessLevel(subDest, ref lvl);
+                        }                        
+                    }
+                }
+
+                // Check if the produced list is valid
+                if (abstractNum.Elements<Level>().Any() && listId.HasValue)
+                {
+                    // Map RTF list id to AbstractNumId
+                    if (abstractNum.AbstractNumberId != null && rtfListTableMap != null)
+                    {
+                        rtfListTableMap[listId.Value] = abstractNum.AbstractNumberId.Value;
+                    }
+                }
+            }
+            else if (token is RtfDestination listPictureDest && string.Equals(listPictureDest.Name, "listpicture", StringComparison.OrdinalIgnoreCase))
+            {
+                // Search for inner \shppict or pict groups
+                int pictId = 0;
+                foreach (var pictGroup in listPictureDest.Tokens.OfType<RtfDestination>()
+                                                                .Where(d => string.Equals(d.Name, "shppict", StringComparison.OrdinalIgnoreCase) 
+                                                                         || string.Equals(d.Name, "pict", StringComparison.OrdinalIgnoreCase)))
+                {
+                    // Get the pict group
+                    var pict = pictGroup.Name.Equals("pict", StringComparison.OrdinalIgnoreCase) 
+                                ? pictGroup 
+                                : pictGroup.Tokens.OfType<RtfDestination>().FirstOrDefault(g => string.Equals(g.Name, "pict", StringComparison.OrdinalIgnoreCase));
+                    if (pict != null)
+                    {
+                        var pictureBullet = ProcessPicture<PictureBulletBase>(pict, isPictureBullet: true);
+                        if (pictureBullet != null)
+                            numbering.Append(new NumberingPictureBullet(pictureBullet)
+                            {
+                                NumberingPictureBulletId = pictId
+                            });
+                    }
+                    ++pictId;
+                }
+            }
+        }
     }
 
     private void ParseListOverrideTable(RtfDestination dest)
     {
-        
-    }
-
-    private Level EnsureLevel()
-    {
-        currentLevel ??= currentParagraphPr.GetOrCreateListLevel(mainPart);
-        return currentLevel;
-    }
-
-    private bool ProcessLegacyListControlWord(RtfControlWord cw)
-    {
-        var name = (cw.Name ?? string.Empty).ToLowerInvariant();
-        switch (name)
+        // Ensure numbering part exists
+        var numbering = mainPart.GetOrCreateNumbering();
+        foreach (var token in dest.Tokens)
         {
-            case "pnlvl": // Paragraph level, where the value is a level from 1 to 9.
-                if (cw.HasValue && cw.Value!.Value > 0)
-                {
-                    EnsureLevel().LevelIndex = cw.Value!.Value - 1; // in Open XML it starts from 0 instead
-                }
-                return true;
-            // case "pnlvlblt": // Bulleted paragraph (corresponds to level 11). The actual character used for the bullet is stored in the \pntxtb group.
-            // Handled by RtfNumberFormatMapper.GetNumberFormat
-            case "pnlvlbody": // Simple paragraph numbering (corresponds to level 10).
-                EnsureLevel().NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.Decimal };
-                // (will be overwritten later by more specific number format, if specified).
-                return true;
-            case "pnlvlcont": // Continue numbering but do not display number ("skip numbering")
-                // (unclear if the level text or even the whole paragraph should be hidden, 
-                // for now set NumberingFormat to None to hide the number)
-                EnsureLevel().NumberingFormat = new NumberingFormat() { Val = NumberFormatValues.None };
-                return true;
+            if (token is RtfDestination ovGroup && string.Equals(ovGroup.Name, "listoverride", StringComparison.OrdinalIgnoreCase))
+            {
+                int? listId = null;
+                int? ls = null;
 
-            // These cannot be set on individual list items in DOCX; ignore for now.
-            case "pnnumonce": // Number each cell only once in a table (default is to number each paragraph in a table).
-                return true;
-            case "pnacross": // Number across rows (default is to number down columns).
-                return true;
-            case "pnhang": // Paragraph uses a hanging indent
-                return true;
-            case "pnrestart": // Restart numbering after each section break. This control word is used only in conjunction with the Heading Numbering feature (applying multilevel numbering to Heading style definitions)
-                return true;
-
-            case "pnstart": // Start at number
-                if (cw.HasValue)
+                foreach (var t in ovGroup.Tokens)
                 {
-                    EnsureLevel().StartNumberingValue = new StartNumberingValue() { Val = cw.Value!.Value };
-                }
-                return true;
-
-            case "pnindent": // Minimum distance from margin to body text.
-                if (cw.HasValue)
-                {
-                    EnsureLevel().LegacyNumbering = new LegacyNumbering
+                    if (t is RtfControlWord cw)
                     {
-                        Legacy = true,
-                        LegacyIndent = cw.Value!.Value.ToStringInvariant()
-                    };
-                }
-                return true;
-            case "pnsp": // Distance from number text to body text.
-                if (cw.HasValue)
-                {
-                    EnsureLevel().LegacyNumbering = new LegacyNumbering
-                    {
-                        Legacy = true,
-                        LegacySpace = cw.Value!.Value.ToStringInvariant()
-                    };
-                }
-                return true;
-
-            case "pnprev": // Used for multilevel lists. Include information from previous level in this level; for example, 1, 1.1, 1.1.1, 1.1.1.1.
-                // Unclear how it works in RTF (should we replace %1 with %1.%2 and so on in the level text ?); ignore for now
-                return true;
-                
-            // Set the following properties on AbstractNumId --> Level --> NumberingSymbolRunProperties
-            case "pnf": // Font number for number/bullet
-                if (cw.HasValue)
-                {
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    if (fontTable.TryGetValue(cw.Value!.Value, out var fname) && !string.IsNullOrEmpty(fname))
-                    level.NumberingSymbolRunProperties.RunFonts = new RunFonts() { Ascii = fname, HighAnsi = fname, EastAsia = fname, ComplexScript = fname };
-                }
-                return true;
-            case "pnfs": // Font size
-                if (cw.HasValue)
-                {
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.FontSize = new FontSize() { Val = cw.Value!.Value.ToStringInvariant() };
-                }
-                return true;
-            case "pncf": // Font color
-                if (cw.HasValue)
-                {
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    var idx = cw.Value!.Value;
-                    if (idx >= 0 && idx < colorTable.Count)
-                    {
-                        var c = colorTable[idx];
-                        var hex = c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
-                        level.NumberingSymbolRunProperties.Color = new Color() { Val = hex };
+                        var name = (cw.Name ?? string.Empty).ToLowerInvariant();
+                        if (name == "listid" && cw.HasValue)
+                            listId = cw.Value;
+                        else if (name == "ls" && cw.HasValue)
+                            ls = cw.Value;
                     }
                 }
-                return true;
-            case "pnb": // Bullet/number is bold
-                if (cw.HasValue && cw.Value == 0)
-                {
-                    // Disabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Bold = new Bold() { Val = false };
-                }
-                else
-                {
-                    // Enabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Bold = new Bold() { Val = true };
-                }
-                return true;
-            case "pni": // Bullet/number is italic
-                if (cw.HasValue && cw.Value == 0)
-                {
-                    // Disabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Italic = new Italic() { Val = false };
-                }
-                else
-                {
-                    // Enabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Italic = new Italic() { Val = true };
-                }
-                return true;
-            case "pnul": // Bullet/number is underlined
-                SetListItemUnderline(cw, UnderlineValues.Single);
-                return true;
-            case "pnuld": // Bullet/number has dotted underline
-                SetListItemUnderline(cw, UnderlineValues.Dotted);
-                return true;
-            case "pnuldash": // Bullet/number has dashed underline
-                SetListItemUnderline(cw, UnderlineValues.Dash);
-                return true;
-            case "pnuldashd": // Bullet/number has dash-dotted underline
-                SetListItemUnderline(cw, UnderlineValues.DotDash);
-                return true;
-            case "pnuldashdd": // Bullet/number has dash-dot-dot underline
-                SetListItemUnderline(cw, UnderlineValues.DotDotDash);
-                return true;
-            case "pnulhair": // Bullet/number has hairline underline
-                SetListItemUnderline(cw, UnderlineValues.Single);
-                return true;
-            case "pnulth": // Bullet/number has thick underline
-                SetListItemUnderline(cw, UnderlineValues.Thick);
-                return true;
-            case "pnulwave": // Bullet/number has wavy underline
-                SetListItemUnderline(cw, UnderlineValues.Wave);
-                return true;
-            case "pnuldb": // Bullet/number has double underline
-                SetListItemUnderline(cw, UnderlineValues.Double);
-                return true;
-            case "pnulw": // Bullet/number has word underline
-                SetListItemUnderline(cw, UnderlineValues.Words);
-                return true;
-            case "pnulnone": // Bullet/number has no underline
-                SetListItemUnderline(cw, UnderlineValues.None);
-                return true;
-            case "pnstrike": // Bullet/number is strikethrough
-                if (cw.HasValue && cw.Value == 0)
-                {
-                    // Disabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Strike = new Strike() { Val = false };
-                }
-                else
-                {
-                    // Enabled
-                    var level = EnsureLevel();
-                    level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    level.NumberingSymbolRunProperties.Strike = new Strike() { Val = true };
-                }
-                return true;
 
-            // Set alignment on AbstractNumId --> Level --> LevelJustification
-            case "pnqc": // Centered numbering
-                EnsureLevel().LevelJustification = new LevelJustification() { Val = LevelJustificationValues.Center };
-                return true;
-            case "pnql": // Left-aligned numberings
-                EnsureLevel().LevelJustification = new LevelJustification() { Val = LevelJustificationValues.Left };
-                return true;
-            case "pnqr": // Right-justified numbering
-                EnsureLevel().LevelJustification = new LevelJustification() { Val = LevelJustificationValues.Right };
-                return true;
+                if (!listId.HasValue || !ls.HasValue)
+                    continue;
 
-            default: 
-                // Map \pndec, \pnucltr, \pnlcltr, ... to Open XML NumberFormatValues
-                if (name.StartsWith("pn") && RtfNumberFormatMapper.GetNumberFormat(name) is NumberFormatValues numberFormat)
+                // Resolve abstract num id from earlier parsed listtable
+                if (!rtfListTableMap.TryGetValue(listId.Value, out var abstractNumId))
+                    continue;
+
+                // Create a NumberingInstance linked to the abstractNumId
+                var numberingInstance = numbering.AddNumberingInstance(abstractNumId);
+
+                // Map RTF \ls value to the created numbering instance id
+                if (numberingInstance.NumberID != null)
                 {
-                    var level = EnsureLevel();
-                    // Set numbering format for the level
-                    level.NumberingFormat = new NumberingFormat() { Val = numberFormat };
+                    rtfListOverrideMap[ls.Value] = numberingInstance.NumberID.Value;
+                }
 
-                    // If the format is NumberFormatValues.Bullet or NumberFormatValues.None, remove "%1" from the level text.
-                    // (it may have been already inserted if \pntxta or \pntxtb is found before the numbering format is determined). 
-                    var text = level.GetLevelText();
-                    if (numberFormat == NumberFormatValues.Bullet || numberFormat == NumberFormatValues.None)
+                // Parse level overrides (\lfolevel groups) inside this listoverride
+                foreach (var inner in ovGroup.Tokens)
+                {
+                    if (inner is RtfDestination lfo && string.Equals(lfo.Name, "lfolevel", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (text.Contains("%1"))
-                            level.SetLevelText(text.Replace("%1", ""));
+                        // Create a LevelOverride attached to the numbering instance
+                        var levelOverride = numberingInstance.AddLevelOverride();
+                        var targetLevel = levelOverride.Level; // the Level child inside the override
+
+                        if (targetLevel == null)
+                            continue;
+
+                        // Inspect tokens inside \lfolevel
+                        foreach (var it in lfo.Tokens)
+                        {
+                            if (it is RtfControlWord icw && icw.Name != null)
+                            {
+                                var iname = icw.Name.ToLowerInvariant();
+                                if (string.Equals(iname, "listoverridestartat", StringComparison.OrdinalIgnoreCase) && icw.HasValue)
+                                {
+                                    levelOverride.StartOverrideNumberingValue = new StartOverrideNumberingValue() { Val = icw.Value!.Value };
+                                }
+                                // Other simple overrides could be handled here if present
+                            }
+                            else if (it is RtfDestination g && string.Equals(g.Name, "listlevel", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Parse the level definition
+                                ProcessLevel(g, ref targetLevel);
+                            }
+                        }
                     }
-                    else if (text == string.Empty)
-                        // Otherwise if the the number format is not bullet/none (the list is numbered), 
-                        // and the level text has not been set (\pntxta or \pntxtb have not been found yet), 
-                        // set the level text to %1 (it will be replaced by the actual number by word processors).
-                        level.SetLevelText("%1");
+                }
+            }
+        }
+    }
+
+    private void ProcessLevel(RtfDestination dest, ref Level level)
+    {
+        var previousBorder = currentBorder;
+        currentBorder = null;
+        var levelParaPr = new ParagraphProperties();
+        var tempState = new FormattingState();
+
+        foreach (var lt in dest.Tokens)
+        {
+            if (lt is RtfControlWord lcw && lcw.Name != null)
+            {
+                var name = lcw.Name.ToLowerInvariant();
+                switch(name)
+                {
+                    case "levelnfc":
+                    case "levelnfcn":
+                        var format = RtfNumberFormatMapper.GetNumberFormat(name);
+                        if (format != null)
+                            level.NumberingFormat = new NumberingFormat() { Val = format };
+                        break;
+                    case "levelstartat":
+                        level.StartNumberingValue = new StartNumberingValue() { Val = lcw.Value!.Value }; break;
+                    case "levelfollow":
+                        if (lcw.HasValue && lcw.Value == 0)
+                            level.LevelSuffix = new LevelSuffix() { Val = LevelSuffixValues.Tab };
+                        else if (lcw.HasValue && lcw.Value == 1)
+                            level.LevelSuffix = new LevelSuffix() { Val = LevelSuffixValues.Space };
+                        else 
+                            level.LevelSuffix = new LevelSuffix() { Val = LevelSuffixValues.Nothing };                            
+                        break;
+                    case "leveljcn":
+                        if (lcw.HasValue)
+                        {
+                            if (lcw.Value == 0) level.LevelJustification = new LevelJustification() { Val = LevelJustificationValues.Left };
+                            else if (lcw.Value == 1) level.LevelJustification = new LevelJustification() { Val = LevelJustificationValues.Center };
+                            else if (lcw.Value == 2) level.LevelJustification = new LevelJustification() { Val = LevelJustificationValues.Right };
+                        }
+                        break;
+                    case "levelpicture":
+                        level.LevelPictureBulletId = new LevelPictureBulletId() { Val = lcw.Value!.Value }; break;
+                    case "lvltentative":
+                        if (lcw.HasValue && lcw.Value!.Value == 1) 
+                            level.Tentative = true; 
+                        break;
+                    default: 
+                        if (ProcessRunControlWord(lcw, tempState))
+                        {
+                            break;
+                        }
+                        if (ProcessParagraphControlWord(lcw, levelParaPr))
+                        {
+                            break;
+                        }
+                        break;
+                }
+            }            
+            else if (lt is RtfDestination dest2 && dest2.Name != null)
+            {
+                var dname = dest2.Name.ToLowerInvariant();
+                if (dname == "leveltext")
+                {
+                    var sb = new StringBuilder();
                     
-                    return true;
-                }
-                break;
-        }
-        return false;
-    }
+                    bool firstCharFound = false;
 
-    private void SetListItemUnderline(RtfControlWord cw, UnderlineValues underlineValue)
-    {
-        var level = EnsureLevel();
-        level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-        if (cw.HasValue && cw.Value == 0)
-        {
-            // Disabled
-            level.NumberingSymbolRunProperties.Underline = new Underline() { Val = UnderlineValues.None };
+                    var enc = codePageEncoding ?? DefaultEncoding;
+                    int uc = TryPeek(fmtStack).Uc;
+                    int toBeSkipped = 0;
+                    foreach (var t in dest2.Tokens)
+                    {
+                        if (t is RtfChar rc)
+                        {
+                            if (!firstCharFound)
+                            {
+                                // Skip initial length byte
+                                firstCharFound = true;
+                                continue;
+                            }
+                            byte b = rc.CharCode;
+                            if (b < 0x20)
+                            {
+                                // placeholder for level number: rtf value = levelIndex (0-based)
+                                sb.Append("%" + (b + 1).ToString());
+                            }
+                            else
+                            {
+                                sb.Append(enc.GetString(new byte[] { b }));
+                            }
+                        }
+                        else if (t is RtfText txt)
+                        {
+                            if (toBeSkipped > 0 && txt.Text != null && txt.Text.Length > 0)
+                                sb.Append(txt.Text.Skip(toBeSkipped).ToArray());
+                            else 
+                                sb.Append(txt.Text ?? string.Empty);
+                            toBeSkipped = 0;
+                        }
+                        else if (t is RtfControlWord levelTextCw)
+                        {
+                            if (string.Equals(levelTextCw.Name, "uc", StringComparison.OrdinalIgnoreCase))
+                            {
+                                uc = levelTextCw.HasValue ? levelTextCw.Value!.Value : 1;
+                            }
+                            else if (string.Equals(levelTextCw.Name, "u", StringComparison.OrdinalIgnoreCase) && levelTextCw.HasValue)
+                            {
+                                int charCode = levelTextCw.Value!.Value;
+                                if (charCode < 0)
+                                {
+                                    // Unicode values greater than 32767 are expressed as negative numbers.
+                                    // For example, U+F020 would be \u-4064 in RTF: 
+                                    // sum 65536 to get 61472.
+                                    charCode += 65536;
+                                }
+                                string s = char.ConvertFromUtf32(charCode);
+                                sb.Append(s);
+                                toBeSkipped = uc;
+                            }
+                        }
+                    }
+                    level.LevelText = new LevelText() { Val = sb.ToString().TrimEnd(";") };
+                }                               
+            }
         }
-        else
-        {
-            // Enabled
-            level.NumberingSymbolRunProperties.Underline = new Underline() { Val = underlineValue };
-        }
+    
+        currentBorder = previousBorder;
+
+        // Note: we can't cast ParagraphProperties to PreviousParagraphProperties, 
+        // but adding them directly should work as they have the same XML name and structure.
+        if (levelParaPr.HasChildren)
+            level.Append(levelParaPr);
+
+        var generatedRun = CreateRunWithProperties(tempState);
+        var rp = generatedRun.GetFirstChild<RunProperties>();
+        if (rp != null && rp.HasChildren)
+            // Note: we can't cast RunProperties to NumberingSymbolRunProperties, 
+            // but adding them directly should work as they have the same XML name and structure.
+            level.Append(rp.CloneNode(true));
     }
 }

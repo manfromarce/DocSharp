@@ -461,6 +461,22 @@ public static class ListHelpers
         return element?.GetMainDocumentPart()?.GetOrCreateNumbering();
     }
 
+    public static NumberingDefinitionsPart GetOrCreateNumberingPart(this WordprocessingDocument document)
+    {
+        var mainPart = document.MainDocumentPart ?? document.AddMainDocumentPart();
+        return mainPart.GetOrCreateNumberingPart();
+    }
+
+    public static NumberingDefinitionsPart GetOrCreateNumberingPart(this MainDocumentPart mainPart)
+    {
+        return mainPart.NumberingDefinitionsPart ?? mainPart.AddNewPart<NumberingDefinitionsPart>();
+    }
+
+    public static NumberingDefinitionsPart? GetOrCreateNumberingPart(this OpenXmlElement element)
+    {
+        return element?.GetMainDocumentPart()?.GetOrCreateNumberingPart();
+    }
+
     internal static void PrependLevelText(this Level level, string val)
     {
         level.LevelText ??= new LevelText();

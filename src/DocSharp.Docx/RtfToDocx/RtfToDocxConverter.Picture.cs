@@ -23,9 +23,8 @@ namespace DocSharp.Docx;
 
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
-    private void ProcessPicture(RtfDestination picture)
+    private T? ProcessPicture<T>(RtfDestination picture, bool isPictureBullet = false) where T : OpenXmlElement, new()
     {
-        var pict = new Picture();
         double? widthInPoints = 0;
         double? heightInPoints = 0;
         PartTypeInfo? imagePartType = null;
@@ -77,24 +76,41 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 data = hexData.Data;
             }
         }
+        
         if (widthInPoints == null || widthInPoints == 0 || heightInPoints == null || heightInPoints == 0 || imagePartType == null || data == null || data.LongLength == 0)
-            return;
+            return null;
 
+        var pict = new T();
         var shape = new V.Shape()
         {
             Style = $"width:{widthInPoints.Value.ToStringInvariant()}pt;height:{heightInPoints.Value.ToStringInvariant()}pt;visibility:visible;",
-            Stroked = false
         };
-        var imgPart = mainPart.AddImagePart(imagePartType.Value);
+        if (isPictureBullet)
+            shape.Bullet = true;
+        
+        ImagePart imgPart;
+        OpenXmlPart rootPart;
+        if (isPictureBullet)
+        {
+            var numberingPart = mainPart.GetOrCreateNumberingPart();
+            imgPart = numberingPart.AddImagePart(imagePartType.Value);
+            rootPart = numberingPart;
+        }
+        else
+        {
+            imgPart = mainPart.AddImagePart(imagePartType.Value);
+            rootPart = mainPart;
+        }
         using (var ms = new MemoryStream(data))
         {
             ms.Position = 0;
             imgPart.FeedData(ms);
         }
-        var rId = mainPart.GetIdOfPart(imgPart);
-        var imgData = new V.ImageData() { RelationshipId = rId };
+        var rId = rootPart.GetIdOfPart(imgPart);
+        var imgData = new V.ImageData() { RelationshipId = rId, Title = string.Empty };
         shape.Append(imgData);
         pict.Append(shape);
-        AddRun().Append(pict);
+        
+        return pict;
     }
 }

@@ -23,7 +23,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private OpenXmlElement container;
     private DocumentSettingsPart? settingsPart;
     private StyleDefinitionsPart? stylesPart;
-    private NumberingDefinitionsPart? numberingDefinitionsPart;
 
     private Dictionary<int, string> fontTable = new();
     private List<(int R, int G, int B)> colorTable = new();
@@ -85,6 +84,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         fontTable = new();
         colorTable = new();
         bookmarks = new();
+        rtfListTableMap = new();
+        rtfListOverrideMap = new();
         codePageEncoding = null;
         defaultFontIndex = null;
         currentBorder = null;
@@ -100,7 +101,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
         settingsPart = mainPart.DocumentSettingsPart;
         stylesPart = mainPart.StyleDefinitionsPart;
-        numberingDefinitionsPart = mainPart.NumberingDefinitionsPart;
 
         mainPart.Document ??= new Document();
         mainPart.Document.Body = new Body();
@@ -182,11 +182,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         }
                         else if (dname == "listtable")
                         {
-                            // TODO: lists
+                            ParseListTable(destination);
                             continue;
                         }
                         else if (dname == "listoverridetable")
                         {
+                            ParseListOverrideTable(destination);
                             continue;
                         }
                         else if (dname == "stylesheet")
@@ -313,7 +314,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             docDefaults.RunPropertiesDefault.RunPropertiesBaseStyle?.Remove();
                             var generatedRun = CreateRunWithProperties(tempState);
                             var rp = generatedRun.GetFirstChild<RunProperties>();
-                            if (rp != null)
+                            if (rp != null && rp.HasChildren)
                                 // Note: we can't cast RunProperties to RunPropertiesBaseStyle, 
                                 // but adding them directly should work as they have the same XML name and structure
                                 docDefaults.RunPropertiesDefault.Append(rp.CloneNode(true));
@@ -322,7 +323,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         else if (dname == "defpap")
                         {
                             // Parse default paragraph properties and map them to Styles/DocDefaults -> ParagraphPropertiesDefault
-                            
                             var previousBorder = currentBorder;
                             currentBorder = null;
                             var defaultPr = new ParagraphProperties();
@@ -335,16 +335,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             }
                             currentBorder = previousBorder;
 
-                            stylesPart ??= mainPart.StyleDefinitionsPart;
-                            stylesPart ??= mainPart.AddNewPart<StyleDefinitionsPart>();
-                            stylesPart.Styles ??= new Styles();
-                            var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
+                            if (defaultPr.HasChildren)
+                            {
+                                stylesPart ??= mainPart.StyleDefinitionsPart;
+                                stylesPart ??= mainPart.AddNewPart<StyleDefinitionsPart>();
+                                stylesPart.Styles ??= new Styles();
+                                var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
 
-                            docDefaults.ParagraphPropertiesDefault ??= new ParagraphPropertiesDefault();
-                            docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle?.Remove();
-                            // Note: we can't cast ParagraphProperties to ParagraphPropertiesBaseStyle, 
-                            // but adding them directly should work as they have the same XML name and structure
-                            docDefaults.ParagraphPropertiesDefault.Append(defaultPr);
+                                docDefaults.ParagraphPropertiesDefault ??= new ParagraphPropertiesDefault();
+                                docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle?.Remove();
+                                // Note: we can't cast ParagraphProperties to ParagraphPropertiesBaseStyle, 
+                                // but adding them directly should work as they have the same XML name and structure
+                                docDefaults.ParagraphPropertiesDefault.Append(defaultPr);
+                            }
                             continue;
                         }
                         else if (dname == "field")
@@ -495,7 +498,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         {
                             // Handle as regular group
                             // (retrieve essential control words for image format and dimensions)
-                            ProcessPicture(destination);
+                            var pict = ProcessPicture<Picture>(destination);
+                            if (pict != null)
+                                AddRun().Append(pict);
                             continue;
                         }
                         else if (dname == "nonshppict")
@@ -517,6 +522,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                                 // Sets the default numbering style for each corresponding \pnlvlN control word within the section.
                                 // Ignored for now.
                             }
+                            continue;
                         }
                         else if (dname == "pntxta")
                         {
@@ -552,9 +558,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                                 level.PrependLevelText(builder.ToString());
                             continue;
                         }
-                        else if (dname == "pntext")
+                        else if (dname == "pntext" || dname == "listtext")
                         {
-                            // Ignore, emitted for compatibility with older RTF readers only
+                            // Ignore, emitted for compatibility with RTF readers that don't understand lists
                             continue;
                         }
 
@@ -707,20 +713,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "uc":
                 // Number of ANSI characters to skip after a following \uN control word
                 if (cw.HasValue)
-                {
-                    try
-                    {
-                        runState.Uc = Math.Max(0, cw.Value!.Value);
-                    }
-                    catch
-                    {
-                        runState.Uc = 1;
-                    }
-                }
+                    runState.Uc = Math.Max(0, cw.Value!.Value);
                 else
-                {
                     runState.Uc = 1;
-                }
                 break;
             case "u":
                 if (cw.HasValue)

@@ -54,20 +54,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "uc":
                 // Number of ANSI characters to skip after a following \uN control word
                 if (cw.HasValue)
-                {
-                    try
-                    {
-                        runState.Uc = Math.Max(0, cw.Value!.Value);
-                    }
-                    catch
-                    {
-                        runState.Uc = 1;
-                    }
-                }
+                    runState.Uc = Math.Max(0, cw.Value!.Value);
                 else
-                {
                     runState.Uc = 1;
-                }
                 break;
             case "u":
                 if (cw.HasValue)

@@ -99,11 +99,11 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Paragraph positioning / frame properties / drop cap
 - ❌ Paragraph group formatting
 - ❌ Styles (however the formatting is usually written inline in RTF for compatibility reasons, even if there is an associated style too)  
-- ❌ Lists
+- 🟡 Lists (note: there are still issues that need to be resolved)
 - ❌ Tables
 - 🟡 Section properties
 - 🟡 Default section properties / document-level formatting and settings
-- 🟡 Fields (supported but additional work may be needed for some complex fields or form fields)
+- 🟡 Fields (supported but additional work is needed for some complex fields and form fields)
 - ✅ Hyperlinks (fields in RTF)
 - ✅ Bookmarks
 - ✅ Special characters (symbols, page number, section number, current date/time)
