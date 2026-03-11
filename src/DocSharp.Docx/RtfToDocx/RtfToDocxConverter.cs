@@ -109,6 +109,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         var rtfDocument = RtfReader.ReadRtf(input);
         ConvertGroup(rtfDocument.Root);
 
+        // Remove undesired additional list item in some cases
+        if (mainPart.Document.Body.LastChild is Paragraph p && p.IsEmpty())
+            p.Remove();
+
         if (currentSectPr != null)
         {
             // currentSectPr is not null if at least a section formatting control word was found 

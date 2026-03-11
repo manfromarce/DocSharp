@@ -201,28 +201,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     }
                 }
                 return true;
-            case "cbpat":
-            case "cfpat":
-                if (cw.Value != null)
-                {
-                    if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
-                    {
-                        var c = colorTable[cw.Value.Value];
-                        var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
-                        currentParagraphPr.Shading ??= new Shading();
-                        if (name == "cfpat")
-                        {
-                            currentParagraphPr.Shading.Color = hex;
-                            if (currentParagraphPr.Shading.Val == null)
-                                currentParagraphPr.Shading.Val = ShadingPatternValues.Clear;
-                        }
-                        else if (name == "cbpat")
-                        {
-                            currentParagraphPr.Shading.Fill = hex;
-                        }
-                    }
-                }
-                return true;
             // case "cb": // Not supported by Word, use chcbpat to specify background color
             //     return true;
             case "cf":

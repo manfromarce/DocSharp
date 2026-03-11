@@ -22,7 +22,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     {
         if (currentParagraph == null)
         {
-            currentParagraph = CreateParagraphWithProperties(currentParagraphPr);
+            // avoid adding two empty paragraphs (if currentParagraph is null, then currentParagraphPr is also null)
+            currentParagraph = new Paragraph(); 
             container.Append(currentParagraph);
             currentRun = null;
         }
@@ -30,9 +31,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
     private void AddParagraph()
     {
-        currentParagraph = CreateParagraphWithProperties(currentParagraphPr);
-        container.Append(currentParagraph);
-        currentRun = null;
+        if (currentParagraph == null)
+        {
+            // avoid adding two empty paragraphs (if currentParagraph is null, then currentParagraphPr is also null)
+            currentParagraph = new Paragraph(); 
+            container.Append(currentParagraph);
+            currentRun = null;
+        }
+        else 
+        {
+            currentParagraph = CreateParagraphWithProperties(currentParagraphPr);
+            container.Append(currentParagraph);
+            currentRun = null;
+        }
     }
 
     private Paragraph CreateParagraphWithProperties(ParagraphProperties pPr)
@@ -92,6 +103,28 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
             // case "box":
             //     return true;
+            case "cbpat":
+            case "cfpat":
+                if (cw.Value != null)
+                {
+                    if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
+                    {
+                        var c = colorTable[cw.Value.Value];
+                        var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
+                        targetProperties.Shading ??= new Shading();
+                        if (name == "cfpat")
+                        {
+                            targetProperties.Shading.Color = hex;
+                            if (targetProperties.Shading.Val == null)
+                                targetProperties.Shading.Val = ShadingPatternValues.Clear;
+                        }
+                        else if (name == "cbpat")
+                        {
+                            targetProperties.Shading.Fill = hex;
+                        }
+                    }
+                }
+                return true;
             case "contextualspace":
                 targetProperties.ContextualSpacing = new ContextualSpacing();
                 return true;
