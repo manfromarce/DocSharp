@@ -19,7 +19,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="3.119.2" />
-    <PackageReference Include="Svg.Skia" Version="3.4.1" />
+    <PackageReference Include="Svg.Skia" Version="3.7.0" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" />
     <PackageReference Include="CoreJ2K.Skia" Version="2.1.2.38" />
     <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
