@@ -20,6 +20,24 @@ namespace DocSharp.Docx;
 
 public static class OpenXmlHelpers
 {
+    public static Body EnsureBody(this WordprocessingDocument wordprocessingDocument)
+    {
+        var mainPart = wordprocessingDocument.MainDocumentPart ?? wordprocessingDocument.AddMainDocumentPart();
+        return mainPart.EnsureBody();
+    }
+
+    public static Body EnsureBody(this MainDocumentPart mainDocumentPart)
+    {
+        mainDocumentPart.Document ??= new Document();
+        return mainDocumentPart.Document.EnsureBody();
+    }
+
+    public static Body EnsureBody(this Document document)
+    {
+        document.Body ??= new Body();
+        return document.Body;
+    }
+
     public static T? FirstOrDefault<T>(this OpenXmlElement element, Func<T, bool> condition) where T : OpenXmlElement
     {
         return element.Elements<T>().FirstOrDefault(condition);
