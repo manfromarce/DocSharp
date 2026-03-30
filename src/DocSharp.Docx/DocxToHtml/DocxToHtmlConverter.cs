@@ -73,6 +73,11 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     /// </summary>
     public bool ExportFootnotesEndnotes { get; set; } = true;
 
+    /// <summary>
+    /// Used to map DOCX styles by name. The default <see cref="DefaultStyleNamingResolver"/> can be overriden to customize style mappings.
+    /// </summary>
+    public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
+
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
         sb.WriteHtmlHeader(document.MainDocumentPart?.OpenXmlPackage.PackageProperties.Title);

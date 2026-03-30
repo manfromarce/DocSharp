@@ -1,9 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DocSharp.Helpers;
 using DocSharp.Writers;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -19,42 +15,34 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>();
         var styleName = paragraph.GetStyleName();
 
-        if (styleName != null)
+        // Check if the style can be mapped to heading, quote block or code block.
+        if (StyleNamingResolver.TryGetStyleType(styleName, out var styleType))
         {
-            // Check if the style can be mapped to heading, quote block or code block.
-            switch (styleName.ToLowerInvariant())
+            switch (styleType)
             {
-                case "heading 1":
-                case "heading1":
-                case "title":
+                case StyleType.Header1:
                     tag = "h1";
                     break;
-                case "heading 2":
-                case "heading2":
-                case "subtitle":
+                case StyleType.Header2:
                     tag = "h2";
                     break;
-                case "heading 3":
-                case "heading3":
+                case StyleType.Header3:
                     tag = "h3";
                     break;
-                case "heading 4":
-                case "heading4":
+                case StyleType.Header4:
                     tag = "h4";
                     break;
-                case "heading 5":
-                case "heading5":
+                case StyleType.Header5:
                     tag = "h5";
                     break;
-                case "heading 6":
-                case "heading6":
+                case StyleType.Header6:
                     tag = "h6";
                     break;
-                case "quote":
-                case "intense quote":
+                case StyleType.Quote:
+                case StyleType.IntenseQuote:
                     tag = "blockquote";
                     break;
-                case "html preformatted": // This style is created by Microsoft Word when an HTML file is saved as DOCX
+                case StyleType.HtmlPreformatted: // This style is created by Microsoft Word when an HTML file is saved as DOCX
                     tag = "pre";
                     break;
             }
@@ -88,7 +76,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         //    var direction = paragraph.GetEffectiveProperty<TextDirection>() ?? 
         //                    cell.GetEffectiveProperty<TextDirection>();
         //    // Direction is not applied to regular paragraphs in DOCX but only in table cells and text boxes
-       
+
         if (alignment != null)
         {
             if (alignment == JustificationValues.Left || alignment == JustificationValues.Start)
@@ -121,7 +109,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
         if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
             ProcessBorder(topBorder, MapParagraphBorderAttribute(topBorder), ref styles);
-        
+
         if (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder)
             ProcessBorder(bottomBorder, MapParagraphBorderAttribute(bottomBorder), ref styles);
         // In the current implementation both BottomBorder and BetweenBorder are mapped to border-bottom in HTML,
