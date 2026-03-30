@@ -81,6 +81,11 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     /// </summary>
     public bool ExportFootnotesEndnotes { get; set; } = true;
 
+    /// <summary>
+    /// Used to map DOCX styles by name. The default <see cref="DefaultStyleNamingResolver"/> can be overriden to customize style mappings.
+    /// </summary>
+    public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
+
     private bool isInEmphasis = false;
     private bool isAllCaps = false;
     private bool isInCodeBlockParagraph = false;
@@ -106,9 +111,9 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         base.ProcessSection(section, mainPart, writer);
 
         // Add horizontal rule between sections
-        if (section != Sections[Sections.Count - 1]) 
+        if (section != Sections[Sections.Count - 1])
         {
-            writer.WriteHorizontalLine();        
+            writer.WriteHorizontalLine();
         }
     }
 
@@ -133,42 +138,34 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         bool isCode = false;
 
         var styleName = paragraph.GetStyleName();
-        if (styleName != null)
+        // Check if the style can be mapped to heading, quote block or code block.
+        if (StyleNamingResolver.TryGetStyleType(styleName, out var styleType))
         {
-            // Check if the style can be mapped to heading, quote block or code block.
-            switch (styleName.ToLowerInvariant())
+            switch (styleType)
             {
-                case "heading 1":
-                case "heading1":
-                case "title":
+                case StyleType.Header1:
                     sb.Write("# ");
                     break;
-                case "heading 2":
-                case "heading2":
-                case "subtitle":
+                case StyleType.Header2:
                     sb.Write("## ");
                     break;
-                case "heading 3":
-                case "heading3":
+                case StyleType.Header3:
                     sb.Write("### ");
                     break;
-                case "heading 4":
-                case "heading4":
+                case StyleType.Header4:
                     sb.Write("#### ");
                     break;
-                case "heading 5":
-                case "heading5":
+                case StyleType.Header5:
                     sb.Write("##### ");
                     break;
-                case "heading 6":
-                case "heading6":
+                case StyleType.Header6:
                     sb.Write("###### ");
                     break;
-                case "quote":
-                case "intense quote":
+                case StyleType.Quote:
+                case StyleType.IntenseQuote:
                     sb.Write("> ");
                     break;
-                case "html preformatted": // This style is created by Microsoft Word when an HTML file is saved as DOCX
+                case StyleType.HtmlPreformatted:
                     isCode = true;
                     break;
             }
@@ -264,7 +261,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     }
                     else
                     {
-                        int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ?? 
+                        int startNumber = levelOverride?.StartOverrideNumberingValue?.Val ??
                                           levelOverrideLevel?.StartNumberingValue?.Val ??
                                           level.StartNumberingValue?.Val ?? 1;
                         sb.Write($"{startNumber}. "); // Markdown renderers will automatically increase the number.
@@ -280,7 +277,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         {
             return;
         }
-        
+
         var text = run.GetFirstChild<Text>();
         bool hasText = text != null && !string.IsNullOrEmpty(text.InnerText);
         if (hasText && text!.InnerText.All(char.IsWhiteSpace))
@@ -309,7 +306,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             isBold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run) is Bold b && (b.Val is null || b.Val);
             isItalic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run) is Italic i && (i.Val is null || i.Val);
 
-            isUnderline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run) is Underline u && 
+            isUnderline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run) is Underline u &&
                           u.Val != null && u.Val != UnderlineValues.None;
 
             isStrikethrough = (OpenXmlHelpers.GetEffectiveProperty<DoubleStrike>(run) is DoubleStrike ds &&
@@ -359,11 +356,11 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         // Check if the style should be mapped to an inline code element
         var styleName = run.GetStyleName();
         bool isCode = false;
-        if ((styleName != null && styleName.Equals("html code", StringComparison.OrdinalIgnoreCase)) || 
-            (CodeFontFamilies != null && 
-             run.GetEffectiveProperty<RunFonts>() is RunFonts rf && rf?.Ascii?.Value != null && 
+        if ((styleName != null && styleName.Equals("html code", StringComparison.OrdinalIgnoreCase)) ||
+            (CodeFontFamilies != null &&
+             run.GetEffectiveProperty<RunFonts>() is RunFonts rf && rf?.Ascii?.Value != null &&
              CodeFontFamilies.Contains(rf.Ascii.Value)))
-             // (the "HTML Code" style is created by Microsoft Word when an HTML file is saved as DOCX)
+        // (the "HTML Code" style is created by Microsoft Word when an HTML file is saved as DOCX)
         {
             isCode = true;
         }
@@ -447,7 +444,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             {
                 sb.WriteLine();
             }
-            else 
+            else
             {
                 sb.Write("<br>");
                 // (avoid standard soft break with two trailing spaces as it causes issues in lists and tables)
@@ -486,7 +483,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         EnsureEmptyLine(sb);
 
         int rowIndex = 0;
-        foreach(var element in table.Elements())
+        foreach (var element in table.Elements())
         {
             switch (element)
             {
@@ -524,7 +521,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 case TableCell cell:
                     ProcessCell(cell, sb);
                     ++currentCellCount;
-                    if (currentCellCount < maxCellsCount && 
+                    if (currentCellCount < maxCellsCount &&
                         cell.TableCellProperties?.GridSpan?.Val != null)
                     {
                         // Markdown does not support merged cells, add another empty cell for consistency.
@@ -589,11 +586,11 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     {
         if (isAnchor)
             target = "#" + target;
-        else 
+        else
             // Microsoft Word already escapes spaces, but other DOCX writers may not do it, 
             // causing the link not to be recognized properly by some Markdown processors.
             target = target.Replace(" ", "%20");
-        
+
         sb.Write($"[{displayText}]({target}");
         if (!string.IsNullOrWhiteSpace(tooltip))
         {
@@ -613,7 +610,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 string? tooltip = drawing.Inline.DocProperties?.HyperlinkOnClick?.Tooltip?.Value;
 
                 var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
-                if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip && 
+                if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
                     svgBlip.Embed?.Value is string svgRelId)
                 {
                     // Prefer the actual SVG image as web browsers can display it.
@@ -651,7 +648,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 ImagesOutputFolder = ImagesOutputFolder!.ReplaceAll(['/', '\\'], Path.DirectorySeparatorChar);
                 if (!ImagesOutputFolder.EndsWith(Path.DirectorySeparatorChar))
                     ImagesOutputFolder += Path.DirectorySeparatorChar;
-                
+
                 // Try to create the output directory if it doesn't exist.
                 if (!Directory.Exists(ImagesOutputFolder))
                     Directory.CreateDirectory(ImagesOutputFolder);
@@ -697,16 +694,16 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 catch (Exception ex)
                 {
                     // Image retrieval failed (probably format is not supported by the image converter, or the output directory is not writeable).
-                    #if DEBUG
-                        Debug.WriteLine("ProcessImagePart error: " + ex.Message);
-                    #endif
+#if DEBUG
+                    Debug.WriteLine("ProcessImagePart error: " + ex.Message);
+#endif
 
                     // Delete the image file and don't add a reference to it in Markdown.
                     if (File.Exists(actualFilePath))
                         File.Delete(actualFilePath);
                     return;
                 }
-                
+
                 if (File.Exists(actualFilePath))
                 {
                     Uri uri;
@@ -716,18 +713,18 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     }
                     else
                     {
-                        string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);                        
+                        string baseUri = UriHelpers.NormalizeBaseUri(ImagesBaseUriOverride);
                         uri = new Uri(baseUri + fileName, UriKind.RelativeOrAbsolute);
                     }
                     EnsureWhiteSpace(sb);
-                    
-                    if (hyperlinkId != null && 
+
+                    if (hyperlinkId != null &&
                         (rootPart.OpenXmlPackage as WordprocessingDocument)?.MainDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
                     {
                         // Image with hyperlink
                         WriteHyperlink($"![{relId}]({uri.ToString().Replace(" ", "%20")})", relationship.Uri.OriginalString, false, hyperlinkTooltip, sb);
                     }
-                    else 
+                    else
                     {
                         // Regular image
                         sb.Write($"![{relId}]({uri.ToString().Replace(" ", "%20")})");
@@ -738,9 +735,9 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         catch (Exception ex)
         {
             // Other generic error during image retrieval, don't stop the whole conversion.
-            #if DEBUG
-                Debug.WriteLine("ProcessImagePart error: " + ex.Message);
-            #endif
+#if DEBUG
+            Debug.WriteLine("ProcessImagePart error: " + ex.Message);
+#endif
         }
     }
 
@@ -773,7 +770,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 htmlEntity = $"&#{decimalValue};";
             }
             sb.Write(htmlEntity);
-        }        
+        }
     }
 
     internal override void ProcessMathElement(OpenXmlElement element, MarkdownStringWriter sb)
@@ -784,7 +781,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 // TODO: Ensure blank line before ?
                 foreach (var subElement in oMathPara.Elements())
                 {
-                    if (subElement is M.OfficeMath || 
+                    if (subElement is M.OfficeMath ||
                         subElement is M.Run)
                     {
                         ProcessMathElement(subElement, sb);
@@ -825,7 +822,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 #endif
                 }
                 if (!string.IsNullOrWhiteSpace(latex))
-                { 
+                {
                     sb.Write($" $` {latex} `$ ");
                 }
                 if (element.LastChild != null && !element.LastChild.IsMathElement())
