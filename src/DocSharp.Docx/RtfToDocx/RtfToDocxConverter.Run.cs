@@ -24,7 +24,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (currentRun == null)
         {
             currentRun = CreateRunWithProperties(TryPeek(fmtStack));
-            currentParagraph!.Append(currentRun);
+            pendingParagraph!.Append(currentRun);
         }
         return currentRun;
     }
@@ -33,7 +33,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     {
         EnsureParagraph();
         currentRun = CreateRunWithProperties(TryPeek(fmtStack));
-        currentParagraph!.Append(currentRun);
+        pendingParagraph!.Append(currentRun);
         return currentRun;
     }
 

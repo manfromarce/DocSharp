@@ -20,7 +20,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 {
     private WordprocessingDocument package;
     private MainDocumentPart mainPart;
-    private OpenXmlElement container;
+    private Stack<OpenXmlElement> containers = new();
+    private OpenXmlElement? container
+    {
+        get
+        {
+            return containers.Count > 0 ? containers.Peek() : null;
+        }
+    }
     private DocumentSettingsPart? settingsPart;
     private StyleDefinitionsPart? stylesPart;
 
@@ -34,18 +41,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private SectionProperties? defaultSectPr;
     private SectionProperties? currentSectPr;
     private BorderType? currentBorder;
-    private Paragraph? currentParagraph = null;
-    private ParagraphProperties currentParagraphPr
+    private Paragraph? pendingParagraph = null;
+    private ParagraphState paragraphState = new ParagraphState();
+    private ParagraphProperties pendingParagraphPr
     {
         get
         {
-            if (currentParagraph == null)
-            {
-                currentParagraph = new Paragraph();
-                container.Append(currentParagraph);
-            }
-            currentParagraph.ParagraphProperties ??= new ParagraphProperties();
-            return currentParagraph.ParagraphProperties;
+            paragraphState.ParagraphProperties ??= new ParagraphProperties();
+            return paragraphState.ParagraphProperties;
         }
     }
     private Level? currentLevel = new();
@@ -82,20 +85,33 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     public void BuildDocx(TextReader input, WordprocessingDocument targetDocument)
     {        
         fontTable = new();
-        colorTable = new();
+        defaultFontIndex = null;
+
+        colorTable = new();        
         bookmarks = new();
+        codePageEncoding = null;
+        currentBorder = null;
+        currentRun = null;
+        pendingFootnoteEndnoteRef = false;
+
         rtfListTableMap = new();
         rtfListOverrideMap = new();
-        codePageEncoding = null;
-        defaultFontIndex = null;
-        currentBorder = null;
+        currentLevel = null;
+
         defaultSectPr = null;
         currentSectPr = null;
-        currentParagraph = null;
-        currentRun = null;
-        currentLevel = null;
-        pendingFootnoteEndnoteRef = false;
+
+        pendingParagraph = null;
+        paragraphState = new ParagraphState();
+
+        pendingTableRow = null;
+        currentTableRowExceptions = null;
+        currentRowProperties = null;
+        cellx = 0;
+        cellIndex = 0;
+
         fmtStack.Clear();
+        containers.Clear();
 
         package = targetDocument;
         mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
@@ -104,14 +120,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
         mainPart.Document ??= new Document();
         mainPart.Document.Body = new Body();
-        container = mainPart.Document.Body;
+        containers.Push(mainPart.Document.Body);
 
         var rtfDocument = RtfReader.ReadRtf(input);
         ConvertGroup(rtfDocument.Root);
 
-        // Remove undesired additional list item in some cases
-        if (mainPart.Document.Body.LastChild is Paragraph p && p.IsEmpty())
-            p.Remove();
+        // Flush any pending paragraph not terminated by \par
+        if (pendingParagraph != null)
+            AddParagraph();
 
         if (currentSectPr != null)
         {
@@ -264,7 +280,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             var bookmarkNameBuilder = new StringBuilder();
                             ConvertGroupAsText(subGroup, bookmarkNameBuilder);
                             string bookmarkName = bookmarkNameBuilder.ToString();
-                            currentParagraph!.AppendChild(new BookmarkStart() { Id = bookmarks.Count.ToStringInvariant(), Name = bookmarkName });                            
+                            pendingParagraph!.AppendChild(new BookmarkStart() { Id = bookmarks.Count.ToStringInvariant(), Name = bookmarkName });                            
                             bookmarks.Add(bookmarkName, bookmarks.Count); // IDs starts from 0, so Count = previous id + 1
 
                             // Force creating subsequent content in a new run.
@@ -282,11 +298,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             string bookmarkName = bookmarkNameBuilder.ToString();
                             
                             if (bookmarks.TryGetValue(bookmarkName, out int id))
-                                currentParagraph!.AppendChild(new BookmarkEnd() { Id = id.ToStringInvariant() });
+                                pendingParagraph!.AppendChild(new BookmarkEnd() { Id = id.ToStringInvariant() });
                             else 
                                 // If the name is not specified in bkmkend or is not contained in the document, 
                                 // for now just assume that the most recent bookmark is being closed. 
-                                currentParagraph!.AppendChild(new BookmarkEnd() { Id = (bookmarks.Count - 1).ToStringInvariant() });
+                                pendingParagraph!.AppendChild(new BookmarkEnd() { Id = (bookmarks.Count - 1).ToStringInvariant() });
                             
                             // Force creating subsequent content in a new run.
                             currentRun = null;
@@ -369,16 +385,16 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             var beginRun = new Run();
                             var beginChar = new FieldChar() { FieldCharType = FieldCharValues.Begin };
                             beginRun.AppendChild(beginChar);
-                            currentParagraph!.AppendChild(beginRun);
+                            pendingParagraph!.AppendChild(beginRun);
 
                             // Create FieldCode
                             var instrTextBuilder = new StringBuilder();
                             ConvertGroupAsText(subGroup, instrTextBuilder);
-                            currentParagraph!.AppendChild(new Run(new FieldCode(instrTextBuilder.ToString())));
+                            pendingParagraph!.AppendChild(new Run(new FieldCode(instrTextBuilder.ToString())));
 
                             // Create FieldChar of type Separate
                             var separateRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.Separate });
-                            currentParagraph!.AppendChild(separateRun);
+                            pendingParagraph!.AppendChild(separateRun);
                             
                             // Force creating field content in a new run.
                             // The formatting state is relevant for the content run and should not be reset.
@@ -393,7 +409,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             // Ensure we are in a paragraph and add a field char of type End
                             EnsureParagraph();
                             var endRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.End });
-                            currentParagraph!.AppendChild(endRun);
+                            pendingParagraph!.AppendChild(endRun);
 
                             // Force creating subsequent content in a new run.
                             currentRun = null;
@@ -517,7 +533,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         else if (dname == "pn")
                         {
                             // Enumerate the group normally to retrieve list level, number format, character style, text before/after, ...
-                            currentLevel = currentParagraphPr.CreateListLevel(mainPart);
+                            currentLevel = pendingParagraphPr.CreateListLevel(mainPart);
                         }
                         else if (dname == "pnseclvl")
                         {
@@ -751,22 +767,29 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         switch (name)
         {
             case "sect":
-                // End current section
+                // End current section. SectionProperties must be applied to a paragraph that is present in the document.
                 if (container is Body body)
                 {
                     EnsureParagraph();
-                    currentParagraph!.ParagraphProperties ??= new ParagraphProperties();
-                    currentSectPr ??= CreateSectionProperties();
-                    // If \sbk* is not specified in RTF, assume NextPage as default.
-                    if (currentSectPr.GetFirstChild<SectionType>() == null)
-                        currentSectPr.AppendChild(new SectionType() { Val = SectionMarkValues.NextPage });
+                    if (pendingParagraph != null)
+                    {
+                        // Ensure pending paragraph has the paragraph properties from paragraphState
+                        if (paragraphState.ParagraphProperties != null)
+                            pendingParagraph.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
+                        else
+                            pendingParagraph.ParagraphProperties ??= new ParagraphProperties();
 
-                    // TODO: should we preserve previous paragraph properties (except inner SectionProperties)? 
-                    // Starting a new section does not necessarily reset paragraph properties in RTF.
+                        currentSectPr ??= CreateSectionProperties();
+                        // If \sbk* is not specified in RTF, assume NextPage as default.
+                        if (currentSectPr.GetFirstChild<SectionType>() == null)
+                            currentSectPr.AppendChild(new SectionType() { Val = SectionMarkValues.NextPage });
 
-                    currentParagraph.ParagraphProperties.SectionProperties = (SectionProperties)currentSectPr.CloneNode(true);
-                    currentParagraph = null;
-                    currentRun = null;
+                        pendingParagraph.ParagraphProperties.SectionProperties = (SectionProperties)currentSectPr.CloneNode(true);
+                        // Append the paragraph to the current container so SectionProperties are written
+                        container.Append(pendingParagraph);
+                        pendingParagraph = null;
+                        currentRun = null;
+                    }
                 }
                 break;
             case "par":
@@ -778,7 +801,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 ResetSectionProperties();
                 break;
             case "pard":  // reset paragraph formatting
-                currentParagraphPr.Clear();
+                paragraphState.Reset();
                 currentLevel = null;
                 break;
             case "plain": // reset character formatting
@@ -828,6 +851,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 {
                     break;
                 }
+                else if (ProcessTableControlWord(cw))
+                {
+                    break;
+                }
                 else if (ProcessLegacyListControlWord(cw))
                 {
                     break;
@@ -869,8 +896,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
                     if (shadingType != null)
                     {
-                        currentParagraphPr.Shading ??= new Shading();
-                        currentParagraphPr.Shading.Val = shadingType;
+                        pendingParagraphPr.Shading ??= new Shading();
+                        pendingParagraphPr.Shading.Val = shadingType;
                     }
                 }
                 else if (cw.Name?.StartsWith("pgn") == true)

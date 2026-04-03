@@ -21,13 +21,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private void ProcessPartContent(RtfGroup group, Func<OpenXmlCompositeElement> createPart)
     {
         // Save current state
-        var oldContainer = container;
-        var oldParagraph = currentParagraph;
+        var oldParagraph = pendingParagraph;
         var oldFmtStack = fmtStack.Clone();
 
         // Set context to a different document part (header, footer, footnote, endnote)
-        container = createPart();
-        currentParagraph = null;
+        containers.Push(createPart());
+        pendingParagraph = null;
         currentRun = null;
         fmtStack.Clear();
 
@@ -35,8 +34,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         ConvertGroup(group);        
         
         // Restore previous context; create subsequent content in a new run
-        container = oldContainer;
-        currentParagraph = oldParagraph;
+        containers.Pop();
+        pendingParagraph = oldParagraph;
         fmtStack = oldFmtStack;
     }
 

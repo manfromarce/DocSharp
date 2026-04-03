@@ -20,46 +20,50 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 {
     private void EnsureParagraph()
     {
-        if (currentParagraph == null)
+        if (pendingParagraph == null)
         {
-            // avoid adding two empty paragraphs (if currentParagraph is null, then currentParagraphPr is also null)
-            currentParagraph = new Paragraph(); 
-            container.Append(currentParagraph);
+            // Create a pending paragraph (do not append to the document yet)
+            pendingParagraph = new Paragraph();
             currentRun = null;
         }
     }
 
     private void AddParagraph()
     {
-        if (currentParagraph == null)
+        pendingParagraph ??= new Paragraph();
+        if (paragraphState.ParagraphProperties != null)
+            pendingParagraph.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
+
+        if (paragraphState.TableNestingLevel > 0)
         {
-            // avoid adding two empty paragraphs (if currentParagraph is null, then currentParagraphPr is also null)
-            currentParagraph = new Paragraph(); 
-            container.Append(currentParagraph);
-            currentRun = null;
+            if (inTableRowDefinition)
+            {
+                // If cell definitions were found before the cell content, reset index to 0, 
+                // otherwise we wrongly retrieve the last cell for the first cell.
+                inTableRowDefinition = false;
+                cellIndex = 0;
+            }
+            containers.Push(EnsureTableCell());
         }
-        else 
+        else
         {
-            currentParagraph = CreateParagraphWithProperties(currentParagraphPr);
-            container.Append(currentParagraph);
-            currentRun = null;
+            if (container is TableCell)
+            // If container is table cell but TableNestingLevel is 0, we are now outside of the table, so pop the cell container.
+                containers.Pop();
         }
-    }
 
-    private Paragraph CreateParagraphWithProperties(ParagraphProperties pPr)
-    {
-        var par = new Paragraph();
-
-        if (pPr.HasChildren)
-            par.Append(pPr.CloneNode(true));
-
-        return par;
+        container?.Append(pendingParagraph);
+        // Reset pending paragraph (do not reset paragraphState)
+        pendingParagraph = null;
+        currentRun = null;
+        if (container is TableCell)
+            containers.Pop();
     }
 
     private bool ProcessParagraphControlWord(RtfControlWord cw, ParagraphProperties? targetProperties = null)
     {
         var name = (cw.Name ?? string.Empty).ToLowerInvariant();
-        targetProperties ??= currentParagraphPr;
+        targetProperties ??= pendingParagraphPr;
         switch (name)
         {
             case "adjustright":
