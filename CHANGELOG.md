@@ -17,6 +17,7 @@
 - Better mapping of styles in DOCX ➡️ HTML / Markdown converter
 - Option to handle custom font families as code inline (preformatted text) in DOCX ➡️ Markdown converter
 - Support emphasis and images inside hyperlinks in DOCX ➡️ Markdown converter
+- Allow customizing DOCX style id mappings for headers, quote, etc. in DOCX ➡️ Markdown converter
 - Support base64 images in Markdown ➡️ DOCX/RTF converter
 - Fix various bugs with images in Markdown ↔️ DOCX converters
 - Fix: unnecessary space was created in DOCX ➡️ Markdown converter in some cases
