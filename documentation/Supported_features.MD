@@ -100,7 +100,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ❌ Paragraph group formatting
 - ❌ Styles (however the formatting is usually written inline in RTF for compatibility reasons, even if there is an associated style too)  
 - 🟡 Lists (note: there are still issues that need to be resolved)
-- ❌ Tables
+- 🟡 Tables
 - 🟡 Section properties
 - 🟡 Default section properties / document-level formatting and settings
 - 🟡 Fields (supported but additional work is needed for some complex fields and form fields)

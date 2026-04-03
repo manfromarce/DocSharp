@@ -90,6 +90,20 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             return;
         }
         var table = container.LastChild as Table ?? container.AppendChild(new Table());
+        
+        // We have to add GridSpan to cells based on their width and the number of cells, 
+        // otherwise horizontally merged cells do not behave as expected, even if they width is increased.
+        // The following approach is not ideal, but I can't think of a better way at this time.
+        int minWidth = Math.Max(pendingTableRow.Elements<TableCell>().Min(c => (c.TableCellProperties?.TableCellWidth?.Width?.Value).ToIntInvariant(0)), 1);
+        foreach (var cell in pendingTableRow.Elements<TableCell>())
+        {
+            int cellWidth = Math.Max((cell.TableCellProperties?.TableCellWidth?.Width?.Value).ToIntInvariant(0), 1);
+            int gridSpan = (int)Math.Round((double)cellWidth / minWidth, MidpointRounding.AwayFromZero);
+            // Grid span is always at least 1. 
+            if (gridSpan > 1)
+                cell.TableCellProperties!.GridSpan = new GridSpan() { Val = gridSpan };
+        }
+
         table.AppendChild(pendingTableRow);
         pendingTableRow = null;
         // Do not reset row properties and exceptions here, as they can be inherited by subsequent rows until a new trowd control word is encountered
@@ -139,6 +153,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 currentTableRowExceptions = new();
                 inTableRowDefinition = true;
                 cellIndex = 0;
+                cellx = 0;
 				return true;
             case "row":
             case "nestrow":
