@@ -683,20 +683,21 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 sb.Write(@"\cltxbtlr");
             }
         }
-
+        
         var topMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Top, isRightToLeft) as TopMargin;
         var bottomMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Bottom, isRightToLeft) as BottomMargin;
         var leftMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Left, isRightToLeft);
         var rightMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Right, isRightToLeft);
+        // Left and top cell padding are inverted due to a bug in all versions of Word (in RTF only): https://www.office-forums.com/threads/rtf-file-weirdness-clpadt-vs-clpadl.2163500/
         if (topMargin?.Type != null)
         {
             if (topMargin.Type.Value == TableWidthUnitValues.Nil)
             {
-                sb.Write(@"\clpadft0");
+                sb.Write(@"\clpadfl0");
             }
             else if (topMargin.Type.Value == TableWidthUnitValues.Dxa && topMargin.Width.ToLong() is long top)
             {
-                sb.Write($"\\clpadt{top.ToStringInvariant()}\\clpadft3");
+                sb.Write($"\\clpadl{top.ToStringInvariant()}\\clpadfl3");
             }
             // RTF does not support other units for these elements.
         }
@@ -715,22 +716,22 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {
             if (twt1.Type.Value == TableWidthUnitValues.Nil)
             {
-                sb.Write(@"\clpadfl0");
+                sb.Write(@"\clpadft0");
             }
             else if (twt1.Type.Value == TableWidthUnitValues.Dxa && twt1.Width.ToLong() is long left)
             {
-                sb.Write($"\\clpadl{left.ToStringInvariant()}\\clpadfl3");
+                sb.Write($"\\clpadt{left.ToStringInvariant()}\\clpadft3");
             }
         }
         else if (leftMargin is TableWidthDxaNilType dxaNilType1 && dxaNilType1?.Type != null)
         {
             if (dxaNilType1.Type.Value == TableWidthValues.Nil)
             {
-                sb.Write(@"\clpadfl0");
+                sb.Write(@"\clpadft0");
             }
             else if (dxaNilType1.Type.Value == TableWidthValues.Dxa && dxaNilType1.Width != null)
             {
-                sb.Write($"\\clpadl{dxaNilType1.Width.Value.ToStringInvariant()}\\clpadfl3");
+                sb.Write($"\\clpadt{dxaNilType1.Width.Value.ToStringInvariant()}\\clpadft3");
             }
         }
         if (rightMargin is TableWidthType twt2 && twt2?.Type != null)
