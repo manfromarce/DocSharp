@@ -75,6 +75,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         return cellProperties.TableCellBorders.Elements<T>().FirstOrDefault() ?? cellProperties.TableCellBorders.AppendChild(new T());
     }
 
+    private T EnsureTableCellMargin<T>() where T : TableWidthType, new()
+    {
+        var cellProperties = EnsureTableCellProperties();
+        cellProperties.TableCellMargin ??= new TableCellMargin();
+        return cellProperties.TableCellMargin.Elements<T>().FirstOrDefault() ?? cellProperties.TableCellMargin.AppendChild(new T());
+    }
 
     // Terminates the pending table row, appends it to the current table and resets cellx and cellIndex counters.
     private void EndTableRow()
@@ -160,6 +166,213 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 				EndTableRow();
 				return true;
 
+            // All the following control words appear inside a table row definition (after \trowd), if present.
+
+            case "tcelld": // Sets table cell defaults.
+                return true;
+
+            case "trbrdrl": // Sets border context on the left side of the current table row.
+                return true;
+            case "trbrdrr": // Sets border context on the right side of the current table row.
+                return true;
+            case "trbrdrt": // Sets border context on the top border of the current table row. 
+                return true;
+            case "trbrdrb": // Sets border context on the bottom border of the current table row.          
+                return true;
+            case "trbrdrh": // Sets border context on the inside horizontal border of the current table row.
+                return true;
+            case "trbrdrv": // Sets border context on the inside vertical border of the current table row.
+                return true;
+
+            case "trgaph": // Half the space (in twips) between the text in a table cell and the cell borders.
+                // (Word 97 padding, superseded by \trpaddl, \trpaddr, \trpaddt and \trpaddb if present, unless trpaddfb/trpaddfl/trpaddfr/trpaddft are set to 0.)
+                return true;
+            case "trpaddl": // Default left margin or padding for cells in the row.
+                return true;
+            case "trpaddr": // Default right margin or padding for cells in the row.
+                return true;
+            case "trpaddt": // Default top margin or padding for cells in the row.
+                return true;
+            case "trpaddb": // Default bottom margin or padding for cells in the row.
+                return true;
+            case "trpaddfl": // The unit of measurement for the left padding of the table cell. Can only be set to 0 (null, means that trpaddl should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trpaddfr": // The unit of measurement for the right padding of the table cell. Can only be set to 0 (null, means that trpaddr should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trpaddft": // The unit of measurement for the top padding of the table cell. Can only be set to 0 (null, means that trpaddt should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trpaddfb": // The unit of measurement for the bottom padding of the table cell. Can only be set to 0 (null, means that trpaddb should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+
+            case "trpadol": // Default left margin or padding for cells in the leftmost column.
+                return true;
+            case "trpador": // Default right margin or padding for cells in the rightmost column.
+                return true;
+            case "trpadot": // Default top margin or padding for cells in the top row.
+                return true;
+            case "trpadob": // Default bottom margin or padding for cells in the bottom row.
+                return true;
+            case "trpadofl": // The unit of measurement for \trpadol. Can only be set to 0 (null, means that trpaddl should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trpadofr": // The unit of measurement for \trpador. Can only be set to 0 (null, means that trpaddr should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trpadoft": // The unit of measurement for \trpadot. Can only be set to 0 (null, means that trpaddt should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trpadofb": // The unit of measurement for \trpadob. Can only be set to 0 (null, means that trpaddb should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+
+            case "trspdl": // Default left spacing for cells in the row.
+                return true;
+            case "trspdr": // Default right spacing for cells in the row.
+                return true;
+            // The total horizontal spacing between adjacent cells is equal to the sum of \trspdlN from the rightmost cell 
+            // and \trspdrN from the leftmost cell, both of which will have the same value when written by Word
+            case "trspdt": // Default top spacing for cells in the row.
+                return true;
+            case "trspdb": // Default bottom spacing for cells in the row.
+            // The total vertical spacing between adjacent cells is equal to the sum of \trspdtN from the bottom cell 
+            // and \trspdbN from the top cell, both of which will have the same value when written by Word.
+                return true;
+            case "trspdfl": // The unit of measurement for the left spacing of the table cell. Can only be set to 0 (null, means that trpaddl should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trspdfr": // The unit of measurement for the right spacing of the table cell. Can only be set to 0 (null, means that trpaddr should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trspdft": // The unit of measurement for the top spacing of the table cell. Can only be set to 0 (null, means that trpaddt should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+            case "trspdfb": // The unit of measurement for the bottom spacing of the table cell. Can only be set to 0 (null, means that trpaddb should be ignored in favor of trgaph) or 3 (twips).
+                return true;
+
+            case "trleft": // The distance (in twips) between the left edge of the table and the left margin of the page.
+                return true;
+            case "trql": // Align table row to the left.
+                return true;
+            case "trqc": // Align table row to the center.
+                return true;
+            case "trqr": // Align table row to the right.
+                return true;
+            case "tblind": // Specifies the indentation that shall be added before the
+                           // leading edge of the current table in the document (the left edge in a left-to-right table, and the right edge in a right-to-left table). 
+                           // This indentation should shift the table into the text margin by the specified amount.
+            case "tblindtype": // Units for tblind:
+            // 0: auto (automatically determined by the table layout algorithm)
+            // 1: twips
+            // 2: nil (ignore tblind)
+            // 3: percentage (in 50ths of a percent)
+                return true;
+
+            case "trautofit": // If 0 (default) the table is not automatically resized to fit the contents of the cells. If 1, AutoFit is on (but is still overriden by \clwWidthN and \trwWidthN).
+                return true;
+            case "trwwidth": // Specifies the width of the table row.
+                return true;
+            case "trftswidth": // Units for trwWidth: 
+            // 0: null (ignore trwWidth in favor of cellx)
+            // 1: auto (no preferred row width. Ignore trwWidth if present, give precedence to row defaults and autofit)
+            // 2: percentage (in 50ths of a percent)
+            // 3: twips
+                return true;
+            case "trwwidthb": // Width of invisible cell at the beginning of the row. Used only in cases where rows have different widths.
+                return true;
+            case "trftswidthb": // Units for trwWidthB: 
+            // 0: null (no invisible cell before)
+            // 1: auto (ignore trwWidthB if present)
+            // 2: percentage (in 50ths of a percent)
+            // 3: twips
+                return true;
+            case "trwwidtha": // Width of invisible cell at the end of the row. Used only in cases where rows have different widths.
+                return true;
+            case "trftswidtha": // Units for trwWidthA: 
+            // 0: null (no invisible cell after)
+            // 1: auto (ignore trwWidthA if present)
+            // 2: percentage (in 50ths of a percent)
+            // 3: twips
+                return true;
+            case "trrh": // Height of a table row in twips. 
+            // When 0, the height is sufficient for all the text in the line; 
+            // when positive, the height is guaranteed to be at least the specified height; 
+            // when negative, the absolute value of the height is used, regardless of the height of the text in the line.
+                return true;
+
+            case "taprtl": // If present, table direction is right to left.
+                return true;
+            case "rtlrow": // Cells in this row will have right-to-left precedence.
+                return true;
+            case "ltrrow": // Cells in this row will have left-to-right precedence (default).
+                return true;
+
+            case "trhdr": // If present, the current table row is a header row. A header row is repeated at the top of each page that the table spans across.
+                return true;
+            case "trkeep": // If present, the current table row should not be split across pages.
+                return true;
+            case "trkeepfollow": // If present, the current table row should be kept on the same page as the following row.
+                return true;
+
+            case "trcbpat": // Background pattern color for the table row shading.
+                return true;
+            case "trcfpat": // Foreground pattern color for the table row shading.
+                return true;
+            // case "trpat": // Pattern for table row shading
+            // Ignore for now as it has no equivalent in cells/paragraphs and it's not clear how it is different from the pattern specified by trshdng/trbgbdiag/... (mapped in RtfShadingMapper.cs).
+
+            // Positioned Wrapped Tables: the following properties must be the same for all rows in the table
+            case "tdfrmtxtleft": // Distance in twips, between the left of the table and surrounding text (default is 0)
+                return true;
+            case "tdfrmtxttop": // Distance in twips, between the top of the table and surrounding text (default is 0)
+                return true;
+            case "tdfrmtxtright": // Distance in twips, between the right of the table and surrounding text (default is 0)
+                return true;
+            case "tdfrmtxtbottom": // Distance in twips, between the bottom of the table and surrounding text (default is 0)
+                return true;
+            case "tabsnoovrlp": // If present, do not allow table to overlap with other tables or shapes with similar wrapping not contained within it.
+                return true;
+
+            case "tphcol": // Use column as horizontal reference frame (default if no horizontal table positioning information is given)
+                return true;
+            case "tphmrg": // Use margin as horizontal reference frame
+                return true;
+            case "tphpg": // Use page as horizontal reference frame
+                return true;
+
+            case "tposx": // Position table N twips from the left edge of the horizontal reference frame
+                return true;
+            case "tposnegx": // Same as \tposx but allows arbitrary negative values.
+                return true;
+
+            case "tposxc": // Center table within the horizontal reference frame.
+                return true;
+            case "tposxi": // Position table inside the horizontal reference frame.
+                return true;
+            case "tposxo": // Position table outside the horizontal reference frame.
+                return true;
+            case "tposxl": // Position table to the left of the horizontal reference frame.
+                return true;
+            case "tposxr": // Position table to the right of the horizontal reference frame.
+                return true;
+
+            case "tpvmrg": // Use top margin as vertical reference frame (default if no vertical table positioning information is given)
+                return true;
+            case "tpvpara": // Use upper left corner of the next unframed paragraph as vertical reference frame
+                return true;
+            case "tpvpg": // Use page as vertical reference frame
+                return true;
+
+            case "tposy": // Position table N twips from the top edge of the vertical reference frame
+                return true;
+            case "tposnegy": // Same as \tposy but allows arbitrary negative values.
+                return true;
+
+            case "tposyb": // Position table at the bottom of the vertical reference frame
+                return true;
+            case "tposyc": // Center table within the vertical reference frame
+                return true;
+            case "tposyil": // Position table to be inline
+                return true;
+            case "tposyin": // Position table inside within the vertical reference frame
+                return true;
+            case "tposyout": // Position table outside within the vertical reference frame
+                return true;
+            case "tposyt": // Position table at the top of the vertical reference frame
+                return true;
+
             // Cells
 			case "cellx":
 				if (cw.HasValue)
@@ -206,6 +419,151 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
             case "cldgll": // Sets the diagonal border from the bottom-left to top-right diagonal border of the current table cell.
                 currentBorder = EnsureTableCellBorder<TopRightToBottomLeftCellBorder>();
+                return true;
+            
+            // Left and top cell padding are inverted due to a bug in all versions of Word (in RTF only): https://www.office-forums.com/threads/rtf-file-weirdness-clpadt-vs-clpadl.2163500/
+            case "clpadt": // Left cell margin or padding. Overrides the row default specified by \trpaddl.
+                if (cw.HasValue)
+                {
+                    var leftMargin = EnsureTableCellMargin<LeftMargin>();
+                    leftMargin.Type = TableWidthUnitValues.Dxa;
+                    leftMargin.Width = cw.Value!.Value.ToStringInvariant();
+                }
+                return true;
+            case "clpadl": // Top cell margin or padding. Overrides the row default specified by \trpaddt.
+                if (cw.HasValue)
+                {
+                    var topMargin = EnsureTableCellMargin<TopMargin>();
+                    topMargin.Type = TableWidthUnitValues.Dxa;
+                    topMargin.Width = cw.Value!.Value.ToStringInvariant();
+                }
+                return true;
+            case "clpadr": // Right cell margin or padding. Overrides the row default specified by \trpaddr.
+                if (cw.HasValue)
+                {
+                    var rightMargin = EnsureTableCellMargin<RightMargin>();
+                    rightMargin.Type = TableWidthUnitValues.Dxa;
+                    rightMargin.Width = cw.Value!.Value.ToStringInvariant();
+                }
+                return true;
+            case "clpadb": // Bottom cell margin or padding. Overrides the row default specified by \trpaddb.
+                if (cw.HasValue)
+                {
+                    var bottomMargin = EnsureTableCellMargin<BottomMargin>();
+                    bottomMargin.Type = TableWidthUnitValues.Dxa;
+                    bottomMargin.Width = cw.Value!.Value.ToStringInvariant();
+                }
+                return true;
+            case "clpadft": // The unit of measurement for the left padding of the table cell. Can only be set to 0 (null, means that clpadt should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    var leftMargin = EnsureTableCellMargin<LeftMargin>();
+                    leftMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                }
+                return true;
+            case "clpadfr": // The unit of measurement for the right padding of the table cell. Can only be set to 0 (null, means that clpadr should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    var rightMargin = EnsureTableCellMargin<RightMargin>();
+                    rightMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                }
+                return true;
+            case "clpadfl": // The unit of measurement for the top padding of the table cell. Can only be set to 0 (null, means that clpadl should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    var topMargin = EnsureTableCellMargin<TopMargin>();
+                    topMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                }
+                return true;
+            case "clpadfb": // The unit of measurement for the bottom padding of the table cell. Can only be set to 0 (null, means that clpadb should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    var bottomMargin = EnsureTableCellMargin<BottomMargin>();
+                    bottomMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                }
+                return true;
+
+            case "clspl": // Left cell spacing. Overrides the row default specified by \trspdl.
+                return true;
+            case "clspr": // Right cell spacing. Overrides the row default specified by \trspdr.
+                return true;
+            case "clspt": // Top cell spacing. Overrides the row default specified by \trspdt.
+                return true;
+            case "clspb": // Bottom cell spacing. Overrides the row default specified by \trspdb.
+                return true;
+            case "clspfl": // The unit of measurement for the left spacing of the table cell. Can only be set to 0 (null, ignore clspl) or 3 (twips).
+                return true;
+            case "clspfr": // The unit of measurement for the right spacing of the table cell. Can only be set to 0 (null, ignore clspr) or 3 (twips).
+                return true;
+            case "clspft": // The unit of measurement for the top spacing of the table cell. Can only be set to 0 (null, ignore clspt) or 3 (twips).
+                return true;
+            case "clspfb": // The unit of measurement for the bottom spacing of the table cell. Can only be set to 0 (null, ignore clspb) or 3 (twips).
+                return true;
+
+            case "clwwidth": // Specifies the width of the table cell. Overrides table row autofit.
+                return true;
+            case "clftswidth": // Units for clwWidth:
+            // 0: null (ignore clwWidth in favor of cellx)
+            // 1: auto (no preferred cell width. Ignore clwWidth if present, give precedence to row defaults)
+            // 2: percentage (in 50ths of a percent)
+            // 3: twips
+                return true;
+
+            case "clshdrawnil": // No shading specified
+                return true;
+            case "clcbpat": // Background pattern color for the table cell shading.
+            case "clcfpat": // Foreground pattern color for the table cell shading.
+                if (cw.Value != null)
+                {
+                    if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
+                    {
+                        var cellPr = EnsureTableCellProperties();
+                        var c = colorTable[cw.Value.Value];
+                        var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
+                        cellPr.Shading ??= new Shading();
+                        if (name == "clcfpat")
+                        {
+                            cellPr.Shading.Color = hex;
+                            if (cellPr.Shading.Val == null)
+                                cellPr.Shading.Val = ShadingPatternValues.Clear;
+                        }
+                        else if (name == "clcbpat")
+                        {
+                            cellPr.Shading.Fill = hex;
+                        }
+                    }
+                }
+                return true;
+
+            case "clfittext": // If present, the content of the table cell is scaled to fit the cell width.
+                EnsureTableCellProperties().TableCellFitText = new TableCellFitText() { Val = OnOffOnlyValues.On };
+                return true;
+            case "clnowrap": // If present, do not wrap text for the cell.
+                EnsureTableCellProperties().NoWrap = new NoWrap() { Val = OnOffOnlyValues.On };
+                return true;
+            case "clhidemark": // If present, only printing characters in the cell shall be used to determine row height (ignore end of cell glyph).
+                EnsureTableCellProperties().HideMark = new HideMark() { Val = OnOffOnlyValues.On };
+                return true;
+
+            case "clvertalt": // Vertical alignment of text in the cell is at the top of the cell.
+                EnsureTableCellProperties().TableCellVerticalAlignment = new TableCellVerticalAlignment() { Val = TableVerticalAlignmentValues.Top };
+                return true;
+            case "clvertalc": // Vertical alignment of text in the cell is centered between the top and bottom of the cell.
+                EnsureTableCellProperties().TableCellVerticalAlignment = new TableCellVerticalAlignment() { Val = TableVerticalAlignmentValues.Center };
+                return true;
+            case "clvertalb": // Vertical alignment of text in the cell is at the bottom of the cell.
+                EnsureTableCellProperties().TableCellVerticalAlignment = new TableCellVerticalAlignment() { Val = TableVerticalAlignmentValues.Bottom };
+                return true;
+
+            case "cltxlrtb": // Text in the cell flows from left to right and top to bottom (default).
+                return true;
+            case "cltxtbrl": // Text in the cell flows right to left and top to bottom.
+                return true;
+            case "cltxbtlr": // Text in the cell flows from left to right and bottom to top.
+                return true;
+            case "cltxlrtbv": // Text in the cell flows left to right and top to bottom, vertical.
+                return true;
+            case "cltxtbrlv": // Text in the cell flows top to bottom and right to left, vertical.
                 return true;
 
             // Paragraphs inside tables

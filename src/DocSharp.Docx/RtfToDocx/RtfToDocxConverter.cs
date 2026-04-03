@@ -882,6 +882,15 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     var val = RtfBorderMapper.GetBorderType(cw.Name + (cw.HasValue ? cw.Value!.Value.ToStringInvariant() : string.Empty));
                     currentBorder.Val = val;
                 }
+                else if (cw.Name?.StartsWith("shading") == true || cw.Name?.StartsWith("bg") == true)
+                {
+                    var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    if (shadingType != null)
+                    {
+                        pendingParagraphPr.Shading ??= new Shading();
+                        pendingParagraphPr.Shading.Val = shadingType;
+                    }
+                }
                 else if (cw.Name?.StartsWith("chshdng") == true || cw.Name?.StartsWith("chbg") == true)
                 {
                     var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
@@ -891,13 +900,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         runState.CharacterShading.Val = shadingType;
                     }
                 }
-                else if (cw.Name?.StartsWith("shading") == true || cw.Name?.StartsWith("bg") == true)
+                else if (cw.Name?.StartsWith("clshdng") == true || cw.Name?.StartsWith("clbg") == true)
                 {
                     var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
                     if (shadingType != null)
                     {
-                        pendingParagraphPr.Shading ??= new Shading();
-                        pendingParagraphPr.Shading.Val = shadingType;
+                        var cellPr = EnsureTableCellProperties();
+                        cellPr.Shading ??= new Shading();
+                        cellPr.Shading.Val = shadingType;
                     }
                 }
                 else if (cw.Name?.StartsWith("pgn") == true)
