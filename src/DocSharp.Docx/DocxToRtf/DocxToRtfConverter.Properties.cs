@@ -18,6 +18,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     internal void ProcessProperties(WordprocessingDocument doc, RtfStringWriter sb)
     {
         var packageProps = doc.PackageProperties;
+        sb.WriteLine();
         sb.Write(@"{\info");
         if (!string.IsNullOrEmpty(packageProps.Creator))
         {

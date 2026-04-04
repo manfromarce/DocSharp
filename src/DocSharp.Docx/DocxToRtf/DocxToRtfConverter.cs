@@ -65,7 +65,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     /// </summary>
     public IImageConverter? ImageConverter { get; set; } = null;
 
-    private FastStringCollection fonts = new FastStringCollection();
+    private FastStringCollection fonts = new FastStringCollection(0);
     private FastStringCollection colors = new FastStringCollection();
     private FastStringCollection files = new FastStringCollection();
 
@@ -84,9 +84,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // Reset state
         this.abstractNumDictionary.Clear();
         this.numIdDictionary.Clear();
-        this.colors = new();
-        this.fonts = new();
-        this.files = new();
+        this.colors.Clear();
+        this.fonts.Clear();
+        this.files.Clear();
         this.currentSectionProperties = null;
         this.noSections = false;
         this.firstSection = true;
@@ -125,6 +125,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
         // Prepare fonts table 
+        sb.WriteLine();
         sb.Write(@"{\fonttbl");
         fonts.TryAddAndGetIndex(DefaultSettings.FontName, out _);
 

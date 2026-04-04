@@ -11,9 +11,12 @@ public class FastStringCollection
 {
     private OrderedDictionary _dictionary { get; set; }
 
-    public FastStringCollection()
+    private int _startIndex;
+
+    public FastStringCollection(int startIndex = 1)
     {
         _dictionary = new OrderedDictionary();
+        _startIndex = startIndex;
     }
 
     public void Add(string value)
@@ -23,7 +26,7 @@ public class FastStringCollection
         // and a custom numeric key are not needed.
         if (!_dictionary.Contains(value))
         {
-            _dictionary.Add(value, _dictionary.Count + 1);
+            _dictionary.Add(value, _dictionary.Count + _startIndex);
         }
     }
 
@@ -98,5 +101,10 @@ public class FastStringCollection
         {
             yield return new KeyValuePair<string, int>((string)pair.Key, (int)pair.Value!);
         }
+    }
+
+    public void Clear()
+    {
+        _dictionary.Clear();
     }
 }
