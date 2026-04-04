@@ -28,19 +28,19 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                     {
                         if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Left)
                         {
-                            sb.Write(@"\mJc3");
+                            sb.Write(@"\mjc3");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Right)
                         {
-                            sb.Write(@"\mJc4");
+                            sb.Write(@"\mjc4");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.Center)
                         {
-                            sb.Write(@"\mJc2");
+                            sb.Write(@"\mjc2");
                         }
                         else if (oMathPara.ParagraphProperties.Justification.Val == M.JustificationValues.CenterGroup)
                         {
-                            sb.Write(@"\mJc1");
+                            sb.Write(@"\mjc1");
                         }
                     }
                     sb.Write('}');
