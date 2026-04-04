@@ -39,6 +39,11 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
 
     internal virtual void ProcessDocument(Document document, TOutput sb)
     {
+        // Reset state
+        this.TitlePage = false;
+        this.FacingPages = false;
+        this.Sections.Clear();
+
         if (document.DocumentBackground is DocumentBackground bg)
         {
             ProcessDocumentBackground(bg, sb);

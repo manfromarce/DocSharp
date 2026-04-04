@@ -80,6 +80,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
+        // Reset state
+        this._listLevelCounters.Clear();
+
         sb.WriteHtmlHeader(document.MainDocumentPart?.OpenXmlPackage.PackageProperties.Title);
         sb.WriteStartElement("body");
         if (document.DocumentBackground is DocumentBackground bg)

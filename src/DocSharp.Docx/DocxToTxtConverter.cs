@@ -35,6 +35,14 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
     /// </summary>
     public bool ExportFootnotesEndnotes { get; set; } = true;
 
+    internal override void ProcessDocument(Document document, TxtStringWriter sb)
+    {
+        // Reset state
+        this._cellsText.Clear();
+        this._listLevelCounters.Clear();
+        base.ProcessDocument(document, sb);
+    }
+
     internal override void ProcessHeader(Header header, TxtStringWriter writer)
     {
         if (this.ExportHeaderFooter)
@@ -144,7 +152,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         }
         AddHorizontalBorder(columnWidths, sb); // Border after last row
         sb.WriteLine();
-        cellsText.Clear();
+        _cellsText.Clear();
     }
 
     private int GetGridSpan(TableCell? cell)
@@ -189,15 +197,15 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         });
     }
 
-    private Dictionary<TableCell, string> cellsText = new Dictionary<TableCell, string>();
+    private Dictionary<TableCell, string> _cellsText = new Dictionary<TableCell, string>();
 
     internal string GetCellText(TableCell cell)
     {
         // Cache the cells text content and avoid calling ProcessParagraph multiple times,
         // as it would wrongly increment numbering for list items (if any).
-        if (cellsText.ContainsKey(cell))
+        if (_cellsText.ContainsKey(cell))
         {
-            return cellsText[cell];
+            return _cellsText[cell];
         }
         else
         {
@@ -206,8 +214,8 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             {
                 ProcessParagraph(paragraph, cellTextBuilder);
             }
-            cellsText.Add(cell, cellTextBuilder.ToString().TrimEnd());
-            return cellsText[cell];
+            _cellsText.Add(cell, cellTextBuilder.ToString().TrimEnd());
+            return _cellsText[cell];
         }
     }
 

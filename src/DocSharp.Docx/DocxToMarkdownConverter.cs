@@ -86,9 +86,19 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     /// </summary>
     public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
 
-    private bool isInEmphasis = false;
-    private bool isAllCaps = false;
-    private bool isInCodeBlockParagraph = false;
+    private bool _isInEmphasis = false;
+    private bool _isAllCaps = false;
+    private bool _isInCodeBlockParagraph = false;
+
+    internal override void ProcessDocument(Document document, MarkdownStringWriter sb)
+    {
+        // Reset state
+        _isInEmphasis = false;
+        _isAllCaps = false;
+        _isInCodeBlockParagraph = false;
+        
+        base.ProcessDocument(document, sb);
+    }
 
     internal override void ProcessHeader(Header header, MarkdownStringWriter writer)
     {
@@ -185,9 +195,9 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     NewLine = sb.NewLine,
                     SuppressEscaping = true
                 };
-                this.isInCodeBlockParagraph = true;
+                this._isInCodeBlockParagraph = true;
                 base.ProcessParagraph(paragraph, builder);
-                this.isInCodeBlockParagraph = false;
+                this._isInCodeBlockParagraph = false;
 
                 // Start code block
                 sb.WriteLine(" ```");
@@ -210,9 +220,9 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             {
                 // Simple code block: enable suppression for the paragraph render
                 sb.WriteLine("```");
-                this.isInCodeBlockParagraph = true;
+                this._isInCodeBlockParagraph = true;
                 base.ProcessParagraph(paragraph, sb);
-                this.isInCodeBlockParagraph = false;
+                this._isInCodeBlockParagraph = false;
                 sb.WriteLine();
                 sb.WriteLine("```");
                 return;
@@ -324,7 +334,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             isSuperscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Superscript;
 
             // Do not emit emphasis/formatting markers when inside a code paragraph
-            if (!this.isInCodeBlockParagraph)
+            if (!this._isInCodeBlockParagraph)
             {
                 // Consecutive emphasis inlines such as *italic***bold** are sometimes not interpreted properly.
                 // if (sb.EndsWithEmphasis() && string.IsNullOrEmpty(leadingSpaces) &&
@@ -365,17 +375,17 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             isCode = true;
         }
 
-        isAllCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run) is Caps caps && (caps.Val is null || caps.Val);
+        _isAllCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run) is Caps caps && (caps.Val is null || caps.Val);
 
-        bool inCodeContextRun = this.isInCodeBlockParagraph || isCode;
+        bool inCodeContextRun = this._isInCodeBlockParagraph || isCode;
         bool prevSuppress = sb.SuppressEscaping;
         if (inCodeContextRun)
             sb.SuppressEscaping = true;
 
-        isInEmphasis = !inCodeContextRun;
+        _isInEmphasis = !inCodeContextRun;
 
         // For inline code emit backtick markers here (but not for code paragraph)
-        if (isCode && !this.isInCodeBlockParagraph)
+        if (isCode && !this._isInCodeBlockParagraph)
         {
             sb.Write("`");
         }
@@ -385,14 +395,14 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             base.ProcessRunElement(element, sb);
         }
 
-        isInEmphasis = false;
-        isAllCaps = false;
+        _isInEmphasis = false;
+        _isAllCaps = false;
         if (inCodeContextRun)
             sb.SuppressEscaping = prevSuppress;
 
         if (hasText)
         {
-            if (isCode && !this.isInCodeBlockParagraph)
+            if (isCode && !this._isInCodeBlockParagraph)
                 sb.Write("`");
 
             if (!inCodeContextRun)
@@ -440,7 +450,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         }
         else
         {
-            if (isInCodeBlockParagraph)
+            if (_isInCodeBlockParagraph)
             {
                 sb.WriteLine();
             }
@@ -461,13 +471,13 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
         string t = text.InnerText;
-        if (isInEmphasis)
+        if (_isInEmphasis)
         {
             t = t.Trim();
         }
         foreach (char c in t)
         {
-            sb.WriteCharEscaped(isAllCaps ? char.ToUpper(c) : c, font);
+            sb.WriteCharEscaped(_isAllCaps ? char.ToUpper(c) : c, font);
         }
     }
 

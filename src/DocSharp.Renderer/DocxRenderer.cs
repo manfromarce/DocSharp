@@ -89,6 +89,16 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
     internal override void ProcessDocument(W.Document document, QuestPdfModel output)
     {
+        // Reset state
+        this.currentContainer.Clear();
+        this.currentRunContainer.Clear();
+        this.currentParagraph.Clear();
+        this.currentTable.Clear();
+        this.currentRow.Clear();
+        this.currentSpan.Clear();
+        this.pageColor = null;
+        this._listLevelCounters.Clear();
+
         // Process body and document background
         base.ProcessDocument(document, output);
     }

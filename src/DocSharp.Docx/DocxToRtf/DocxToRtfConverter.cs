@@ -81,6 +81,19 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     internal override void ProcessDocument(Document document, RtfStringWriter sb)
     {
+        // Reset state
+        this.abstractNumDictionary.Clear();
+        this.numIdDictionary.Clear();
+        this.colors = new();
+        this.fonts = new();
+        this.files = new();
+        this.currentSectionProperties = null;
+        this.noSections = false;
+        this.firstSection = true;
+        this.FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;        
+        this.currentSectionProperties = null;
+        this.tableNestingLevel = 0;
+
         sb.WriteRtfHeader(DefaultCodePage);
 
         if (document.MainDocumentPart?.StyleDefinitionsPart?.Styles is Styles styles)
