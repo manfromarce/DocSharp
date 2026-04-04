@@ -68,6 +68,29 @@ public static class OpenXmlHelpers
         }
     }
 
+    /// <summary>
+    /// Get or create a child element of the specified type. 
+    /// Useful when a strongly-typed property is not provided by the Open XML SDK.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="element"></param>
+    public static T EnsureElement<T>(this OpenXmlElement element) where T : OpenXmlElement, new()
+    {        
+        return element.GetFirstChild<T>() ?? element.AppendChild(new T());
+    }
+
+    /// <summary>
+    /// Set child element of the specified type. 
+    /// Useful when a strongly-typed property is not provided by the Open XML SDK.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="element"></param>
+    public static T SetElement<T>(this OpenXmlElement element, T value) where T : OpenXmlElement
+    {        
+        element.RemoveAll<T>();
+        return element.AppendChild(value);
+    }
+
     public static void Clear(this OpenXmlElement element)
     {
         element.RemoveAllChildren();

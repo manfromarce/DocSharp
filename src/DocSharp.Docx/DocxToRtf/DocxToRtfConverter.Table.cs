@@ -20,8 +20,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         var tableProperties = new RtfStringWriter();
 
         // In RTF, table properties are usually specified for single rows.
-        // However, if spacing between cells is present, table row shading is not applied there,
-        // unlike table shading.
+        // However, if spacing between cells is present, table row shading is not applied there, unlike table shading.
         // This is a limitation of RTF and also occurs when converting DOCX to RTF using Word.
         // So we just process table cell shading in ProcessTableCellProperties, since there is no difference
         // (it will retrieve table shading if cell shading is not specified).
@@ -649,38 +648,33 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
                 direction.Val == TextDirectionValues.LeftToRightTopToBottom2010)
             {
-                // Horizontal text, left to right, top to bottom (default)
                 sb.Write(@"\cltxlrtb");
-            }
-            if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
-                direction.Val == TextDirectionValues.LeftToRightTopToBottomRotated2010)
-            {
-                // Vertical text, left to right, top to bottom (seems the same as the default, maybe depends on the font or context)
-                sb.Write(@"\cltxlrtbv");
             }
             if (direction.Val == TextDirectionValues.TopToBottomRightToLeft ||
                 direction.Val == TextDirectionValues.TopToBottomRightToLeft2010)
             {
-                // Vertical text, top to bottom, right to left
                 sb.Write(@"\cltxtbrl");
-            }
-            if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
-                direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
-            {
-                // Vertical text, bottom to top, right to left (seems the same as the default, maybe depends on the font or context)
-                sb.Write(@"\cltxtbrlv");
             }
             if (direction.Val == TextDirectionValues.BottomToTopLeftToRight ||
                 direction.Val == TextDirectionValues.BottomToTopLeftToRight2010)
             {
-                // Vertical text, bottom to top, left to right
                 sb.Write(@"\cltxbtlr");
+            }
+            if (direction.Val == TextDirectionValues.LefttoRightTopToBottomRotated ||
+                direction.Val == TextDirectionValues.LeftToRightTopToBottomRotated2010)
+            {
+                sb.Write(@"\cltxlrtbv");
+            }
+            if (direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated ||
+                direction.Val == TextDirectionValues.TopToBottomRightToLeftRotated2010)
+            {
+                sb.Write(@"\cltxtbrlv");
             }
             if (direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated ||
                 direction.Val == TextDirectionValues.TopToBottomLeftToRightRotated2010)
             {
-                // Not supported in RTF, fallback to BottomToTopLeftToRight
-                sb.Write(@"\cltxbtlr");
+                // Not available in RTF, fallback to TopToBottomRightToLeftRotated.
+                sb.Write(@"\cltxtbrlv");
             }
         }
         

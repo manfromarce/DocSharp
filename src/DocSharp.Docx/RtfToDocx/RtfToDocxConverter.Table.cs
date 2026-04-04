@@ -19,10 +19,6 @@ namespace DocSharp.Docx;
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
 	private TableRow? pendingTableRow;
-    private TableRowProperties? currentRowProperties;
-    private TablePropertyExceptions? currentTableRowExceptions;
-
-	// private TableCell? pendingTableCell;
 
     private bool inTableRowDefinition = false;
 	private int cellx = 0;
@@ -61,6 +57,21 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         return row.TablePropertyExceptions;
     }
 
+    private T EnsureTableCellDefaultMargin<T>() where T : OpenXmlElement, new()
+    {
+        // Note that the type is different for top/bottom (TableWidthType) and left/right (TableWidthDxaNilType)
+        var rowPr = EnsureTableRowExceptions();
+        rowPr.TableCellMarginDefault ??= new TableCellMarginDefault();
+        return rowPr.TableCellMarginDefault.EnsureElement<T>();
+    }
+
+    private T EnsureTableRowBorder<T>() where T : OpenXmlElement, new()
+    {
+        var rowPr = EnsureTableRowExceptions();
+        rowPr.TableBorders ??= new TableBorders();
+        return rowPr.TableBorders.EnsureElement<T>();
+    }
+
     private TableCellProperties EnsureTableCellProperties()
     {
         var cell = EnsureTableCell();
@@ -70,16 +81,23 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
     private T EnsureTableCellBorder<T>() where T : BorderType, new()
     {
-        var cellProperties = EnsureTableCellProperties();
-        cellProperties.TableCellBorders ??= new TableCellBorders();
-        return cellProperties.TableCellBorders.Elements<T>().FirstOrDefault() ?? cellProperties.TableCellBorders.AppendChild(new T());
+        var cellPr = EnsureTableCellProperties();
+        cellPr.TableCellBorders ??= new TableCellBorders();
+        return cellPr.TableCellBorders.EnsureElement<T>();
     }
 
     private T EnsureTableCellMargin<T>() where T : TableWidthType, new()
     {
-        var cellProperties = EnsureTableCellProperties();
-        cellProperties.TableCellMargin ??= new TableCellMargin();
-        return cellProperties.TableCellMargin.Elements<T>().FirstOrDefault() ?? cellProperties.TableCellMargin.AppendChild(new T());
+        var cellPr = EnsureTableCellProperties();
+        cellPr.TableCellMargin ??= new TableCellMargin();
+        return cellPr.TableCellMargin.EnsureElement<T>();
+    }
+
+    private TableCellWidth EnsureTableCellWidth()
+    {
+        var cellPr = EnsureTableCellProperties();
+        cellPr.TableCellWidth ??= new TableCellWidth();
+        return cellPr.TableCellWidth;
     }
 
     // Terminates the pending table row, appends it to the current table and resets cellx and cellIndex counters.
@@ -95,6 +113,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             pendingTableRow = null;
             return;
         }
+        
         var table = container.LastChild as Table ?? container.AppendChild(new Table());
         
         // We have to add GridSpan to cells based on their width and the number of cells, 
@@ -155,8 +174,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 // The RTF specification clarifies that a reader should not assume that the row definition is at the beginning of a row, 
                 // and that rows can also not contain a \trowd at all, inheriting all properties from the previous row. 
                 // Microsoft Word writes row definition both at the beginning and end of a row for better compatibility, but other writers may not do so.
-				currentRowProperties = new();
-                currentTableRowExceptions = new();
                 inTableRowDefinition = true;
                 cellIndex = 0;
                 cellx = 0;
@@ -166,42 +183,162 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 				EndTableRow();
 				return true;
 
-            // All the following control words appear inside a table row definition (after \trowd), if present.
+            // ------
+            //  Cells
+			case "cellx":
+				if (cw.HasValue)
+                {
+					int cellWidth = cw.Value!.Value - cellx;
+                    cellx += cellWidth;
+                    var existingWidth = EnsureTableCellWidth();
+                    // If cell width was already set by \clwwidth, give precedence to it, unless \clftswidth is set to 0.
+                    if (existingWidth.Width == null || string.IsNullOrEmpty(existingWidth.Width.Value) || 
+                        (existingWidth.Type != null && existingWidth.Type == TableWidthUnitValues.Nil))
+                    {
+                        // TODO: should we subtract padding, spacing and border thickness from cellx if we use it ?
+                        existingWidth.Width = cellWidth.ToStringInvariant();
+                        existingWidth.Type = TableWidthUnitValues.Dxa;
+                    }
+                }
+                // \cellxN is the last element of the cell definition, so increment the cell index.
+                ++cellIndex;
+				return true;
+			case "cell":
+			case "nestcell":
+				EndTableCell();
+				return true;
 
+            // ------
+            // Paragraphs inside tables
+            case "intbl":
+				// Mark current paragraph state as inside a table and ensure we entered a cell
+				paragraphState.TableNestingLevel = Math.Max(paragraphState.TableNestingLevel, 1);
+				return true;
+            case "itap":
+                if (cw.HasValue)
+                    paragraphState.TableNestingLevel = cw.Value!.Value;
+                return true;
+
+            // ------
+            // Table row formatting. 
+            // All the following control words may appear inside a table row definition (started by \trowd), before the list of cell definitions.
+            // In general, we prefer TableRowProperties in DOCX when a property is available both there and in TablePropertyExceptions. 
+            // We use TablePropertyExceptions for properties that are generally defined at table level in DOCX but might have different values per-row in RTF), 
+            // and we use TableProperties only for properties that are not supported for single rows at all in DOCX. 
             case "tcelld": // Sets table cell defaults.
+                // Ignore for now, it's unclear how it should work and what syntax to expect, as it does not appear in documents generated by Word.
                 return true;
 
             case "trbrdrl": // Sets border context on the left side of the current table row.
+                currentBorder = EnsureTableRowBorder<LeftBorder>();
                 return true;
             case "trbrdrr": // Sets border context on the right side of the current table row.
+                currentBorder = EnsureTableRowBorder<RightBorder>();
                 return true;
             case "trbrdrt": // Sets border context on the top border of the current table row. 
+                currentBorder = EnsureTableRowBorder<TopBorder>();
                 return true;
             case "trbrdrb": // Sets border context on the bottom border of the current table row.          
+                currentBorder = EnsureTableRowBorder<BottomBorder>();
                 return true;
             case "trbrdrh": // Sets border context on the inside horizontal border of the current table row.
+                currentBorder = EnsureTableRowBorder<InsideHorizontalBorder>();
                 return true;
             case "trbrdrv": // Sets border context on the inside vertical border of the current table row.
+                currentBorder = EnsureTableRowBorder<InsideVerticalBorder>();
                 return true;
 
             case "trgaph": // Half the space (in twips) between the text in a table cell and the cell borders.
                 // (Word 97 padding, superseded by \trpaddl, \trpaddr, \trpaddt and \trpaddb if present, unless trpaddfb/trpaddfl/trpaddfr/trpaddft are set to 0.)
+                if (cw.HasValue)
+                {                    
+                    var existingLeftMargin = EnsureTableCellDefaultMargin<TableCellLeftMargin>();
+                    var existingRightMargin = EnsureTableCellDefaultMargin<TableCellRightMargin>();
+                    var existingTopMargin = EnsureTableCellDefaultMargin<TopMargin>();
+                    var existingBottomMargin = EnsureTableCellDefaultMargin<BottomMargin>();
+                    // If cell padding was already set by \trpadd*, give precedence to it, unless \trpaddf* is set to 0.
+                    // TODO: should we divide the trgaph value by 2 if we use it?
+                    if (existingLeftMargin.Width == null || 
+                        (existingLeftMargin.Type != null && existingLeftMargin.Type == TableWidthValues.Nil))
+                    {
+                        existingLeftMargin.Width = cw.Value!.Value.ToShort();
+                        existingLeftMargin.Type = TableWidthValues.Dxa;
+                    }
+                    if (existingRightMargin.Width == null || 
+                        (existingRightMargin.Type != null && existingRightMargin.Type == TableWidthValues.Nil))
+                    {
+                        existingRightMargin.Width = cw.Value!.Value.ToShort();
+                        existingRightMargin.Type = TableWidthValues.Dxa;
+                    }
+                    if (existingTopMargin.Width == null || string.IsNullOrEmpty(existingTopMargin.Width.Value) || 
+                        (existingTopMargin.Type != null && existingTopMargin.Type == TableWidthUnitValues.Nil))
+                    {
+                        existingTopMargin.Width = cw.Value!.Value.ToStringInvariant();
+                        existingTopMargin.Type = TableWidthUnitValues.Dxa;
+                    }
+                    if (existingBottomMargin.Width == null || string.IsNullOrEmpty(existingBottomMargin.Width.Value) || 
+                        (existingBottomMargin.Type != null && existingBottomMargin.Type == TableWidthUnitValues.Nil))
+                    {
+                        existingBottomMargin.Width = cw.Value!.Value.ToStringInvariant();
+                        existingBottomMargin.Type = TableWidthUnitValues.Dxa;
+                    }
+                }
                 return true;
             case "trpaddl": // Default left margin or padding for cells in the row.
+                if (cw.HasValue)
+                {
+                    var existingMargin = EnsureTableCellDefaultMargin<TableCellLeftMargin>();
+                    existingMargin.Width = cw.Value!.Value.ToShort();
+                    existingMargin.Type ??= TableWidthValues.Dxa;
+                }
                 return true;
             case "trpaddr": // Default right margin or padding for cells in the row.
+                if (cw.HasValue)
+                {
+                    var existingMargin = EnsureTableCellDefaultMargin<TableCellRightMargin>();
+                    existingMargin.Width = cw.Value!.Value.ToShort();
+                    existingMargin.Type ??= TableWidthValues.Dxa;
+                }
                 return true;
             case "trpaddt": // Default top margin or padding for cells in the row.
+                if (cw.HasValue)
+                {
+                    var existingMargin = EnsureTableCellDefaultMargin<TopMargin>();
+                    existingMargin.Width = cw.Value!.Value.ToStringInvariant();
+                    existingMargin.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
             case "trpaddb": // Default bottom margin or padding for cells in the row.
+                if (cw.HasValue)
+                {
+                    var existingMargin = EnsureTableCellDefaultMargin<BottomMargin>();
+                    existingMargin.Width = cw.Value!.Value.ToStringInvariant();
+                    existingMargin.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
             case "trpaddfl": // The unit of measurement for the left padding of the table cell. Can only be set to 0 (null, means that trpaddl should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    EnsureTableCellDefaultMargin<TableCellLeftMargin>().Type = cw.Value!.Value == 0 ? TableWidthValues.Nil : TableWidthValues.Dxa;
+                }
                 return true;
             case "trpaddfr": // The unit of measurement for the right padding of the table cell. Can only be set to 0 (null, means that trpaddr should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    EnsureTableCellDefaultMargin<TableCellRightMargin>().Type = cw.Value!.Value == 0 ? TableWidthValues.Nil : TableWidthValues.Dxa;
+                }
                 return true;
             case "trpaddft": // The unit of measurement for the top padding of the table cell. Can only be set to 0 (null, means that trpaddt should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    EnsureTableCellDefaultMargin<TopMargin>().Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                }
                 return true;
             case "trpaddfb": // The unit of measurement for the bottom padding of the table cell. Can only be set to 0 (null, means that trpaddb should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    EnsureTableCellDefaultMargin<BottomMargin>().Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                }
                 return true;
 
             case "trpadol": // Default left margin or padding for cells in the leftmost column.
@@ -221,75 +358,180 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "trpadofb": // The unit of measurement for \trpadob. Can only be set to 0 (null, means that trpaddb should be ignored in favor of trgaph) or 3 (twips).
                 return true;
 
+            // Limitation: TableCellSpacing can not have different values for top/left/bottom/right in DOCX, so just use the latest values that is found.
             case "trspdl": // Default left spacing for cells in the row.
-                return true;
             case "trspdr": // Default right spacing for cells in the row.
-                return true;
-            // The total horizontal spacing between adjacent cells is equal to the sum of \trspdlN from the rightmost cell 
-            // and \trspdrN from the leftmost cell, both of which will have the same value when written by Word
+                           // The total horizontal spacing between adjacent cells is equal to the sum of \trspdlN from the rightmost cell 
+                           // and \trspdrN from the leftmost cell, both of which will have the same value when written by Word
             case "trspdt": // Default top spacing for cells in the row.
-                return true;
             case "trspdb": // Default bottom spacing for cells in the row.
-            // The total vertical spacing between adjacent cells is equal to the sum of \trspdtN from the bottom cell 
-            // and \trspdbN from the top cell, both of which will have the same value when written by Word.
+                           // The total vertical spacing between adjacent cells is equal to the sum of \trspdtN from the bottom cell 
+                           // and \trspdbN from the top cell, both of which will have the same value when written by Word.
+                if (cw.HasValue)
+                {
+                    var spacing = EnsureTableRowProperties().EnsureElement<TableCellSpacing>();
+                    spacing.Width = cw.Value!.Value.ToStringInvariant();
+                    spacing.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
             case "trspdfl": // The unit of measurement for the left spacing of the table cell. Can only be set to 0 (null, means that trpaddl should be ignored in favor of trgaph) or 3 (twips).
-                return true;
             case "trspdfr": // The unit of measurement for the right spacing of the table cell. Can only be set to 0 (null, means that trpaddr should be ignored in favor of trgaph) or 3 (twips).
-                return true;
             case "trspdft": // The unit of measurement for the top spacing of the table cell. Can only be set to 0 (null, means that trpaddt should be ignored in favor of trgaph) or 3 (twips).
-                return true;
             case "trspdfb": // The unit of measurement for the bottom spacing of the table cell. Can only be set to 0 (null, means that trpaddb should be ignored in favor of trgaph) or 3 (twips).
+                if (cw.HasValue)
+                {
+                    var spacing = EnsureTableRowProperties().EnsureElement<TableCellSpacing>();
+                    spacing.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                }
                 return true;
 
-            case "trleft": // The distance (in twips) between the left edge of the table and the left margin of the page.
-                return true;
             case "trql": // Align table row to the left.
+                EnsureTableRowProperties().EnsureElement<TableJustification>().Val = TableRowAlignmentValues.Left;
                 return true;
             case "trqc": // Align table row to the center.
+                EnsureTableRowProperties().EnsureElement<TableJustification>().Val = TableRowAlignmentValues.Center;
                 return true;
             case "trqr": // Align table row to the right.
+                EnsureTableRowProperties().EnsureElement<TableJustification>().Val = TableRowAlignmentValues.Right;
                 return true;
-            case "tblind": // Specifies the indentation that shall be added before the
-                           // leading edge of the current table in the document (the left edge in a left-to-right table, and the right edge in a right-to-left table). 
-                           // This indentation should shift the table into the text margin by the specified amount.
+            case "trleft": // The distance (in twips) between the left edge of the table and the left margin of the page.
+                // Handled the same way as tblind for now, as the difference it's unclear.
+            case "tblind": // Specifies the indentation that shall be added before the leading edge of the table 
+                           // (the left edge in a left-to-right table, and the right edge in a right-to-left table). 
+                if (cw.Value != null)
+                {
+                    var indentation = EnsureTableRowExceptions().EnsureElement<TableIndentation>();
+                    indentation.Width = cw.Value!.Value;
+                    indentation.Type ??= TableWidthUnitValues.Dxa;
+                }
+                return true;
             case "tblindtype": // Units for tblind:
-            // 0: auto (automatically determined by the table layout algorithm)
-            // 1: twips
-            // 2: nil (ignore tblind)
-            // 3: percentage (in 50ths of a percent)
+                if (cw.Value != null)
+                {
+                    var rowPr = EnsureTableRowExceptions();
+                    rowPr.TableIndentation ??= new TableIndentation();
+                    if (cw.Value == 0)
+                        // 0 = Auto (automatically determined by the table layout algorithm)
+                        rowPr.TableIndentation.Type ??= TableWidthUnitValues.Auto;
+                    else if (cw.Value == 2)
+                        // 2 = Nil (consider \tblind equal to 0)
+                        rowPr.TableIndentation.Type ??= TableWidthUnitValues.Nil;
+                    else if (cw.Value == 3)
+                        // 3 = percentage (in 50ths of a percent)
+                        rowPr.TableIndentation.Type ??= TableWidthUnitValues.Pct;
+                    else
+                        // 1 = Twips (same as Dxa)
+                        rowPr.TableIndentation.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
 
             case "trautofit": // If 0 (default) the table is not automatically resized to fit the contents of the cells. If 1, AutoFit is on (but is still overriden by \clwWidthN and \trwWidthN).
+                if (cw.HasValue)
+                {
+                    EnsureTableRowExceptions().TableLayout = cw.Value!.Value == 1
+                        ? new TableLayout() { Type = TableLayoutValues.Autofit }
+                        : new TableLayout() { Type = TableLayoutValues.Fixed };
+                }
                 return true;
             case "trwwidth": // Specifies the width of the table row.
+                if (cw.Value != null)
+                {
+                    var rowPr = EnsureTableRowExceptions();
+                    rowPr.TableWidth ??= new TableWidth();
+                    rowPr.TableWidth.Width = cw.Value!.Value.ToStringInvariant();
+                    rowPr.TableWidth.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
-            case "trftswidth": // Units for trwWidth: 
-            // 0: null (ignore trwWidth in favor of cellx)
-            // 1: auto (no preferred row width. Ignore trwWidth if present, give precedence to row defaults and autofit)
-            // 2: percentage (in 50ths of a percent)
-            // 3: twips
+            case "trftswidth": // Units for trwWidth
+                if (cw.Value != null)
+                {
+                    var rowPr = EnsureTableRowExceptions();
+                    rowPr.TableWidth ??= new TableWidth();
+                    if (cw.Value == 0)
+                        // 0 = null (ignore trwWidth in favor of cellx)
+                        rowPr.TableWidth.Type ??= TableWidthUnitValues.Nil;
+                    else if (cw.Value == 1)
+                        // 1 = auto (no preferred row width. Ignore trwWidth if present, give precedence to row defaults and autofit)
+                        rowPr.TableWidth.Type ??= TableWidthUnitValues.Auto;
+                    else if (cw.Value == 2)
+                        // 2 = percentage (in 50ths of a percent)
+                        rowPr.TableWidth.Type ??= TableWidthUnitValues.Pct;
+                    else
+                        // 3 = twips (same as Dxa)
+                        rowPr.TableWidth.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
             case "trwwidthb": // Width of invisible cell at the beginning of the row. Used only in cases where rows have different widths.
+                if (cw.Value != null)
+                {
+                    var indentation = EnsureTableRowProperties().EnsureElement<WidthBeforeTableRow>();
+                    indentation.Width = cw.Value!.Value.ToStringInvariant();
+                    indentation.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
-            case "trftswidthb": // Units for trwWidthB: 
-            // 0: null (no invisible cell before)
-            // 1: auto (ignore trwWidthB if present)
-            // 2: percentage (in 50ths of a percent)
-            // 3: twips
+            case "trftswidthb": // Units for trwWidthB
+                if (cw.Value != null)
+                {
+                    if (cw.Value == 0)
+                        // 0 = null (no invisible cell before)
+                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Nil;
+                    else if (cw.Value == 1)
+                        // 1 = auto (ignore trwWidthB if present)
+                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Auto;
+                    else if (cw.Value == 2)
+                        // 2 = percentage (in 50ths of a percent)
+                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Pct;
+                    else
+                        // 3 = twips (same as Dxa)
+                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Dxa;
+                }
                 return true;
             case "trwwidtha": // Width of invisible cell at the end of the row. Used only in cases where rows have different widths.
+                if (cw.Value != null)
+                {
+                    var indentation = EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>();
+                    indentation.Width = cw.Value!.Value.ToStringInvariant();
+                    indentation.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
-            case "trftswidtha": // Units for trwWidthA: 
-            // 0: null (no invisible cell after)
-            // 1: auto (ignore trwWidthA if present)
-            // 2: percentage (in 50ths of a percent)
-            // 3: twips
+            case "trftswidtha": // Units for trwWidthA
+                if (cw.Value != null)
+                {
+                    if (cw.Value == 0)
+                        // 0 = null (no invisible cell after)
+                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Nil;
+                    else if (cw.Value == 1)
+                        // 1 = auto (ignore trwWidthA if present)
+                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Auto;
+                    else if (cw.Value == 2)
+                        // 2 = percentage (in 50ths of a percent)
+                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Pct;
+                    else
+                        // 3 = twips (same as Dxa)
+                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Dxa;
+                }
                 return true;
             case "trrh": // Height of a table row in twips. 
             // When 0, the height is sufficient for all the text in the line; 
             // when positive, the height is guaranteed to be at least the specified height; 
             // when negative, the absolute value of the height is used, regardless of the height of the text in the line.
+                if (cw.HasValue)
+                {
+                    var rowPr = EnsureTableRowProperties();
+                    rowPr.RemoveAll<TableRowHeight>();
+                    if (cw.Value!.Value == 0)
+                    {
+                        rowPr.Append(new TableRowHeight() { HeightType = HeightRuleValues.Auto });
+                    }
+                    else if (cw.Value!.Value > 0)
+                    {
+                        rowPr.Append(new TableRowHeight() { HeightType = HeightRuleValues.AtLeast, Val = cw.Value!.Value.ToUint() });
+                    }
+                    else if (cw.Value!.Value < 0)
+                    {
+                        rowPr.Append(new TableRowHeight() { HeightType = HeightRuleValues.Exact, Val = cw.Value!.Value.ToUint() });
+                    }
+                }
                 return true;
 
             case "taprtl": // If present, table direction is right to left.
@@ -300,20 +542,42 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
 
             case "trhdr": // If present, the current table row is a header row. A header row is repeated at the top of each page that the table spans across.
+                EnsureTableRowProperties().Append(new TableHeader() { Val = OnOffOnlyValues.On });
                 return true;
             case "trkeep": // If present, the current table row should not be split across pages.
+                EnsureTableRowProperties().Append(new CantSplit() { Val = OnOffOnlyValues.On });
                 return true;
             case "trkeepfollow": // If present, the current table row should be kept on the same page as the following row.
                 return true;
 
             case "trcbpat": // Background pattern color for the table row shading.
-                return true;
             case "trcfpat": // Foreground pattern color for the table row shading.
+                if (cw.Value != null)
+                {
+                    if (cw.Value.Value >= 0 && cw.Value.Value < colorTable.Count)
+                    {
+                        var rowPr = EnsureTableRowExceptions();
+                        var c = colorTable[cw.Value.Value];
+                        var hex = (c.R & 0xFF).ToString("X2") + (c.G & 0xFF).ToString("X2") + (c.B & 0xFF).ToString("X2");
+                        rowPr.Shading ??= new Shading();
+                        if (name == "trcfpat")
+                        {
+                            rowPr.Shading.Color = hex;
+                            if (rowPr.Shading.Val == null)
+                                rowPr.Shading.Val = ShadingPatternValues.Clear;
+                        }
+                        else if (name == "trcbpat")
+                        {
+                            rowPr.Shading.Fill = hex;
+                        }
+                    }
+                }
                 return true;
             // case "trpat": // Pattern for table row shading
-            // Ignore for now as it has no equivalent in cells/paragraphs and it's not clear how it is different from the pattern specified by trshdng/trbgbdiag/... (mapped in RtfShadingMapper.cs).
+            // Ignore for now as it has no equivalent in cells/paragraphs and it's not clear how it is different from the pattern specified by trshdng/trbgbdiag/... (mapped in RtfShadingMapper).
 
-            // Positioned Wrapped Tables: the following properties must be the same for all rows in the table
+            // Positioned Wrapped Tables: the following properties must be the same for all rows in the table in RTF, 
+            // and in DOCX they are only available on TableProperties (cannot be set for rows).
             case "tdfrmtxtleft": // Distance in twips, between the left of the table and surrounding text (default is 0)
                 return true;
             case "tdfrmtxttop": // Distance in twips, between the top of the table and surrounding text (default is 0)
@@ -360,7 +624,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "tposnegy": // Same as \tposy but allows arbitrary negative values.
                 return true;
 
-            case "tposyb": // Position table at the bottom of the vertical reference frame
+            case "tposyb": // Position table at the bottom of the vertical reference frame             
                 return true;
             case "tposyc": // Center table within the vertical reference frame
                 return true;
@@ -373,22 +637,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "tposyt": // Position table at the top of the vertical reference frame
                 return true;
 
-            // Cells
-			case "cellx":
-				if (cw.HasValue)
-                {
-					int cellWidth = cw.Value!.Value - cellx;
-                    cellx += cellWidth;
-                    EnsureTableCellProperties().TableCellWidth = new TableCellWidth() { Type = TableWidthUnitValues.Dxa, Width = cellWidth.ToStringInvariant() };
-                }
-                // \cellxN is the last element of the cell definition, so increment the cell index.
-                ++cellIndex;
-				return true;
-			case "cell":
-			case "nestcell":
-				EndTableCell();
-				return true;
-
+            // ------
+            // Table cell formatting. 
+            // All the following control words may appear in a cell definition. 
+            // The list of cell definitions is found at the end of a row definition (started by \trowd), 
+            // and each cell definition must be terminated by \cellxN.
             case "clmgf": // Indicates that the current table cell is the first in a range of table cells to be merged horizontally.
                 EnsureTableCellProperties().HorizontalMerge = new HorizontalMerge() { Val = MergedCellValues.Restart };
                 return true;
@@ -421,68 +674,68 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 currentBorder = EnsureTableCellBorder<TopRightToBottomLeftCellBorder>();
                 return true;
             
-            // Left and top cell padding are inverted due to a bug in all versions of Word (in RTF only): https://www.office-forums.com/threads/rtf-file-weirdness-clpadt-vs-clpadl.2163500/
+            // NOTE: left and top borders are inverted due to a bug in Microsoft Word, 
+            // which has been purposely retained by newer versions and other software for compatibility: 
+            // https://www.office-forums.com/threads/rtf-file-weirdness-clpadt-vs-clpadl.2163500/
             case "clpadt": // Left cell margin or padding. Overrides the row default specified by \trpaddl.
                 if (cw.HasValue)
                 {
                     var leftMargin = EnsureTableCellMargin<LeftMargin>();
-                    leftMargin.Type = TableWidthUnitValues.Dxa;
                     leftMargin.Width = cw.Value!.Value.ToStringInvariant();
+                    leftMargin.Type ??= TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "clpadl": // Top cell margin or padding. Overrides the row default specified by \trpaddt.
                 if (cw.HasValue)
                 {
                     var topMargin = EnsureTableCellMargin<TopMargin>();
-                    topMargin.Type = TableWidthUnitValues.Dxa;
                     topMargin.Width = cw.Value!.Value.ToStringInvariant();
+                    topMargin.Type ??= TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "clpadr": // Right cell margin or padding. Overrides the row default specified by \trpaddr.
                 if (cw.HasValue)
                 {
                     var rightMargin = EnsureTableCellMargin<RightMargin>();
-                    rightMargin.Type = TableWidthUnitValues.Dxa;
                     rightMargin.Width = cw.Value!.Value.ToStringInvariant();
+                    rightMargin.Type ??= TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "clpadb": // Bottom cell margin or padding. Overrides the row default specified by \trpaddb.
                 if (cw.HasValue)
                 {
                     var bottomMargin = EnsureTableCellMargin<BottomMargin>();
-                    bottomMargin.Type = TableWidthUnitValues.Dxa;
                     bottomMargin.Width = cw.Value!.Value.ToStringInvariant();
+                    bottomMargin.Type ??= TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "clpadft": // The unit of measurement for the left padding of the table cell. Can only be set to 0 (null, means that clpadt should be ignored in favor of trgaph) or 3 (twips).
                 if (cw.HasValue)
                 {
-                    var leftMargin = EnsureTableCellMargin<LeftMargin>();
-                    leftMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                    EnsureTableCellMargin<LeftMargin>().Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "clpadfr": // The unit of measurement for the right padding of the table cell. Can only be set to 0 (null, means that clpadr should be ignored in favor of trgaph) or 3 (twips).
                 if (cw.HasValue)
                 {
-                    var rightMargin = EnsureTableCellMargin<RightMargin>();
-                    rightMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                    EnsureTableCellMargin<RightMargin>().Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "clpadfl": // The unit of measurement for the top padding of the table cell. Can only be set to 0 (null, means that clpadl should be ignored in favor of trgaph) or 3 (twips).
                 if (cw.HasValue)
                 {
-                    var topMargin = EnsureTableCellMargin<TopMargin>();
-                    topMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                    EnsureTableCellMargin<TopMargin>().Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "clpadfb": // The unit of measurement for the bottom padding of the table cell. Can only be set to 0 (null, means that clpadb should be ignored in favor of trgaph) or 3 (twips).
                 if (cw.HasValue)
                 {
-                    var bottomMargin = EnsureTableCellMargin<BottomMargin>();
-                    bottomMargin.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
+                    EnsureTableCellMargin<BottomMargin>().Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
                 }
                 return true;
 
+            // Limitation: it is not possible to specify spacing for single cells in DOCX.
+            // MS Word applies them to the whole row when opening RTF, but ignores them when re-saving as DOCX.
             case "clspl": // Left cell spacing. Overrides the row default specified by \trspdl.
                 return true;
             case "clspr": // Right cell spacing. Overrides the row default specified by \trspdr.
@@ -500,13 +753,29 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "clspfb": // The unit of measurement for the bottom spacing of the table cell. Can only be set to 0 (null, ignore clspb) or 3 (twips).
                 return true;
 
-            case "clwwidth": // Specifies the width of the table cell. Overrides table row autofit.
+            case "clwwidth": // Specifies the width of the table cell. Overrides table row autofit. 
+                if (cw.Value != null && cw.Value > 0)
+                {
+                    var existingWidth = EnsureTableCellWidth();
+                    existingWidth.Width = cw.Value.Value.ToStringInvariant();
+                    existingWidth.Type ??= TableWidthUnitValues.Dxa;
+                }
                 return true;
-            case "clftswidth": // Units for clwWidth:
-            // 0: null (ignore clwWidth in favor of cellx)
-            // 1: auto (no preferred cell width. Ignore clwWidth if present, give precedence to row defaults)
-            // 2: percentage (in 50ths of a percent)
-            // 3: twips
+            case "clftswidth": // Units for clwWidth.
+                if (cw.Value != null)
+                {
+                    if (cw.Value == 0)
+                        // 0 = Ignore \clwWidthN in favor of \cellxN (Word 97 style of determining cell and row width)
+                        EnsureTableCellWidth().Type = TableWidthUnitValues.Nil;
+                    else if (cw.Value == 1)
+                        // 1 = Auto, no preferred cell width, ignores \clwWidthN if present; 
+                        // \clwWidthN will generally not be written, giving precedence to row defaults.
+                        EnsureTableCellWidth().Type = TableWidthUnitValues.Auto;
+                    else if (cw.Value == 2)
+                        EnsureTableCellWidth().Type = TableWidthUnitValues.Pct;
+                    else if (cw.Value == 3)
+                        EnsureTableCellWidth().Type = TableWidthUnitValues.Dxa;
+                }
                 return true;
 
             case "clshdrawnil": // No shading specified
@@ -556,24 +825,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
 
             case "cltxlrtb": // Text in the cell flows from left to right and top to bottom (default).
+                EnsureTableCellProperties().TextDirection = new TextDirection() { Val = TextDirectionValues.LefToRightTopToBottom };
                 return true;
             case "cltxtbrl": // Text in the cell flows right to left and top to bottom.
+                EnsureTableCellProperties().TextDirection = new TextDirection() { Val = TextDirectionValues.TopToBottomRightToLeft };
                 return true;
             case "cltxbtlr": // Text in the cell flows from left to right and bottom to top.
+                EnsureTableCellProperties().TextDirection = new TextDirection() { Val = TextDirectionValues.BottomToTopLeftToRight };
                 return true;
             case "cltxlrtbv": // Text in the cell flows left to right and top to bottom, vertical.
+                EnsureTableCellProperties().TextDirection = new TextDirection() { Val = TextDirectionValues.LefttoRightTopToBottomRotated };
                 return true;
             case "cltxtbrlv": // Text in the cell flows top to bottom and right to left, vertical.
-                return true;
-
-            // Paragraphs inside tables
-            case "intbl":
-				// Mark current paragraph state as inside a table and ensure we entered a cell
-				paragraphState.TableNestingLevel = Math.Max(paragraphState.TableNestingLevel, 1);
-				return true;
-            case "itap":
-                if (cw.HasValue)
-                    paragraphState.TableNestingLevel = cw.Value!.Value;
+                EnsureTableCellProperties().TextDirection = new TextDirection() { Val = TextDirectionValues.TopToBottomRightToLeftRotated };
                 return true;
 
 			default:

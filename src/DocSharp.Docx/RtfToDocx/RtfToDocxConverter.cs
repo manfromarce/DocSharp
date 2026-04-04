@@ -105,8 +105,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         paragraphState = new ParagraphState();
 
         pendingTableRow = null;
-        currentTableRowExceptions = null;
-        currentRowProperties = null;
         cellx = 0;
         cellIndex = 0;
 
@@ -884,30 +882,40 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 }
                 else if (cw.Name?.StartsWith("shading") == true || cw.Name?.StartsWith("bg") == true)
                 {
-                    var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
-                    if (shadingType != null)
+                    var paragraphShadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    if (paragraphShadingType != null)
                     {
                         pendingParagraphPr.Shading ??= new Shading();
-                        pendingParagraphPr.Shading.Val = shadingType;
+                        pendingParagraphPr.Shading.Val = paragraphShadingType;
                     }
                 }
                 else if (cw.Name?.StartsWith("chshdng") == true || cw.Name?.StartsWith("chbg") == true)
                 {
-                    var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
-                    if (shadingType != null)
+                    var charShadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    if (charShadingType != null)
                     {
                         runState.CharacterShading ??= new Shading();
-                        runState.CharacterShading.Val = shadingType;
+                        runState.CharacterShading.Val = charShadingType;
                     }
                 }
                 else if (cw.Name?.StartsWith("clshdng") == true || cw.Name?.StartsWith("clbg") == true)
                 {
-                    var shadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
-                    if (shadingType != null)
+                    var cellShadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    if (cellShadingType != null)
                     {
                         var cellPr = EnsureTableCellProperties();
                         cellPr.Shading ??= new Shading();
-                        cellPr.Shading.Val = shadingType;
+                        cellPr.Shading.Val = cellShadingType;
+                    }
+                }
+                else if (cw.Name?.StartsWith("trshdng") == true || cw.Name?.StartsWith("trbg") == true)
+                {
+                    var rowShadingType = RtfShadingMapper.GetShadingType(cw.Name, cw.Value);
+                    if (rowShadingType != null)
+                    {
+                        var rowPr = EnsureTableRowExceptions();
+                        rowPr.Shading ??= new Shading();
+                        rowPr.Shading.Val = rowShadingType;
                     }
                 }
                 else if (cw.Name?.StartsWith("pgn") == true)
