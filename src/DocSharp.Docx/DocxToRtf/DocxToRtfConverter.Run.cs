@@ -90,7 +90,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
         else
         {
-            // Calibri is already in the font table as last resort
+            // The default font is already in the font table as last resort
             sb.Write(@"\f0");
         }
 

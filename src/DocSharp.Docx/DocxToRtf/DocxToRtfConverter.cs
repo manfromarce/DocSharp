@@ -125,9 +125,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
         // Prepare fonts table 
-        sb.Write(@"{\fonttbl{\f0\fnil\fcharset0 ");
-        sb.Write(DefaultSettings.FontName);
-        sb.Write(";}");
+        sb.Write(@"{\fonttbl");
+        fonts.TryAddAndGetIndex(DefaultSettings.FontName, out _);
 
         // Determine footnotes / endnotes type
         FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
