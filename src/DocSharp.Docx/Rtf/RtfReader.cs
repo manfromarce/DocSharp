@@ -190,6 +190,7 @@ internal static class RtfReader
         "mmPr",
         "mmquery",
         "mmr",
+        "mnary",
         "mnaryPr",
         "mnoBreak",
         "mnum",
