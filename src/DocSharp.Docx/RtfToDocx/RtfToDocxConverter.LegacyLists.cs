@@ -95,8 +95,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 {
                     var level = EnsureLevel();
                     level.NumberingSymbolRunProperties ??= new NumberingSymbolRunProperties();
-                    if (fontTable.TryGetValue(cw.Value!.Value, out var fname) && !string.IsNullOrEmpty(fname))
-                    level.NumberingSymbolRunProperties.RunFonts = new RunFonts() { Ascii = fname, HighAnsi = fname, EastAsia = fname, ComplexScript = fname };
+                    if (fontTable.TryGetValue(cw.Value!.Value, out var finfo) && !string.IsNullOrEmpty(finfo?.Name))
+                        level.NumberingSymbolRunProperties.RunFonts = new RunFonts() { Ascii = finfo.Name, HighAnsi = finfo.Name, EastAsia = finfo.Name, ComplexScript = finfo.Name };
                 }
                 return true;
             case "pnfs": // Font size

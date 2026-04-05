@@ -65,7 +65,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		return om;
 	}
 
-	private void ProcessMoMathChildren(RtfGroup group, OpenXmlElement parent)
+	private void ProcessMoMathChildren(RtfGroup group, OpenXmlElement parent, string fontFamily = "Cambria Math")
 	{
 		if (group == null) return;
 
@@ -136,7 +136,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 						break;
 
 					case "mr":
-						el = ConvertMathRun(d);
+						el = ConvertMathRun(d, fontFamily);
 						break;
 					default:
 						// TODO: better handle regular runs/chars inside math context
@@ -151,9 +151,17 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 			}
 			else if (token is RtfGroup g)
 			{
-				// TODO: better handle regular runs/chars inside math context
-				// For now just recurse to find \mr
-				ProcessMoMathChildren(g, parent);
+				// TODO: better handle regular runs/chars inside math context.
+				// For now just recurse to find \mr and keep track of custom font (if specified)
+				var fontCw = g.Tokens.OfType<RtfControlWord>().FirstOrDefault(x => x.Name.Equals("f", StringComparison.OrdinalIgnoreCase));
+				if (fontCw != null && fontCw.HasValue && fontTable.TryGetValue(fontCw.Value!.Value, out var finfo) && !string.IsNullOrEmpty(finfo?.Name))
+				{
+					ProcessMoMathChildren(g, parent, finfo.Name);
+				}
+				else
+				{
+					ProcessMoMathChildren(g, parent);
+				}
 			}
 		}
 	}
@@ -163,7 +171,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (group == null) return;
 		foreach (var d in group.Tokens.OfType<RtfDestination>())
 		{
-
+			// TODO
 		}
 	}
 
@@ -582,13 +590,16 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		return sup;
 	}
 
-	private M.Run? ConvertMathRun(RtfDestination dest)
+	private M.Run? ConvertMathRun(RtfDestination dest, string fontFamily = "Cambria Math")
 	{
 		var run = new M.Run();
-        // TODO: check if a different font should be used
         run.RunProperties = new RunProperties
         {
+			// RunFonts = new RunFonts() { Ascii = fontFamily, HighAnsi = fontFamily, EastAsia = fontFamily, ComplexScript = fontFamily }
             RunFonts = new RunFonts() { Ascii = "Cambria Math", HighAnsi = "Cambria Math", EastAsia = "Cambria Math", ComplexScript = "Cambria Math" }
+            // For now font family is ignored, because fonts such as "Cambria Math Greek" are frequently specified in RTF 
+			// but they cause rendering issues in DOCX. 
+			// However, we use them to detect the encoding.
         };
 		run.MathRunProperties = new M.RunProperties();
 		var msty = dest.Tokens.OfType<RtfControlWord>().FirstOrDefault(p => p.Name.Equals("msty", StringComparison.OrdinalIgnoreCase)) ?? 
@@ -627,8 +638,16 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 				}
 			}
 		}
-        var builder = new StringBuilder();
-		ConvertGroupAsText(dest, builder);
+		var builder = new StringBuilder();
+		// Try to determine an encoding from the math run font family (if present).
+		Encoding? overrideEnc = null;
+		if (!string.IsNullOrEmpty(fontFamily))
+		{
+			var finfo = fontTable.Values.FirstOrDefault(fi => string.Equals(fi.Name, fontFamily, StringComparison.OrdinalIgnoreCase));
+			if (finfo != null)
+				overrideEnc = GetEncodingFromFontInfo(finfo);
+		}
+		ConvertGroupAsText(dest, builder, overrideEnc);
 		run.AppendChild(new M.Text() { Text = builder.ToString(), Space = SpaceProcessingModeValues.Preserve });
 		return run;
 	}

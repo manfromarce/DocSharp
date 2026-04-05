@@ -47,15 +47,25 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             if (token is RtfGroup entry)
             {
                 int? idx = null;
+                int? fcharset = null;
+                int? cpg = null;
                 var sb = new StringBuilder();
                 foreach (var et in entry.Tokens)
                 {
                     if (et is RtfControlWord ecw)
                     {
-                        // TODO: recognize and handle \fnil, \fcharset, ...
-                        if ((ecw.Name ?? string.Empty).ToLowerInvariant() == "f" && ecw.HasValue)
+                        var nm = (ecw.Name ?? string.Empty).ToLowerInvariant();
+                        if (nm == "f" && ecw.HasValue)
                         {
                             idx = ecw.Value;
+                        }
+                        else if (nm == "fcharset" && ecw.HasValue)
+                        {
+                            fcharset = ecw.Value;
+                        }
+                        else if (nm == "cpg" && ecw.HasValue)
+                        {
+                            cpg = ecw.Value;
                         }
                         continue;
                     }
@@ -70,7 +80,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     // remove trailing semicolon used as delimiter in fonttbl entries
                     if (name.EndsWith(";")) name = name.Substring(0, name.Length - 1).Trim();
                     if (!string.IsNullOrEmpty(name))
-                        fontTable[idx.Value] = name;
+                        fontTable[idx.Value] = new RtfFontInfo() { Name = name, FCharset = fcharset, CodePage = cpg };
                 }
             }
         }

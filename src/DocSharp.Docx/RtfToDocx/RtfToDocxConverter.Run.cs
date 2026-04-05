@@ -80,15 +80,15 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         // if (state.CharacterStyleIndex.HasValue) rPr.Append(new RunStyle() { Val = ""});
 
         // Get font family from font table
-        if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fname) && !string.IsNullOrEmpty(fname))
-            rPr.RunFonts = new RunFonts() { Ascii = fname, HighAnsi = fname, EastAsia = fname, ComplexScript = fname };
+        if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fInfo) && !string.IsNullOrEmpty(fInfo?.Name))
+            rPr.RunFonts = new RunFonts() { Ascii = fInfo.Name, HighAnsi = fInfo.Name, EastAsia = fInfo.Name, ComplexScript = fInfo.Name };
 
-        if (state.AssociatedFontIndex.HasValue && fontTable.TryGetValue(state.AssociatedFontIndex.Value, out var afName) && !string.IsNullOrEmpty(afName))
+        if (state.AssociatedFontIndex.HasValue && fontTable.TryGetValue(state.AssociatedFontIndex.Value, out var afInfo) && !string.IsNullOrEmpty(afInfo?.Name))
         {
             rPr.RunFonts ??= new RunFonts();
-            rPr.RunFonts.HighAnsi = afName;
-            rPr.RunFonts.EastAsia = afName;
-            rPr.RunFonts.ComplexScript = afName;
+            rPr.RunFonts.HighAnsi = afInfo.Name;
+            rPr.RunFonts.EastAsia = afInfo.Name;
+            rPr.RunFonts.ComplexScript = afInfo.Name;
         }
 
         // Get colors from color table

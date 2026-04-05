@@ -53,6 +53,10 @@ internal class FormattingState
 
     // Remaining ANSI characters to skip because of a previously seen \u control word
     public int PendingAnsiSkip { get; set; }
+    // If a high-surrogate UTF-16 code unit was seen from a previous \u control word,
+    // store it here until the matching low surrogate is found so we can emit
+    // a single valid surrogate pair in the same text node.
+    public int? PendingHighSurrogate { get; set; }
     
     // When true the last emitted break was a text-wrapping line break (from \line or \lbr).
     // Used to avoid emitting duplicate breaks when both \line and \lbr are present.
@@ -108,6 +112,7 @@ internal class FormattingState
             
             Uc = this.Uc,
             PendingAnsiSkip = this.PendingAnsiSkip,
+            PendingHighSurrogate = this.PendingHighSurrogate,
             LastWasLineBreak = this.LastWasLineBreak
         };
     }
@@ -156,6 +161,7 @@ internal class FormattingState
 
         Uc = 1;
         PendingAnsiSkip = 0;
+        PendingHighSurrogate = null;
         LastWasLineBreak = false;
     }
 }

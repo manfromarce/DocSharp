@@ -245,63 +245,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (dname == "leveltext")
                 {
                     var sb = new StringBuilder();
-                    
-                    bool firstCharFound = false;
-
-                    var enc = codePageEncoding ?? DefaultEncoding;
-                    int uc = TryPeek(fmtStack).Uc;
-                    int toBeSkipped = 0;
-                    foreach (var t in dest2.Tokens)
-                    {
-                        if (t is RtfChar rc)
-                        {
-                            if (!firstCharFound)
-                            {
-                                // Skip initial length byte
-                                firstCharFound = true;
-                                continue;
-                            }
-                            byte b = rc.CharCode;
-                            if (b < 0x20)
-                            {
-                                // placeholder for level number: rtf value = levelIndex (0-based)
-                                sb.Append("%" + (b + 1).ToString());
-                            }
-                            else
-                            {
-                                sb.Append(enc.GetString(new byte[] { b }));
-                            }
-                        }
-                        else if (t is RtfText txt)
-                        {
-                            if (toBeSkipped > 0 && txt.Text != null && txt.Text.Length > 0)
-                                sb.Append(txt.Text.Skip(toBeSkipped).ToArray());
-                            else 
-                                sb.Append(txt.Text ?? string.Empty);
-                            toBeSkipped = 0;
-                        }
-                        else if (t is RtfControlWord levelTextCw)
-                        {
-                            if (string.Equals(levelTextCw.Name, "uc", StringComparison.OrdinalIgnoreCase))
-                            {
-                                uc = levelTextCw.HasValue ? levelTextCw.Value!.Value : 1;
-                            }
-                            else if (string.Equals(levelTextCw.Name, "u", StringComparison.OrdinalIgnoreCase) && levelTextCw.HasValue)
-                            {
-                                int charCode = levelTextCw.Value!.Value;
-                                if (charCode < 0)
-                                {
-                                    // Unicode values greater than 32767 are expressed as negative numbers.
-                                    // For example, U+F020 would be \u-4064 in RTF: 
-                                    // sum 65536 to get 61472.
-                                    charCode += 65536;
-                                }
-                                string s = char.ConvertFromUtf32(charCode);
-                                sb.Append(s);
-                                toBeSkipped = uc;
-                            }
-                        }
-                    }
+                    ConvertGroupAsText(dest2, sb, codePageEncoding, true);
                     level.LevelText = new LevelText() { Val = sb.ToString().TrimEnd(";") };
                 }                               
             }

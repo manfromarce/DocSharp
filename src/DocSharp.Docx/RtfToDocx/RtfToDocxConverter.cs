@@ -32,7 +32,42 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     private DocumentSettingsPart? settingsPart;
     private StyleDefinitionsPart? stylesPart;
 
-    private Dictionary<int, string> fontTable = new();
+    // Minimal mapping fcharset -> code page (extendable)
+    private static readonly Dictionary<int, int> FCharsetToCodePage = new() {
+        { 0, 1252 }, // fcharset0 -> code page Windows-1252 (ANSI Latin 1)
+        { 1, 0 }, // fcharset1 -> code page 0 (default)
+        { 2, 42 }, // fcharset2 -> code page 42 (Symbol)
+        { 77, 10000 }, // fcharset77 -> code page 10000 (Mac Roman)
+        { 78, 10001 }, // fcharset78 -> code page 10001 (Mac Shift Jis)
+        { 79, 10003 }, // fcharset79 -> code page 10003 (Mac Hangul)
+        { 80, 10008 }, // fcharset80 -> code page 10008 (Mac GB2312)
+        { 81, 10002 }, // fcharset81 -> code page 10002 (Mac Big5)
+        { 83, 10005 }, // fcharset83 -> code page 10005 (Mac Hebrew)
+        { 84, 10004 }, // fcharset84 -> code page 10004 (Mac Arabic)
+        { 85, 10006 }, // fcharset85 -> code page 10006 (Mac Greek)
+        { 86, 10081 }, // fcharset86 -> code page 10081 (Mac Turkish)
+        { 87, 10021 }, // fcharset87 -> code page 10021 (Mac Thai)
+        { 88, 10029 }, // fcharset88 -> code page 10029 (Mac East Europe)
+        { 89, 10007 }, // fcharset89 -> code page 10007 (Mac Russian)
+        { 128, 932 }, // fcharset128 -> code page 932 (Shift JIS)
+        { 129, 949 }, // fcharset129 -> code page 949 (Hangul)
+        { 130, 1361 }, // fcharset130 -> code page 1361 (Johab)
+        { 134, 936 }, // fcharset134 -> code page 936 (GB2312)
+        { 136, 950 }, // fcharset136 -> code page 950 (Big5)
+        { 161, 1253 }, // fcharset161 -> code page 1253 (Greek)
+        { 162, 1254 }, // fcharset162 -> code page 1254 (Turkish)
+        { 163, 1258 }, // fcharset163 -> code page 1258 (Vietnamese)
+        { 177, 1255 }, // fcharset177 -> code page 1255 (Hebrew)
+        { 178, 1256 }, // fcharset178 -> code page 1256 (Arabic)
+        { 186, 1257 }, // fcharset186 -> code page 1257 (Baltic)
+        { 204, 1251 }, // fcharset204 -> code page 1251 (Russian)
+        { 222, 874 }, // fcharset222 -> code page 874 (Thai)
+        { 238, 1250 }, // fcharset238 -> code page 1250 (Eastern European)
+        { 254, 437 }, // fcharset254 -> code page 437 (PC 437)
+        { 255, 850 }, // fcharset255 -> code page 850 (OEM)
+    };
+
+    private Dictionary<int, RtfFontInfo> fontTable = new();
     private List<(int R, int G, int B)> colorTable = new();
     private Dictionary<string, int> bookmarks = new();
     private int? defaultFontIndex = null;
@@ -124,7 +159,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             new M.MathFont() { Val = "Cambria Math" }, 
             new M.BreakBinarySubtraction() { Val = M.BreakBinarySubtractionValues.MinusMinus }, 
             new M.SmallFraction() { Val = M.BooleanValues.Zero }, 
-            new M.DisplayDefaults(), 
+            new M.DisplayDefaults() { Val = M.BooleanValues.One }, 
             new M.LeftMargin() { Val = 0 },
             new M.RightMargin() { Val = 0 },
             new M.DefaultJustification() { Val = M.JustificationValues.Center },
@@ -634,8 +669,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     break;
                 case RtfChar ch:
                     // Ensure paragraph and run exist
-                    codePageEncoding ??= Encodings.ANSI;
-                    string s = codePageEncoding.GetString([ch.CharCode]);
+                    var encMain = ResolveEncodingForRun(TryPeek(fmtStack));
+                    string s = encMain.GetString(new byte[] { ch.CharCode });
                     HandleText(s);
                     break;
                 case RtfText text:
@@ -664,10 +699,47 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             stack.Pop();
     }
 
-    private void ConvertGroupAsText(RtfGroup group, StringBuilder sb)
+    private Encoding? GetEncodingFromFontInfo(RtfFontInfo? fi)
+    {
+        if (fi == null) return null;
+        if (fi.CodePage.HasValue)
+        {
+            try { return Encoding.GetEncoding(fi.CodePage.Value); } catch { }
+        }
+        if (fi.FCharset.HasValue)
+        {
+            if (FCharsetToCodePage.TryGetValue(fi.FCharset.Value, out var cp))
+            {
+                try { return Encoding.GetEncoding(cp); } catch { }
+            }
+        }
+        return null;
+    }
+
+    private Encoding ResolveEncodingForRun(FormattingState state)
+    {
+        if (state != null)
+        {
+            if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fi))
+            {
+                var enc = GetEncodingFromFontInfo(fi);
+                if (enc != null) return enc;
+            }
+            if (state.AssociatedFontIndex.HasValue && fontTable.TryGetValue(state.AssociatedFontIndex.Value, out var afi))
+            {
+                var enc = GetEncodingFromFontInfo(afi);
+                if (enc != null) return enc;
+            }
+        }
+        if (codePageEncoding != null) return codePageEncoding;
+        try { return Encoding.GetEncoding(DefaultCodePage); } catch { return DefaultEncoding; }
+    }
+
+    private void ConvertGroupAsText(RtfGroup group, StringBuilder sb, Encoding? overrideEncoding = null, bool isLevelText = false)
     {
         // Method to handle only text and special character
         fmtStack.Push(TryPeek(fmtStack).Clone());
+        bool firstCharFound = false;
         foreach (var token in group.Tokens)
         {
             switch (token)
@@ -677,15 +749,50 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         continue; // destinations are ignored in this context as they cause incorrect handling (e.g. \*\datafield in fields)
                     else 
                         // Recurse
-                        ConvertGroupAsText(subGroup, sb);
+                        ConvertGroupAsText(subGroup, sb, overrideEncoding);
                     break;
                 case RtfControlWord cw:
-                    HandleControlWord(cw, sb);
+                    var runState = TryPeek(fmtStack);
+                    var name = (cw.Name ?? string.Empty).ToLowerInvariant();
+                    switch (name)
+                    {
+                        case "uc":
+                            // Number of ANSI characters to skip after a following \uN control word
+                            if (cw.HasValue)
+                                runState.Uc = Math.Max(0, cw.Value!.Value);
+                            else
+                                runState.Uc = 1;
+                            break;
+                        case "u":
+                            if (cw.HasValue)
+                            {
+                                ProcessUnicode(cw.Value!.Value, runState, sb);                   
+                            }
+                            break;
+                    }
                     break;
                 case RtfChar ch:
-                    // Ensure paragraph and run exist
-                    codePageEncoding ??= Encodings.ANSI;
-                    string s = codePageEncoding.GetString([ch.CharCode]);
+                    var enc = overrideEncoding ?? ResolveEncodingForRun(TryPeek(fmtStack));
+                    if (isLevelText)
+                    {
+                        // The \leveltext group needs special handling: 
+                        // skip the first hex code that specifies string length (not a char), 
+                        // and convert number placeholders to the format used by Open XML.
+                        if (!firstCharFound)
+                        {
+                            // Skip initial length byte
+                            firstCharFound = true;
+                            continue;
+                        }
+                        // TODO: improve this logic
+                        if (ch.CharCode < 0x20)
+                        {
+                            // placeholder for level number: rtf value = levelIndex (0-based)
+                            sb.Append("%" + (ch.CharCode + 1).ToString());
+                            continue;
+                        } // else process text normally
+                    }
+                    string s = enc.GetString(new byte[] { ch.CharCode });
                     HandleText(s, sb);
                     break;
                 case RtfText text:
@@ -696,7 +803,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         TryPop(fmtStack);
     }
 
-    private void HandleText(string text, StringBuilder sb)
+    private void HandleText(string text, StringBuilder? sb = null)
     {
         text ??= string.Empty;
         var runState = TryPeek(fmtStack);
@@ -716,68 +823,17 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             }
         }
 
-        sb.Append(text);
-    }
-
-    private void HandleText(string text)
-    {
-        text ??= string.Empty;
-        var runState = TryPeek(fmtStack);
-
-        // If a previous \u control word requested skipping a number of following ANSI chars (\ucN),
-        // consume them from the start of this text token. This handles the case where the parser
-        // produced a single RtfText token that contains both the ANSI fallback chars and the remainder.
-        if (runState.PendingAnsiSkip > 0 && text.Length > 0)
+        if (sb != null)
         {
-            int toSkip = Math.Min(runState.PendingAnsiSkip, text.Length);
-            text = text.Substring(toSkip);
-            runState.PendingAnsiSkip -= toSkip;
-            if (text.Length == 0)
-            {
-                // Entire text token was consumed by skipping; nothing to append.
-                return;
-            }
+            // In special cases the output is redirected to a StringBuilder.
+            sb.Append(text);
         }
-
-        // Append the (possibly trimmed) text
-        AddRun().Append(new Text(text)
+        else 
         {
-            Space = SpaceProcessingModeValues.Preserve
-        });
-    }
-
-    private void HandleControlWord(RtfControlWord cw, StringBuilder sb)
-    {
-        var runState = TryPeek(fmtStack);
-        var name = (cw.Name ?? string.Empty).ToLowerInvariant();
-        switch (name)
-        {
-            case "uc":
-                // Number of ANSI characters to skip after a following \uN control word
-                if (cw.HasValue)
-                    runState.Uc = Math.Max(0, cw.Value!.Value);
-                else
-                    runState.Uc = 1;
-                break;
-            case "u":
-                if (cw.HasValue)
-                {
-                    int charCode = cw.Value!.Value;
-                    if (charCode < 0)
-                    {
-                        // Unicode values greater than 32767 are expressed as negative numbers.
-                        // For example, U+F020 would be \u-4064 in RTF: 
-                        // sum 65536 to get 61472.
-                        charCode += 65536;
-                    }
-                    string s = char.ConvertFromUtf32(charCode);
-                    HandleText(s, sb);
-                    // After emitting the Unicode character, the RTF specification says that
-                    // the following "uc" ANSI characters should be ignored. Track how many
-                    // to skip on the formatting state so subsequent text tokens can consume them.
-                    runState.PendingAnsiSkip = runState.Uc > 0 ? runState.Uc : 0;
-                }
-                break;
+            AddRun().Append(new Text(text)
+            {
+                Space = SpaceProcessingModeValues.Preserve
+            });
         }
     }
 
