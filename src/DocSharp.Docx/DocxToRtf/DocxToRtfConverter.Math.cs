@@ -1076,7 +1076,11 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         if (mathProperties != null)
         {
-            // TODO
+            // TODO: proper mapping for document-level math properties.
+            // For now, write default Word math properties to avoid rendering issues.
+            sb.WriteLine();
+            sb.WriteLine(@"{\mmathPr\mmathFont1\mbrkBin0\mbrkBinSub0\msmallFrac0\mdispDef1\mlMargin0\mrMargin0\mdefJc1\mwrapIndent1440\mintLim0\mnaryLim1}");
+            // Font nr. 1 is Cambria Math (added to font table after the default font)
         }
     }
 }

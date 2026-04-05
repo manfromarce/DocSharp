@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using DocSharp.Collections;
 using DocSharp.Helpers;
+using DocSharp.Rtf;
 using DocSharp.Writers;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
@@ -128,6 +129,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         sb.WriteLine();
         sb.Write(@"{\fonttbl");
         fonts.TryAddAndGetIndex(DefaultSettings.FontName, out _);
+        fonts.TryAddAndGetIndex("Cambria Math", out _);
 
         // Determine footnotes / endnotes type
         FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
@@ -187,7 +189,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // Write font table after the RTF header
         foreach (var font in fonts)
         {
-            sb.Write(@"{\f" + font.Value + @"\fnil\fcharset0 " + font.Key + ";}");
+            sb.Write(@"{\f" + font.Value + $@"\{RtfFontMapper.GetFontType(font.Key)}\fcharset0 " + font.Key + ";}");
         }
         sb.WriteLine("}");
 
