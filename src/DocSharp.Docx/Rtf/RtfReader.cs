@@ -583,7 +583,7 @@ internal static class RtfReader
                 // convert the recently created group into an RtfDestination. This should happen
                 // both for destinations preceded by '*' (pendingDestinationMarker) and for
                 // plain destination names (e.g. \colortbl).
-                bool isDest = groupJustOpened && (pendingDestinationMarker || Array.IndexOf(destinations, name.ToLowerInvariant()) >= 0);
+                bool isDest = groupJustOpened && (pendingDestinationMarker || destinations.Contains(name, StringComparer.OrdinalIgnoreCase));
                 if (isDest)
                 {
                     var old = stack.Pop();

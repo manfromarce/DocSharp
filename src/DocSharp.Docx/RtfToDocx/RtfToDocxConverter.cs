@@ -13,6 +13,7 @@ using System.Xml;
 using System.Diagnostics;
 using DocumentFormat.OpenXml;
 using DocSharp.Rtf;
+using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
@@ -113,7 +114,25 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
         package = targetDocument;
         mainPart = targetDocument.MainDocumentPart ?? targetDocument.AddMainDocumentPart();
+
+        // TODO: proper math properties mapping. 
+        // For now hardcode the default Word math properties to avoid rendering issues.
         settingsPart = mainPart.DocumentSettingsPart;
+        settingsPart ??= mainPart.AddNewPart<DocumentSettingsPart>();
+        settingsPart.Settings ??= new Settings();        
+        settingsPart.Settings.Append(new M.MathProperties(
+            new M.MathFont() { Val = "Cambria Math" }, 
+            new M.BreakBinarySubtraction() { Val = M.BreakBinarySubtractionValues.MinusMinus }, 
+            new M.SmallFraction() { Val = M.BooleanValues.Zero }, 
+            new M.DisplayDefaults(), 
+            new M.LeftMargin() { Val = 0 },
+            new M.RightMargin() { Val = 0 },
+            new M.DefaultJustification() { Val = M.JustificationValues.Center },
+            new M.WrapIndent() { Val = 1440 },
+            new M.IntegralLimitLocation { Val = M.LimitLocationValues.SubscriptSuperscript }, 
+            new M.NaryLimitLocation { Val = M.LimitLocationValues.UnderOver }
+        ));
+
         stylesPart = mainPart.StyleDefinitionsPart;
 
         mainPart.Document ??= new Document();
@@ -519,6 +538,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             var pict = ProcessPicture<Picture>(destination);
                             if (pict != null)
                                 AddRun().Append(pict);
+                            continue;
+                        }
+                        else if (dname == "mmath")
+                        {
+                            ProcessMathDestination(destination);
                             continue;
                         }
                         else if (dname == "nonshppict")

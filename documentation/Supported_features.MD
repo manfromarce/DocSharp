@@ -99,8 +99,8 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Paragraph positioning / frame properties / drop cap
 - ❌ Paragraph group formatting
 - ❌ Styles (however the formatting is usually written inline in RTF for compatibility reasons, even if there is an associated style too)  
-- 🟡 Lists (note: there are still issues that need to be resolved)
-- 🟡 Tables
+- ✅ Lists
+- 🟡 Tables (nested tables, conditional formatting and advanced table/row position are not supported)
 - 🟡 Section properties
 - 🟡 Default section properties / document-level formatting and settings
 - 🟡 Fields (supported but additional work is needed for some complex fields and form fields)
@@ -110,12 +110,12 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ❌ Custom tabs
 - ✅ Header and footer
 - ✅ Footnotes and endnotes
-- 🟡 Pictures - supported but text wrapping layouts and many properties written by Word are not recognized (always rendered in line with text)
+- 🟡 Pictures (supported but text wrapping layouts and many properties written by Word are not recognized, all pictures are rendered in line with text)
+- 🟡 Math formulas (there are still issues that need to be resolved)
 - ❌ Drawings (text boxes, shapes, diagrams, WordArt)
 - ❌ Table of contents (in RTF can be a dedicated structure, while in DOCX it's a group of fields)
 - ❌ Index entries
 - ❌ OLE objects
-- ❌ Math formulas
 - ✅ Document information
 - ❌ Document protection
 - ❌ Document background
