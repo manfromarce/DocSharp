@@ -107,7 +107,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Hyperlinks (fields in RTF)
 - ✅ Bookmarks
 - ✅ Special characters (symbols, page number, section number, current date/time)
-- ❌ Custom tabs
+- ✅ Custom tabs
 - ✅ Header and footer
 - ✅ Footnotes and endnotes
 - 🟡 Pictures (supported but text wrapping layouts and many properties written by Word are not recognized, all pictures are rendered in line with text)
