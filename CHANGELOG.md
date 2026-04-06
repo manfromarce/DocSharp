@@ -1,4 +1,4 @@
-## 0.18.0 - not published yet
+## 0.18.0 - 2026.04.07
 
 - Added conversion options to `WordprocessingDocument.SaveTo` extension methods
 - Added ability to append to existing Markdown / plain text when converting DOCX
@@ -23,6 +23,7 @@
 - Fixed various bugs with images in Markdown ↔️ DOCX converters
 - Fix: unnecessary space was created in DOCX ➡️ Markdown converter in some cases
 - Fixed other bugs and improve code structure
+- Updated dependencies
 
 ## 0.17.0 - 2025.12.04
 

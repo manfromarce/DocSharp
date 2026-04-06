@@ -6,8 +6,9 @@ The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.  
 Note: pre-97 formats (not documented) and XLSB (very different) are not supported.
-- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt). Possible applications include generating Open XML documents in C# and exporting for other editors/services, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt), and RTF to DOCX. Possible applications include generating Open XML documents in C# and exporting for other editors/services, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
+- DocSharp.Renderer: provides basic DOCX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
 
 Packages can be installed via NuGet:  
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Doc?style=flat-square&label=DocSharp.Binary.Doc)](https://www.nuget.org/packages/DocSharp.Binary.Doc/) 
@@ -15,12 +16,9 @@ Packages can be installed via NuGet:
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Binary.Ppt?style=flat-square&label=DocSharp.Binary.Ppt)](https://www.nuget.org/packages/DocSharp.Binary.Ppt/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Docx?style=flat-square&label=DocSharp.Docx)](https://www.nuget.org/packages/DocSharp.Docx/)
 [![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Markdown?style=flat-square&label=DocSharp.Markdown)](https://www.nuget.org/packages/DocSharp.Markdown/)
+[![NuGet](https://img.shields.io/nuget/vpre/DocSharp.Renderer?style=flat-square&label=DocSharp.Renderer)](https://www.nuget.org/packages/DocSharp.Renderer/)
 
-The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), DocSharp.MagickNET (not published yet) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). Each of these has pros and cons, the choice depends on your requirements. More information can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
-
-The codebase also contains few experimental converters that are not ready and not published on NuGet yet:  
-- RTF to DOCX converter class in the DocSharp.Docx project
-- DocSharp.Renderer: provides DOCX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
+The optional extra packages [DocSharp.ImageSharp](https://www.nuget.org/packages/DocSharp.ImageSharp/), [DocSharp.SystemDrawing](https://www.nuget.org/packages/DocSharp.SystemDrawing/), [DocSharp.SkiaSharp](https://www.nuget.org/packages/DocSharp.SkiaSharp/), [DocSharp.MagickNET](https://www.nuget.org/packages/DocSharp.MagickNET/) allow to convert unsupported images (e.g. GIF / TIFF for DOCX -> RTF or WMF / EMF / TIFF for DOCX -> Markdown/HTML). Each of these has pros and cons, the choice depends on your requirements. More information can be found in the [Wiki](https://github.com/manfromarce/DocSharp/wiki/Convert-images).
 
 There is no common DOM to manipulate or generate documents, this library is mainly for conversion. Some helper methods on top of the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) and format-specific writers are available, but they are mostly intended for internal use; however they could be extended/improved in the future.  
 You can consider using the Open XML SDK itself or other <a href="#recommended_libraries">recommended libraries</a> for documents creation and manipulation. Some of these are used in the sample app to test two-steps conversions, compare results, or generate documents in multiple formats with the same code.  
