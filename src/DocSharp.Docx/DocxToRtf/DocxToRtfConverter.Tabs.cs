@@ -113,6 +113,5 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
             sb.Write('}');
         }
-        sb.Write("{\\ptabldot \\pindtabqr}");
     }
 }

@@ -94,24 +94,32 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\f0");
         }
 
-        string? complexScriptFont = runFonts?.ComplexScript?.Value;        
-        if (!string.IsNullOrEmpty(complexScriptFont))
-        {        
-            fonts.TryAddAndGetIndex(complexScriptFont!, out int fontIndex);
-            sb.WriteWordWithValue("af", fontIndex);
-        }
-        string? eastAsiaFont = runFonts?.EastAsia?.Value;
-        if (!string.IsNullOrEmpty(eastAsiaFont))
-        {
-            fonts.TryAddAndGetIndex(eastAsiaFont!, out int fontIndex);
-            sb.WriteWordWithValue("af", fontIndex);
-        }
-        string? highAnsiFont = runFonts?.HighAnsi?.Value;
-        if (!string.IsNullOrEmpty(highAnsiFont))
-        {
-            fonts.TryAddAndGetIndex(highAnsiFont!, out int fontIndex);
-            sb.WriteWordWithValue("af", fontIndex);
-        }
+        // This is disabled for now as it was causing issues, such as fonts (seeminlgy) randomly becoming bold or small caps,
+        // I need to understand better how these "associate font" work first.
+        // string? complexScriptFont = runFonts?.ComplexScript?.Value;        
+        // if (!string.IsNullOrEmpty(complexScriptFont))
+        // {        
+        //     fonts.TryAddAndGetIndex(complexScriptFont!, out int fontIndex);
+        //     sb.WriteWordWithValue("af", fontIndex);
+        // }
+        // else
+        // {
+        //     string? eastAsiaFont = runFonts?.EastAsia?.Value;
+        //     if (!string.IsNullOrEmpty(eastAsiaFont))
+        //     {
+        //         fonts.TryAddAndGetIndex(eastAsiaFont!, out int fontIndex);
+        //         sb.WriteWordWithValue("af", fontIndex);
+        //     }
+        //     else
+        //     {
+        //         string? highAnsiFont = runFonts?.HighAnsi?.Value;
+        //         if (!string.IsNullOrEmpty(highAnsiFont))
+        //         {
+        //             fonts.TryAddAndGetIndex(highAnsiFont!, out int fontIndex);
+        //             sb.WriteWordWithValue("af", fontIndex);
+        //         }                
+        //     }            
+        // }
 
         if (run.GetEffectiveProperty<FontSize>()?.Val.ToLong() is long fontSize)
         {

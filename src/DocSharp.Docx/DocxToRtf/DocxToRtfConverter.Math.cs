@@ -93,12 +93,18 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         if (element == null)
             return;
-        sb.Write('{');
-        if (!ProcessRunElement(element, sb))
+        var internalSb = new RtfStringWriter();
+        if (!ProcessRunElement(element, internalSb))
         {
-            ProcessParagraphElement(element, sb);
+            ProcessParagraphElement(element, internalSb);
         }
-        sb.Write('}');
+        var internalElement = internalSb.ToString();
+        if (!string.IsNullOrEmpty(internalElement))
+        {
+            sb.Write('{');
+            sb.Write(internalElement);
+            sb.Write('}');
+        }
     }
 
     private void ProcessMathChildren(OpenXmlElement? element, RtfStringWriter sb)
@@ -109,7 +115,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {
             if (subElement.IsMathElement()
                 && subElement is not M.ParagraphProperties
-                && subElement is not ArgumentProperties
+                && subElement is not M.ArgumentProperties
                 && subElement is not M.RunProperties
                 && subElement is not W.RunProperties)
             {
@@ -137,6 +143,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 sb.Write(@"{\mr");
                 ProcessMathRunProperties(run.MathRunProperties, sb);
                 ProcessRunFormatting(run.RunProperties, sb);
+                sb.Write(' ');
                 ProcessMathChildren(run, sb);
                 sb.Write('}');
                 break;
@@ -903,100 +910,103 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     private void ProcessMathRunProperties(M.RunProperties? mathRunProperties, RtfStringWriter sb)
     {
-        if (mathRunProperties == null)
+        if (mathRunProperties != null)
         {
-            return;
-        }
-        //sb.Append(@"{\mrPr ");
-        if (mathRunProperties.Literal != null)
-        {
-            if (mathRunProperties.Literal.Val == null || mathRunProperties.Literal.Val.ToBool())
+            if (mathRunProperties.Literal != null)
             {
-                sb.Write(@"\mlit1");
+                if (mathRunProperties.Literal.Val == null || mathRunProperties.Literal.Val.ToBool())
+                {
+                    sb.Write(@"\mlit1");
+                }
+                else
+                {
+                    sb.Write(@"\mlit0");
+                }
             }
-            else
+            foreach (var subElement in mathRunProperties)
             {
-                sb.Write(@"\mlit0");
-            }
-        }
-        foreach (var subElement in mathRunProperties)
-        {
-            switch (subElement)
-            {
-                case M.NormalText normalText:
-                    if (normalText.Val == null || normalText.Val.ToBool())
-                    {
-                        sb.Write(@"\mnor"); // Should be \mnor1 ?
-                    }
-                    break;
-                case M.Break br:
-                    ProcessMathBreak(br, sb);
-                    break;
-                case M.Alignment alignment:
-                    // ?
-                    // Not mentioned in RTF documentation, assuming it's the same as in BorderBoxProperties
-                    if (alignment.Val == null || alignment.Val.ToBool())
-                    {
-                        sb.Write(@"\maln1");
-                    }
-                    else
-                    {
-                        sb.Write(@"\maln0");
-                    }
-                    break;
-                case M.Script script:
-                    if (script.Val != null)
-                    {
-                        if (script.Val == ScriptValues.Roman)
+                switch (subElement)
+                {
+                    case M.NormalText normalText:
+                        if (normalText.Val == null || normalText.Val.ToBool())
                         {
-                            sb.Write(@"\mscr0");
+                            sb.Write(@"\mnor"); // Should be \mnor1 ?
                         }
-                        else if (script.Val == ScriptValues.Script)
+                        break;
+                    case M.Break br:
+                        ProcessMathBreak(br, sb);
+                        break;
+                    case M.Alignment alignment:
+                        // ?
+                        // Not mentioned in RTF documentation, assuming it's the same as in BorderBoxProperties
+                        if (alignment.Val == null || alignment.Val.ToBool())
                         {
-                            sb.Write(@"\mscr1");
+                            sb.Write(@"\maln1");
                         }
-                        else if (script.Val == ScriptValues.Fraktur)
+                        else
                         {
-                            sb.Write(@"\mscr2");
+                            sb.Write(@"\maln0");
                         }
-                        else if (script.Val == ScriptValues.DoubleStruck)
+                        break;
+                    case M.Script script:
+                        if (script.Val != null)
                         {
-                            sb.Write(@"\mscr3");
+                            if (script.Val == ScriptValues.Roman)
+                            {
+                                sb.Write(@"\mscr0");
+                            }
+                            else if (script.Val == ScriptValues.Script)
+                            {
+                                sb.Write(@"\mscr1");
+                            }
+                            else if (script.Val == ScriptValues.Fraktur)
+                            {
+                                sb.Write(@"\mscr2");
+                            }
+                            else if (script.Val == ScriptValues.DoubleStruck)
+                            {
+                                sb.Write(@"\mscr3");
+                            }
+                            else if (script.Val == ScriptValues.Monospace)
+                            {
+                                sb.Write(@"\mscr4");
+                            }
+                            else if (script.Val == ScriptValues.SansSerif)
+                            {
+                                sb.Write(@"\mscr5");
+                            }
                         }
-                        else if (script.Val == ScriptValues.Monospace)
+                        break;
+                    case M.Style style:
+                        if (style.Val != null)
                         {
-                            sb.Write(@"\mscr4");
+                            if (style.Val == StyleValues.Bold)
+                            {
+                                sb.Write(@"\msty1");
+                            }
+                            else if (style.Val == StyleValues.Italic)
+                            {
+                                sb.Write(@"\msty2");
+                            }
+                            else if (style.Val == StyleValues.BoldItalic)
+                            {
+                                sb.Write(@"\msty3");
+                            }
+                            else if (style.Val == StyleValues.Plain)
+                            {
+                                sb.Write(@"\msty0");
+                            }
                         }
-                        else if (script.Val == ScriptValues.SansSerif)
-                        {
-                            sb.Write(@"\mscr5");
-                        }
-                    }
-                    break;
-                case M.Style style:
-                    if (style.Val != null)
-                    {
-                        if (style.Val == StyleValues.Bold)
-                        {
-                            sb.Write(@"\msty1");
-                        }
-                        else if (style.Val == StyleValues.Italic)
-                        {
-                            sb.Write(@"\msty2");
-                        }
-                        else if (style.Val == StyleValues.BoldItalic)
-                        {
-                            sb.Write(@"\msty3");
-                        }
-                        else if (style.Val == StyleValues.Plain)
-                        {
-                            sb.Write(@"\msty0");
-                        }
-                    }
-                    break;
+                        break;
+                }
             }
         }
-        //sb.Append('}');
+
+        if (mathRunProperties?.GetFirstChild<M.Style>()?.Val == null)
+        {
+            // Italic is assumed by default in DOCX, while in RTF it must be specified.
+            sb.Write(@"\msty2");
+        }
     }
 
     internal void ProcessMathBreak(M.Break br, RtfStringWriter sb)

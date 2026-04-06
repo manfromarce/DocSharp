@@ -11,17 +11,18 @@
 - Created DocSharp.MagickNET and DocSharp.SkiaSharp packages as alternative graphics backends to System.Drawing.Common and ImageSharp
 - Added WMF support in non-GDI+ image converters thanks to a custom parser
 - Implemented basic DOCX ➡️ PDF / images / XPS / SVG renderer via QuestPDF in a separate package
-- Implemented basic RTF ➡️ DOCX converter
-- Fix right, bottom and diagonal border in XLS converter
-- Support few more compex script / right-to-left options in DOCX ➡️ RTF converter
+- Implemented RTF ➡️ DOCX converter
+- Fixed right, bottom and diagonal border in XLS converter
+- Improved math conversion iin DOCX ➡️ RTF converter
+- Fixed duplication of default font in the font table that could occur in DOCX ➡️ RTF conversion
 - Better mapping of styles in DOCX ➡️ HTML / Markdown converter
+- Allow customizing DOCX style id mappings for headers, quote, etc. in DOCX ➡️ Markdown/HTML converter
 - Option to handle custom font families as code inline (preformatted text) in DOCX ➡️ Markdown converter
 - Support emphasis and images inside hyperlinks in DOCX ➡️ Markdown converter
-- Allow customizing DOCX style id mappings for headers, quote, etc. in DOCX ➡️ Markdown converter
 - Support base64 images in Markdown ➡️ DOCX/RTF converter
-- Fix various bugs with images in Markdown ↔️ DOCX converters
+- Fixed various bugs with images in Markdown ↔️ DOCX converters
 - Fix: unnecessary space was created in DOCX ➡️ Markdown converter in some cases
-- Fix other minor bugs and improve code structure
+- Fixed other bugs and improve code structure
 
 ## 0.17.0 - 2025.12.04
 
