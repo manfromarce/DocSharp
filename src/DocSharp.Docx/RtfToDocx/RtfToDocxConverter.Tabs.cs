@@ -18,35 +18,73 @@ namespace DocSharp.Docx;
 
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
+    private TabStop? pendingTab;
+
     private bool ProcessParagraphTab(RtfControlWord cw, ParagraphProperties targetProperties)
     {
-        var tabs = targetProperties.Tabs; // Tabs can contain a list of TabStop
         var name = (cw.Name ?? string.Empty).ToLowerInvariant();
         switch (name)
         {
             case "tx":
+                if (cw.HasValue)
+                {
+                    targetProperties.Tabs ??= new Tabs();
+                    pendingTab ??= new TabStop();
+                    pendingTab.Val ??= TabStopValues.Left;
+                    pendingTab.Position = cw.Value!.Value;
+                    targetProperties.Tabs.Append(pendingTab);
+                    pendingTab = null;
+                }
                 return true;
             case "tb":
+                if (cw.HasValue)
+                {
+                    targetProperties.Tabs ??= new Tabs();
+                    pendingTab ??= new TabStop();
+                    pendingTab.Val ??= TabStopValues.Bar;
+                    pendingTab.Position = cw.Value!.Value;
+                    targetProperties.Tabs.Append(pendingTab);
+                    pendingTab = null;
+                }
                 return true;
 
-            case "tqr":
-                return true;
             case "tqc":
+                pendingTab ??= new TabStop();
+                pendingTab.Val = TabStopValues.Center;
+                return true;
+            case "tqr":
+                pendingTab ??= new TabStop();
+                pendingTab.Val = TabStopValues.Right;
                 return true;
             case "tqdec":
+                pendingTab ??= new TabStop();
+                pendingTab.Val = TabStopValues.Decimal;
                 return true;
 
             case "tldot":
+                pendingTab ??= new TabStop();
+                pendingTab.Leader = TabStopLeaderCharValues.Dot;
                 return true;
             case "tlmdot":
+                pendingTab ??= new TabStop();
+                pendingTab.Leader = TabStopLeaderCharValues.MiddleDot;
                 return true;
             case "tlhyph":
+                pendingTab ??= new TabStop();
+                pendingTab.Leader = TabStopLeaderCharValues.Hyphen;
                 return true;
             case "tlul":
+                pendingTab ??= new TabStop();
+                pendingTab.Leader = TabStopLeaderCharValues.Underscore;
                 return true;
             case "tlth":
+                pendingTab ??= new TabStop();
+                pendingTab.Leader = TabStopLeaderCharValues.Heavy;
                 return true;
             case "tleq":
+                // Leader equal sign, not available in DOCX.
+                // pendingTab ??= new TabStop();
+                // pendingTab.Leader = TabStopLeaderCharValues.None;
                 return true;
         }
         return false;

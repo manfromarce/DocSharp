@@ -55,6 +55,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         container?.Append(pendingParagraph);
         // Reset pending paragraph (do not reset paragraphState)
         pendingParagraph = null;
+        pendingTab = null; // Reset pending tab if it was not terminated by \txN or \tbN
         currentRun = null;
         if (container is TableCell)
             containers.Pop();

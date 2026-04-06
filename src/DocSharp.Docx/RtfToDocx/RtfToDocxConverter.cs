@@ -144,6 +144,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         cellx = 0;
         cellIndex = 0;
 
+        pendingTab = null;
+
         fmtStack.Clear();
         containers.Clear();
 
