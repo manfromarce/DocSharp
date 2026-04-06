@@ -201,9 +201,12 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 {
                     case "levelnfc":
                     case "levelnfcn":
-                        var format = RtfNumberFormatMapper.GetNumberFormat(name);
-                        if (format != null)
-                            level.NumberingFormat = new NumberingFormat() { Val = format };
+                        if (lcw.HasValue)
+                        {
+                            var format = RtfNumberFormatMapper.GetNumberFormat(name + lcw.Value!.Value.ToStringInvariant());
+                            if (format != null)
+                                level.NumberingFormat = new NumberingFormat() { Val = format };
+                        }
                         break;
                     case "levelstartat":
                         level.StartNumberingValue = new StartNumberingValue() { Val = lcw.Value!.Value }; break;
