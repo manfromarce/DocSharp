@@ -111,11 +111,11 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Header and footer
 - ✅ Footnotes and endnotes
 - 🟡 Pictures (supported but text wrapping layouts and many properties written by Word are not recognized, all pictures are rendered in line with text)
-- 🟡 Math formulas (there are still issues that need to be resolved)
+- ✅ Math formulas
 - ❌ Drawings (text boxes, shapes, diagrams, WordArt)
+- 🟡 OLE objects (preserved as images)
 - ❌ Table of contents (in RTF can be a dedicated structure, while in DOCX it's a group of fields)
 - ❌ Index entries
-- ❌ OLE objects
 - ✅ Document information
 - ❌ Document protection
 - ❌ Document background

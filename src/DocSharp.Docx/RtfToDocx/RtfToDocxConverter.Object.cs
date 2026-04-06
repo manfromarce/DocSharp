@@ -18,4 +18,13 @@ namespace DocSharp.Docx;
 
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
+	private void ProcessOleObject(RtfDestination destination)
+    {
+        // OLE objects are currently not mapped because it's a complex task.
+        // However, an image fallback is usually emitted by RTF writers, so we attempt to preserve that.
+        
+        var result = destination.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name.Equals("result", StringComparison.OrdinalIgnoreCase));
+        if (result != null)
+            ConvertGroup(result);
+    }
 }

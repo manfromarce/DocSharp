@@ -592,11 +592,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                                     AddRun().Append(pict);
                                 continue;
                             }
-                            else if (dname == "mmath")
-                            {
-                                ProcessMathDestination(destination);
-                                continue;
-                            }
                             else if (dname == "nonshppict")
                             {
                                 // Ignore nonshppict as it's emitted for compatibility for older RTF readers 
@@ -671,6 +666,18 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             {
                                 // Handle as regular group (it can contain \u or any control word such as bkmkstart)
                             }
+
+                            else if (dname == "mmath")
+                            {
+                                ProcessMathDestination(destination);
+                                continue;
+                            }
+                            else if (dname == "object")
+                            {
+                                ProcessOleObject(destination);
+                                continue;
+                            }
+
                             else
                             {
                                 // TODO: other destinations 
