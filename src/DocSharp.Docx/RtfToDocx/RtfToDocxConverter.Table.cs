@@ -177,11 +177,15 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (pendingParagraph != null)
         {
             cell.Append(pendingParagraph);
-            pendingParagraph = null;            
+            if (paragraphState.ParagraphProperties != null)
+                pendingParagraph.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
+            FixParagraphSpacing(pendingParagraph);
+            pendingParagraph = null;
+            currentRun = null;
         }
         // If the cell does not contain any paragraph, add an empty one, otherwise Word considers the document corrupted.
         if (!cell.Elements<Paragraph>().Any())
-            cell.Append(new Paragraph());
+            cell.Append(new Paragraph(new ParagraphProperties(new SpacingBetweenLines() { After = "0", Before = "0", Line = "240", LineRule = LineSpacingRuleValues.Auto })));
         ++cellIndex;
         return cell;
     }

@@ -52,6 +52,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 containers.Pop();
         }
 
+        FixParagraphSpacing(pendingParagraph);
         container?.Append(pendingParagraph);
         // Reset pending paragraph (do not reset paragraphState)
         pendingParagraph = null;
@@ -59,6 +60,24 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentRun = null;
         if (container is TableCell)
             containers.Pop();
+    }
+
+    private void FixParagraphSpacing(Paragraph paragraph)
+    {
+        // Word adds some spacing by default in DOCX, leading to visual differences (especially in tables) with RTF 
+        // where spacing is assumed to be 0 by default instead. 
+        // To avoid this, force SpacingBetweenLines to 0 if values are not set.
+        paragraph.ParagraphProperties ??= new ParagraphProperties();
+        paragraph.ParagraphProperties.SpacingBetweenLines ??= new SpacingBetweenLines();
+        if (paragraph.ParagraphProperties.SpacingBetweenLines.After == null || paragraph.ParagraphProperties.SpacingBetweenLines.After == string.Empty)
+            paragraph.ParagraphProperties.SpacingBetweenLines.After = "0";
+        if (paragraph.ParagraphProperties.SpacingBetweenLines.Before == null || paragraph.ParagraphProperties.SpacingBetweenLines.Before == string.Empty)
+            paragraph.ParagraphProperties.SpacingBetweenLines.Before = "0";
+        if (paragraph.ParagraphProperties.SpacingBetweenLines.Line == null || paragraph.ParagraphProperties.SpacingBetweenLines.Line == string.Empty)
+        {
+            paragraph.ParagraphProperties.SpacingBetweenLines.Line = "240";
+            paragraph.ParagraphProperties.SpacingBetweenLines.LineRule = LineSpacingRuleValues.Auto;
+        }
     }
 
     private bool ProcessParagraphControlWord(RtfControlWord cw, ParagraphProperties? targetProperties = null)
