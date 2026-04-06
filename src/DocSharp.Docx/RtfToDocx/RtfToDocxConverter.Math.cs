@@ -14,6 +14,7 @@ using System.Diagnostics;
 using DocumentFormat.OpenXml;
 using DocSharp.Rtf;
 using M = DocumentFormat.OpenXml.Math;
+using DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
@@ -203,6 +204,20 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         TryPop(fmtStack);
 	}
 
+    private void ProcessArgumentProperties<T>(RtfDestination dest, T argument) where T : OfficeMathArgumentType
+    {
+		var prDest = dest.Tokens.OfType<RtfDestination>().FirstOrDefault(d => string.Equals(d.Name, "margPr", StringComparison.OrdinalIgnoreCase));
+		if (prDest != null)
+		{
+        	argument.ArgumentProperties = new ArgumentProperties();
+			var argSz = ReadIntegerMathProperty(prDest, "margSz");
+			if (argSz != null)
+			{
+				argument.ArgumentProperties.ArgumentSize = new M.ArgumentSize() { Val = argSz.Value };
+			}
+		}
+    }
+
 	private M.Accent? ConvertAccent(RtfDestination dest)
 	{
 		var acc = new M.Accent();
@@ -220,12 +235,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (baseDest != null)
 		{
 			acc.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, acc.Base);
 			ProcessMoMathChildren(baseDest, acc.Base);
 		}
 		return acc;
 	}
 
-	private M.Bar? ConvertBar(RtfDestination dest)
+    private M.Bar? ConvertBar(RtfDestination dest)
 	{
 		var bar = new M.Bar();
 		var prDest = dest.Tokens.OfType<RtfDestination>().FirstOrDefault(d => string.Equals(d.Name, "mbarPr", StringComparison.OrdinalIgnoreCase));
@@ -245,6 +261,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (baseDest != null)
 		{
 			bar.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, bar.Base);
 			ProcessMoMathChildren(baseDest, bar.Base);
 		}
 		return bar;
@@ -302,6 +319,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (baseDest != null)
 		{
 			borderBox.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, borderBox.Base);
 			ProcessMoMathChildren(baseDest, borderBox.Base);
 		}
 		return borderBox;
@@ -344,6 +362,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (baseDest != null)
 		{
 			box.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, box.Base);
 			ProcessMoMathChildren(baseDest, box.Base);
 		}
 		return box;
@@ -385,10 +404,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 					del.DelimiterProperties.Shape = new M.Shape() { Val = M.ShapeDelimiterValues.Centered };
 			}
 		}
-		foreach (var runDest in dest.Tokens.OfType<RtfDestination>().Where(d => string.Equals(d.Name, "me", StringComparison.OrdinalIgnoreCase)))
+		foreach (var baseDest in dest.Tokens.OfType<RtfDestination>().Where(d => string.Equals(d.Name, "me", StringComparison.OrdinalIgnoreCase)))
 		{
 			var e = del.AppendChild(new M.Base());
-			ProcessMoMathChildren(runDest, e);
+			ProcessArgumentProperties(baseDest, e);
+			ProcessMoMathChildren(baseDest, e);
 		}
 		return del;
 	}
@@ -430,10 +450,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 				eqArr.EquationArrayProperties.RowSpacingRule = new M.RowSpacingRule() { Val = rSpRule.Value };
 			}
 		}
-		foreach (var runDest in dest.Tokens.OfType<RtfDestination>().Where(d => string.Equals(d.Name, "me", StringComparison.OrdinalIgnoreCase)))
+		foreach (var baseDest in dest.Tokens.OfType<RtfDestination>().Where(d => string.Equals(d.Name, "me", StringComparison.OrdinalIgnoreCase)))
 		{
 			var e = eqArr.AppendChild(new M.Base());
-			ProcessMoMathChildren(runDest, e);
+			ProcessArgumentProperties(baseDest, e);
+			ProcessMoMathChildren(baseDest, e);
 		}
 		return eqArr;
 	}
@@ -463,11 +484,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (numDest != null)
 		{
 			fraction.Numerator = new M.Numerator();
+			ProcessArgumentProperties(numDest, fraction.Numerator);
 			ProcessMoMathChildren(numDest, fraction.Numerator);
 		}
 		if (denDest != null)
 		{
 			fraction.Denominator = new M.Denominator();
+			ProcessArgumentProperties(denDest, fraction.Denominator);
 			ProcessMoMathChildren(denDest, fraction.Denominator);
 		}
 		return fraction;
@@ -487,11 +510,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (fnameDest != null)
 		{
 			mathFunction.FunctionName = new M.FunctionName();
+			ProcessArgumentProperties(fnameDest, mathFunction.FunctionName);
 			ProcessMoMathChildren(fnameDest, mathFunction.FunctionName);
 		}
 		if (baseDest != null)
 		{
 			mathFunction.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, mathFunction.Base);
 			ProcessMoMathChildren(baseDest, mathFunction.Base);
 		}
 		return mathFunction;
@@ -530,6 +555,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (baseDest != null)
 		{
 			groupChar.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, groupChar.Base);
 			ProcessMoMathChildren(baseDest, groupChar.Base);
 		}
 		return groupChar;
@@ -549,11 +575,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (limDest != null)
 		{
 			limitLow.Limit = new M.Limit();
+			ProcessArgumentProperties(limDest, limitLow.Limit);
 			ProcessMoMathChildren(limDest, limitLow.Limit);
 		}
 		if (baseDest != null)
 		{
 			limitLow.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, limitLow.Base);
 			ProcessMoMathChildren(baseDest, limitLow.Base);
 		}
 		return limitLow;
@@ -573,11 +601,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (limDest != null)
 		{
 			limitUpp.Limit = new M.Limit();
+			ProcessArgumentProperties(limDest, limitUpp.Limit);
 			ProcessMoMathChildren(limDest, limitUpp.Limit);
 		}
 		if (baseDest != null)
 		{
 			limitUpp.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, limitUpp.Base);
 			ProcessMoMathChildren(baseDest, limitUpp.Base);
 		}
 		return limitUpp;
@@ -665,6 +695,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 			foreach (var matrixRowBaseDest in matrixRowDest.Tokens.OfType<RtfDestination>().Where(d => string.Equals(d.Name, "me", StringComparison.OrdinalIgnoreCase)))
 			{
 				var me = mr.AppendChild(new M.Base());
+				ProcessArgumentProperties(matrixRowBaseDest, me);
 				ProcessMoMathChildren(matrixRowBaseDest, me);
 			}			
 		}
@@ -713,16 +744,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (subDest != null)
 		{
 			nary.SubArgument = new M.SubArgument();
+			ProcessArgumentProperties(subDest, nary.SubArgument);
 			ProcessMoMathChildren(subDest, nary.SubArgument);
 		}
 		if (supDest != null)
 		{
 			nary.SuperArgument = new M.SuperArgument();
+			ProcessArgumentProperties(supDest, nary.SuperArgument);
 			ProcessMoMathChildren(supDest, nary.SuperArgument);
 		}
 		if (baseDest != null)
 		{
 			nary.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, nary.Base);
 			ProcessMoMathChildren(baseDest, nary.Base);
 		}
 		return nary;
@@ -765,6 +799,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (baseDest != null)
 		{
 			phant.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, phant.Base);
 			ProcessMoMathChildren(baseDest, phant.Base);
 		}
 		return phant;
@@ -774,6 +809,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 	{
 		var rad = new M.Radical();
 		var prDest = dest.Tokens.OfType<RtfDestination>().FirstOrDefault(d => string.Equals(d.Name, "mradPr", StringComparison.OrdinalIgnoreCase));
+		var degreeDest = dest.Tokens.OfType<RtfDestination>().FirstOrDefault(d => string.Equals(d.Name, "mdeg", StringComparison.OrdinalIgnoreCase));
 		var baseDest = dest.Tokens.OfType<RtfDestination>().FirstOrDefault(d => string.Equals(d.Name, "me", StringComparison.OrdinalIgnoreCase));
 		if (prDest != null)
 		{
@@ -782,12 +818,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 			if (degHide != null)
 			{
 				rad.RadicalProperties.HideDegree = new M.HideDegree() { Val = degHide.Value ? M.BooleanValues.On : M.BooleanValues.Off };
-			}
+			}			
 		}
 		if (baseDest != null)
 		{
 			rad.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, rad.Base);
 			ProcessMoMathChildren(baseDest, rad.Base);
+		}
+		if (degreeDest != null)
+		{
+			rad.Degree = new M.Degree();
+			ProcessArgumentProperties(degreeDest, rad.Degree);
+			ProcessMoMathChildren(degreeDest, rad.Degree);
 		}
 		return rad;
 	}
@@ -807,16 +850,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (subDest != null)
 		{
 			preSubSup.SubArgument = new M.SubArgument();
+			ProcessArgumentProperties(subDest, preSubSup.SubArgument);
 			ProcessMoMathChildren(subDest, preSubSup.SubArgument);
 		}
 		if (supDest != null)
 		{
 			preSubSup.SuperArgument = new M.SuperArgument();
+			ProcessArgumentProperties(supDest, preSubSup.SuperArgument);
 			ProcessMoMathChildren(supDest, preSubSup.SuperArgument);
 		}
 		if (baseDest != null)
 		{
 			preSubSup.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, preSubSup.Base);
 			ProcessMoMathChildren(baseDest, preSubSup.Base);
 		}
 		return preSubSup;
@@ -841,16 +887,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (subDest != null)
 		{
 			subSup.SubArgument = new M.SubArgument();
+			ProcessArgumentProperties(subDest, subSup.SubArgument);
 			ProcessMoMathChildren(subDest, subSup.SubArgument);
 		}
 		if (supDest != null)
 		{
 			subSup.SuperArgument = new M.SuperArgument();
+			ProcessArgumentProperties(supDest, subSup.SuperArgument);
 			ProcessMoMathChildren(supDest, subSup.SuperArgument);
 		}
 		if (baseDest != null)
 		{
 			subSup.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, subSup.Base);
 			ProcessMoMathChildren(baseDest, subSup.Base);
 		}
 		return subSup;
@@ -870,11 +919,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (subDest != null)
 		{
 			sub.SubArgument = new M.SubArgument();
+			ProcessArgumentProperties(subDest, sub.SubArgument);
 			ProcessMoMathChildren(subDest, sub.SubArgument);
 		}
 		if (baseDest != null)
 		{
 			sub.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, sub.Base);
 			ProcessMoMathChildren(baseDest, sub.Base);
 		}
 		return sub;
@@ -894,11 +945,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 		if (supDest != null)
 		{
 			sup.SuperArgument = new M.SuperArgument();
+			ProcessArgumentProperties(supDest, sup.SuperArgument);
 			ProcessMoMathChildren(supDest, sup.SuperArgument);
 		}
 		if (baseDest != null)
 		{
 			sup.Base = new M.Base();
+			ProcessArgumentProperties(baseDest, sup.Base);
 			ProcessMoMathChildren(baseDest, sup.Base);
 		}
 		return sup;
