@@ -115,6 +115,31 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         }
         
         var table = container.LastChild as Table ?? container.AppendChild(new Table());
+
+        // If the current row does not declare row properties nor cell widths, 
+        // try to inherit both row and cell properties from the previous row.
+        var prevRow = table.Elements<TableRow>().LastOrDefault();
+        if (prevRow != null && 
+            pendingTableRow.TableRowProperties == null && 
+            pendingTableRow.TablePropertyExceptions == null && 
+            pendingTableRow.Elements<TableCell>().All(c => c.TableCellProperties == null || !c.TableCellProperties.HasChildren))
+        {
+            if (prevRow.TableRowProperties != null)
+                pendingTableRow.TableRowProperties = (TableRowProperties)prevRow.TableRowProperties.CloneNode(true);
+            if (prevRow.TablePropertyExceptions != null)
+                pendingTableRow.TablePropertyExceptions = (TablePropertyExceptions)prevRow.TablePropertyExceptions.CloneNode(true);
+
+            var prevCells = prevRow.Elements<TableCell>().ToList();
+            var curCells = pendingTableRow.Elements<TableCell>().ToList();
+            for (int i = 0; i < curCells.Count; ++i)
+            {
+                var prevCell = prevCells.ElementAtOrDefault(i);
+                if (prevCell?.TableCellProperties != null)
+                {
+                    curCells[i].TableCellProperties = (TableCellProperties?)prevCell.TableCellProperties.CloneNode(true);
+                }
+            }
+        }
         
         // We have to add GridSpan to cells based on their width and the number of cells, 
         // otherwise horizontally merged cells do not behave as expected, even if they width is increased.
@@ -146,9 +171,8 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
         var row = EnsureTableRow();
         // At this point, the row should already contain the current cell, unless the cell is completely empty and has no properties.
-        // In this case, an empty <w:tc> causes the DOCX document to be considered corrupted by Word, so we add a default minimal width.
         var cell = row.Elements<TableCell>().ElementAtOrDefault(cellIndex) ?? 
-                   row.AppendChild(new TableCell(new TableCellProperties(new TableCellWidth() { Type = TableWidthUnitValues.Dxa, Width = "10" })));
+                   row.AppendChild(new TableCell());
         // If the pending paragraph was not terminated by \par, append it to the cell now and reset it, so that the next cell starts with a new paragraph.
         if (pendingParagraph != null)
         {
