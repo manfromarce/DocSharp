@@ -582,6 +582,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 targetProperties.FrameProperties.Wrap = TextWrappingValues.None;
                 return true;
         }
-        return false;
+        return ProcessParagraphTab(cw, targetProperties);
     }
 }

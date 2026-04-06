@@ -37,11 +37,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         return currentRun;
     }
 
-    private Run CreateRunWithProperties(FormattingState state)
+    private RunProperties CreateRunProperties(FormattingState state)
     {
-        var run = new Run();
-        
         var rPr = new RunProperties();
+
         if (state.Bold) rPr.Append(new Bold());
         if (state.Italic) rPr.Append(new Italic());
         if (state.Strike) rPr.Append(new Strike());
@@ -59,7 +58,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (state.Outline) rPr.Append(new Outline());
         if (state.Shadow) rPr.Append(new Shadow());
         if (state.NoProof) rPr.Append(new NoProof());
-        if (!state.SnapToGrid) rPr.Append(new SnapToGrid() { Val = false }); // enabled by default in DOCX, but not in RTF
+        if (state.SnapToGrid) rPr.Append(new SnapToGrid());
 
         if (state.RightToLeft) rPr.Append(new RightToLeftText());
         if (state.ComplexScript) rPr.Append(new ComplexScript());
@@ -109,7 +108,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             {
                 var c = colorTable[idx];
                 var hex = c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
-                rPr.Append(new Highlight() { Val = ColorHelpers.HexToHighlight(hex) });
+                var highlight = ColorHelpers.HexToHighlight(hex);
+                if (highlight != null)
+                    rPr.Append(new Highlight() { Val = highlight });
             }
         }
 
@@ -133,9 +134,16 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (state.CharacterShading != null) rPr.Append(state.CharacterShading.CloneNode(true));
         if (state.Languages != null) rPr.Append(state.Languages.CloneNode(true));
 
+        return rPr;
+    }
+
+    private Run CreateRunWithProperties(FormattingState state)
+    {
+        var run = new Run();
+        var rPr = CreateRunProperties(state);
+
         if (rPr.HasChildren)
             run.Append(rPr);
-        
         return run;
     }
     

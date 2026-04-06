@@ -215,12 +215,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         // - Sections are defined by SectionProperties in ParagraphProperties of the last paragraph of the section, and a last SectionProperties in Body represents the default section properties for the last and all new sections.
         // 
         // RTF: 
-        // - Groups starting with special control words are destinations and specify that the content should not go into the main document body, for example: header, footer, headerf, headerl, headerr, footerf, footerl, footerr, footnote
+        // - Groups starting with special control words are destinations and specify that the content should not go into the main document body, for example: header, footer, headerf, headerl, headerr, footerf, footerl, footerr, footnote.
+        //   Other destinations need a completely different handling (font table, color table, ...).
         //   Other groups are assumed to be part of the main document body.
-        // - Destinations starting with "*" should be ignored for now (parsed as RtfIgnorableDestination classes). 
-        //   In the future, we should support at list \listtable and \listoverridetable.
-        // - Some destinations need special handling: \stylesheet and \info should be mapped to StyleDefintionsPart and PackageProperties; 
-        //   for font table and color table we need to keep a reference and use them when \fN or \cfN control words are found.
         // - Containers such as body, header, footer, footnote contains paragraphs or table rows (there is no dedicated table element in RTF). 
         //   Compared to DOCX, special control words are used to specify that a paragraph is inside a table cell, or that a table is nested.
         // - Paragraphs are terminated by \par, and \pard optionally resets paragraph properties.
@@ -233,454 +230,474 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (defaultFontIndex.HasValue && clonedState.FontIndex == null)
             clonedState.FontIndex = defaultFontIndex;
         fmtStack.Push(clonedState); // push a clone for this group's local modifications
-        foreach (var token in group.Tokens)
+
+        if (group.Tokens.First() is RtfControlWord tabCw && 
+           (tabCw.Name.Equals("\\ptablnone", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\ptabldot", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\ptablminus", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\ptabluscore", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\ptablmdot", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\pmartabql", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\pmartabqc", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\pmartabqr", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\pindtabql", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\pindtabqc", StringComparison.OrdinalIgnoreCase) || 
+            tabCw.Name.Equals("\\pindtabqr", StringComparison.OrdinalIgnoreCase)))
         {
-            switch (token)
+            ProcessAbsoluteTab(group);
+        }
+        else
+        {
+            foreach (var token in group.Tokens)
             {
-                case RtfGroup subGroup:
-                    currentBorder = null; // Don't inherit border context from parent group, as relevant control words should be written consecutively in the same group
-                    if (subGroup is RtfDestination destination)
-                    {
-                        var dname = (destination.Name ?? string.Empty).ToLowerInvariant();
-                        if (dname == "colortbl")
+                switch (token)
+                {
+                    case RtfGroup subGroup:
+                        currentBorder = null; // Don't inherit border context from parent group, as relevant control words should be written consecutively in the same group
+                        if (subGroup is RtfDestination destination)
                         {
-                            ParseColorTable(destination);
-                            continue;
-                        }
-                        else if (dname == "fonttbl")
-                        {
-                            ParseFontTable(destination);
-                            continue;
-                        }
-                        else if (dname == "listtable")
-                        {
-                            ParseListTable(destination);
-                            continue;
-                        }
-                        else if (dname == "listoverridetable")
-                        {
-                            ParseListOverrideTable(destination);
-                            continue;
-                        }
-                        else if (dname == "stylesheet")
-                        {
-                            // TODO: styles
-                            continue;
-                        }
-                        else if (dname == "pgptbl") 
-                        {
-                            // TODO: paragraph group properties
-                            continue;
-                        }
-
-                        else if (dname == "info")
-                        {
-                            // Recurse as regular group
-                        }
-                        else if (dname == "author")
-                        {
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            package.PackageProperties.Creator = builder.ToString();
-                            continue;
-                        }
-                        else if (dname == "category")
-                        {
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            package.PackageProperties.Category = builder.ToString();
-                            continue;
-                        }
-                        else if (dname == "keywords")
-                        {
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            package.PackageProperties.Keywords = builder.ToString();
-                            continue;
-                        }
-                        else if (dname == "operator") // Person who last made changes to the document
-                        {
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            package.PackageProperties.LastModifiedBy = builder.ToString();
-                            continue;
-                        }
-                        else if (dname == "subject")
-                        {
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            package.PackageProperties.Subject = builder.ToString();
-                            continue;
-                        }
-                        else if (dname == "title")
-                        {
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            package.PackageProperties.Title = builder.ToString();
-                            continue;
-                        }
-                        else if (dname == "hlinkbase")
-                        {
-                            // TODO
-                        }
-
-                        else if (dname == "bkmkstart")
-                        {
-                            // TODO: support bookmarks inside Table / TableRow directly
-                            EnsureParagraph();
-
-                            var bookmarkNameBuilder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, bookmarkNameBuilder);
-                            string bookmarkName = bookmarkNameBuilder.ToString();
-                            pendingParagraph!.AppendChild(new BookmarkStart() { Id = bookmarks.Count.ToStringInvariant(), Name = bookmarkName });                            
-                            bookmarks.Add(bookmarkName, bookmarks.Count); // IDs starts from 0, so Count = previous id + 1
-
-                            // Force creating subsequent content in a new run.
-                            currentRun = null;
-                            continue;
-                        }
-                        else if (dname == "bkmkend")
-                        {
-                            // TODO: support bookmarks inside Table / TableRow directly
-                            EnsureParagraph();
-
-                            // In RTF the bookmark end specifies the name, while in DOCX it uses the ID. 
-                            var bookmarkNameBuilder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, bookmarkNameBuilder);
-                            string bookmarkName = bookmarkNameBuilder.ToString();
-                            
-                            if (bookmarks.TryGetValue(bookmarkName, out int id))
-                                pendingParagraph!.AppendChild(new BookmarkEnd() { Id = id.ToStringInvariant() });
-                            else 
-                                // If the name is not specified in bkmkend or is not contained in the document, 
-                                // for now just assume that the most recent bookmark is being closed. 
-                                pendingParagraph!.AppendChild(new BookmarkEnd() { Id = (bookmarks.Count - 1).ToStringInvariant() });
-                            
-                            // Force creating subsequent content in a new run.
-                            currentRun = null;
-                            continue;
-                        }
-                        else if (dname == "defchp")
-                        {
-                            // Parse default character properties and map them to Styles/DocDefaults -> RunPropertiesDefault
-                            var tempState = new FormattingState();
-                            var previousBorder = currentBorder;
-                            currentBorder = null;
-                            foreach (var t in destination.Tokens)
+                            var dname = (destination.Name ?? string.Empty).ToLowerInvariant();
+                            if (dname == "colortbl")
                             {
-                                if (t is RtfControlWord rcw)
-                                {
-                                    ProcessRunControlWord(rcw, tempState);
-                                }
+                                ParseColorTable(destination);
+                                continue;
                             }
-                            currentBorder = previousBorder;
-
-                            // Ensure styles and docDefaults exist
-                            stylesPart ??= mainPart.StyleDefinitionsPart;
-                            if (stylesPart == null)
-                                stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
-                            stylesPart.Styles ??= new Styles();
-                            var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
-                            
-                            docDefaults.RunPropertiesDefault ??= new RunPropertiesDefault();
-                            docDefaults.RunPropertiesDefault.RunPropertiesBaseStyle?.Remove();
-                            var generatedRun = CreateRunWithProperties(tempState);
-                            var rp = generatedRun.GetFirstChild<RunProperties>();
-                            if (rp != null && rp.HasChildren)
-                                // Note: we can't cast RunProperties to RunPropertiesBaseStyle, 
-                                // but adding them directly should work as they have the same XML name and structure
-                                docDefaults.RunPropertiesDefault.Append(rp.CloneNode(true));
-                            continue;
-                        }
-                        else if (dname == "defpap")
-                        {
-                            // Parse default paragraph properties and map them to Styles/DocDefaults -> ParagraphPropertiesDefault
-                            var previousBorder = currentBorder;
-                            currentBorder = null;
-                            var defaultPr = new ParagraphProperties();
-                            foreach (var t in destination.Tokens)
+                            else if (dname == "fonttbl")
                             {
-                                if (t is RtfControlWord rcw)
-                                {
-                                    ProcessParagraphControlWord(rcw, defaultPr);
-                                }
+                                ParseFontTable(destination);
+                                continue;
                             }
-                            currentBorder = previousBorder;
-
-                            if (defaultPr.HasChildren)
+                            else if (dname == "listtable")
                             {
+                                ParseListTable(destination);
+                                continue;
+                            }
+                            else if (dname == "listoverridetable")
+                            {
+                                ParseListOverrideTable(destination);
+                                continue;
+                            }
+                            else if (dname == "stylesheet")
+                            {
+                                // TODO: styles
+                                continue;
+                            }
+                            else if (dname == "pgptbl") 
+                            {
+                                // TODO: paragraph group properties
+                                continue;
+                            }
+
+                            else if (dname == "info")
+                            {
+                                // Recurse as regular group
+                            }
+                            else if (dname == "author")
+                            {
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                package.PackageProperties.Creator = builder.ToString();
+                                continue;
+                            }
+                            else if (dname == "category")
+                            {
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                package.PackageProperties.Category = builder.ToString();
+                                continue;
+                            }
+                            else if (dname == "keywords")
+                            {
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                package.PackageProperties.Keywords = builder.ToString();
+                                continue;
+                            }
+                            else if (dname == "operator") // Person who last made changes to the document
+                            {
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                package.PackageProperties.LastModifiedBy = builder.ToString();
+                                continue;
+                            }
+                            else if (dname == "subject")
+                            {
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                package.PackageProperties.Subject = builder.ToString();
+                                continue;
+                            }
+                            else if (dname == "title")
+                            {
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                package.PackageProperties.Title = builder.ToString();
+                                continue;
+                            }
+                            else if (dname == "hlinkbase")
+                            {
+                                // TODO
+                            }
+
+                            else if (dname == "bkmkstart")
+                            {
+                                // TODO: support bookmarks inside Table / TableRow directly
+                                EnsureParagraph();
+
+                                var bookmarkNameBuilder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, bookmarkNameBuilder);
+                                string bookmarkName = bookmarkNameBuilder.ToString();
+                                pendingParagraph!.AppendChild(new BookmarkStart() { Id = bookmarks.Count.ToStringInvariant(), Name = bookmarkName });                            
+                                bookmarks.Add(bookmarkName, bookmarks.Count); // IDs starts from 0, so Count = previous id + 1
+
+                                // Force creating subsequent content in a new run.
+                                currentRun = null;
+                                continue;
+                            }
+                            else if (dname == "bkmkend")
+                            {
+                                // TODO: support bookmarks inside Table / TableRow directly
+                                EnsureParagraph();
+
+                                // In RTF the bookmark end specifies the name, while in DOCX it uses the ID. 
+                                var bookmarkNameBuilder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, bookmarkNameBuilder);
+                                string bookmarkName = bookmarkNameBuilder.ToString();
+                                
+                                if (bookmarks.TryGetValue(bookmarkName, out int id))
+                                    pendingParagraph!.AppendChild(new BookmarkEnd() { Id = id.ToStringInvariant() });
+                                else 
+                                    // If the name is not specified in bkmkend or is not contained in the document, 
+                                    // for now just assume that the most recent bookmark is being closed. 
+                                    pendingParagraph!.AppendChild(new BookmarkEnd() { Id = (bookmarks.Count - 1).ToStringInvariant() });
+                                
+                                // Force creating subsequent content in a new run.
+                                currentRun = null;
+                                continue;
+                            }
+                            else if (dname == "defchp")
+                            {
+                                // Parse default character properties and map them to Styles/DocDefaults -> RunPropertiesDefault
+                                var tempState = new FormattingState();
+                                var previousBorder = currentBorder;
+                                currentBorder = null;
+                                foreach (var t in destination.Tokens)
+                                {
+                                    if (t is RtfControlWord rcw)
+                                    {
+                                        ProcessRunControlWord(rcw, tempState);
+                                    }
+                                }
+                                currentBorder = previousBorder;
+
+                                // Ensure styles and docDefaults exist
                                 stylesPart ??= mainPart.StyleDefinitionsPart;
-                                stylesPart ??= mainPart.AddNewPart<StyleDefinitionsPart>();
+                                if (stylesPart == null)
+                                    stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
                                 stylesPart.Styles ??= new Styles();
                                 var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
-
-                                docDefaults.ParagraphPropertiesDefault ??= new ParagraphPropertiesDefault();
-                                docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle?.Remove();
-                                // Note: we can't cast ParagraphProperties to ParagraphPropertiesBaseStyle, 
-                                // but adding them directly should work as they have the same XML name and structure
-                                docDefaults.ParagraphPropertiesDefault.Append(defaultPr);
+                                
+                                docDefaults.RunPropertiesDefault ??= new RunPropertiesDefault();
+                                docDefaults.RunPropertiesDefault.RunPropertiesBaseStyle?.Remove();
+                                var generatedRun = CreateRunWithProperties(tempState);
+                                var rp = generatedRun.GetFirstChild<RunProperties>();
+                                if (rp != null && rp.HasChildren)
+                                    // Note: we can't cast RunProperties to RunPropertiesBaseStyle, 
+                                    // but adding them directly should work as they have the same XML name and structure
+                                    docDefaults.RunPropertiesDefault.Append(rp.CloneNode(true));
+                                continue;
                             }
-                            continue;
-                        }
-                        else if (dname == "field")
-                        {
-                            // Handle as regular group (it should contain fldinst and fldrslt, 
-                            // but it's safer to create the field in DOCX only when we find the actual field instruction)
-                        }
-                        else if (dname == "fldinst")
-                        {
-                            // Ensure we are in a paragraph
-                            EnsureParagraph();
-                            
-                            // Create FieldChar of type Begin.
-                            // The formatting state is not relevant for the Begin and Separate runs.
-                            var beginRun = new Run();
-                            var beginChar = new FieldChar() { FieldCharType = FieldCharValues.Begin };
-                            beginRun.AppendChild(beginChar);
-                            pendingParagraph!.AppendChild(beginRun);
-
-                            // Create FieldCode
-                            var instrTextBuilder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, instrTextBuilder);
-                            pendingParagraph!.AppendChild(new Run(new FieldCode(instrTextBuilder.ToString())));
-
-                            // Create FieldChar of type Separate
-                            var separateRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.Separate });
-                            pendingParagraph!.AppendChild(separateRun);
-                            
-                            // Force creating field content in a new run.
-                            // The formatting state is relevant for the content run and should not be reset.
-                            currentRun = null;
-                            continue;
-                        }
-                        else if (dname == "fldrslt")
-                        {
-                            // Handle as regular group (this is the current value of the field).
-                            ConvertGroup(subGroup);
-                            
-                            // Ensure we are in a paragraph and add a field char of type End
-                            EnsureParagraph();
-                            var endRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.End });
-                            pendingParagraph!.AppendChild(endRun);
-
-                            // Force creating subsequent content in a new run.
-                            currentRun = null;
-                            continue;
-                        }
-
-                        else if (dname == "header")
-                        {
-                            // If different header/footer for odd and even pages are enabled, ignore this destination
-                            if (!(settingsPart?.Settings?.GetFirstChild<EvenAndOddHeaders>()).ToBool())
+                            else if (dname == "defpap")
                             {
+                                // Parse default paragraph properties and map them to Styles/DocDefaults -> ParagraphPropertiesDefault
+                                var previousBorder = currentBorder;
+                                currentBorder = null;
+                                var defaultPr = new ParagraphProperties();
+                                foreach (var t in destination.Tokens)
+                                {
+                                    if (t is RtfControlWord rcw)
+                                    {
+                                        ProcessParagraphControlWord(rcw, defaultPr);
+                                    }
+                                }
+                                currentBorder = previousBorder;
+
+                                if (defaultPr.HasChildren)
+                                {
+                                    stylesPart ??= mainPart.StyleDefinitionsPart;
+                                    stylesPart ??= mainPart.AddNewPart<StyleDefinitionsPart>();
+                                    stylesPart.Styles ??= new Styles();
+                                    var docDefaults = stylesPart.Styles.DocDefaults ?? stylesPart.Styles.AppendChild(new DocDefaults());
+
+                                    docDefaults.ParagraphPropertiesDefault ??= new ParagraphPropertiesDefault();
+                                    docDefaults.ParagraphPropertiesDefault.ParagraphPropertiesBaseStyle?.Remove();
+                                    // Note: we can't cast ParagraphProperties to ParagraphPropertiesBaseStyle, 
+                                    // but adding them directly should work as they have the same XML name and structure
+                                    docDefaults.ParagraphPropertiesDefault.Append(defaultPr);
+                                }
+                                continue;
+                            }
+                            else if (dname == "field")
+                            {
+                                // Handle as regular group (it should contain fldinst and fldrslt, 
+                                // but it's safer to create the field in DOCX only when we find the actual field instruction)
+                            }
+                            else if (dname == "fldinst")
+                            {
+                                // Ensure we are in a paragraph
+                                EnsureParagraph();
+                                
+                                // Create FieldChar of type Begin.
+                                // The formatting state is not relevant for the Begin and Separate runs.
+                                var beginRun = new Run();
+                                var beginChar = new FieldChar() { FieldCharType = FieldCharValues.Begin };
+                                beginRun.AppendChild(beginChar);
+                                pendingParagraph!.AppendChild(beginRun);
+
+                                // Create FieldCode
+                                var instrTextBuilder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, instrTextBuilder);
+                                pendingParagraph!.AppendChild(new Run(new FieldCode(instrTextBuilder.ToString())));
+
+                                // Create FieldChar of type Separate
+                                var separateRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.Separate });
+                                pendingParagraph!.AppendChild(separateRun);
+                                
+                                // Force creating field content in a new run.
+                                // The formatting state is relevant for the content run and should not be reset.
+                                currentRun = null;
+                                continue;
+                            }
+                            else if (dname == "fldrslt")
+                            {
+                                // Handle as regular group (this is the current value of the field).
+                                ConvertGroup(subGroup);
+                                
+                                // Ensure we are in a paragraph and add a field char of type End
+                                EnsureParagraph();
+                                var endRun = new Run(new FieldChar() { FieldCharType = FieldCharValues.End });
+                                pendingParagraph!.AppendChild(endRun);
+
+                                // Force creating subsequent content in a new run.
+                                currentRun = null;
+                                continue;
+                            }
+
+                            else if (dname == "header")
+                            {
+                                // If different header/footer for odd and even pages are enabled, ignore this destination
+                                if (!(settingsPart?.Settings?.GetFirstChild<EvenAndOddHeaders>()).ToBool())
+                                {
+                                    ProcessHeader(subGroup, HeaderFooterValues.Default);
+                                }
+                                continue;
+                            }
+                            else if (dname == "headerf")
+                            {
+                                // Convert header for first page anyway; the word processor will ignore them if TitlePage is not present.
+                                // Note that if a first page header is hidden for a section, a subsequent section that has TitlePage enabled can still inherit from it.
+                                ProcessHeader(subGroup, HeaderFooterValues.First);
+                                continue;
+                            }
+                            else if (dname == "headerl")
+                            {
+                                // Convert header for even pages anyway; the word processor will ignore them if EvenAndOddHeaders is not present
+                                ProcessHeader(subGroup, HeaderFooterValues.Even);
+                                continue;
+                            }
+                            else if (dname == "headerr")
+                            {
+                                // TODO: if different header/footer for odd and even pages are *not* enabled, give priority to "header" if present
                                 ProcessHeader(subGroup, HeaderFooterValues.Default);
+                                continue;
                             }
-                            continue;
-                        }
-                        else if (dname == "headerf")
-                        {
-                            // Convert header for first page anyway; the word processor will ignore them if TitlePage is not present.
-                            // Note that if a first page header is hidden for a section, a subsequent section that has TitlePage enabled can still inherit from it.
-                            ProcessHeader(subGroup, HeaderFooterValues.First);
-                            continue;
-                        }
-                        else if (dname == "headerl")
-                        {
-                            // Convert header for even pages anyway; the word processor will ignore them if EvenAndOddHeaders is not present
-                            ProcessHeader(subGroup, HeaderFooterValues.Even);
-                            continue;
-                        }
-                        else if (dname == "headerr")
-                        {
-                            // TODO: if different header/footer for odd and even pages are *not* enabled, give priority to "header" if present
-                            ProcessHeader(subGroup, HeaderFooterValues.Default);
-                            continue;
-                        }
-                        else if (dname == "footer")
-                        {
-                            // If different header/footer for odd and even pages are enabled, ignore this destination
-                            if (!(settingsPart?.Settings?.GetFirstChild<EvenAndOddHeaders>()).ToBool())
+                            else if (dname == "footer")
                             {
+                                // If different header/footer for odd and even pages are enabled, ignore this destination
+                                if (!(settingsPart?.Settings?.GetFirstChild<EvenAndOddHeaders>()).ToBool())
+                                {
+                                    ProcessFooter(subGroup, HeaderFooterValues.Default);
+                                }
+                                continue;
+                            }
+                            else if (dname == "footerf")
+                            {
+                                // Convert footer for first page anyway; the word processor will ignore it if TitlePage is not present.
+                                // Note that if a first page footer is hidden for a section, a subsequent section that has TitlePage enabled can still inherit from it.
+                                ProcessFooter(subGroup, HeaderFooterValues.First);
+                                continue;
+                            }
+                            else if (dname == "footerl")
+                            {
+                                // Convert footer for even pages anyway; the word processor will ignore them if EvenAndOddHeaders is not present
+                                ProcessFooter(subGroup, HeaderFooterValues.Even);
+                                continue;
+                            }
+                            else if (dname == "footerr")
+                            {
+                                // TODO: if different header/footer for odd and even pages are *not* enabled, give priority to "footer" if present
                                 ProcessFooter(subGroup, HeaderFooterValues.Default);
+                                continue;
                             }
-                            continue;
-                        }
-                        else if (dname == "footerf")
-                        {
-                            // Convert footer for first page anyway; the word processor will ignore it if TitlePage is not present.
-                            // Note that if a first page footer is hidden for a section, a subsequent section that has TitlePage enabled can still inherit from it.
-                            ProcessFooter(subGroup, HeaderFooterValues.First);
-                            continue;
-                        }
-                        else if (dname == "footerl")
-                        {
-                            // Convert footer for even pages anyway; the word processor will ignore them if EvenAndOddHeaders is not present
-                            ProcessFooter(subGroup, HeaderFooterValues.Even);
-                            continue;
-                        }
-                        else if (dname == "footerr")
-                        {
-                            // TODO: if different header/footer for odd and even pages are *not* enabled, give priority to "footer" if present
-                            ProcessFooter(subGroup, HeaderFooterValues.Default);
-                            continue;
-                        }
 
-                        else if (dname == "footnote")
-                        {
-                            ProcessFootnoteEndnote(subGroup);
-                            continue;
-                        }
-                        else if (dname == "ftncn")
-                        {                        
-                            ProcessFootnoteContinuationNotice(subGroup);
-                            continue;
-                        }
-                        else if (dname == "ftnsep")
-                        {
-                            ProcessFootnoteSeparator(subGroup);
-                            continue;
-                        }
-                        else if (dname == "ftnsepc")
-                        {
-                            ProcessFootnoteContinuationSeparator(subGroup);
-                            continue;
-                        }
-                        else if (dname == "aftncn")
-                        {                        
-                            ProcessEndnoteContinuationNotice(subGroup);
-                            continue;
-                        }
-                        else if (dname == "aftnsep")
-                        {
-                            ProcessEndnoteSeparator(subGroup);
-                            continue;
-                        }
-                        else if (dname == "aftnsepc")
-                        {
-                            ProcessEndnoteContinuationSeparator(subGroup);
-                            continue;
-                        }
-
-                        else if (dname == "shppict")
-                        {
-                            // Handle as regular group
-                            // (recurse to retrieve the pict element)
-                        }
-                        else if (dname == "pict")
-                        {
-                            // Handle as regular group
-                            // (retrieve essential control words for image format and dimensions)
-                            var pict = ProcessPicture<Picture>(destination);
-                            if (pict != null)
-                                AddRun().Append(pict);
-                            continue;
-                        }
-                        else if (dname == "mmath")
-                        {
-                            ProcessMathDestination(destination);
-                            continue;
-                        }
-                        else if (dname == "nonshppict")
-                        {
-                            // Ignore nonshppict as it's emitted for compatibility for older RTF readers 
-                            // and contains the same inner \pict as \shppict
-                            continue;
-                        }
-
-                        else if (dname == "pn")
-                        {
-                            // Enumerate the group normally to retrieve list level, number format, character style, text before/after, ...
-                            currentLevel = pendingParagraphPr.CreateListLevel(mainPart);
-                        }
-                        else if (dname == "pnseclvl")
-                        {
-                            if (destination.HasValue)
+                            else if (dname == "footnote")
                             {
-                                // Sets the default numbering style for each corresponding \pnlvlN control word within the section.
-                                // Ignored for now.
+                                ProcessFootnoteEndnote(subGroup);
+                                continue;
                             }
-                            continue;
-                        }
-                        else if (dname == "pntxta")
-                        {
-                            // This group contains the text that follows the number
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            var level = EnsureLevel();
-                            var text = level.GetLevelText();
-                            // If the level text has not been set yet, and the number format is not bullet or not set, 
-                            // initialize the level text to %1 (replaced by the actual list item number by word processors). 
-                            // The %1 will be removed later if we find out that the list is bulleted.
-                            if ((level.NumberingFormat?.Val == null || level.NumberingFormat.Val != NumberFormatValues.Bullet) 
-                                 && text == string.Empty)
-                                level.SetLevelText("%1" + builder.ToString());
-                            else 
-                                level.AppendLevelText(builder.ToString());
-                            continue;
-                        }
-                        else if (dname == "pntxtb")
-                        {
-                            // This group contains the text that precedes the number, or the bullet text
-                            var builder = new StringBuilder();
-                            ConvertGroupAsText(subGroup, builder);
-                            var level = EnsureLevel();
-                            var text = level.GetLevelText();
-                            // If the level text has not been set yet, and the number format is not bullet or not set, 
-                            // initialize the level text to %1 (replaced by the actual list item number by word processors). 
-                            // The %1 will be removed later if we find out that the list is bulleted.
-                            if ((level.NumberingFormat?.Val == null || level.NumberingFormat.Val != NumberFormatValues.Bullet) 
-                                 && text == string.Empty)
-                                level.SetLevelText(builder.ToString() + "%1");
-                            else 
-                                level.PrependLevelText(builder.ToString());
-                            continue;
-                        }
-                        else if (dname == "pntext" || dname == "listtext")
-                        {
-                            // Ignore, emitted for compatibility with RTF readers that don't understand lists
-                            continue;
-                        }
+                            else if (dname == "ftncn")
+                            {                        
+                                ProcessFootnoteContinuationNotice(subGroup);
+                                continue;
+                            }
+                            else if (dname == "ftnsep")
+                            {
+                                ProcessFootnoteSeparator(subGroup);
+                                continue;
+                            }
+                            else if (dname == "ftnsepc")
+                            {
+                                ProcessFootnoteContinuationSeparator(subGroup);
+                                continue;
+                            }
+                            else if (dname == "aftncn")
+                            {                        
+                                ProcessEndnoteContinuationNotice(subGroup);
+                                continue;
+                            }
+                            else if (dname == "aftnsep")
+                            {
+                                ProcessEndnoteSeparator(subGroup);
+                                continue;
+                            }
+                            else if (dname == "aftnsepc")
+                            {
+                                ProcessEndnoteContinuationSeparator(subGroup);
+                                continue;
+                            }
 
-                        else if (dname == "upr")
-                        {
-                            // Process the Unicode group only, ignore the ANSI equivalent
-                            var udGroup = group.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name == "ud");
-                            if (udGroup != null)
-                                ConvertGroup(udGroup);
-                            
-                            continue;
+                            else if (dname == "shppict")
+                            {
+                                // Handle as regular group
+                                // (recurse to retrieve the pict element)
+                            }
+                            else if (dname == "pict")
+                            {
+                                // Handle as regular group
+                                // (retrieve essential control words for image format and dimensions)
+                                var pict = ProcessPicture<Picture>(destination);
+                                if (pict != null)
+                                    AddRun().Append(pict);
+                                continue;
+                            }
+                            else if (dname == "mmath")
+                            {
+                                ProcessMathDestination(destination);
+                                continue;
+                            }
+                            else if (dname == "nonshppict")
+                            {
+                                // Ignore nonshppict as it's emitted for compatibility for older RTF readers 
+                                // and contains the same inner \pict as \shppict
+                                continue;
+                            }
+
+                            else if (dname == "pn")
+                            {
+                                // Enumerate the group normally to retrieve list level, number format, character style, text before/after, ...
+                                currentLevel = pendingParagraphPr.CreateListLevel(mainPart);
+                            }
+                            else if (dname == "pnseclvl")
+                            {
+                                if (destination.HasValue)
+                                {
+                                    // Sets the default numbering style for each corresponding \pnlvlN control word within the section.
+                                    // Ignored for now.
+                                }
+                                continue;
+                            }
+                            else if (dname == "pntxta")
+                            {
+                                // This group contains the text that follows the number
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                var level = EnsureLevel();
+                                var text = level.GetLevelText();
+                                // If the level text has not been set yet, and the number format is not bullet or not set, 
+                                // initialize the level text to %1 (replaced by the actual list item number by word processors). 
+                                // The %1 will be removed later if we find out that the list is bulleted.
+                                if ((level.NumberingFormat?.Val == null || level.NumberingFormat.Val != NumberFormatValues.Bullet) 
+                                    && text == string.Empty)
+                                    level.SetLevelText("%1" + builder.ToString());
+                                else 
+                                    level.AppendLevelText(builder.ToString());
+                                continue;
+                            }
+                            else if (dname == "pntxtb")
+                            {
+                                // This group contains the text that precedes the number, or the bullet text
+                                var builder = new StringBuilder();
+                                ConvertGroupAsText(subGroup, builder);
+                                var level = EnsureLevel();
+                                var text = level.GetLevelText();
+                                // If the level text has not been set yet, and the number format is not bullet or not set, 
+                                // initialize the level text to %1 (replaced by the actual list item number by word processors). 
+                                // The %1 will be removed later if we find out that the list is bulleted.
+                                if ((level.NumberingFormat?.Val == null || level.NumberingFormat.Val != NumberFormatValues.Bullet) 
+                                    && text == string.Empty)
+                                    level.SetLevelText(builder.ToString() + "%1");
+                                else 
+                                    level.PrependLevelText(builder.ToString());
+                                continue;
+                            }
+                            else if (dname == "pntext" || dname == "listtext")
+                            {
+                                // Ignore, emitted for compatibility with RTF readers that don't understand lists
+                                continue;
+                            }
+
+                            else if (dname == "upr")
+                            {
+                                // Process the Unicode group only, ignore the ANSI equivalent
+                                var udGroup = group.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name == "ud");
+                                if (udGroup != null)
+                                    ConvertGroup(udGroup);
+                                
+                                continue;
+                            }
+                            else if (dname == "ud")
+                            {
+                                // Handle as regular group (it can contain \u or any control word such as bkmkstart)
+                            }
+                            else
+                            {
+                                // TODO: other destinations 
+                                continue;
+                            }
                         }
-                        else if (dname == "ud")
-                        {
-                            // Handle as regular group (it can contain \u or any control word such as bkmkstart)
-                        }
-                        else
-                        {
-                            // TODO: other destinations 
-                            continue;
-                        }
-                    }
-                    
-                    // Recurse
-                    ConvertGroup(subGroup);
-                    break;
-                case RtfControlWord cw:
-                    HandleControlWord(cw);
-                    break;
-                case RtfChar ch:
-                    // Ensure paragraph and run exist
-                    var encMain = ResolveEncodingForRun(TryPeek(fmtStack));
-                    string s = encMain.GetString(new byte[] { ch.CharCode });
-                    HandleText(s);
-                    break;
-                case RtfText text:
-                    HandleText(text.Text);
-                    break;
-                case RtfHexToken hexData:
-                    // The hex data (e.g. image bytes) must be handled depending on the current context.                    
-                    break;
+                        
+                        // Recurse
+                        ConvertGroup(subGroup);
+                        break;
+                    case RtfControlWord cw:
+                        HandleControlWord(cw);
+                        break;
+                    case RtfChar ch:
+                        // Ensure paragraph and run exist
+                        var encMain = ResolveEncodingForRun(TryPeek(fmtStack));
+                        string s = encMain.GetString(new byte[] { ch.CharCode });
+                        HandleText(s);
+                        break;
+                    case RtfText text:
+                        HandleText(text.Text);
+                        break;
+                    case RtfHexToken hexData:
+                        // The hex data (e.g. image bytes) must be handled depending on the current context.                    
+                        break;
+                }
             }
         }
+
         pendingFootnoteEndnoteRef = false;
         // Restore parent formatting state
         TryPop(fmtStack);
@@ -697,6 +714,17 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     {
         if (stack.Count > 0)
             stack.Pop();
+    }
+
+    private Encoding? GetEncodingFromFontFamily(string fontFamily)
+    {
+        if (!string.IsNullOrEmpty(fontFamily))
+		{
+			var finfo = fontTable.Values.FirstOrDefault(fi => string.Equals(fi.Name, fontFamily, StringComparison.OrdinalIgnoreCase));
+			if (finfo != null)
+				return GetEncodingFromFontInfo(finfo);
+		}
+        return null;
     }
 
     private Encoding? GetEncodingFromFontInfo(RtfFontInfo? fi)
@@ -718,24 +746,34 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
     private Encoding ResolveEncodingForRun(FormattingState state)
     {
-        if (state != null)
+        if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fi))
         {
-            if (state.FontIndex.HasValue && fontTable.TryGetValue(state.FontIndex.Value, out var fi))
-            {
-                var enc = GetEncodingFromFontInfo(fi);
-                if (enc != null) return enc;
-            }
-            if (state.AssociatedFontIndex.HasValue && fontTable.TryGetValue(state.AssociatedFontIndex.Value, out var afi))
-            {
-                var enc = GetEncodingFromFontInfo(afi);
-                if (enc != null) return enc;
-            }
+            var enc = GetEncodingFromFontInfo(fi);
+            if (enc != null) return enc;
         }
-        if (codePageEncoding != null) return codePageEncoding;
-        try { return Encoding.GetEncoding(DefaultCodePage); } catch { return DefaultEncoding; }
+        if (state.AssociatedFontIndex.HasValue && fontTable.TryGetValue(state.AssociatedFontIndex.Value, out var afi))
+        {
+            var enc = GetEncodingFromFontInfo(afi);
+            if (enc != null) return enc;
+        }
+        return GetDefaultEncoding();
     }
 
-    private void ConvertGroupAsText(RtfGroup group, StringBuilder sb, Encoding? overrideEncoding = null, bool isLevelText = false)
+    private Encoding GetDefaultEncoding()
+    {
+        if (codePageEncoding != null) 
+            return codePageEncoding;
+        try 
+        { 
+            return Encoding.GetEncoding(DefaultCodePage); 
+        } 
+        catch 
+        { 
+            return DefaultEncoding ?? Encodings.ANSI; 
+        }
+    }
+
+    private void ConvertGroupAsText(RtfGroup group, StringBuilder sb, bool isLevelText = false)
     {
         // Method to handle only text and special character
         fmtStack.Push(TryPeek(fmtStack).Clone());
@@ -749,7 +787,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         continue; // destinations are ignored in this context as they cause incorrect handling (e.g. \*\datafield in fields)
                     else 
                         // Recurse
-                        ConvertGroupAsText(subGroup, sb, overrideEncoding);
+                        ConvertGroupAsText(subGroup, sb);
                     break;
                 case RtfControlWord cw:
                     var runState = TryPeek(fmtStack);
@@ -766,13 +804,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         case "u":
                             if (cw.HasValue)
                             {
-                                ProcessUnicode(cw.Value!.Value, runState, sb);                   
+                                ProcessUnicode(cw.Value!.Value, runState, sb);
                             }
                             break;
                     }
                     break;
                 case RtfChar ch:
-                    var enc = overrideEncoding ?? ResolveEncodingForRun(TryPeek(fmtStack));
+                    var enc = ResolveEncodingForRun(TryPeek(fmtStack));
                     if (isLevelText)
                     {
                         // The \leveltext group needs special handling: 

@@ -188,7 +188,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         var previousBorder = currentBorder;
         currentBorder = null;
         var levelParaPr = new ParagraphProperties();
-        var tempState = new FormattingState();
+
+        // Use a clean run state for the level
+        fmtStack.Push(new FormattingState());
 
         foreach (var lt in dest.Tokens)
         {
@@ -228,7 +230,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             level.Tentative = true; 
                         break;
                     default: 
-                        if (ProcessRunControlWord(lcw, tempState))
+                        if (ProcessRunControlWord(lcw, TryPeek(fmtStack)))
                         {
                             break;
                         }
@@ -245,7 +247,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (dname == "leveltext")
                 {
                     var sb = new StringBuilder();
-                    ConvertGroupAsText(dest2, sb, codePageEncoding, true);
+                    ConvertGroupAsText(dest2, sb, true);
                     level.LevelText = new LevelText() { Val = sb.ToString().TrimEnd(";") };
                 }                               
             }
@@ -258,7 +260,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (levelParaPr.HasChildren)
             level.Append(levelParaPr);
 
-        var generatedRun = CreateRunWithProperties(tempState);
+        var generatedRun = CreateRunWithProperties(TryPeek(fmtStack));
         var rp = generatedRun.GetFirstChild<RunProperties>();
         if (rp != null && rp.HasChildren)
             // Note: we can't cast RunProperties to NumberingSymbolRunProperties, 
