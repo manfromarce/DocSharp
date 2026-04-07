@@ -1,5 +1,14 @@
 # Supported features (per format)
 
+## Binary converters
+
+Most DOC, XLS and PPT features are supported and mapped to Open XML equivalents, including formatting, tables, pictures and charts. However there are some issues and unsupported elements.  
+
+A more detailed report will be added later.  
+
+Known issues:  
+- Document information (author, title, creation date, ...) are not preserved
+
 ## DOCX converters
 
 | Feature       | ➡️ RTF | ➡️ HTML | ➡️ Markdown | ➡️ TXT |
