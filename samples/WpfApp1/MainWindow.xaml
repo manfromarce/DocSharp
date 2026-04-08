@@ -90,6 +90,9 @@
                     Click="ViewDocxAsRtf_Click"
                     Content="View Docx document (via RTF)" />
                 <Button
+                    Click="ViewDocxAsHtml_Click"
+                    Content="View Docx document (via HTML)" />
+                <Button
                     Click="ViewDocxAsFixedDocument_Click"
                     Content="View Docx document (via XPS)" />
             </UniformGrid>

@@ -17,6 +17,8 @@ using HtmlToOpenXml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using W = DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.Web.WebView2.Wpf;
+using Microsoft.Web.WebView2.Core;
 
 namespace WpfApp1;
 /// <summary>
@@ -522,6 +524,42 @@ public partial class MainWindow : Window
                     rtb.Selection.Load(ms, DataFormats.Rtf);
                     rtbWindow.Show();
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+    }
+
+    private async void ViewDocxAsHtml_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            try
+            {
+                    var converter = new DocxToHtmlConverter()
+                    {
+                        ImageConverter = new ImageSharpConverter()
+                    };
+                    string html = converter.ConvertToString(ofd.FileName);
+                    var browserWindow = new Window()
+                    {
+                        Owner = this,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+                    var webView = new WebView2();
+                    browserWindow.Content = webView;                    
+                    browserWindow.Show();
+                    await webView.EnsureCoreWebView2Async();
+                    webView.DefaultBackgroundColor = System.Drawing.Color.White;
+                    webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Light;
+                    webView.CoreWebView2.NavigateToString(html);
             }
             catch (Exception ex)
             {
