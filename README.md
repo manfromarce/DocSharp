@@ -6,7 +6,7 @@ The following packages are currently available:
 
 - DocSharp.Binary: convert Office 97-2003 binary documents (doc, xls, ppt) to OpenXML documents (docx, xlsx, pptx). This is a fork of the abandoned [b2xtranslator project](https://github.com/EvolutionJobs/b2xtranslator) which provides critical fixes.  
 Note: pre-97 formats (not documented) and XLSB (very different) are not supported.
-- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt), and RTF to DOCX. Possible applications include generating Open XML documents in C# and exporting for other editors/services, or loading Microsoft Word documents in a RichTextBox / RichEditBox control.
+- DocSharp.Docx: convert DOCX to RTF, HTML, Markdown and plain text (.txt), and RTF to DOCX. Possible applications include generating Open XML documents in C# and exporting for other editors/services, or loading and saving Microsoft Word documents into/from a RichTextBox/RichEditBox control.
 - DocSharp.Markdown: convert Markdown to DOCX or RTF using custom Markdig renderers.
 - DocSharp.Renderer: provides basic DOCX to PDF/images/SVG/XPS conversion using [QuestPDF](https://github.com/QuestPDF/QuestPDF).  
 
