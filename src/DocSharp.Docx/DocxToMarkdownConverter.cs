@@ -624,11 +624,11 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     svgBlip.Embed?.Value is string svgRelId)
                 {
                     // Prefer the actual SVG image as web browsers can display it.
-                    ProcessImagePart(mainDocumentPart, svgRelId, sb);
+                    ProcessImagePart(drawing.GetRootPart(), svgRelId, sb);
                 }
                 else if (blip.Embed?.Value is string relId)
                 {
-                    ProcessImagePart(mainDocumentPart, relId, sb, hyperlinkId, tooltip);
+                    ProcessImagePart(drawing.GetRootPart(), relId, sb, hyperlinkId, tooltip);
                 }
             }
         }
@@ -641,8 +641,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             if (element.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
             {
-                var rootPart = OpenXmlHelpers.GetRootPart(element);
-                ProcessImagePart(rootPart, relId, sb);
+                ProcessImagePart(element.GetRootPart(), relId, sb);
             }
         }
     }

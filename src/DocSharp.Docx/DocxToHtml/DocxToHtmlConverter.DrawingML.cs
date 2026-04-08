@@ -47,16 +47,15 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb)
     {
-        var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
         if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
             svgBlip.Embed?.Value is string svgRelId)
         {
             // Prefer the actual SVG image as web browsers can display it.
-            ProcessImagePart(mainDocumentPart, svgRelId, width, height, sb);
+            ProcessImagePart(drawing.GetRootPart(), svgRelId, width, height, sb);
         }
         else if (blip.Embed?.Value is string relId)
         {
-            ProcessImagePart(mainDocumentPart, relId, width, height, sb);
+            ProcessImagePart(drawing.GetRootPart(), relId, width, height, sb);
         }
     }
 }
