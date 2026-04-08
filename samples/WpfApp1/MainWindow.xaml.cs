@@ -559,6 +559,8 @@ public partial class MainWindow : Window
                     await webView.EnsureCoreWebView2Async();
                     webView.DefaultBackgroundColor = System.Drawing.Color.White;
                     webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Light;
+                    // Note: the maximum size for HTML is 2 MB when using this method, 
+                    // otherwise you have to use a temp file.
                     webView.CoreWebView2.NavigateToString(html);
             }
             catch (Exception ex)
