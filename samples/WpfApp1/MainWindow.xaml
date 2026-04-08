@@ -18,6 +18,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0"
                     Margin="4"
@@ -69,12 +71,6 @@
                 <Button
                     Click="DocxToImages_Click"
                     Content="Docx to images" />
-                <Button
-                    Click="ViewDocx_Click"
-                    Content="View Docx document (via RTF)" />
-                <Button
-                    Click="ViewDocxFixed_Click"
-                    Content="View Docx document (via XPS)" />
             </UniformGrid>
             <TextBlock Grid.Row="2"
                 Margin="4,10,4,4"
@@ -83,6 +79,27 @@
                 Margin="4"
                 HorizontalAlignment="Left"
                 Grid.Row="3"
+                Columns="2">
+                <UniformGrid.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="Padding" Value="3,5,3,5"/>
+                        <Setter Property="Margin" Value="2"/>
+                    </Style>
+                </UniformGrid.Resources>              
+                <Button
+                    Click="ViewDocxAsRtf_Click"
+                    Content="View Docx document (via RTF)" />
+                <Button
+                    Click="ViewDocxAsFixedDocument_Click"
+                    Content="View Docx document (via XPS)" />
+            </UniformGrid>
+            <TextBlock Grid.Row="4"
+                Margin="4,10,4,4"
+                Text="Two-steps conversions or integration with other libraries:"/>
+            <UniformGrid 
+                Margin="4"
+                HorizontalAlignment="Left"
+                Grid.Row="5"
                 Columns="2">
                 <UniformGrid.Resources>
                     <Style TargetType="Button">

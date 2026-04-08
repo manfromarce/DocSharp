@@ -281,62 +281,26 @@ public partial class MainWindow : Window
         }
     }
 
-    private void DocxToPdf_Click(object sender, RoutedEventArgs e)
+    private void RtfToDocx_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
         {
-            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
+            Filter = "Rich Text Format|*.rtf",
             Multiselect = false,
         };
         if (ofd.ShowDialog(this) == true)
         {
             var sfd = new SaveFileDialog()
             {
-                Filter = "Portable Document Format|*.pdf",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
+                Filter = "Word OpenXML document|*.docx",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
             };
             if (sfd.ShowDialog(this) == true)
             {
                 try
                 {
-                    var renderer = new DocxRenderer()
-                    {
-                        // ImageConverter = new ImageSharpConverter(), // Converts GIF, TIFF and WMF that are not supported by QuestPDF
-                        ImageConverter = new SystemDrawingConverter(), // Supports EMF too
-                    };
-                    renderer.SaveAsPdf(ofd.FileName, sfd.FileName);
-                }
-                catch (Exception ex)
-                {                    
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
-    }
-
-    private void DocxToImages_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new OpenFolderDialog()
-            {
-                Title = "Choose folder to export images in"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                try
-                {
-                    var renderer = new DocxRenderer()
-                    {
-                        // ImageConverter = new ImageSharpConverter(), // Converts GIF, TIFF and WMF that are not supported by QuestPDF
-                        ImageConverter = new SystemDrawingConverter(), // Supports EMF too
-                    };
-                    renderer.SaveAllPagesAsPng(ofd.FileName, sfd.FolderName, Path.GetFileNameWithoutExtension(ofd.FileName));
+                    var conv = new RtfToDocxConverter();
+                    conv.Convert(ofd.FileName, sfd.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -452,7 +416,72 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ViewDocx_Click(object sender, RoutedEventArgs e)
+    private void DocxToPdf_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Portable Document Format|*.pdf",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".pdf"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var renderer = new DocxRenderer()
+                    {
+                        // ImageConverter = new ImageSharpConverter(), // Converts GIF, TIFF and WMF that are not supported by QuestPDF
+                        ImageConverter = new SystemDrawingConverter(), // Supports EMF too
+                    };
+                    renderer.SaveAsPdf(ofd.FileName, sfd.FileName);
+                }
+                catch (Exception ex)
+                {                    
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void DocxToImages_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Word OpenXML document|*.docx;*.dotx;*.docm;*.dotm",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new OpenFolderDialog()
+            {
+                Title = "Choose folder to export images in"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var renderer = new DocxRenderer()
+                    {
+                        // ImageConverter = new ImageSharpConverter(), // Converts GIF, TIFF and WMF that are not supported by QuestPDF
+                        ImageConverter = new SystemDrawingConverter(), // Supports EMF too
+                    };
+                    renderer.SaveAllPagesAsPng(ofd.FileName, sfd.FolderName, Path.GetFileNameWithoutExtension(ofd.FileName));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void ViewDocxAsRtf_Click(object sender, RoutedEventArgs e)
     {
         // Please note that the WPF RichTextBox supports a subset of RTF features.
         // To test the DOCX --> RTF conversion provided by DocSharp,
@@ -501,7 +530,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ViewDocxFixed_Click(object sender, RoutedEventArgs e)
+    private void ViewDocxAsFixedDocument_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
         {
@@ -544,109 +573,6 @@ public partial class MainWindow : Window
                 MessageBox.Show(ex.Message);
                 if (File.Exists(tempFile))
                     File.Delete(tempFile);
-            }
-        }
-    }
-
-    private async void RtfToDocx_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "Rich Text Format|*.rtf",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "Word OpenXML document|*.docx",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".docx"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                try
-                {
-                    var conv = new RtfToDocxConverter();
-                    conv.Convert(ofd.FileName, sfd.FileName);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
-    }
-
-    private async void RtfToHtml_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "Rich Text Format|*.rtf",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "HTML|*.html;*.htm",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                try
-                {
-                    var conv = new RtfToDocxConverter();
-                    using (var ms = new MemoryStream())
-                    {
-                        var wpd = conv.ConvertToWordProcessingDocument(ofd.FileName, ms);
-                        wpd.SaveTo(sfd.FileName, new HtmlSaveOptions()
-                        {
-                            ImageConverter = new SystemDrawingConverter(),
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
-    }
-
-    private async void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
-    {
-        var ofd = new OpenFileDialog()
-        {
-            Filter = "Rich Text Format|*.rtf",
-            Multiselect = false,
-        };
-        if (ofd.ShowDialog(this) == true)
-        {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn;*.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
-                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
-            };
-            if (sfd.ShowDialog(this) == true)
-            {
-                try
-                {
-                    var conv = new RtfToDocxConverter();
-                    using (var ms = new MemoryStream())
-                    {
-                        var wpd = conv.ConvertToWordProcessingDocument(ofd.FileName, ms);
-                        wpd.SaveTo(sfd.FileName, new MarkdownSaveOptions()
-                        {
-                            ImageConverter = new SystemDrawingConverter(),
-                            ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
-                            ImagesBaseUriOverride = "",
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
             }
         }
     }
@@ -740,6 +666,80 @@ public partial class MainWindow : Window
         }
     }
 
+     private void RtfToHtml_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "HTML|*.html;*.htm",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".html"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var conv = new RtfToDocxConverter();
+                    using (var ms = new MemoryStream())
+                    {
+                        var wpd = conv.ConvertToWordProcessingDocument(ofd.FileName, ms);
+                        wpd.SaveTo(sfd.FileName, new HtmlSaveOptions()
+                        {
+                            ImageConverter = new SystemDrawingConverter(),
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
+    private void RtfToMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog()
+        {
+            Filter = "Rich Text Format|*.rtf",
+            Multiselect = false,
+        };
+        if (ofd.ShowDialog(this) == true)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = "Markdown|*.md;*.markdown;*.mkd;*.mkdn;*.mkdwn;*.mdwn;*.mdown;*.markdn;*.mdtxt;*.mdtext",
+                FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".md"
+            };
+            if (sfd.ShowDialog(this) == true)
+            {
+                try
+                {
+                    var conv = new RtfToDocxConverter();
+                    using (var ms = new MemoryStream())
+                    {
+                        var wpd = conv.ConvertToWordProcessingDocument(ofd.FileName, ms);
+                        wpd.SaveTo(sfd.FileName, new MarkdownSaveOptions()
+                        {
+                            ImageConverter = new SystemDrawingConverter(),
+                            ImagesOutputFolder = Path.GetDirectoryName(sfd.FileName),
+                            ImagesBaseUriOverride = "",
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+    }
+
     private async void HtmlToRtf_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog()
@@ -804,29 +804,28 @@ public partial class MainWindow : Window
             };
             if (sfd.ShowDialog(this) == true)
             {
-                var tempFile = Path.GetTempFileName(); // or use MemoryStream
                 try
                 {
-                    using (var reader = new StructuredStorageReader(ofd.FileName))
+                    using (var ms = new MemoryStream())
                     {
-                        var xls = new XlsDocument(reader);
-                        using (var xlsx = DocSharp.Binary.OpenXmlLib.SpreadsheetML.SpreadsheetDocument.Create(tempFile, DocSharp.Binary.OpenXmlLib.SpreadsheetDocumentType.Workbook))
+                        using (var reader = new StructuredStorageReader(ofd.FileName))
                         {
-                            DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
+                            var xls = new XlsDocument(reader);
+                            using (var xlsx = DocSharp.Binary.OpenXmlLib.SpreadsheetML.SpreadsheetDocument.Create(ms, DocSharp.Binary.OpenXmlLib.SpreadsheetDocumentType.Workbook))
+                            {
+                                DocSharp.Binary.SpreadsheetMLMapping.Converter.Convert(xls, xlsx);
+                            }
+                        }                        
+                        ms.Position = 0;
+                        using (var outputStream = new FileStream(sfd.FileName, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            XlsxToHtmlConverter.Converter.Convert(ms, outputStream);
                         }
-                    }
-                    using (var outputStream = new FileStream(sfd.FileName, FileMode.Create, FileAccess.ReadWrite))
-                    {
-                        XlsxToHtmlConverter.Converter.Convert(tempFile, outputStream);
                     }
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
-                }
-                finally
-                {
-                    File.Delete(tempFile);
                 }
             }
         }
