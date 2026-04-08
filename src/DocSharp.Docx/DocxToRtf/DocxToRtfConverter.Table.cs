@@ -62,7 +62,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
             if (pos.TablePositionX != null)
             {
-                tableProperties.WriteWordWithValue("tposx", pos.TablePositionX.Value);
+                tableProperties.WriteWordWithValue(pos.TablePositionX.Value < 0 ? "tposnegx" : "tposx", pos.TablePositionX.Value);
             }
             if (pos.TablePositionXAlignment != null)
             {
@@ -89,7 +89,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
             if (pos.TablePositionY != null)
             {
-                tableProperties.WriteWordWithValue("tposy", pos.TablePositionY.Value);
+                tableProperties.WriteWordWithValue(pos.TablePositionY.Value < 0 ? "tposnegy" : "tposy", pos.TablePositionY.Value);
             }
             if (pos.TablePositionYAlignment != null)
             {
@@ -122,7 +122,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             {
                 if (pos.HorizontalAnchor.Value == HorizontalAnchorValues.Text)
                 {
-                    tableProperties.Write(@"\tphcol");
+                    tableProperties.Write(@"\tphcol"); // ?
                 }
                 else if (pos.HorizontalAnchor.Value == HorizontalAnchorValues.Page)
                 {
