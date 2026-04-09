@@ -256,7 +256,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             cell.Append(pendingParagraph);
             if (paragraphState.ParagraphProperties != null)
                 pendingParagraph.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
-            
+            FixParagraphSpacing(pendingParagraph);
             pendingParagraph = null;
             currentRun = null;
         }
