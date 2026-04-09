@@ -52,7 +52,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                                 break;
                             case "listhybrid":
                                 abstractNum.MultiLevelType = new MultiLevelType() { Val = MultiLevelValues.HybridMultilevel };
-                                break;                                
+                                break;
+                            // case "listrestarthdn"
+                            // Restart at each section (for Word 95 compatibility only) (not available in DOCX)
                         }
                     }
                     else if (lt is RtfDestination subDest)                    
@@ -218,6 +220,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                         else 
                             level.LevelSuffix = new LevelSuffix() { Val = LevelSuffixValues.Nothing };                            
                         break;
+                    case "leveljc":
                     case "leveljcn":
                         if (lcw.HasValue)
                         {
@@ -229,9 +232,46 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     case "levelpicture":
                         level.LevelPictureBulletId = new LevelPictureBulletId() { Val = lcw.Value!.Value }; break;
                     case "lvltentative":
-                        if (lcw.HasValue && lcw.Value!.Value == 1) 
+                        if (!lcw.HasValue || lcw.Value!.Value == 1) 
                             level.Tentative = true; 
                         break;
+                    case "levelnorestart": // Do not restart numbering at this level
+                        if (!lcw.HasValue || lcw.Value!.Value == 1) 
+                            level.LevelRestart = new LevelRestart() { Val = 0 };
+                        break;
+                    case "levellegal": 
+                        if (!lcw.HasValue || lcw.Value!.Value == 1) 
+                            level.IsLegalNumberingStyle = new IsLegalNumberingStyle() { Val = true};
+                        break;
+
+                    // Keywords emitted for compatibility with Word 95 or Word 6.0 only
+                    case "levelold":
+                        if (!lcw.HasValue || lcw.Value!.Value == 1)
+                        {
+                            level.LegacyNumbering ??= new LegacyNumbering();
+                            level.LegacyNumbering.Legacy = true;
+                        }
+                        break;
+                    case "levelindent":
+                        if (lcw.HasValue)
+                        {
+                            level.LegacyNumbering ??= new LegacyNumbering();
+                            level.LegacyNumbering.LegacyIndent = lcw.Value!.Value.ToStringInvariant();
+                        }
+                        break;
+                    case "levelspace":
+                        if (lcw.HasValue)
+                        {
+                            level.LegacyNumbering ??= new LegacyNumbering();
+                            level.LegacyNumbering.LegacySpace = lcw.Value!.Value.ToStringInvariant();
+                        }
+                        break;
+                    // case "levelprev":
+                    // case "levelprevspace":
+                    // Not available in DOCX
+
+                    // case "levelpicturenosize":
+                    
                     default: 
                         if (ProcessRunControlWord(lcw, TryPeek(fmtStack)))
                         {
