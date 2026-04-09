@@ -388,13 +388,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
 
             case "trgaph": // Half the space (in twips) between the text in a table cell and the cell borders.
-                // (Word 97 padding, superseded by \trpaddl, \trpaddr, \trpaddt and \trpaddb if present, unless trpaddfb/trpaddfl/trpaddfr/trpaddft are set to 0.)
+                // (Word 97 padding, superseded by \trpaddl and \trpaddr if present, unless trpaddfl/trpaddfr are set to 0.)
                 if (cw.HasValue)
                 {                    
                     var existingLeftMargin = EnsureTableCellDefaultMargin<TableCellLeftMargin>();
                     var existingRightMargin = EnsureTableCellDefaultMargin<TableCellRightMargin>();
-                    var existingTopMargin = EnsureTableCellDefaultMargin<TopMargin>();
-                    var existingBottomMargin = EnsureTableCellDefaultMargin<BottomMargin>();
                     // If cell padding was already set by \trpadd*, give precedence to it, unless \trpaddf* is set to 0.
                     // TODO: should we divide the trgaph value by 2 if we use it?
                     if (existingLeftMargin.Width == null || 
@@ -408,18 +406,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     {
                         existingRightMargin.Width = cw.Value!.Value.ToShort();
                         existingRightMargin.Type = TableWidthValues.Dxa;
-                    }
-                    if (existingTopMargin.Width == null || string.IsNullOrEmpty(existingTopMargin.Width.Value) || 
-                        (existingTopMargin.Type != null && existingTopMargin.Type == TableWidthUnitValues.Nil))
-                    {
-                        existingTopMargin.Width = cw.Value!.Value.ToStringInvariant();
-                        existingTopMargin.Type = TableWidthUnitValues.Dxa;
-                    }
-                    if (existingBottomMargin.Width == null || string.IsNullOrEmpty(existingBottomMargin.Width.Value) || 
-                        (existingBottomMargin.Type != null && existingBottomMargin.Type == TableWidthUnitValues.Nil))
-                    {
-                        existingBottomMargin.Width = cw.Value!.Value.ToStringInvariant();
-                        existingBottomMargin.Type = TableWidthUnitValues.Dxa;
                     }
                 }
                 return true;
