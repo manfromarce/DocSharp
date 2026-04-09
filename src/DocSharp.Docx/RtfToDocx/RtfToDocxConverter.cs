@@ -922,9 +922,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             currentSectPr.AppendChild(new SectionType() { Val = SectionMarkValues.NextPage });
 
                         pendingParagraph.ParagraphProperties.SectionProperties = (SectionProperties)currentSectPr.CloneNode(true);
-                        FixParagraphSpacing(pendingParagraph);                    
                         // Append the paragraph to the current container so SectionProperties are written
                         container.Append(pendingParagraph);
+                        FixParagraphSpacing(pendingParagraph);               
                         pendingParagraph = null;
                         currentRun = null;
                     }

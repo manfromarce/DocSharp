@@ -23,6 +23,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         // Save current state
         var oldParagraph = pendingParagraph;
         var oldFmtStack = fmtStack.Clone();
+        var oldParagraphState = paragraphState.Clone();
 
         // Set context to a different document part (header, footer, footnote, endnote)
         containers.Push(createPart());
@@ -38,6 +39,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         
         // Restore previous context; create subsequent content in a new run
         containers.Pop();
+        paragraphState = oldParagraphState.Clone();
         pendingParagraph = oldParagraph;
         fmtStack = oldFmtStack;
     }

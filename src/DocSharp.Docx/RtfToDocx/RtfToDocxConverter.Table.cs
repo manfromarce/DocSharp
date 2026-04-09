@@ -267,6 +267,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             cell.Append(p);
             if (paragraphState.ParagraphProperties != null)
                 p.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
+            FixParagraphSpacing(p);
         }
 
         // Also, if the cell does not contain any paragraph or ends with a nested table, Word considers the document corrupted.
@@ -673,6 +674,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 EnsureTableRowProperties().Append(new CantSplit() { Val = OnOffOnlyValues.On });
                 return true;
             case "trkeepfollow": // If present, the current table row should be kept on the same page as the following row.
+                // (not available in DOCX)
                 return true;
 
             case "trcbpat": // Background pattern color for the table row shading.

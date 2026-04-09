@@ -34,11 +34,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (paragraphState.ParagraphProperties != null)
             pendingParagraph.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
 
-        // If spacing is not specified, force paragraph to no spacing before/after to improve visual fidelity.
-        FixParagraphSpacing(pendingParagraph);
-
         // Get appropriate cell or container
         GetOrCreateParagraphContainer(paragraphState.TableNestingLevel)?.Append(pendingParagraph);
+
+        FixParagraphSpacing(pendingParagraph);
 
         // Reset pending paragraph (do not reset paragraphState)
         pendingParagraph = null;
@@ -48,9 +47,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
     private void FixParagraphSpacing(Paragraph paragraph)
     {
-        // Word adds some spacing by default in DOCX, leading to visual differences (especially in tables) with RTF 
-        // where spacing is assumed to be 0 by default instead. 
-        // To avoid this, force SpacingBetweenLines to 0 if values are not set.
+        // If spacing control words are *not* found, SpacingBetweenLines is not created by our logic,
+        // but this leads to visual differences because of different default behavior between RTF and DOCX. 
+        // To fix this, set space before/after to 0 and line spacing to single line when the paragraph is finalized, 
+        // unless spacing is already defined. 
         paragraph.ParagraphProperties ??= new ParagraphProperties();
         paragraph.ParagraphProperties.SpacingBetweenLines ??= new SpacingBetweenLines();
         if (paragraph.ParagraphProperties.SpacingBetweenLines.After == null || paragraph.ParagraphProperties.SpacingBetweenLines.After == string.Empty)

@@ -12,4 +12,13 @@ internal class ParagraphState
         ParagraphProperties = null;
         TableNestingLevel = 0;
     }
+
+    public ParagraphState Clone()
+    {
+        return new ParagraphState()
+        {
+            ParagraphProperties = this.ParagraphProperties == null ? null : (ParagraphProperties)this.ParagraphProperties.CloneNode(true),
+            TableNestingLevel = this.TableNestingLevel
+        };
+    }
 }
