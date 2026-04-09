@@ -129,6 +129,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         currentBorder = null;
         currentRun = null;
         pendingFootnoteEndnoteRef = false;
+        FootnotesEndnotes = FootnotesEndnotesType.FootnotesOnlyOrNothing;
 
         rtfListTableMap = new();
         rtfListOverrideMap = new();

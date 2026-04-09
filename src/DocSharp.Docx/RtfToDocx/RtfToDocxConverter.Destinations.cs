@@ -31,7 +31,10 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         fmtStack.Clear();
 
         // Add content to the specified part
-        ConvertGroup(group);        
+        ConvertGroup(group); 
+        // Flush any pending paragraph not terminated by \par
+        if (pendingParagraph != null)
+            AddParagraph();       
         
         // Restore previous context; create subsequent content in a new run
         containers.Pop();
