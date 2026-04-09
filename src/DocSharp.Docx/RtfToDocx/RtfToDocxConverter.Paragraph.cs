@@ -34,9 +34,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (paragraphState.ParagraphProperties != null)
             pendingParagraph.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
 
-        // If spacing is not specified, force paragraph to no spacing before/after to improve visual fidelity.
-        FixParagraphSpacing(pendingParagraph);
-
         // Get appropriate cell or container
         GetOrCreateParagraphContainer(paragraphState.TableNestingLevel)?.Append(pendingParagraph);
 
@@ -44,24 +41,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         pendingParagraph = null;
         pendingTab = null; // Reset pending tab if it was not terminated by \txN or \tbN
         currentRun = null;
-    }
-
-    private void FixParagraphSpacing(Paragraph paragraph)
-    {
-        // Word adds some spacing by default in DOCX, leading to visual differences (especially in tables) with RTF 
-        // where spacing is assumed to be 0 by default instead. 
-        // To avoid this, force SpacingBetweenLines to 0 if values are not set.
-        paragraph.ParagraphProperties ??= new ParagraphProperties();
-        paragraph.ParagraphProperties.SpacingBetweenLines ??= new SpacingBetweenLines();
-        if (paragraph.ParagraphProperties.SpacingBetweenLines.After == null || paragraph.ParagraphProperties.SpacingBetweenLines.After == string.Empty)
-            paragraph.ParagraphProperties.SpacingBetweenLines.After = "0";
-        if (paragraph.ParagraphProperties.SpacingBetweenLines.Before == null || paragraph.ParagraphProperties.SpacingBetweenLines.Before == string.Empty)
-            paragraph.ParagraphProperties.SpacingBetweenLines.Before = "0";
-        if (paragraph.ParagraphProperties.SpacingBetweenLines.Line == null || paragraph.ParagraphProperties.SpacingBetweenLines.Line == string.Empty)
-        {
-            paragraph.ParagraphProperties.SpacingBetweenLines.Line = "240";
-            paragraph.ParagraphProperties.SpacingBetweenLines.LineRule = LineSpacingRuleValues.Auto;
-        }
     }
 
     private bool ProcessParagraphControlWord(RtfControlWord cw, ParagraphProperties? targetProperties = null)
