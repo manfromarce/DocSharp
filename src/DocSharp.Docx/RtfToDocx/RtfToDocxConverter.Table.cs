@@ -18,16 +18,91 @@ namespace DocSharp.Docx;
 
 public partial class RtfToDocxConverter : ITextToDocxConverter
 {
-	private TableRow? pendingTableRow;
+	private Stack<TableRowState> pendingTableRows = new();
 
-    private bool inTableRowDefinition = false;
-	private int cellx = 0;
-    private int cellIndex = 0;
+    private OpenXmlElement? GetOrCreateParagraphContainer(int nestingLevel)
+    {
+        if (nestingLevel < 0 || containers.Count == 0)
+        {
+            // Unexpected case, return null.
+            return null;
+        }
+
+        int cellsInStack = containers.TakeWhile(c => c is TableCell).Count();
+
+        if (nestingLevel == 0)
+        {
+            if (cellsInStack == containers.Count)
+            {
+                // Unexpected case, at least the document body should be present before the cells.
+                return null;
+            }
+            // Return the first non-cell container (0 <= cellsInStack <= containers.Count - 1)
+            return containers.ElementAt(cellsInStack);
+        }
+        
+        if (cellsInStack == nestingLevel)
+        {
+            // All cells are already available
+            return (TableCell?)containers.Peek();
+        }
+        else if (cellsInStack < nestingLevel)
+        {
+            // Create cell until the desired nesting level is reached
+            while (cellsInStack < nestingLevel)
+            {
+                if (nestingLevel > 1 && nestingLevel > pendingTableRows.Count)
+                {
+                    pendingTableRows.Push(new TableRowState());
+                }
+                containers.Push(EnsureTableCell());
+                ++cellsInStack;
+            }
+
+            return (TableCell?)containers.Peek();
+        }
+        else if (cellsInStack > nestingLevel)
+        {
+            // while (pendingTableRows.Count > nestingLevel)
+            //     pendingTableRows.Pop();
+            // Get parent cell at the specified level
+            return (TableCell?)containers.ElementAt(nestingLevel - 1);
+        }
+        return null;
+    }
+
+    private TableRowState EnsureTableRowState()
+    {
+        if (pendingTableRows.Count == 0)
+        {
+            pendingTableRows.Push(new TableRowState());
+        }
+        return pendingTableRows.Peek();
+    }
+
+    private int cellx
+    {
+        get => EnsureTableRowState().TotalCellx;
+        set => EnsureTableRowState().TotalCellx = value;
+    }
+
+    private int cellIndex
+    {
+        get => EnsureTableRowState().CurrentCellIndex;
+        set => EnsureTableRowState().CurrentCellIndex = value;
+    }
+
+    private int cellPropertiesIndex
+    {
+        get => EnsureTableRowState().CurrentCellPropertiesIndex;
+        set => EnsureTableRowState().CurrentCellPropertiesIndex = value;
+    }
 
     private TableRow EnsureTableRow()
     {
-        pendingTableRow ??= new TableRow();
-        return pendingTableRow;
+        var rowState = EnsureTableRowState();
+        rowState.Row ??= new TableRow();
+        return rowState.Row;
     }
 
     // Get or create the cell at the current index
@@ -45,16 +120,30 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 
     private TableRowProperties EnsureTableRowProperties()
     {
-        var row = EnsureTableRow();
-        row.TableRowProperties ??= new TableRowProperties();
-        return row.TableRowProperties;
+        var rowState = EnsureTableRowState();
+        rowState.RowProperties ??= new TableRowProperties();
+        return rowState.RowProperties;
     }
 
     private TablePropertyExceptions EnsureTableRowExceptions()
     {
-        var row = EnsureTableRow();
-        row.TablePropertyExceptions ??= new TablePropertyExceptions();
-        return row.TablePropertyExceptions;
+        var rowState = EnsureTableRowState();
+        rowState.TablePropertyExceptions ??= new TablePropertyExceptions();
+        return rowState.TablePropertyExceptions;
+    }
+
+    private TableProperties EnsureTableProperties()
+    {
+        var rowState = EnsureTableRowState();
+        rowState.TableProperties ??= new TableProperties();
+        return rowState.TableProperties;
+    }
+
+    private TablePositionProperties EnsureTablePositionProperties()
+    {
+        var tableProperties = EnsureTableProperties();
+        tableProperties.TablePositionProperties ??= new TablePositionProperties();
+        return tableProperties.TablePositionProperties;
     }
 
     private T EnsureTableCellDefaultMargin<T>() where T : OpenXmlElement, new()
@@ -62,19 +151,21 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         // Note that the type is different for top/bottom (TableWidthType) and left/right (TableWidthDxaNilType)
         var rowPr = EnsureTableRowExceptions();
         rowPr.TableCellMarginDefault ??= new TableCellMarginDefault();
-        return rowPr.TableCellMarginDefault.EnsureElement<T>();
+        return rowPr.TableCellMarginDefault.GetOrAddFirstChild<T>();
     }
 
     private T EnsureTableRowBorder<T>() where T : OpenXmlElement, new()
     {
         var rowPr = EnsureTableRowExceptions();
         rowPr.TableBorders ??= new TableBorders();
-        return rowPr.TableBorders.EnsureElement<T>();
+        return rowPr.TableBorders.GetOrAddFirstChild<T>();
     }
 
     private TableCellProperties EnsureTableCellProperties()
     {
-        var cell = EnsureTableCell();
+        var row = EnsureTableRow();        
+        var cell = row.Elements<TableCell>().ElementAtOrDefault(cellPropertiesIndex) ?? 
+                   row.AppendChild(new TableCell());
         cell.TableCellProperties ??= new TableCellProperties();
         return cell.TableCellProperties;
     }
@@ -83,14 +174,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     {
         var cellPr = EnsureTableCellProperties();
         cellPr.TableCellBorders ??= new TableCellBorders();
-        return cellPr.TableCellBorders.EnsureElement<T>();
+        return cellPr.TableCellBorders.GetOrAddFirstChild<T>();
     }
 
     private T EnsureTableCellMargin<T>() where T : TableWidthType, new()
     {
         var cellPr = EnsureTableCellProperties();
         cellPr.TableCellMargin ??= new TableCellMargin();
-        return cellPr.TableCellMargin.EnsureElement<T>();
+        return cellPr.TableCellMargin.GetOrAddFirstChild<T>();
     }
 
     private TableCellWidth EnsureTableCellWidth()
@@ -103,72 +194,58 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
     // Terminates the pending table row, appends it to the current table and resets cellx and cellIndex counters.
     private void EndTableRow()
     {
-        cellx = 0;
-        cellIndex = 0;
-        inTableRowDefinition = false;
-
-        // Add the row only if it contains at least one cell, otherwise Word considers the document corrupted.
-        if (pendingTableRow == null || !pendingTableRow.Elements<TableCell>().Any())
+        if (pendingTableRows.Count > 0)
         {
-            pendingTableRow = null;
-            return;
-        }
-        
-        var table = container.LastChild as Table ?? container.AppendChild(new Table());
+            var rowState = pendingTableRows.Peek();
+            rowState.TotalCellx = 0;
+            rowState.CurrentCellIndex = 0;
 
-        // If the current row does not declare row properties nor cell widths, 
-        // try to inherit both row and cell properties from the previous row.
-        var prevRow = table.Elements<TableRow>().LastOrDefault();
-        if (prevRow != null && 
-            pendingTableRow.TableRowProperties == null && 
-            pendingTableRow.TablePropertyExceptions == null && 
-            pendingTableRow.Elements<TableCell>().All(c => c.TableCellProperties == null || !c.TableCellProperties.HasChildren))
-        {
-            if (prevRow.TableRowProperties != null)
-                pendingTableRow.TableRowProperties = (TableRowProperties)prevRow.TableRowProperties.CloneNode(true);
-            if (prevRow.TablePropertyExceptions != null)
-                pendingTableRow.TablePropertyExceptions = (TablePropertyExceptions)prevRow.TablePropertyExceptions.CloneNode(true);
-
-            var prevCells = prevRow.Elements<TableCell>().ToList();
-            var curCells = pendingTableRow.Elements<TableCell>().ToList();
-            for (int i = 0; i < curCells.Count; ++i)
+            var pendingTableRow = pendingTableRows.Peek().Row;
+            if (pendingTableRow != null)
             {
-                var prevCell = prevCells.ElementAtOrDefault(i);
-                if (prevCell?.TableCellProperties != null)
+                // Remove empty cells (produced by formatting inheritance if this row has less cells than the previous row; 
+                // otherwise in any case a cell should contain at least an empty paragraph and preferably TableCellProperties.TableCellWidth) 
+                pendingTableRow.RemoveEmpty<TableCell>();
+
+                // Add the row only if it contains at least one cell, otherwise Word considers the document corrupted.
+                if (pendingTableRow.Elements<TableCell>().Any())
                 {
-                    curCells[i].TableCellProperties = (TableCellProperties?)prevCell.TableCellProperties.CloneNode(true);
+                    // Even for nested rows, the container should be correct because: 
+                    // - the last nested cell was closed (\nestcell must be before \nestrow)
+                    // - the parent cell is still open (it was opened by a paragraph or by the nested cell itself 
+                    // if there is no paragraph, and gest closed after the nested row)
+                    var table = container.LastChild as Table ?? container.AppendChild(new Table());
+
+                    if (rowState.TableProperties != null)
+                        table.TableProperties = rowState.TableProperties;
+                    
+                    // We have to add GridSpan to cells based on their width and the number of cells, 
+                    // otherwise horizontally merged cells do not behave as expected, even if they width is increased.
+                    // The following approach is not ideal, but I can't think of a better way at this time.
+                    int minWidth = Math.Max(pendingTableRow.Elements<TableCell>().Where(c => c.TableCellProperties?.TableCellWidth?.Width != null).Min(c => (c.TableCellProperties?.TableCellWidth?.Width?.Value).ToIntInvariant(0)), 1);
+                    foreach (var cell in pendingTableRow.Elements<TableCell>())
+                    {
+                        int cellWidth = Math.Max((cell.TableCellProperties?.TableCellWidth?.Width?.Value).ToIntInvariant(0), 1);
+                        int gridSpan = (int)Math.Round((double)cellWidth / minWidth, MidpointRounding.AwayFromZero);
+                        // Grid span is always at least 1. 
+                        if (gridSpan > 1)
+                            cell.TableCellProperties!.GridSpan = new GridSpan() { Val = gridSpan };
+                    }
+
+                    table.AppendChild(pendingTableRow);
                 }
             }
+            
+            // Inherit formatting for the subsequent row if it does not declare \trowd
+            // (if this the last row it doesn't matter, the formatting will never be applied)
+            var pendingFormatting = rowState.CloneFormatting();
+            pendingTableRows.Pop();
+            pendingTableRows.Push(pendingFormatting);
         }
-        
-        // We have to add GridSpan to cells based on their width and the number of cells, 
-        // otherwise horizontally merged cells do not behave as expected, even if they width is increased.
-        // The following approach is not ideal, but I can't think of a better way at this time.
-        int minWidth = Math.Max(pendingTableRow.Elements<TableCell>().Min(c => (c.TableCellProperties?.TableCellWidth?.Width?.Value).ToIntInvariant(0)), 1);
-        foreach (var cell in pendingTableRow.Elements<TableCell>())
-        {
-            int cellWidth = Math.Max((cell.TableCellProperties?.TableCellWidth?.Width?.Value).ToIntInvariant(0), 1);
-            int gridSpan = (int)Math.Round((double)cellWidth / minWidth, MidpointRounding.AwayFromZero);
-            // Grid span is always at least 1. 
-            if (gridSpan > 1)
-                cell.TableCellProperties!.GridSpan = new GridSpan() { Val = gridSpan };
-        }
-
-        table.AppendChild(pendingTableRow);
-        pendingTableRow = null;
-        // Do not reset row properties and exceptions here, as they can be inherited by subsequent rows until a new trowd control word is encountered
     }
 
     private TableCell EndTableCell()
     {
-        if (inTableRowDefinition)
-        {
-            // If cell definitions were found before the cell content, reset index to 0, 
-            // otherwise we wrongly retrieve the last cell for the first cell.
-            inTableRowDefinition = false;
-            cellIndex = 0;
-        }
-
         var row = EnsureTableRow();
         // At this point, the row should already contain the current cell, unless the cell is completely empty and has no properties.
         var cell = row.Elements<TableCell>().ElementAtOrDefault(cellIndex) ?? 
@@ -183,10 +260,28 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             pendingParagraph = null;
             currentRun = null;
         }
-        // If the cell does not contain any paragraph, add an empty one, otherwise Word considers the document corrupted.
-        if (!cell.Elements<Paragraph>().Any())
+        else
+        {
+            // The last \par (if any) in the cells added the pending paragraph but it should also append a new paragraph. 
+            var p = new Paragraph();
+            cell.Append(p);
+            if (paragraphState.ParagraphProperties != null)
+                p.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
+        }
+
+        // Also, if the cell does not contain any paragraph or ends with a nested table, Word considers the document corrupted.
+        // (Starting the cell with a nested table is fine instead)
+        if (!cell.EndsWith<Paragraph>())
+        {
             cell.Append(new Paragraph(new ParagraphProperties(new SpacingBetweenLines() { After = "0", Before = "0", Line = "240", LineRule = LineSpacingRuleValues.Auto })));
+        }
+
         ++cellIndex;
+
+        // The cell has likely been opened by a paragraph, because the paragraph content is found before \cell. 
+        // If this is the case, remove the cell from the container stack. 
+        if (containers.Count > 0 && containers.Peek() == cell)
+            containers.Pop();
         return cell;
     }
 
@@ -202,13 +297,21 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 // The RTF specification clarifies that a reader should not assume that the row definition is at the beginning of a row, 
                 // and that rows can also not contain a \trowd at all, inheriting all properties from the previous row. 
                 // Microsoft Word writes row definition both at the beginning and end of a row for better compatibility, but other writers may not do so.
-                inTableRowDefinition = true;
-                cellIndex = 0;
-                cellx = 0;
+                // However, in nested rows the row definition is always after the row content. 
+                if (pendingTableRows != null && pendingTableRows.Count > 0)
+                    pendingTableRows.Peek().ResetFormatting();
 				return true;
             case "row":
+                // Terminate nested rows, if any
+                while (pendingTableRows.Count > 1)
+                    pendingTableRows.Pop();
+                EndTableRow();
+				return true;
             case "nestrow":
-				EndTableRow();
+                // Ignore if the row stack does not contain more than 1 row 
+                // (should not happen, unless the nested row has no cells, in that case we should indeed not create it).
+                if (pendingTableRows.Count > 1)
+				    EndTableRow();
 				return true;
 
             // ------
@@ -229,10 +332,18 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     }
                 }
                 // \cellxN is the last element of the cell definition, so increment the cell index.
-                ++cellIndex;
+                ++cellPropertiesIndex;
 				return true;
 			case "cell":
+                // Terminate nested rows, if any
+                while (pendingTableRows.Count > 1)
+                    pendingTableRows.Pop();
+                EndTableCell();
+				return true;
 			case "nestcell":
+                // Cells can be empty. 
+                // If no paragraph was found, \nestcell should create the nested cell to avoid closing the parent cell. 
+                GetOrCreateParagraphContainer(2);
 				EndTableCell();
 				return true;
 
@@ -397,7 +508,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                            // and \trspdbN from the top cell, both of which will have the same value when written by Word.
                 if (cw.HasValue)
                 {
-                    var spacing = EnsureTableRowProperties().EnsureElement<TableCellSpacing>();
+                    var spacing = EnsureTableRowProperties().GetOrAddFirstChild<TableCellSpacing>();
                     spacing.Width = cw.Value!.Value.ToStringInvariant();
                     spacing.Type ??= TableWidthUnitValues.Dxa;
                 }
@@ -408,19 +519,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "trspdfb": // The unit of measurement for the bottom spacing of the table cell. Can only be set to 0 (null, means that trpaddb should be ignored in favor of trgaph) or 3 (twips).
                 if (cw.HasValue)
                 {
-                    var spacing = EnsureTableRowProperties().EnsureElement<TableCellSpacing>();
+                    var spacing = EnsureTableRowProperties().GetOrAddFirstChild<TableCellSpacing>();
                     spacing.Type = cw.Value!.Value == 0 ? TableWidthUnitValues.Nil : TableWidthUnitValues.Dxa;
                 }
                 return true;
 
             case "trql": // Align table row to the left.
-                EnsureTableRowProperties().EnsureElement<TableJustification>().Val = TableRowAlignmentValues.Left;
+                EnsureTableRowProperties().GetOrAddFirstChild<TableJustification>().Val = TableRowAlignmentValues.Left;
                 return true;
             case "trqc": // Align table row to the center.
-                EnsureTableRowProperties().EnsureElement<TableJustification>().Val = TableRowAlignmentValues.Center;
+                EnsureTableRowProperties().GetOrAddFirstChild<TableJustification>().Val = TableRowAlignmentValues.Center;
                 return true;
             case "trqr": // Align table row to the right.
-                EnsureTableRowProperties().EnsureElement<TableJustification>().Val = TableRowAlignmentValues.Right;
+                EnsureTableRowProperties().GetOrAddFirstChild<TableJustification>().Val = TableRowAlignmentValues.Right;
                 return true;
             case "trleft": // The distance (in twips) between the left edge of the table and the left margin of the page.
                 // Handled the same way as tblind for now, as the difference it's unclear.
@@ -428,7 +539,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                            // (the left edge in a left-to-right table, and the right edge in a right-to-left table). 
                 if (cw.Value != null)
                 {
-                    var indentation = EnsureTableRowExceptions().EnsureElement<TableIndentation>();
+                    var indentation = EnsureTableRowExceptions().GetOrAddFirstChild<TableIndentation>();
                     indentation.Width = cw.Value!.Value;
                     indentation.Type ??= TableWidthUnitValues.Dxa;
                 }
@@ -492,7 +603,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "trwwidthb": // Width of invisible cell at the beginning of the row. Used only in cases where rows have different widths.
                 if (cw.Value != null)
                 {
-                    var indentation = EnsureTableRowProperties().EnsureElement<WidthBeforeTableRow>();
+                    var indentation = EnsureTableRowProperties().GetOrAddFirstChild<WidthBeforeTableRow>();
                     indentation.Width = cw.Value!.Value.ToStringInvariant();
                     indentation.Type ??= TableWidthUnitValues.Dxa;
                 }
@@ -502,22 +613,22 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 {
                     if (cw.Value == 0)
                         // 0 = null (no invisible cell before)
-                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Nil;
+                        EnsureTableRowExceptions().GetOrAddFirstChild<WidthBeforeTableRow>().Type = TableWidthUnitValues.Nil;
                     else if (cw.Value == 1)
                         // 1 = auto (ignore trwWidthB if present)
-                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Auto;
+                        EnsureTableRowExceptions().GetOrAddFirstChild<WidthBeforeTableRow>().Type = TableWidthUnitValues.Auto;
                     else if (cw.Value == 2)
                         // 2 = percentage (in 50ths of a percent)
-                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Pct;
+                        EnsureTableRowExceptions().GetOrAddFirstChild<WidthBeforeTableRow>().Type = TableWidthUnitValues.Pct;
                     else
                         // 3 = twips (same as Dxa)
-                        EnsureTableRowExceptions().EnsureElement<WidthBeforeTableRow>().Type = TableWidthUnitValues.Dxa;
+                        EnsureTableRowExceptions().GetOrAddFirstChild<WidthBeforeTableRow>().Type = TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "trwwidtha": // Width of invisible cell at the end of the row. Used only in cases where rows have different widths.
                 if (cw.Value != null)
                 {
-                    var indentation = EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>();
+                    var indentation = EnsureTableRowProperties().GetOrAddFirstChild<WidthAfterTableRow>();
                     indentation.Width = cw.Value!.Value.ToStringInvariant();
                     indentation.Type ??= TableWidthUnitValues.Dxa;
                 }
@@ -527,16 +638,16 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 {
                     if (cw.Value == 0)
                         // 0 = null (no invisible cell after)
-                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Nil;
+                        EnsureTableRowProperties().GetOrAddFirstChild<WidthAfterTableRow>().Type = TableWidthUnitValues.Nil;
                     else if (cw.Value == 1)
                         // 1 = auto (ignore trwWidthA if present)
-                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Auto;
+                        EnsureTableRowProperties().GetOrAddFirstChild<WidthAfterTableRow>().Type = TableWidthUnitValues.Auto;
                     else if (cw.Value == 2)
                         // 2 = percentage (in 50ths of a percent)
-                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Pct;
+                        EnsureTableRowProperties().GetOrAddFirstChild<WidthAfterTableRow>().Type = TableWidthUnitValues.Pct;
                     else
                         // 3 = twips (same as Dxa)
-                        EnsureTableRowProperties().EnsureElement<WidthAfterTableRow>().Type = TableWidthUnitValues.Dxa;
+                        EnsureTableRowProperties().GetOrAddFirstChild<WidthAfterTableRow>().Type = TableWidthUnitValues.Dxa;
                 }
                 return true;
             case "trrh": // Height of a table row in twips. 
@@ -607,62 +718,94 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             // Positioned Wrapped Tables: the following properties must be the same for all rows in the table in RTF, 
             // and in DOCX they are only available on TableProperties (cannot be set for rows).
             case "tdfrmtxtleft": // Distance in twips, between the left of the table and surrounding text (default is 0)
+                if (cw.HasValue) 
+                    EnsureTablePositionProperties().LeftFromText = cw.Value!.Value.ToShort();
                 return true;
             case "tdfrmtxttop": // Distance in twips, between the top of the table and surrounding text (default is 0)
+                if (cw.HasValue) 
+                    EnsureTablePositionProperties().TopFromText = cw.Value!.Value.ToShort();
                 return true;
             case "tdfrmtxtright": // Distance in twips, between the right of the table and surrounding text (default is 0)
+                if (cw.HasValue) 
+                    EnsureTablePositionProperties().RightFromText = cw.Value!.Value.ToShort();
                 return true;
             case "tdfrmtxtbottom": // Distance in twips, between the bottom of the table and surrounding text (default is 0)
+                if (cw.HasValue) 
+                    EnsureTablePositionProperties().BottomFromText = cw.Value!.Value.ToShort();
                 return true;
             case "tabsnoovrlp": // If present, do not allow table to overlap with other tables or shapes with similar wrapping not contained within it.
+                EnsureTableProperties().TableOverlap = new TableOverlap() { Val = TableOverlapValues.Never };
                 return true;
 
             case "tphcol": // Use column as horizontal reference frame (default if no horizontal table positioning information is given)
+                EnsureTablePositionProperties().HorizontalAnchor = HorizontalAnchorValues.Text;
                 return true;
             case "tphmrg": // Use margin as horizontal reference frame
+                EnsureTablePositionProperties().HorizontalAnchor = HorizontalAnchorValues.Margin;
                 return true;
             case "tphpg": // Use page as horizontal reference frame
+                EnsureTablePositionProperties().HorizontalAnchor = HorizontalAnchorValues.Page;
                 return true;
 
             case "tposx": // Position table N twips from the left edge of the horizontal reference frame
-                return true;
             case "tposnegx": // Same as \tposx but allows arbitrary negative values.
+                if (cw.HasValue)
+                {
+                    EnsureTablePositionProperties().TablePositionX = cw.Value!.Value;
+                }
                 return true;
 
             case "tposxc": // Center table within the horizontal reference frame.
+                EnsureTablePositionProperties().TablePositionXAlignment = HorizontalAlignmentValues.Center;
                 return true;
             case "tposxi": // Position table inside the horizontal reference frame.
+                EnsureTablePositionProperties().TablePositionXAlignment = HorizontalAlignmentValues.Inside;
                 return true;
             case "tposxo": // Position table outside the horizontal reference frame.
+                EnsureTablePositionProperties().TablePositionXAlignment = HorizontalAlignmentValues.Outside;
                 return true;
             case "tposxl": // Position table to the left of the horizontal reference frame.
+                EnsureTablePositionProperties().TablePositionXAlignment = HorizontalAlignmentValues.Left;
                 return true;
             case "tposxr": // Position table to the right of the horizontal reference frame.
+                EnsureTablePositionProperties().TablePositionXAlignment = HorizontalAlignmentValues.Right;
                 return true;
 
             case "tpvmrg": // Use top margin as vertical reference frame (default if no vertical table positioning information is given)
+                EnsureTablePositionProperties().VerticalAnchor = VerticalAnchorValues.Margin;
                 return true;
             case "tpvpara": // Use upper left corner of the next unframed paragraph as vertical reference frame
+                EnsureTablePositionProperties().VerticalAnchor = VerticalAnchorValues.Text;
                 return true;
             case "tpvpg": // Use page as vertical reference frame
+                EnsureTablePositionProperties().VerticalAnchor = VerticalAnchorValues.Page;
                 return true;
 
             case "tposy": // Position table N twips from the top edge of the vertical reference frame
-                return true;
             case "tposnegy": // Same as \tposy but allows arbitrary negative values.
+                if (cw.HasValue)
+                {
+                    EnsureTablePositionProperties().TablePositionY = cw.Value!.Value;
+                }
                 return true;
 
             case "tposyb": // Position table at the bottom of the vertical reference frame             
+                EnsureTablePositionProperties().TablePositionYAlignment = VerticalAlignmentValues.Bottom;
                 return true;
             case "tposyc": // Center table within the vertical reference frame
+                EnsureTablePositionProperties().TablePositionYAlignment = VerticalAlignmentValues.Center;
                 return true;
             case "tposyil": // Position table to be inline
+                EnsureTablePositionProperties().TablePositionYAlignment = VerticalAlignmentValues.Inline;
                 return true;
             case "tposyin": // Position table inside within the vertical reference frame
+                EnsureTablePositionProperties().TablePositionYAlignment = VerticalAlignmentValues.Inside;
                 return true;
             case "tposyout": // Position table outside within the vertical reference frame
+                EnsureTablePositionProperties().TablePositionYAlignment = VerticalAlignmentValues.Outside;
                 return true;
             case "tposyt": // Position table at the top of the vertical reference frame
+                EnsureTablePositionProperties().TablePositionYAlignment = VerticalAlignmentValues.Top;
                 return true;
 
             // ------

@@ -34,32 +34,16 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         if (paragraphState.ParagraphProperties != null)
             pendingParagraph.ParagraphProperties = (ParagraphProperties)paragraphState.ParagraphProperties.CloneNode(true);
 
-        if (paragraphState.TableNestingLevel > 0)
-        {
-            if (inTableRowDefinition)
-            {
-                // If cell definitions were found before the cell content, reset index to 0, 
-                // otherwise we wrongly retrieve the last cell for the first cell.
-                inTableRowDefinition = false;
-                cellIndex = 0;
-            }
-            containers.Push(EnsureTableCell());
-        }
-        else
-        {
-            if (container is TableCell)
-            // If container is table cell but TableNestingLevel is 0, we are now outside of the table, so pop the cell container.
-                containers.Pop();
-        }
-
+        // If spacing is not specified, force paragraph to no spacing before/after to improve visual fidelity.
         FixParagraphSpacing(pendingParagraph);
-        container?.Append(pendingParagraph);
+
+        // Get appropriate cell or container
+        GetOrCreateParagraphContainer(paragraphState.TableNestingLevel)?.Append(pendingParagraph);
+
         // Reset pending paragraph (do not reset paragraphState)
         pendingParagraph = null;
         pendingTab = null; // Reset pending tab if it was not terminated by \txN or \tbN
         currentRun = null;
-        if (container is TableCell)
-            containers.Pop();
     }
 
     private void FixParagraphSpacing(Paragraph paragraph)

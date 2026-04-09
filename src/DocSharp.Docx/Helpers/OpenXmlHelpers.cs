@@ -43,13 +43,15 @@ public static class OpenXmlHelpers
         return element.Elements<T>().FirstOrDefault(condition);
     }
 
+    public static bool EndsWith<T>(this OpenXmlElement element) where T : OpenXmlElement
+    {
+        return element.HasChildren && element.LastChild is T;
+    }
+
     public static void RemoveAll<T>(this OpenXmlElement element, Func<T, bool> condition) where T : OpenXmlElement
     {
-        var subElements = element.Elements<T>().ToArray();
-        int count = subElements.Length;
-        for (int i = count - 1; i >= 0; i--)
+        foreach (var subElement in element.Elements<T>())
         {
-            var subElement = subElements[count - 1];
             if (condition.Invoke(subElement))
             {
                 subElement.Remove();
@@ -59,25 +61,20 @@ public static class OpenXmlHelpers
 
     public static void RemoveAll<T>(this OpenXmlElement element) where T : OpenXmlElement
     {
-        var subElements = element.Elements<T>().ToArray();
-        int count = subElements.Length;
-        for (int i = count - 1; i >= 0; i--)
+        foreach (var subElement in element.Elements<T>())
         {
-            var subElement = subElements[count - 1];
             subElement.Remove();
         }
     }
 
-    /// <summary>
-    /// Get or create a child element of the specified type. 
-    /// Useful when a strongly-typed property is not provided by the Open XML SDK.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="element"></param>
-    public static T EnsureElement<T>(this OpenXmlElement element) where T : OpenXmlElement, new()
-    {        
-        return element.GetFirstChild<T>() ?? element.AppendChild(new T());
-    }
+    public static void RemoveEmpty<T>(this OpenXmlElement element) where T : OpenXmlElement
+    {
+        foreach (var subElement in element.Elements<T>())
+        {
+            if (!subElement.HasChildren)
+                subElement.Remove();
+        }
+    }   
 
     /// <summary>
     /// Set child element of the specified type. 

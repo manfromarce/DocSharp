@@ -140,9 +140,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         pendingParagraph = null;
         paragraphState = new ParagraphState();
 
-        pendingTableRow = null;
-        cellx = 0;
-        cellIndex = 0;
+        pendingTableRows.Clear();
 
         pendingTab = null;
 
@@ -675,6 +673,19 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                             else if (dname == "object")
                             {
                                 ProcessOleObject(destination);
+                                continue;
+                            }
+
+                            else if (dname == "nesttableprops")
+                            {
+                                // We don't need to push a new row because it has already been done by the paragraph or cells 
+                                // (for nested rows, the row definition is found after the row content).
+                                foreach(var controlWord in destination.Tokens.OfType<RtfControlWord>())
+                                {
+                                    HandleControlWord(controlWord);
+                                }
+                                if (pendingTableRows.Count > 1)
+                                    pendingTableRows.Pop();
                                 continue;
                             }
 
