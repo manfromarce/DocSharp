@@ -1,3 +1,16 @@
+## 0.18.1 - 2026.04.10
+
+- Fix: images in header/footer were not preserved in DOCX to HTML/Markdown conversion
+- Fix table position properties for negative values in DOCX to RTF conversion
+- Fix: last empty paragraph was trimmed from table cells in RTF to DOCX converter
+- Support for nested tables in RTF to DOCX converter
+- Support for table position properties in RTF to DOCX converter
+- Fix support for footnotes and endnotes after recent changes in RTF to DOCX converter
+- Improve accuracy in paragraph spacing and table cell padding in RTF to DOCX converter
+- Fix: "no borders" in table cells were not mapped properly in some cases in RTF ↔️ DOCX conversion
+- Fix: paragraph formatting was lost in some cases where it contained a footnote reference (in RTF to DOCX converter)
+- Improve accuracy for lists preservation in RTF to DOCX converter
+
 ## 0.18.0 - 2026.04.07
 
 - Added conversion options to `WordprocessingDocument.SaveTo` extension methods
