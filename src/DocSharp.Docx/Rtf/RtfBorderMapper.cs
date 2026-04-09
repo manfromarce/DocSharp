@@ -61,15 +61,16 @@ internal static class RtfBorderMapper
             return @"\brdrengrave";
         else if (borderValue == BorderValues.DashDotStroked)
             return @"\brdrdashdotstr";
+
+        // Note: Nil and None are not the same.
+        // \brdrnone in RTF means "no borders at all" (also overriding any borders defined in the parent row/table), 
+        // while \brdrnil means "no borders specified" (keeps the default value). 
+        // Confusingly, in DOCX the meaning seems reversed (although the Open XML SDK documentation just says "No border" for both),  
+        // so it seems better to map Nil to \brdrnone and None to \brdrnil. 
         else if (borderValue == BorderValues.Nil)
-            // return @"\brdrnil"; 
-            // In DOCX nil means no border.
-            // "brdrnil" in RTF is interpreted differently by MS Word (probably like a default border) causing some issues,
-            // although in LibreOffice and OnlyOffice is interpreted as no border.
-            // We should use brdrnone instead.
             return @"\brdrnone";
         else if (borderValue == BorderValues.None)
-            return @"\brdrnone";
+            return @"\brdrnil";
 
         else if (borderValue == BorderValues.Apples)
             return @"\brdrart1";
@@ -458,9 +459,15 @@ internal static class RtfBorderMapper
             return BorderValues.ThreeDEngrave;
         else if (borderValue == "brdrdashdotstr")
             return BorderValues.DashDotStroked;
-        else if (borderValue == "brdrnil")
-            return BorderValues.Nil;
+
+        // Note: Nil and None are not the same.
+        // \brdrnone in RTF means "no borders at all" (also overriding any borders defined in the parent row/table), 
+        // while \brdrnil means "no borders specified" (keeps the default value). 
+        // Confusingly, in DOCX the meaning seems reversed (although the Open XML SDK documentation just says "No border" for both),  
+        // so it seems better to map \brdrnone to Nil and \brdrnil to None. 
         else if (borderValue == "brdrnone")
+            return BorderValues.Nil; 
+        else if (borderValue == "brdrnil")
             return BorderValues.None;
         else if (borderValue == "brdrart1")
             return BorderValues.Apples;
