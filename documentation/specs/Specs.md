@@ -44,3 +44,11 @@ This is a list of file format specifications which may be useful for this projec
 - EPUB:
   + [EPUB 3.3 (w3.org)](https://www.w3.org/TR/epub/)
   + [EPUB Reading Systems 3.3 (w3.org)](https://www.w3.org/TR/epub-rs/)
+- Image formats: 
+  + WMF: <https://winprotocoldoc.z19.web.core.windows.net/MS-WMF/%5bMS-WMF%5d.pdf>
+  + EMF: <https://winprotocoldoc.z19.web.core.windows.net/MS-EMF/%5bMS-EMF%5d.pdf>
+  + EMF+: <https://winprotocoldoc.z19.web.core.windows.net/MS-EMFPLUS/%5bMS-EMFPLUS%5d.pdf>
+  + GIF:
+    - [GIF87](https://www.w3.org/Graphics/GIF/spec-gif87.txt)
+    - [GIF89a](https://www.w3.org/Graphics/GIF/spec-gif89a.txt)
+
