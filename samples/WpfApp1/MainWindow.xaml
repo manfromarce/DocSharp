@@ -74,7 +74,7 @@
             </UniformGrid>
             <TextBlock Grid.Row="2"
                 Margin="4,10,4,4"
-                Text="Two-steps conversions or integration with other libraries:"/>
+                Text="Examples:"/>
             <UniformGrid 
                 Margin="4"
                 HorizontalAlignment="Left"
