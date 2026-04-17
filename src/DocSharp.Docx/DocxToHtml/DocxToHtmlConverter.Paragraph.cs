@@ -12,7 +12,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         string tag = "p"; // Assume this is a regular paragraph by default
 
-        var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>();
+        var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>(Styles);
         var styleName = paragraph.GetStyleName();
 
         // Check if the style can be mapped to heading, quote block or code block.
@@ -61,21 +61,21 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             return;
         }
 
-        var alignment = OpenXmlHelpers.GetEffectiveProperty<Justification>(paragraph)?.Val?.Value;
-        var indent = OpenXmlHelpers.GetEffectiveIndent(paragraph);
-        var spacing = OpenXmlHelpers.GetEffectiveSpacing(paragraph);
-        var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TextAlignment>(paragraph);
-        var keepLines = OpenXmlHelpers.GetEffectiveProperty<KeepLines>(paragraph);
-        var keepNext = OpenXmlHelpers.GetEffectiveProperty<KeepNext>(paragraph);
-        var widowControl = OpenXmlHelpers.GetEffectiveProperty<WidowControl>(paragraph);
-        // var frameProperties = OpenXmlHelpers.GetEffectiveProperty<FrameProperties>(paragraph); // TODO
+        var alignment = paragraph.GetEffectiveProperty<Justification>(Styles)?.Val?.Value;
+        var indent = paragraph.GetEffectiveIndent(Styles);
+        var spacing = paragraph.GetEffectiveSpacing(Styles);
+        var verticalAlignment = paragraph.GetEffectiveProperty<TextAlignment>(Styles);
+        var keepLines = paragraph.GetEffectiveProperty<KeepLines>(Styles);
+        var keepNext = paragraph.GetEffectiveProperty<KeepNext>(Styles);
+        var widowControl = paragraph.GetEffectiveProperty<WidowControl>(Styles);
+        // var frameProperties = paragraph.GetEffectiveProperty<FrameProperties>(Styles); // TODO
 
         // Build CSS style string
         var styles = new List<string>();
 
-        //    var direction = paragraph.GetEffectiveProperty<TextDirection>() ?? 
-        //                    cell.GetEffectiveProperty<TextDirection>();
-        //    // Direction is not applied to regular paragraphs in DOCX but only in table cells and text boxes
+        //    var direction = paragraph.GetEffectiveProperty<TextDirection>(Styles) ?? 
+        //                    cell.GetEffectiveProperty<TextDirection>(Styles);
+        //    Direction is not applied to regular paragraphs in DOCX but only in table cells and text boxes
 
         if (alignment != null)
         {
@@ -107,24 +107,24 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add("vertical-align: top;");
         }
 
-        if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
+        if (paragraph.GetEffectiveBorder<TopBorder>(Styles) is TopBorder topBorder)
             ProcessBorder(topBorder, MapParagraphBorderAttribute(topBorder), ref styles);
 
-        if (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder)
+        if (paragraph.GetEffectiveBorder<BottomBorder>(Styles) is BottomBorder bottomBorder)
             ProcessBorder(bottomBorder, MapParagraphBorderAttribute(bottomBorder), ref styles);
         // In the current implementation both BottomBorder and BetweenBorder are mapped to border-bottom in HTML,
         // so avoid writing duplicate attributes.
-        else if (paragraph.GetEffectiveBorder<BetweenBorder>() is BetweenBorder betweenBorder)
+        else if (paragraph.GetEffectiveBorder<BetweenBorder>(Styles) is BetweenBorder betweenBorder)
             ProcessBorder(betweenBorder, MapParagraphBorderAttribute(betweenBorder), ref styles);
 
-        if (paragraph.GetEffectiveBorder<LeftBorder>() is LeftBorder leftBorder)
+        if (paragraph.GetEffectiveBorder<LeftBorder>(Styles) is LeftBorder leftBorder)
             ProcessBorder(leftBorder, MapParagraphBorderAttribute(leftBorder), ref styles);
-        if (paragraph.GetEffectiveBorder<RightBorder>() is RightBorder rightBorder)
+        if (paragraph.GetEffectiveBorder<RightBorder>(Styles) is RightBorder rightBorder)
             ProcessBorder(rightBorder, MapParagraphBorderAttribute(rightBorder), ref styles);
-        if (paragraph.GetEffectiveBorder<BarBorder>() is BarBorder barBorder)
+        if (paragraph.GetEffectiveBorder<BarBorder>(Styles) is BarBorder barBorder)
             ProcessBorder(barBorder, MapParagraphBorderAttribute(barBorder), ref styles);
 
-        ProcessShading(OpenXmlHelpers.GetEffectiveProperty<Shading>(paragraph), ref styles);
+        ProcessShading(paragraph.GetEffectiveProperty<Shading>(Styles), ref styles);
 
         if (spacing != null)
         {
@@ -151,7 +151,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 }
             }
 
-            if (paragraph.GetEffectiveProperty<ContextualSpacing>().ToBool())
+            if (paragraph.GetEffectiveProperty<ContextualSpacing>(Styles).ToBool())
             {
                 // Remove spacing between paragraphs of the same styles, to be improved
                 styles.Add($"margin-top: 0pt;");
@@ -193,7 +193,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add("break-after: avoid;");
         }
 
-        if (!paragraph.GetEffectiveProperty<WordWrap>().ToBool(defaultIfNotPresent: true))
+        if (!paragraph.GetEffectiveProperty<WordWrap>(Styles).ToBool(defaultIfNotPresent: true))
         {
             // By default text breaks in new lines at the word level.
             // If WordWrap is set to off the document allows to break at character level.
@@ -201,7 +201,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add("word-wrap: break-word;");
         }
 
-        if (paragraph.GetEffectiveProperty<SuppressAutoHyphens>().ToBool())
+        if (paragraph.GetEffectiveProperty<SuppressAutoHyphens>(Styles).ToBool())
         {
             styles.Add(@"hyphens: none;");
         }

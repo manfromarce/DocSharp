@@ -73,8 +73,8 @@ public static class FootnoteEndnoteHelpers
     {
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(footnoteReference);
         if (footnoteReference.Id != null && 
-            mainPart?.FootnotesPart?.Footnotes?.Elements<Footnote>()
-            .FirstOrDefault(en => en.Id != null && en.Id == footnoteReference.Id) is Footnote footnote)
+            mainPart?.FootnotesPart?.Footnotes?
+            .FirstOrDefault<Footnote>(en => en.Id != null && en.Id == footnoteReference.Id) is Footnote footnote)
         {
             return footnote;
         }
@@ -85,8 +85,8 @@ public static class FootnoteEndnoteHelpers
     {
         var mainPart = OpenXmlHelpers.GetMainDocumentPart(endnoteReference);
         if (endnoteReference.Id != null && 
-            mainPart?.EndnotesPart?.Endnotes?.Elements<Endnote>()
-            .FirstOrDefault(en => en.Id != null && en.Id == endnoteReference.Id) is Endnote endnote)
+            mainPart?.EndnotesPart?.Endnotes?
+            .FirstOrDefault<Endnote>(en => en.Id != null && en.Id == endnoteReference.Id) is Endnote endnote)
         {
             return endnote;
         }

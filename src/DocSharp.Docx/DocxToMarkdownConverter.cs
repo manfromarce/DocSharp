@@ -144,7 +144,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
         EnsureEmptyLine(sb); // Add a blank line before the paragraph
 
-        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>(Styles);
         bool isCode = false;
 
         var styleName = paragraph.GetStyleName();
@@ -283,7 +283,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessRun(Run run, MarkdownStringWriter sb)
     {
-        if (run.GetEffectiveProperty<Vanish>().ToBool())
+        if (run.GetEffectiveProperty<Vanish>(Styles).ToBool())
         {
             return;
         }
@@ -313,28 +313,24 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
             // Formatting options of type OnOffValue such as bold and italic are considered enabled
             // if the element is present, unless value is explicitly set to false.
-            isBold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run) is Bold b && (b.Val is null || b.Val);
-            isItalic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run) is Italic i && (i.Val is null || i.Val);
+            isBold = run.GetEffectiveProperty<Bold>(Styles) is Bold b && (b.Val is null || b.Val);
+            isItalic = run.GetEffectiveProperty<Italic>(Styles) is Italic i && (i.Val is null || i.Val);
 
-            isUnderline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run) is Underline u &&
+            isUnderline = run.GetEffectiveProperty<Underline>(Styles) is Underline u &&
                           u.Val != null && u.Val != UnderlineValues.None;
 
-            isStrikethrough = (OpenXmlHelpers.GetEffectiveProperty<DoubleStrike>(run) is DoubleStrike ds &&
-                          (ds.Val is null || ds.Val)) ||
-                          (OpenXmlHelpers.GetEffectiveProperty<Strike>(run) is Strike s &&
-                          (s.Val is null || s.Val));
+            isStrikethrough = (run.GetEffectiveProperty<DoubleStrike>(Styles) is DoubleStrike ds && (ds.Val is null || ds.Val))
+                              || (run.GetEffectiveProperty<Strike>(Styles) is Strike s && (s.Val is null || s.Val));
 
-            isHighlight = (OpenXmlHelpers.GetEffectiveProperty<Highlight>(run) is Highlight h &&
-                           h.Val != null && h.Val != HighlightColorValues.None) ||
-                          (OpenXmlHelpers.GetEffectiveProperty<Shading>(run) is Shading sh &&
-                           sh.Val != null && sh.Val != ShadingPatternValues.Clear && sh.Val != ShadingPatternValues.Nil);
+            isHighlight = (run.GetEffectiveProperty<Highlight>(Styles) is Highlight h && h.Val != null && h.Val != HighlightColorValues.None)
+                            || (run.GetEffectiveProperty<Shading>(Styles) is Shading sh && sh.Val != null && sh.Val != ShadingPatternValues.Clear && sh.Val != ShadingPatternValues.Nil);
 
-            var vta = OpenXmlHelpers.GetEffectiveProperty<VerticalTextAlignment>(run);
+            var vta = run.GetEffectiveProperty<VerticalTextAlignment>(Styles);
             isSubscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Subscript;
             isSuperscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Superscript;
 
             // Do not emit emphasis/formatting markers when inside a code paragraph
-            if (!this._isInCodeBlockParagraph)
+            if (!_isInCodeBlockParagraph)
             {
                 // Consecutive emphasis inlines such as *italic***bold** are sometimes not interpreted properly.
                 // if (sb.EndsWithEmphasis() && string.IsNullOrEmpty(leadingSpaces) &&
@@ -368,14 +364,14 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         bool isCode = false;
         if ((styleName != null && styleName.Equals("html code", StringComparison.OrdinalIgnoreCase)) ||
             (CodeFontFamilies != null &&
-             run.GetEffectiveProperty<RunFonts>() is RunFonts rf && rf?.Ascii?.Value != null &&
+             run.GetEffectiveProperty<RunFonts>(Styles) is RunFonts rf && rf?.Ascii?.Value != null &&
              CodeFontFamilies.Contains(rf.Ascii.Value)))
         // (the "HTML Code" style is created by Microsoft Word when an HTML file is saved as DOCX)
         {
             isCode = true;
         }
 
-        _isAllCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run) is Caps caps && (caps.Val is null || caps.Val);
+        _isAllCaps = run.GetEffectiveProperty<Caps>(Styles) is Caps caps && (caps.Val is null || caps.Val);
 
         bool inCodeContextRun = this._isInCodeBlockParagraph || isCode;
         bool prevSuppress = sb.SuppressEscaping;
@@ -467,7 +463,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         string font = string.Empty;
         if (text.Parent is Run run)
         {
-            var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
+            var fonts = run.GetEffectiveProperty<RunFonts>(Styles);
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
         string t = text.InnerText;

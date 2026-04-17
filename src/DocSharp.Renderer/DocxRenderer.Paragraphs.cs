@@ -19,7 +19,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 {
     internal override void ProcessParagraph(Paragraph paragraph, QuestPdfModel output)
     {
-        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);        
+        var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>(Styles);        
         if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
             (h.Val is null || h.Val))
         {
@@ -36,7 +36,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         // Process paragraph properties here and add them to a new QuestPdfParagraph object
 
         var p = new QuestPdfParagraph();
-        if (paragraph.GetEffectiveProperty<Justification>() is Justification jc && jc.Val != null)
+        if (paragraph.GetEffectiveProperty<Justification>(Styles) is Justification jc && jc.Val != null)
         {
             if (jc.Val == JustificationValues.Center)
                 p.Alignment = ParagraphAlignment.Center;
@@ -52,13 +52,13 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 p.Alignment = ParagraphAlignment.Left;
         }
 
-        var docxBgColor = paragraph.GetEffectiveBackgroundColor();
+        var docxBgColor = paragraph.GetEffectiveBackgroundColor(Styles);
         if (!string.IsNullOrWhiteSpace(docxBgColor))
         {
             p.BackgroundColor = QuestPDF.Infrastructure.Color.FromHex(docxBgColor!);
         }
 
-        if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
+        if (paragraph.GetEffectiveBorder<TopBorder>(Styles) is TopBorder topBorder)
         {
             if (topBorder.Size != null)
             {
@@ -70,7 +70,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 p.BordersColor = borderColor;
             }
         }
-        BorderType? bottomBorder = paragraph.GetEffectiveBorder<BottomBorder>() as BorderType ?? paragraph.GetEffectiveBorder<BetweenBorder>() as BorderType;
+        BorderType? bottomBorder = paragraph.GetEffectiveBorder<BottomBorder>(Styles) as BorderType ?? paragraph.GetEffectiveBorder<BetweenBorder>(Styles) as BorderType;
         // In the current implementation BetweenBorder is treated as BottomBorder
         if (bottomBorder != null)
         {
@@ -79,14 +79,14 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 p.BottomBorderThickness = bottomBorder.Size.Value / 8f;
             }
         }
-        if (paragraph.GetEffectiveBorder<LeftBorder>() is LeftBorder leftBorder)
+        if (paragraph.GetEffectiveBorder<LeftBorder>(Styles) is LeftBorder leftBorder)
         {
             if (leftBorder.Size != null)
             {
                 p.LeftBorderThickness = leftBorder.Size.Value / 8f;
             }
         }
-        BorderType? rightBorder = paragraph.GetEffectiveBorder<RightBorder>() as BorderType ?? paragraph.GetEffectiveBorder<BarBorder>() as BorderType;
+        BorderType? rightBorder = paragraph.GetEffectiveBorder<RightBorder>(Styles) as BorderType ?? paragraph.GetEffectiveBorder<BarBorder>(Styles) as BorderType;
         // In the current implementation BarBorder is treated as RightBorder
         if (rightBorder != null)
         {
@@ -96,19 +96,19 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             }
         }
 
-        var spacing = paragraph.GetEffectiveSpacingValues();
+        var spacing = paragraph.GetEffectiveSpacingValues(Styles);
         p.SpaceBefore = spacing.SpaceBefore;
         p.SpaceAfter = spacing.SpaceAfter;
         p.LineHeight = spacing.LineHeight;
 
-        var indent = paragraph.GetEffectiveIndentValues();
+        var indent = paragraph.GetEffectiveIndentValues(Styles);
         p.LeftIndent = indent.LeftIndent;
         p.RightIndent = indent.RightIndent;
         p.StartIndent = indent.StartIndent;
         p.EndIndent = indent.EndIndent;
         p.FirstLineIndent = indent.FirstLineIndent;
 
-        p.KeepTogether = paragraph.GetEffectiveProperty<KeepLines>().ToBool();
+        p.KeepTogether = paragraph.GetEffectiveProperty<KeepLines>(Styles).ToBool();
         // TODO: KeepNext (cannot be set at paragraph level in QuestPDF and requires a different approach)
 
         // Add paragraph to the current container (body, header, footer, table cell, ...)

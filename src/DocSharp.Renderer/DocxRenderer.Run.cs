@@ -19,17 +19,17 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 {
     internal QuestPdfSpan? ProcessRunProperties(Run run)
     {
-        if (run.GetEffectiveProperty<Vanish>().ToBool())
+        if (run.GetEffectiveProperty<Vanish>(Styles).ToBool())
             return null; // don't process hidden runs
 
         // Process run properties and add them to a new QuestPdfSpan object
-        bool bold = run.GetEffectiveProperty<Bold>().ToBool();
-        bool italic = run.GetEffectiveProperty<Italic>().ToBool();
+        bool bold = run.GetEffectiveProperty<Bold>(Styles).ToBool();
+        bool italic = run.GetEffectiveProperty<Italic>(Styles).ToBool();
         
         UnderlineStyle underline = UnderlineStyle.None;
         bool thickUnderline = false;
         QuestPDF.Infrastructure.Color? underlineColor = null;
-        if (run.GetEffectiveProperty<Underline>() is Underline u && u.Val != null && u.Val.Value != UnderlineValues.None)
+        if (run.GetEffectiveProperty<Underline>(Styles) is Underline u && u.Val != null && u.Val.Value != UnderlineValues.None)
         {
             if (u.Val.Value == UnderlineValues.Dash || u.Val.Value == UnderlineValues.DashedHeavy || 
                 u.Val.Value == UnderlineValues.DashLong || u.Val.Value == UnderlineValues.DashLongHeavy ||
@@ -56,26 +56,26 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             }
         }
         StrikethroughStyle strikethrough = StrikethroughStyle.None;
-        if (run.GetEffectiveProperty<Strike>().ToBool())
+        if (run.GetEffectiveProperty<Strike>(Styles).ToBool())
             strikethrough = StrikethroughStyle.Single;
-        else if (run.GetEffectiveProperty<DoubleStrike>().ToBool()) 
+        else if (run.GetEffectiveProperty<DoubleStrike>(Styles).ToBool()) 
             strikethrough = StrikethroughStyle.Double;
 
         SubSuperscript supSuperscript = SubSuperscript.Normal;
-        var verticalPos = run.GetEffectiveProperty<VerticalTextAlignment>();
+        var verticalPos = run.GetEffectiveProperty<VerticalTextAlignment>(Styles);
         if (verticalPos != null && verticalPos.Val != null && verticalPos.Val.Value != VerticalPositionValues.Baseline)
         {
             supSuperscript = verticalPos.Val.Value == VerticalPositionValues.Subscript ? SubSuperscript.Subscript : SubSuperscript.Superscript;
         }
 
         CapsType caps = CapsType.Normal;
-        if (run.GetEffectiveProperty<SmallCaps>().ToBool())
+        if (run.GetEffectiveProperty<SmallCaps>(Styles).ToBool())
             caps = CapsType.SmallCaps;
-        else if (run.GetEffectiveProperty<Caps>().ToBool()) 
+        else if (run.GetEffectiveProperty<Caps>(Styles).ToBool()) 
             caps = CapsType.AllCaps;
 
         float? fontSize = null;
-        var fs = run.GetEffectiveProperty<FontSize>()?.Val?.Value;
+        var fs = run.GetEffectiveProperty<FontSize>(Styles)?.Val?.Value;
         if (!string.IsNullOrEmpty(fs) && float.TryParse(fs, out float fontSizeValue))
         {
             fontSizeValue /= 2f; // Convert half-points to points
@@ -84,7 +84,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
         // Text color
         QuestPDF.Infrastructure.Color? fontColor = null;
-        var docxFontColor = run.GetEffectiveTextColor();
+        var docxFontColor = run.GetEffectiveTextColor(Styles);
         if (!string.IsNullOrWhiteSpace(docxFontColor))
         {
             fontColor = QuestPDF.Infrastructure.Color.FromHex(docxFontColor!);
@@ -92,14 +92,14 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
         // Highlight and shading (highlight has priority over shading)
         QuestPDF.Infrastructure.Color? bgColor = null;
-        var docxBgColor = run.GetEffectiveBackgroundColor();
+        var docxBgColor = run.GetEffectiveBackgroundColor(Styles);
         if (!string.IsNullOrWhiteSpace(docxBgColor))
         {
             bgColor = QuestPDF.Infrastructure.Color.FromHex(docxBgColor!);
         }
 
         string? fontFamily = null; 
-        if (run.GetEffectiveProperty<RunFonts>()?.Ascii?.Value is string asciiFont && 
+        if (run.GetEffectiveProperty<RunFonts>(Styles)?.Ascii?.Value is string asciiFont && 
             !string.IsNullOrWhiteSpace(asciiFont))
         {
             fontFamily = asciiFont;

@@ -360,35 +360,35 @@ public static class OpenXmlHelpers
         return null;
     }
 
-    public static T? GetEffectiveProperty<T>(this OpenXmlElement element) where T : OpenXmlElement
+    public static T? GetEffectiveProperty<T>(this OpenXmlElement element, Styles? styles = null) where T : OpenXmlElement
     {
         if (element is Paragraph p)
         {
-            return GetEffectiveProperty<T>(p);
+            return GetEffectiveProperty<T>(p, styles);
         }
         else if (element is Run run)
         {
-            return GetEffectiveProperty<T>(run);
+            return GetEffectiveProperty<T>(run, styles);
         }
         else if (element is Table table)
         {
-            return GetEffectiveProperty<T>(table);
+            return GetEffectiveProperty<T>(table, styles);
         }
         else if (element is TableRow tableRow)
         {
-            return GetEffectiveProperty<T>(tableRow);
+            return GetEffectiveProperty<T>(tableRow, styles);
         }
         else if (element is TableCell tableCell)
         {
-            return GetEffectiveProperty<T>(tableCell);
+            return GetEffectiveProperty<T>(tableCell, styles);
         }
         else if (element is RunProperties runPr)
         {
-            return GetEffectiveProperty<T>(runPr);
+            return GetEffectiveProperty<T>(runPr, styles);
         }
         else if (element is NumberingSymbolRunProperties runPr2)
         {
-            return GetEffectiveProperty<T>(runPr2);
+            return runPr2.GetFirstChild<T>();
         }
         else
         {
@@ -498,17 +498,13 @@ public static class OpenXmlHelpers
             {
                 Level? level = null;
                 // If NumberingInstance has a LevelOverride, use it.
-                level = num.Elements<LevelOverride>()
-                    .FirstOrDefault(x => x.Level?.LevelIndex != null &&
-                                            x.Level.LevelIndex == numProperties.NumberingLevelReference.Val)?.Level;
+                level = num.FirstOrDefault<LevelOverride>(x => x.Level?.LevelIndex != null &&
+                                                          x.Level.LevelIndex == numProperties.NumberingLevelReference.Val)?.Level;
                 // Otherwise get level from AbstractNum
                 if (num.AbstractNumId?.Val != null)
                 {
-                    level ??= numbering.Elements<AbstractNum>().FirstOrDefault(x => x.AbstractNumberId != null &&
-                                                                                x.AbstractNumberId.Value == num.AbstractNumId.Val)?
-                                    .Elements<Level>()
-                                    .FirstOrDefault(x => x.LevelIndex != null &&
-                                                        x.LevelIndex == numProperties.NumberingLevelReference.Val);
+                    level ??= numbering.FirstOrDefault<AbstractNum>(x => x.AbstractNumberId != null && x.AbstractNumberId.Value == num.AbstractNumId.Val)?
+                                       .FirstOrDefault<Level>(x => x.LevelIndex != null && x.LevelIndex == numProperties.NumberingLevelReference.Val);
                 }
                 // Get paragraph properties for list level
                 return level?.PreviousParagraphProperties;
@@ -1040,12 +1036,6 @@ public static class OpenXmlHelpers
         return null;
     }
 
-    public static T? GetEffectiveProperty<T>(this NumberingSymbolRunProperties runPr) where T : OpenXmlElement
-    {
-        // Check run properties
-        return runPr.GetFirstChild<T>();
-    }
-
     // Helper function to get table formatting from table properties or style.
     public static T? GetEffectiveProperty<T>(this Table table, Styles? stylesPart = null) where T : OpenXmlElement
     {
@@ -1412,11 +1402,9 @@ public static class OpenXmlHelpers
     // Helper function to get a border (top, bottom, left, start, ...) from row properties or style.
     public static T? GetEffectiveBorder<T>(this Table table, Styles? stylesPart = null) where T : BorderType
     {
-        T? propertyValue = null;
-
         // Check table properties
         var tableProperties = table.GetFirstChild<TableProperties>();
-        propertyValue = tableProperties?.TableBorders?.GetFirstChild<T>();
+        T? propertyValue = tableProperties?.TableBorders?.GetFirstChild<T>();
         if (propertyValue != null)
         {
             return propertyValue;

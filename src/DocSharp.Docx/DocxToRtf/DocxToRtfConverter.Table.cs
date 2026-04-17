@@ -24,7 +24,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // This is a limitation of RTF and also occurs when converting DOCX to RTF using Word.
         // So we just process table cell shading in ProcessTableCellProperties, since there is no difference
         // (it will retrieve table shading if cell shading is not specified).
-        // var shading = table.GetEffectiveProperty<Shading>();
+        // var shading = table.GetEffectiveProperty<Shading>(Styles);
         // if (shading != null)
         // {
         //     ProcessShading(shading, sb, ShadingType.TableRow);
@@ -41,7 +41,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // }
 
         // Positioned Wrapped Tables (the following properties must be the same for all rows in the table)
-        var pos = table.GetEffectiveProperty<TablePositionProperties>();
+        var pos = table.GetEffectiveProperty<TablePositionProperties>(Styles);
         if (pos != null)
         {
             if (pos.LeftFromText != null)
@@ -150,7 +150,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        var overlap = table.GetEffectiveProperty<TableOverlap>();
+        var overlap = table.GetEffectiveProperty<TableOverlap>(Styles);
         if (overlap != null)
         {
             if (overlap.Val != null && overlap.Val == TableOverlapValues.Never)
@@ -233,7 +233,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         sb.Write(tableProperties);
 
         bool isRightToLeft = false;
-        var biDiVisual = row.GetEffectiveProperty<BiDiVisual>();
+        var biDiVisual = row.GetEffectiveProperty<BiDiVisual>(Styles);
         if (biDiVisual != null && biDiVisual.ToBool())
         {
             isRightToLeft = true;
@@ -275,17 +275,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 sb.WriteWordWithValue("trrh", tableRowHeight.Val.Value);
             }
         }
-        if (row.GetEffectiveProperty<TableHeader>().ToBool())
+        if (row.GetEffectiveProperty<TableHeader>(Styles).ToBool())
         {
             sb.Write(@"\trhdr");
         }
-        if (row.GetEffectiveProperty<CantSplit>().ToBool())
+        if (row.GetEffectiveProperty<CantSplit>(Styles).ToBool())
         {
             sb.Write(@"\trkeep");
         }
 
         // These properties can appear in rows, tables or TablePropertyExceptions.
-        var justification = row.GetEffectiveProperty<TableJustification>();
+        var justification = row.GetEffectiveProperty<TableJustification>(Styles);
         if (justification != null && justification.Val != null && justification.Val.HasValue)
         {
             if (justification.Val.Value == TableRowAlignmentValues.Left)
@@ -302,7 +302,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        var layout = row.GetEffectiveProperty<TableLayout>();
+        var layout = row.GetEffectiveProperty<TableLayout>(Styles);
         if (layout?.Type != null && layout.Type.Value == TableLayoutValues.Fixed)
         {
             sb.Write(@"\trautofit0"); // No auto-fit
@@ -313,7 +313,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                                       // Can be overriden by \clwWidthN and \trwWidthN.
         }
 
-        var ind = row.GetEffectiveProperty<TableIndentation>();
+        var ind = row.GetEffectiveProperty<TableIndentation>(Styles);
         if (ind?.Type != null)
         {
             if (ind.Type.Value == TableWidthUnitValues.Nil)
@@ -338,7 +338,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        var width = row.GetEffectiveProperty<TableWidth>();
+        var width = row.GetEffectiveProperty<TableWidth>(Styles);
         if (width?.Type != null)
         {
             if (width.Type.Value == TableWidthUnitValues.Nil)
@@ -363,9 +363,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        //var gridBefore = row.GetEffectiveProperty<GridBefore>();
-        //var gridAfter = row.GetEffectiveProperty<GridAfter>();
-        var widthBefore = row.GetEffectiveProperty<WidthBeforeTableRow>();
+        //var gridBefore = row.GetEffectiveProperty<GridBefore>(Styles);
+        //var gridAfter = row.GetEffectiveProperty<GridAfter>(Styles);
+        var widthBefore = row.GetEffectiveProperty<WidthBeforeTableRow>(Styles);
         if (widthBefore?.Type != null)
         {
             if (widthBefore.Type.Value == TableWidthUnitValues.Nil)
@@ -388,7 +388,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 }
             }
         }
-        var widthAfter = row.GetEffectiveProperty<WidthAfterTableRow>();
+        var widthAfter = row.GetEffectiveProperty<WidthAfterTableRow>(Styles);
         if (widthAfter?.Type != null)
         {
             if (widthAfter.Type.Value == TableWidthUnitValues.Nil)
@@ -413,7 +413,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
         long cellSpacing = 0;
-        if (OpenXmlHelpers.GetEffectiveProperty<TableCellSpacing>(row) is TableCellSpacing spacing &&
+        if (OpenXmlHelpers.GetEffectiveProperty<TableCellSpacing>(Styles) is TableCellSpacing spacing &&
             spacing.Type != null && spacing.Type.HasValue)
         {
             if (spacing.Type.Value == TableWidthUnitValues.Nil)
@@ -435,15 +435,15 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        var topBorder = OpenXmlHelpers.GetEffectiveBorder<TopBorder>(row);
-        var bottomBorder = OpenXmlHelpers.GetEffectiveBorder<BottomBorder>(row);
-        BorderType? leftBorder = OpenXmlHelpers.GetEffectiveBorder<LeftBorder>(row);
-        BorderType? rightBorder = OpenXmlHelpers.GetEffectiveBorder<RightBorder>(row);
+        var topBorder = row.GetEffectiveBorder<TopBorder>(Styles);
+        var bottomBorder = row.GetEffectiveBorder<BottomBorder>(Styles);
+        BorderType? leftBorder = row.GetEffectiveBorder<LeftBorder>(Styles);
+        BorderType? rightBorder = row.GetEffectiveBorder<RightBorder>(Styles);
         // Left/right should have priority over start/end as they are more specific.
-        leftBorder ??= isRightToLeft ? OpenXmlHelpers.GetEffectiveBorder<EndBorder>(row) : OpenXmlHelpers.GetEffectiveBorder<StartBorder>(row);
-        rightBorder ??= isRightToLeft ? OpenXmlHelpers.GetEffectiveBorder<StartBorder>(row) : OpenXmlHelpers.GetEffectiveBorder<EndBorder>(row);
-        var insideH = OpenXmlHelpers.GetEffectiveBorder<InsideHorizontalBorder>(row);
-        var insideV = OpenXmlHelpers.GetEffectiveBorder<InsideVerticalBorder>(row);
+        leftBorder ??= isRightToLeft ? row.GetEffectiveBorder<EndBorder>(Styles) : row.GetEffectiveBorder<StartBorder>(Styles);
+        rightBorder ??= isRightToLeft ? row.GetEffectiveBorder<StartBorder>(Styles) : row.GetEffectiveBorder<EndBorder>(Styles);
+        var insideH = row.GetEffectiveBorder<InsideHorizontalBorder>(Styles);
+        var insideV = row.GetEffectiveBorder<InsideVerticalBorder>(Styles);
         if (topBorder != null)
         {
             sb.Write(@"\trbrdrt");
@@ -475,12 +475,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             ProcessBorder(insideV, sb);
         }
 
-        var topMargin = row.GetEffectiveMargin<TopMargin>();
-        var bottomMargin = row.GetEffectiveMargin<BottomMargin>();
-        var startMargin = row.GetEffectiveMargin<StartMargin>();
-        var endMargin = row.GetEffectiveMargin<EndMargin>();
-        var leftMargin = row.GetEffectiveMargin<TableCellLeftMargin>();
-        var rightMargin = row.GetEffectiveMargin<TableCellRightMargin>();
+        var topMargin = row.GetEffectiveMargin<TopMargin>(Styles);
+        var bottomMargin = row.GetEffectiveMargin<BottomMargin>(Styles);
+        var startMargin = row.GetEffectiveMargin<StartMargin>(Styles);
+        var endMargin = row.GetEffectiveMargin<EndMargin>(Styles);
+        var leftMargin = row.GetEffectiveMargin<TableCellLeftMargin>(Styles);
+        var rightMargin = row.GetEffectiveMargin<TableCellRightMargin>(Styles);
         if (topMargin?.Type != null)
         {
             if (topMargin.Type.Value == TableWidthUnitValues.Nil)
@@ -678,10 +678,10 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
         
-        var topMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Top, isRightToLeft) as TopMargin;
-        var bottomMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Bottom, isRightToLeft) as BottomMargin;
-        var leftMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Left, isRightToLeft);
-        var rightMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Right, isRightToLeft);
+        var topMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Top, isRightToLeft, Styles) as TopMargin;
+        var bottomMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Bottom, isRightToLeft, Styles) as BottomMargin;
+        var leftMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Left, isRightToLeft, Styles);
+        var rightMargin = cell.GetEffectiveMargin(Primitives.MarginValue.Right, isRightToLeft, Styles);
         // Left and top cell padding are inverted due to a bug in all versions of Word (in RTF only): https://www.office-forums.com/threads/rtf-file-weirdness-clpadt-vs-clpadl.2163500/
         if (topMargin?.Type != null)
         {
@@ -751,7 +751,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<TableCellVerticalAlignment>(cell);
+        var verticalAlignment = cell.GetEffectiveProperty<TableCellVerticalAlignment>(Styles);
         if (verticalAlignment != null && verticalAlignment.Val != null)
         {
             if (verticalAlignment.Val == TableVerticalAlignmentValues.Top)
@@ -768,17 +768,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (cell.GetEffectiveProperty<TableCellFitText>().ToBool())
+        if (cell.GetEffectiveProperty<TableCellFitText>(Styles).ToBool())
         {
             sb.Write(@"\clFitText");
         }
 
-        if (cell.GetEffectiveProperty<NoWrap>().ToBool())
+        if (cell.GetEffectiveProperty<NoWrap>(Styles).ToBool())
         {
             sb.Write(@"\clNoWrap");
         }
 
-        if (cell.GetEffectiveProperty<HideMark>().ToBool())
+        if (cell.GetEffectiveProperty<HideMark>(Styles).ToBool())
         {
             sb.Write(@"\clhidemark");
         }
@@ -821,12 +821,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         // The GetEffectiveBorder function deals with various complexities in retrieving borders
         // (e.g. start / end / insideHorizontal / insideVertical are considered depending on the case).
-        BorderType? topBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Top, isRightToLeft);
-        BorderType? bottomBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Bottom, isRightToLeft);
-        BorderType? leftBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Left, isRightToLeft);
-        BorderType? rightBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Right, isRightToLeft);
-        var topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, isRightToLeft);
-        var topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, isRightToLeft);               
+        BorderType? topBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Top, isRightToLeft, Styles);
+        BorderType? bottomBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Bottom, isRightToLeft, Styles);
+        BorderType? leftBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Left, isRightToLeft, Styles);
+        BorderType? rightBorder = cell.GetEffectiveBorder(Primitives.BorderValue.Right, isRightToLeft, Styles);
+        var topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, isRightToLeft, Styles);
+        var topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, isRightToLeft, Styles);               
         if (topBorder != null)
         {
             sb.Write(@"\clbrdrt");
@@ -858,13 +858,13 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             ProcessBorder(topRightToBottomLeft, sb);
         }
 
-        var shading = OpenXmlHelpers.GetEffectiveProperty<Shading>(cell);
+        var shading = cell.GetEffectiveProperty<Shading>(Styles);
         if (shading != null)
         {
             ProcessShading(shading, sb, ShadingType.TableCell);
         }
 
-        var cellWidth = OpenXmlHelpers.GetEffectiveProperty<TableCellWidth>(cell);
+        var cellWidth = cell.GetEffectiveProperty<TableCellWidth>(Styles);
         long width = 2000; // Default value (hopefully not used).
         if (cellWidth?.Width.ToLong() is long widthValue)
         {

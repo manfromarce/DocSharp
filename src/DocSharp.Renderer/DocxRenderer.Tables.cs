@@ -20,9 +20,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
     internal override void ProcessTable(Table table, QuestPdfModel output)
     {
         // Process table properties and create a new QuestPdfTable object
-        var t = new QuestPdfTable(table.GetColumnsWidth());
+        var t = new QuestPdfTable(table.GetColumnsWidth(Styles));
         
-        if (table.GetEffectiveProperty<TableJustification>() is TableJustification jc && jc.Val != null)
+        if (table.GetEffectiveProperty<TableJustification>(Styles) is TableJustification jc && jc.Val != null)
         {   
             if (jc.Val == TableRowAlignmentValues.Center)
                 t.Alignment = HorizontalAlignment.Center;
@@ -198,7 +198,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 cell.PaddingRight = dxaNilType2.Width.Value / 20f;
         }
 
-        var verticalAlignment = tableCell.GetEffectiveProperty<TableCellVerticalAlignment>();
+        var verticalAlignment = tableCell.GetEffectiveProperty<TableCellVerticalAlignment>(Styles);
         if (verticalAlignment?.Val != null)
         {
             if (verticalAlignment.Val == TableVerticalAlignmentValues.Top)
@@ -216,7 +216,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             TableRow? currentRow = row;
             while (rowSpanCounter > 0 && currentRow != null)
             {
-                var height = currentRow.GetEffectiveProperty<TableRowHeight>();
+                var height = currentRow.GetEffectiveProperty<TableRowHeight>(Styles);
                 if (height != null &&
                     height.Val != null &&
                     (height.HeightType == null || // if HeightType is not specified but a value is present, assume it means "Exact"

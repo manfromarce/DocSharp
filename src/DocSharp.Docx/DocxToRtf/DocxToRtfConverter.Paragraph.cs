@@ -27,7 +27,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             // (can be used by word processors to increment the list item numbers)
             sb.Write("\\v ");
 
-            var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+            var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>(Styles);
             if (numberingProperties != null)
             {
                 ProcessListItem(numberingProperties, sb);
@@ -57,12 +57,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     internal void ProcessParagraphFormatting(Paragraph paragraph, RtfStringWriter sb)
     {
-        if (paragraph.GetEffectiveProperty<NumberingProperties>() is NumberingProperties numberingProperties)
+        if (paragraph.GetEffectiveProperty<NumberingProperties>(Styles) is NumberingProperties numberingProperties)
         {
             ProcessListItem(numberingProperties, sb);
         }
 
-        if (paragraph.GetEffectiveProperty<BiDi>().ToBool()) 
+        if (paragraph.GetEffectiveProperty<BiDi>(Styles).ToBool()) 
         {
             // Left to right by default; right to left if the element is present unless explicitly set to false.
             sb.Write(@"\rtlpar");
@@ -72,7 +72,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\ltrpar");
         }
 
-        //var direction = paragraph.GetEffectiveProperty<TextDirection>();
+        //var direction = paragraph.GetEffectiveProperty<TextDirection>(Styles);
         //if (direction != null && direction.Val != null)
         //{
         //    if (direction.Val == TextDirectionValues.LefToRightTopToBottom ||
@@ -104,7 +104,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         //    }
         //}
 
-        var vAlign = paragraph.GetEffectiveProperty<TextAlignment>();
+        var vAlign = paragraph.GetEffectiveProperty<TextAlignment>(Styles);
         if (vAlign?.Val != null)
         {
             if (vAlign.Val == VerticalTextAlignmentValues.Auto)
@@ -129,17 +129,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (paragraph.GetEffectiveProperty<Tabs>() is Tabs tabs)
+        if (paragraph.GetEffectiveProperty<Tabs>(Styles) is Tabs tabs)
         {
             ProcessTabs(tabs, sb);
         }
 
-        if (paragraph.GetEffectiveProperty<FrameProperties>() is FrameProperties frameProps)
+        if (paragraph.GetEffectiveProperty<FrameProperties>(Styles) is FrameProperties frameProps)
         {
             ProcessFrameProperties(frameProps, sb);
         }
 
-        var alignment = paragraph.GetEffectiveProperty<Justification>();
+        var alignment = paragraph.GetEffectiveProperty<Justification>(Styles);
         if (alignment?.Val != null)
         {
             if (alignment.Val == JustificationValues.Left || alignment.Val == JustificationValues.Start)
@@ -163,7 +163,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             // else if (alignment.Val == JustificationValues.NumTab)
         }
 
-        var spacing = paragraph.GetEffectiveSpacing();
+        var spacing = paragraph.GetEffectiveSpacing(Styles);
         if (spacing?.BeforeAutoSpacing != null && (!spacing.BeforeAutoSpacing.HasValue || spacing.BeforeAutoSpacing.Value))
         {
             sb.Write($"\\sbauto1");
@@ -219,12 +219,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write("\\slmult1");
         }
 
-        if (paragraph.GetEffectiveProperty<AdjustRightIndent>().ToBool()) 
+        if (paragraph.GetEffectiveProperty<AdjustRightIndent>(Styles).ToBool()) 
         {
             sb.Write("\\adjustright");
         }
 
-        if (paragraph.GetEffectiveIndent() is Indentation indent)
+        if (paragraph.GetEffectiveIndent(Styles) is Indentation indent)
         {
             if (indent.LeftChars != null)
                 sb.Write($"\\culi{indent.LeftChars.Value.ToStringInvariant()}"); // overwrites \liN
@@ -254,13 +254,13 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 sb.Write($"\\fi-{hanging.ToStringInvariant()}");
         }
 
-        var mirrorIndent = paragraph.GetEffectiveProperty<MirrorIndents>();
+        var mirrorIndent = paragraph.GetEffectiveProperty<MirrorIndents>(Styles);
         if (mirrorIndent != null && (mirrorIndent.Val is null || mirrorIndent.Val))
         {
             sb.Write(@"\indmirror"); // Should we avoid this for lists ?
         }
 
-        var wControl = paragraph.GetEffectiveProperty<WidowControl>();
+        var wControl = paragraph.GetEffectiveProperty<WidowControl>(Styles);
         if (wControl?.Val != null && !wControl.Val)
         {
             sb.Write(@"\nowidctlpar");
@@ -270,104 +270,104 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\widctlpar"); // True by default
         }
 
-        var wordWrap = paragraph.GetEffectiveProperty<WordWrap>();
+        var wordWrap = paragraph.GetEffectiveProperty<WordWrap>(Styles);
         if (wordWrap?.Val != null && !wordWrap.Val)
         {
             // By default text breaks in new lines at the word level.
             // If WordWrap is set to off the document allows to break at character level.
             sb.Write(@"\nowwrap");
         }
-        var op = paragraph.GetEffectiveProperty<OverflowPunctuation>();
+        var op = paragraph.GetEffectiveProperty<OverflowPunctuation>(Styles);
         if (op?.Val != null && !op.Val)
         {
             // By default punctuation chars are allowed to extend past the end of the line by one character.
             // If OverflowPunctuation is set to off, lines should break even if the next character is a punctuation mark.
             sb.Write(@"\nooverflow");
         }
-        if (paragraph.GetEffectiveProperty<AutoSpaceDE>().ToBool(defaultIfNotPresent: true)) 
+        if (paragraph.GetEffectiveProperty<AutoSpaceDE>(Styles).ToBool(defaultIfNotPresent: true)) 
         { // true by default in DOCX
             sb.Write(@"\aspalpha");
         }
-        if (paragraph.GetEffectiveProperty<AutoSpaceDN>().ToBool(defaultIfNotPresent: true)) 
+        if (paragraph.GetEffectiveProperty<AutoSpaceDN>(Styles).ToBool(defaultIfNotPresent: true)) 
         { // true by default in DOCX
             sb.Write(@"\aspnum");
         }
-        if (paragraph.GetEffectiveProperty<TopLinePunctuation>().ToBool()) 
+        if (paragraph.GetEffectiveProperty<TopLinePunctuation>(Styles).ToBool()) 
         {
             sb.Write(@"\toplinepunct");
         }
-        if (paragraph.GetEffectiveProperty<SuppressAutoHyphens>().ToBool()) 
+        if (paragraph.GetEffectiveProperty<SuppressAutoHyphens>(Styles).ToBool()) 
         {
             sb.Write(@"\hyphpar0");
         }
-        if (paragraph.GetEffectiveProperty<SuppressLineNumbers>().ToBool()) 
+        if (paragraph.GetEffectiveProperty<SuppressLineNumbers>(Styles).ToBool()) 
         {
             sb.Write(@"\noline");
         }
-        if (paragraph.GetEffectiveProperty<PageBreakBefore>().ToBool()) 
+        if (paragraph.GetEffectiveProperty<PageBreakBefore>(Styles).ToBool()) 
         {
             sb.Write(@"\pagebb");
         }
-        var snapToGrid = paragraph.GetEffectiveProperty<SnapToGrid>();
+        var snapToGrid = paragraph.GetEffectiveProperty<SnapToGrid>(Styles);
         if (snapToGrid?.Val != null && !snapToGrid.Val) // True by default
         {
             sb.Write(@"\nosnaplinegrid");
         }
-        var outlineLevel = paragraph.GetEffectiveProperty<OutlineLevel>();
+        var outlineLevel = paragraph.GetEffectiveProperty<OutlineLevel>(Styles);
         if (outlineLevel?.Val != null && outlineLevel.Val.HasValue)
         {
             sb.Write($"\\outline{outlineLevel.Val.Value}");
         }
 
-        var contextualSpacing = paragraph.GetEffectiveProperty<ContextualSpacing>();
+        var contextualSpacing = paragraph.GetEffectiveProperty<ContextualSpacing>(Styles);
         if (contextualSpacing != null && (contextualSpacing.Val is null || contextualSpacing.Val))
             sb.Write(@"\contextualspace");
 
-        var keepLines = paragraph.GetEffectiveProperty<KeepLines>();
+        var keepLines = paragraph.GetEffectiveProperty<KeepLines>(Styles);
         if (keepLines != null && (keepLines.Val is null || keepLines.Val))
             sb.Write(@"\keep");
 
-        var keepNext = paragraph.GetEffectiveProperty<KeepNext>();
+        var keepNext = paragraph.GetEffectiveProperty<KeepNext>(Styles);
         if (keepNext != null && (keepNext.Val is null || keepNext.Val))
             sb.Write(@"\keepn");
 
-        if (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
+        if (paragraph.GetEffectiveBorder<TopBorder>(Styles) is TopBorder topBorder)
         {
             sb.Write(@"\brdrt");
             ProcessBorder(topBorder, sb);
         }
-        if (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder)
+        if (paragraph.GetEffectiveBorder<BottomBorder>(Styles) is BottomBorder bottomBorder)
         {
             sb.Write(@"\brdrb");
             ProcessBorder(bottomBorder, sb);
         }
-        if (paragraph.GetEffectiveBorder<LeftBorder>() is LeftBorder leftBorder)
+        if (paragraph.GetEffectiveBorder<LeftBorder>(Styles) is LeftBorder leftBorder)
         {
             sb.Write(@"\brdrl");
             ProcessBorder(leftBorder, sb);
         }
-        if (paragraph.GetEffectiveBorder<RightBorder>() is RightBorder rightBorder)
+        if (paragraph.GetEffectiveBorder<RightBorder>(Styles) is RightBorder rightBorder)
         {
             sb.Write(@"\brdrr");
             ProcessBorder(rightBorder, sb);
         }
-        if (paragraph.GetEffectiveBorder<BarBorder>() is BarBorder barBorder)
+        if (paragraph.GetEffectiveBorder<BarBorder>(Styles) is BarBorder barBorder)
         {
             sb.Write(@"\brdrbar");
             ProcessBorder(barBorder, sb);
         }
-        if (paragraph.GetEffectiveBorder<BetweenBorder>() is BetweenBorder betweenBorder)
+        if (paragraph.GetEffectiveBorder<BetweenBorder>(Styles) is BetweenBorder betweenBorder)
         {
             sb.Write(@"\brdrbtw");
             ProcessBorder(betweenBorder, sb);
         }
 
-        if (paragraph.GetEffectiveProperty<Shading>() is Shading shading)
+        if (paragraph.GetEffectiveProperty<Shading>(Styles) is Shading shading)
         {
             ProcessShading(shading, sb, ShadingType.Paragraph);
         }
 
-        var textBoxTightWrap = paragraph.GetEffectiveProperty<TextBoxTightWrap>();
+        var textBoxTightWrap = paragraph.GetEffectiveProperty<TextBoxTightWrap>(Styles);
         if (textBoxTightWrap?.Val != null)
         {
             if (textBoxTightWrap.Val == TextBoxTightWrapValues.AllLines)

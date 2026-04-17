@@ -81,6 +81,10 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
         // Reset state
+        this.TitlePage = false;
+        this.FacingPages = false;
+        this.Styles = document.MainDocumentPart?.StyleDefinitionsPart?.Styles;
+        this.Sections.Clear();
         this._listLevelCounters.Clear();
 
         sb.WriteHtmlHeader(document.MainDocumentPart?.OpenXmlPackage.PackageProperties.Title);
@@ -245,7 +249,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         string font = string.Empty;
         if (text.Parent is Run run)
         {
-            var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
+            var fonts = run.GetEffectiveProperty<RunFonts>(Styles);
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
         string t = text.InnerText;

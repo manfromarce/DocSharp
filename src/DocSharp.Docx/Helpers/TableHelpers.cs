@@ -81,9 +81,9 @@ public static class TableHelpers
         return maxCellsPerRow;
     }
 
-    public static float GetCellWidthInPoints(this TableCell cell)
+    public static float GetCellWidthInPoints(this TableCell cell, Styles? styles = null)
     {
-        var cellWidth = cell.GetEffectiveProperty<TableCellWidth>();
+        var cellWidth = cell.GetEffectiveProperty<TableCellWidth>(styles);
         if (cellWidth?.Type != null && cellWidth.Type.Value == TableWidthUnitValues.Dxa && 
             cellWidth.Width != null && cellWidth.Width.ToLong() is long width)
         {
@@ -92,7 +92,7 @@ public static class TableHelpers
         return 0; // Auto, Pct, Nil or unspecified width; should be handled depending on the context
     }
 
-    public static List<float> GetColumnsWidth(this Table table)
+    public static List<float> GetColumnsWidth(this Table table, Styles? styles = null)
     {
         var columnWidths = new List<float>();
         foreach (var row in table.Elements<TableRow>())
@@ -101,7 +101,7 @@ public static class TableHelpers
             foreach (var cell in row.Elements<TableCell>())
             {
                 var gridSpan = cell.GetGridSpan();
-                float width = cell.GetCellWidthInPoints() / gridSpan;
+                float width = cell.GetCellWidthInPoints(styles) / gridSpan;
 
                 for (int i = 0; i < gridSpan; i++)
                 {
@@ -297,9 +297,7 @@ public static class TableHelpers
 
     public static void AddHorizontalSpan(this TableRow row, int span)
     {
-        var firstCell = row.ChildElements
-            .OfType<TableCell>()
-            .FirstOrDefault();
+        var firstCell = row.GetFirstChild<TableCell>();
 
         if (firstCell == null) return;
 

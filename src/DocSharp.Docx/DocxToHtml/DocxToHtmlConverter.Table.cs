@@ -22,28 +22,28 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
         var tableStyles = new List<string>();
 
-        var layout = table.GetEffectiveProperty<TableLayout>();
+        var layout = table.GetEffectiveProperty<TableLayout>(Styles);
         if (layout?.Type != null && layout.Type.Value == TableLayoutValues.Fixed) // otherwise AutoFit
         {
             tableStyles.Add("table-layout: fixed;");
-            ProcessTableWidthType(table.GetEffectiveProperty<TableWidth>(), ref tableStyles, "width");
+            ProcessTableWidthType(table.GetEffectiveProperty<TableWidth>(Styles), ref tableStyles, "width");
         }
         else
         {
             tableStyles.Add("table-layout: auto;");
         }
 
-        if (table.GetEffectiveBorder<TopBorder>() is TopBorder topBorder)
+        if (table.GetEffectiveBorder<TopBorder>(Styles) is TopBorder topBorder)
             ProcessBorder(topBorder, MapTableBorderAttribute(topBorder), ref tableStyles);
-        if (table.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder)
+        if (table.GetEffectiveBorder<BottomBorder>(Styles) is BottomBorder bottomBorder)
             ProcessBorder(bottomBorder, MapTableBorderAttribute(bottomBorder), ref tableStyles);
-        if (table.GetEffectiveBorder<LeftBorder>() is LeftBorder leftBorder)
+        if (table.GetEffectiveBorder<LeftBorder>(Styles) is LeftBorder leftBorder)
             ProcessBorder(leftBorder, MapTableBorderAttribute(leftBorder), ref tableStyles);
-        if (table.GetEffectiveBorder<RightBorder>() is RightBorder rightBorder)
+        if (table.GetEffectiveBorder<RightBorder>(Styles) is RightBorder rightBorder)
             ProcessBorder(rightBorder, MapTableBorderAttribute(rightBorder), ref tableStyles);
-        if (table.GetEffectiveBorder<StartBorder>() is StartBorder startBorder)
+        if (table.GetEffectiveBorder<StartBorder>(Styles) is StartBorder startBorder)
             ProcessBorder(startBorder, MapTableBorderAttribute(startBorder), ref tableStyles);
-        if (table.GetEffectiveBorder<EndBorder>() is EndBorder endBorder)
+        if (table.GetEffectiveBorder<EndBorder>(Styles) is EndBorder endBorder)
             ProcessBorder(endBorder, MapTableBorderAttribute(endBorder), ref tableStyles);
         // Notes:
         // - InsideHorizontalBorder and InsideVerticalBorder are *not* relevant in this case,
@@ -57,7 +57,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         var firstRow = table.Descendants<TableRow>().FirstOrDefault();
         if (firstRow != null)
         {
-            var tableCellSpacing = firstRow.GetEffectiveProperty<TableCellSpacing>();
+            var tableCellSpacing = firstRow.GetEffectiveProperty<TableCellSpacing>(Styles);
             if (tableCellSpacing?.Width != null && decimal.TryParse(tableCellSpacing.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal w))
             {
                 if (tableCellSpacing.Type == null ||
@@ -84,7 +84,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         // In DOCX the internal cell margin is computed in the cell width,
         // while in HTML by default it's not, causing cells to become larger if border-box is not specified.
 
-        var ind = table.GetEffectiveProperty<TableIndentation>();
+        var ind = table.GetEffectiveProperty<TableIndentation>(Styles);
         if (ind?.Type != null && ind?.Width != null)
         {
             if (ind.Type.Value == TableWidthUnitValues.Pct) // Fithies of percent
@@ -99,7 +99,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             }
         }
 
-        //var tj = row.GetEffectiveProperty<TableJustification>();
+        //var tj = row.GetEffectiveProperty<TableJustification>(Styles);
         // TODO
 
         if (tableStyles.Count > 0)
@@ -121,7 +121,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         var defaultCellStyles = new List<string>();
         
         // These properties are specific to single rows.
-        if (row.GetEffectiveProperty<TableRowHeight>() is TableRowHeight tableRowHeight &&
+        if (row.GetEffectiveProperty<TableRowHeight>(Styles) is TableRowHeight tableRowHeight &&
             tableRowHeight.Val != null && 
             (tableRowHeight.HeightType == null || // if HeightType is not specified but a value is present, assume it means "Exact"
              tableRowHeight.HeightType.Value == HeightRuleValues.AtLeast ||
@@ -137,7 +137,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             rowStyles.Add($"{property}: {(tableRowHeight.Val.Value / 20m).ToStringInvariant(2)}pt;"); // Convert twips to points
         }        
 
-        if (row.GetEffectiveProperty<CantSplit>().ToBool())
+        if (row.GetEffectiveProperty<CantSplit>(Styles).ToBool())
         {
             // No breaks inside the row
             rowStyles.Add("break-inside: avoid;");
@@ -145,13 +145,13 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
         // These properties can appear in rows, tables or TablePropertyExceptions:
 
-        var layout = row.GetEffectiveProperty<TableLayout>();
+        var layout = row.GetEffectiveProperty<TableLayout>(Styles);
         if (layout?.Type != null && layout.Type.Value == TableLayoutValues.Fixed) // otherwise AutoFit
         {
-            ProcessTableWidthType(row.GetEffectiveProperty<TableWidth>(), ref rowStyles, "width");
+            ProcessTableWidthType(row.GetEffectiveProperty<TableWidth>(Styles), ref rowStyles, "width");
         }
 
-        //var ind = row.GetEffectiveProperty<TableIndentation>();
+        //var ind = row.GetEffectiveProperty<TableIndentation>(Styles);
         // Not supported for individual rows in HTML
         //if (ind?.Type != null && ind?.Width != null)
         //{
@@ -167,18 +167,18 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         //    }
         //}
 
-        //var tj = row.GetEffectiveProperty<TableJustification>();
+        //var tj = row.GetEffectiveProperty<TableJustification>(Styles);
         // Not supported for individual rows in HTML
 
-        ProcessTableWidthType(row.GetEffectiveProperty<WidthBeforeTableRow>(), ref rowStyles, "margin-left");
-        ProcessTableWidthType(row.GetEffectiveProperty<WidthAfterTableRow>(), ref rowStyles, "margin-right");
+        ProcessTableWidthType(row.GetEffectiveProperty<WidthBeforeTableRow>(Styles), ref rowStyles, "margin-left");
+        ProcessTableWidthType(row.GetEffectiveProperty<WidthAfterTableRow>(Styles), ref rowStyles, "margin-right");
 
-        ProcessTableWidthType(row.GetEffectiveMargin<TopMargin>(), ref defaultCellStyles, "padding-top");
-        ProcessTableWidthType(row.GetEffectiveMargin<BottomMargin>(), ref defaultCellStyles, "padding-bottom");
-        ProcessTableWidthType(row.GetEffectiveMargin<TableCellLeftMargin>(), ref defaultCellStyles, "padding-left");
-        ProcessTableWidthType(row.GetEffectiveMargin<TableCellRightMargin>(), ref defaultCellStyles, "padding-right");
-        ProcessTableWidthType(row.GetEffectiveMargin<StartMargin>(), ref defaultCellStyles, "padding-inline-start");
-        ProcessTableWidthType(row.GetEffectiveMargin<EndMargin>(), ref defaultCellStyles, "padding-inline-end");
+        ProcessTableWidthType(row.GetEffectiveMargin<TopMargin>(Styles), ref defaultCellStyles, "padding-top");
+        ProcessTableWidthType(row.GetEffectiveMargin<BottomMargin>(Styles), ref defaultCellStyles, "padding-bottom");
+        ProcessTableWidthType(row.GetEffectiveMargin<TableCellLeftMargin>(Styles), ref defaultCellStyles, "padding-left");
+        ProcessTableWidthType(row.GetEffectiveMargin<TableCellRightMargin>(Styles), ref defaultCellStyles, "padding-right");
+        ProcessTableWidthType(row.GetEffectiveMargin<StartMargin>(Styles), ref defaultCellStyles, "padding-inline-start");
+        ProcessTableWidthType(row.GetEffectiveMargin<EndMargin>(Styles), ref defaultCellStyles, "padding-inline-end");
         // Notes:
         // - Default left/right margins are TableCellLeftMargin and TableCellRightMargin,
         //   *not* LeftMargin and RightMargin (these are for individual cell margins,
@@ -234,7 +234,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         if (cell.IsInMergedRangeNotFirst())
             return false; // Don't generate a new <td> in this case
 
-        if (cell.GetEffectiveProperty<NoWrap>().ToBool() || cell.GetEffectiveProperty<TableCellFitText>().ToBool())
+        if (cell.GetEffectiveProperty<NoWrap>(Styles).ToBool() || cell.GetEffectiveProperty<TableCellFitText>(Styles).ToBool())
         {
             cellStyles.Add("white-space: nowrap;");
             cellStyles.Add("overflow: hidden;");
@@ -250,12 +250,12 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
 
         bool isVertical = false;
-        var direction = cell.GetEffectiveProperty<TextDirection>();
+        var direction = cell.GetEffectiveProperty<TextDirection>(Styles);
         if (direction?.Val != null)
         {
             ProcessTextDirection(direction.Val.Value, ref cellStyles, out isVertical);
         }
-        var verticalAlignment = cell.GetEffectiveProperty<TableCellVerticalAlignment>();
+        var verticalAlignment = cell.GetEffectiveProperty<TableCellVerticalAlignment>(Styles);
         if (verticalAlignment?.Val != null)
         {
             if (verticalAlignment.Val == TableVerticalAlignmentValues.Top)
@@ -270,11 +270,11 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             cellStyles.Add("vertical-align: top;");
         }
 
-        var cellWidth = cell.GetEffectiveProperty<TableCellWidth>();
+        var cellWidth = cell.GetEffectiveProperty<TableCellWidth>(Styles);
         ProcessTableWidthType(cellWidth, ref cellStyles, "width"); 
         
         // For vertical text, it seems row height is not applied if not specified for cells too.
-        var height = cell.GetFirstAncestor<TableRow>()?.GetEffectiveProperty<TableRowHeight>();
+        var height = cell.GetFirstAncestor<TableRow>()?.GetEffectiveProperty<TableRowHeight>(Styles);
         if (height != null &&
             height.Val != null &&
             (height.HeightType == null || // if HeightType is not specified but a value is present, assume it means "Exact"
@@ -294,7 +294,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         // Some of these are mapped to the same attributes in HTML in some cases (e.g. vertical cells),
         // and also default padding may have been written by the row.
         // Avoid writing duplicate attributes by removing the existing ones in the correct priority order.
-        if (cell.GetEffectiveMargin(Primitives.MarginValue.Start) is OpenXmlElement startMargin)
+        if (cell.GetEffectiveMargin(Primitives.MarginValue.Start, stylesPart: Styles) is OpenXmlElement startMargin)
         {
             string? attribute = MapMarginAttribute(startMargin, isVertical);
             if (attribute != null)
@@ -303,7 +303,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessTableWidthType(startMargin, ref cellStyles, attribute);
             }
         }
-        if (cell.GetEffectiveMargin(Primitives.MarginValue.End) is OpenXmlElement endMargin)
+        if (cell.GetEffectiveMargin(Primitives.MarginValue.End, stylesPart: Styles) is OpenXmlElement endMargin)
         {
             string? attribute = MapMarginAttribute(endMargin, isVertical);
             if (attribute != null)
@@ -312,7 +312,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessTableWidthType(endMargin, ref cellStyles, attribute);
             }
         }
-        if (cell.GetEffectiveMargin(Primitives.MarginValue.Top) is OpenXmlElement topMargin)
+        if (cell.GetEffectiveMargin(Primitives.MarginValue.Top, stylesPart: Styles) is OpenXmlElement topMargin)
         {
             string? attribute = MapMarginAttribute(topMargin, isVertical);
             if (attribute != null)
@@ -321,7 +321,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessTableWidthType(topMargin, ref cellStyles, attribute);
             }
         }
-        if (cell.GetEffectiveMargin(Primitives.MarginValue.Bottom) is OpenXmlElement bottomMargin)
+        if (cell.GetEffectiveMargin(Primitives.MarginValue.Bottom, stylesPart: Styles) is OpenXmlElement bottomMargin)
         {
             string? attribute = MapMarginAttribute(bottomMargin, isVertical);
             if (attribute != null)
@@ -330,7 +330,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessTableWidthType(bottomMargin, ref cellStyles, attribute);
             }
         }
-        if (cell.GetEffectiveMargin(Primitives.MarginValue.Left) is OpenXmlElement leftMargin)
+        if (cell.GetEffectiveMargin(Primitives.MarginValue.Left, stylesPart: Styles) is OpenXmlElement leftMargin)
         {
             string? attribute = MapMarginAttribute(leftMargin, isVertical);
             if (attribute != null)
@@ -339,7 +339,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessTableWidthType(leftMargin, ref cellStyles, attribute);
             }
         }
-        if (cell.GetEffectiveMargin(Primitives.MarginValue.Right) is OpenXmlElement rightMargin)
+        if (cell.GetEffectiveMargin(Primitives.MarginValue.Right, stylesPart: Styles) is OpenXmlElement rightMargin)
         {
             string? attribute = MapMarginAttribute(rightMargin, isVertical);
             if (attribute != null)
@@ -351,7 +351,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
         // Some of these are mapped to the same property in HTML,
         // so avoid writing duplicated attributes by removing the existing ones in the correct priority order.
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Start) is BorderType startBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Start, stylesPart: Styles) is BorderType startBorder)
         {
             string? attribute = MapTableCellBorderAttribute(startBorder, Primitives.BorderValue.Start, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -360,7 +360,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessBorder(startBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.End) is BorderType endBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.End, stylesPart: Styles) is BorderType endBorder)
         {
             string? attribute = MapTableCellBorderAttribute(endBorder, Primitives.BorderValue.End, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -369,7 +369,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessBorder(endBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Top) is BorderType topBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Top, stylesPart: Styles) is BorderType topBorder)
         {
             string? attribute = MapTableCellBorderAttribute(topBorder, Primitives.BorderValue.Top, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -378,7 +378,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessBorder(topBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Bottom) is BorderType bottomBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Bottom, stylesPart: Styles) is BorderType bottomBorder)
         {
             string? attribute = MapTableCellBorderAttribute(bottomBorder, Primitives.BorderValue.Bottom, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -387,7 +387,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessBorder(bottomBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Left) is BorderType leftBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Left, stylesPart: Styles) is BorderType leftBorder)
         {
             string? attribute = MapTableCellBorderAttribute(leftBorder, Primitives.BorderValue.Left, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -396,7 +396,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 ProcessBorder(leftBorder, attribute, ref cellStyles);
             }
         }
-        if (cell.GetEffectiveBorder(Primitives.BorderValue.Right) is BorderType rightBorder)
+        if (cell.GetEffectiveBorder(Primitives.BorderValue.Right, stylesPart: Styles) is BorderType rightBorder)
         {
             string? attribute = MapTableCellBorderAttribute(rightBorder, Primitives.BorderValue.Right, isVertical, isFirstRow, isFirstColumn, isLastRow, isLastColumn);
             if (attribute != null)
@@ -406,7 +406,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             }
         }
 
-        ProcessShading(cell.GetEffectiveProperty<Shading>(), ref cellStyles);
+        ProcessShading(cell.GetEffectiveProperty<Shading>(Styles), ref cellStyles);
 
         return true;
     }
@@ -444,9 +444,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             sb.WriteAttributeString("style", string.Join(" ", styles));
         }
         
-        //BorderType? topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, 1, 1, 1, 1);
+        //BorderType? topLeftToBottomRight = cell.GetEffectiveBorder(Primitives.BorderValue.TopLeftToBottomRightDiagonal, stylesPart: Styles);
         //ProcessDiagonalBorder(topLeftToBottomRight, sb);
-        //BorderType? topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, 1, 1, 1, 1);
+        //BorderType? topRightToBottomLeft = cell.GetEffectiveBorder(Primitives.BorderValue.TopRightToBottomLeftDiagonal, stylesPart: Styles);
         //ProcessDiagonalBorder(topRightToBottomLeft, sb);
         // Diagonal borders are not supported in CSS; they could be created using inline SVG or other workarounds.
 

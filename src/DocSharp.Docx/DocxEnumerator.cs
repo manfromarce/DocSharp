@@ -37,11 +37,14 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
     internal bool TitlePage = false;
     internal bool FacingPages = false;   
 
+    internal Styles? Styles = null;
+
     internal virtual void ProcessDocument(Document document, TOutput sb)
     {
         // Reset state
         this.TitlePage = false;
         this.FacingPages = false;
+        this.Styles = document.MainDocumentPart?.StyleDefinitionsPart?.Styles;
         this.Sections.Clear();
 
         if (document.DocumentBackground is DocumentBackground bg)

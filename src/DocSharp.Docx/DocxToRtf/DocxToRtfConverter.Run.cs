@@ -40,7 +40,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             return;
         }
 
-        if (run.GetEffectiveProperty<RightToLeftText>().ToBool())
+        if (run.GetEffectiveProperty<RightToLeftText>(Styles).ToBool())
         {
             sb.Write(@"\rtlch");
         }
@@ -49,13 +49,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\ltrch");
         }
 
-        bool forceComplexScript = run.GetEffectiveProperty<ComplexScript>().ToBool();
-        if (forceComplexScript)
+        if (run.GetEffectiveProperty<ComplexScript>(Styles).ToBool())
         {
             sb.Write(@"\fcs1");
         }
 
-        var lang = run.GetEffectiveProperty<Languages>();
+        var lang = run.GetEffectiveProperty<Languages>(Styles);
         if (!string.IsNullOrEmpty(lang?.Val?.Value))
         {
             int code = RtfHelpers.GetLanguageCode(lang!.Val!.Value!);
@@ -75,13 +74,13 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.WriteWordWithValue("langfenp", code);
         }
 
-        if (run.GetEffectiveProperty<NoProof>().ToBool())
+        if (run.GetEffectiveProperty<NoProof>(Styles).ToBool())
         {
             sb.Write(@"\noproof\lang1024");
         }
 
         // To be improved (Ascii value may not be present, although rare)
-        var runFonts = run.GetEffectiveProperty<RunFonts>();
+        var runFonts = run.GetEffectiveProperty<RunFonts>(Styles);
         string? asciiFont = runFonts?.Ascii?.Value;       
         if (!string.IsNullOrEmpty(asciiFont))
         {
@@ -121,7 +120,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         //     }            
         // }
 
-        if (run.GetEffectiveProperty<FontSize>()?.Val.ToLong() is long fontSize)
+        if (run.GetEffectiveProperty<FontSize>(Styles)?.Val.ToLong() is long fontSize)
         {
             // Font size is in half-points in both DOCX and RTF
             sb.WriteWordWithValue("fs", fontSize);
@@ -131,18 +130,18 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.WriteWordWithValue("fs", DefaultSettings.FontSize * 2); // Font size is in half-points
         }
 
-        if (run.GetEffectiveProperty<FontSizeComplexScript>()?.Val.ToLong() is long fontSizeComplexScript)
+        if (run.GetEffectiveProperty<FontSizeComplexScript>(Styles)?.Val.ToLong() is long fontSizeComplexScript)
         {
             // Font size is in half-points in both DOCX and RTF
             sb.WriteWordWithValue("afs", fontSizeComplexScript);
         }
 
-        // if (run.GetEffectiveProperty<EastAsianLayout>() is EastAsianLayout eastAsianLayout)
+        // if (run.GetEffectiveProperty<EastAsianLayout>(Styles) is EastAsianLayout eastAsianLayout)
         // {
         // }
 
-        string? color = run.GetEffectiveProperty<Color>()?.Val;
-        var fill14 = run.GetEffectiveProperty<W14.FillTextEffect>();
+        string? color = run.GetEffectiveProperty<Color>(Styles)?.Val;
+        var fill14 = run.GetEffectiveProperty<W14.FillTextEffect>(Styles);
         if (fill14?.Elements<W14.SolidColorFillProperties>().FirstOrDefault() is W14.SolidColorFillProperties solidFill &&
             ColorHelpers.GetColor(solidFill) is string fillColor && 
             !string.IsNullOrEmpty(fillColor))
@@ -176,42 +175,42 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // Note: RTF does not support advanced effects introduced with Office 2010
         // (w14:shadow, w14:textOutline, w14:glow ...),
         // but only the legacy Shadow, Outline, Emboss, Imprint font properties.
-        if (run.GetEffectiveProperty<Shadow>().ToBool())
+        if (run.GetEffectiveProperty<Shadow>(Styles).ToBool())
         {
             sb.Write(@"\shad");
         }
-        if (run.GetEffectiveProperty<Outline>().ToBool())
+        if (run.GetEffectiveProperty<Outline>(Styles).ToBool())
         {
             sb.Write(@"\outl");
         }
-        if (run.GetEffectiveProperty<Emboss>().ToBool())
+        if (run.GetEffectiveProperty<Emboss>(Styles).ToBool())
         {
             sb.Write(@"\embo");
         }
-        if (run.GetEffectiveProperty<Imprint>().ToBool())
+        if (run.GetEffectiveProperty<Imprint>(Styles).ToBool())
         {
             sb.Write(@"\impr");
         }
 
-        if (run.GetEffectiveProperty<Kern>() is Kern kern && kern.Val != null)
+        if (run.GetEffectiveProperty<Kern>(Styles) is Kern kern && kern.Val != null)
         {
             // Kerning is in half-points in both Open XML and RTF.
             sb.WriteWordWithValue("kerning", kern.Val.Value);
         }
 
-        if (run.GetEffectiveProperty<CharacterScale>() is CharacterScale scale && scale.Val != null)
+        if (run.GetEffectiveProperty<CharacterScale>(Styles) is CharacterScale scale && scale.Val != null)
         {
             // Character scaling is expressed as percentage (100, 200, ...) in both Open XML and RTF.
             sb.WriteWordWithValue("charscalex", scale.Val.Value);
         }
 
-        if (run.GetEffectiveProperty<FitText>() is FitText fitText && fitText.Val != null)
+        if (run.GetEffectiveProperty<FitText>(Styles) is FitText fitText && fitText.Val != null)
         {
             // FitText is in twips in both Open XML and RTF.
             sb.WriteWordWithValue("fittext", fitText.Val);
         }
 
-        if (run.GetEffectiveProperty<Spacing>() is Spacing spacing && spacing.Val != null)
+        if (run.GetEffectiveProperty<Spacing>(Styles) is Spacing spacing && spacing.Val != null)
         {
             // Character spacing is expressed in twips in Open XML;
             // in RTF it should also be specified in quarter-points for backward compatibility.
@@ -222,25 +221,25 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // Most formatting options such as bold are considered enabled if the element is present,
         // unless OnOffValue is explicitly set to false.
         // (e.g. <w:b /> without value means bold is enabled, otherwise it would not be present at all)
-        if (run.GetEffectiveProperty<Bold>().ToBool())
+        if (run.GetEffectiveProperty<Bold>(Styles).ToBool())
         {
             sb.Write(@"\b");
         }
-        if (run.GetEffectiveProperty<BoldComplexScript>().ToBool())
+        if (run.GetEffectiveProperty<BoldComplexScript>(Styles).ToBool())
         {
             sb.Write(@"\ab");
         }
 
-        if (run.GetEffectiveProperty<Italic>().ToBool())
+        if (run.GetEffectiveProperty<Italic>(Styles).ToBool())
         {
             sb.Write(@"\i");
         }
-        if (run.GetEffectiveProperty<ItalicComplexScript>().ToBool())
+        if (run.GetEffectiveProperty<ItalicComplexScript>(Styles).ToBool())
         {
             sb.Write(@"\ai");
         }
 
-        if (run.GetEffectiveProperty<Underline>() is Underline u && u.Val != null)
+        if (run.GetEffectiveProperty<Underline>(Styles) is Underline u && u.Val != null)
         {
             string? ul = RtfUnderlineMapper.GetUnderlineType(u.Val);
             if (!string.IsNullOrEmpty(ul))
@@ -255,20 +254,20 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (run.GetEffectiveProperty<DoubleStrike>().ToBool())
+        if (run.GetEffectiveProperty<DoubleStrike>(Styles).ToBool())
         {
             sb.Write(@"\striked1");
         }
         else
         {
             // Don't add strike if double strike is already active.
-            if (run.GetEffectiveProperty<Strike>().ToBool())
+            if (run.GetEffectiveProperty<Strike>(Styles).ToBool())
             {
                 sb.Write(@"\strike");
             }
         }
 
-        if (run.GetEffectiveProperty<Highlight>() is Highlight highlight && highlight.Val != null)
+        if (run.GetEffectiveProperty<Highlight>(Styles) is Highlight highlight && highlight.Val != null)
         {
             if (highlight.Val == HighlightColorValues.None)
             {
@@ -285,7 +284,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (run.GetEffectiveProperty<VerticalTextAlignment>() is VerticalTextAlignment verticalTextAlignment && verticalTextAlignment?.Val != null)
+        if (run.GetEffectiveProperty<VerticalTextAlignment>(Styles) is VerticalTextAlignment verticalTextAlignment && verticalTextAlignment?.Val != null)
         {
             if (verticalTextAlignment.Val == VerticalPositionValues.Subscript)
             {
@@ -302,14 +301,14 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
         else
         {
-            var position = run.GetEffectiveProperty<Position>();
+            var position = run.GetEffectiveProperty<Position>(Styles);
             if (position?.Val != null && int.TryParse(position.Val.Value, out int pos))
             {
                 sb.WriteWordWithValue(pos < 0 ? "dn" : "up", Math.Abs(pos));
             }
         }
 
-        if (run.GetEffectiveProperty<Emphasis>() is Emphasis em && em?.Val != null)
+        if (run.GetEffectiveProperty<Emphasis>(Styles) is Emphasis em && em?.Val != null)
         {
             if (em.Val == EmphasisMarkValues.None)
             {
@@ -333,41 +332,41 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (run.GetEffectiveProperty<SmallCaps>().ToBool())
+        if (run.GetEffectiveProperty<SmallCaps>(Styles).ToBool())
         {
             sb.Write(@"\scaps");
         }
         else
         {
             // Small caps and All caps are mutually exclusive
-            if (run.GetEffectiveProperty<Caps>().ToBool())
+            if (run.GetEffectiveProperty<Caps>(Styles).ToBool())
             {
                 sb.Write(@"\caps");
             }
         }
 
-        if (run.GetEffectiveProperty<Vanish>().ToBool() || run.GetEffectiveProperty<SpecVanish>().ToBool())
+        if (run.GetEffectiveProperty<Vanish>(Styles).ToBool() || run.GetEffectiveProperty<SpecVanish>(Styles).ToBool())
         {
             sb.Write(@"\v");
         }
-        if (run.GetEffectiveProperty<WebHidden>().ToBool())
+        if (run.GetEffectiveProperty<WebHidden>(Styles).ToBool())
         {
             sb.Write(@"\webhidden");
         }
 
-        if (run.GetEffectiveProperty<Border>() is Border border)
+        if (run.GetEffectiveProperty<Border>(Styles) is Border border)
         {
             // Character border is the same for top, left, bottom and right.
             sb.Write(@"\chbrdr");
             ProcessBorder(border, sb);
         }
 
-        if (run.GetEffectiveProperty<Shading>() is Shading shading)
+        if (run.GetEffectiveProperty<Shading>(Styles) is Shading shading)
         {
             ProcessShading(shading, sb, ShadingType.Character);
         }
 
-        if (run.GetEffectiveProperty<SnapToGrid>().ToBool(defaultIfNotPresent: true))
+        if (run.GetEffectiveProperty<SnapToGrid>(Styles).ToBool(defaultIfNotPresent: true))
         {
             // Enabled by default in DOCX but not in RTF.
             sb.Write(@"\cgrid");

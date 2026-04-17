@@ -57,7 +57,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal override void ProcessRun(Run run, TxtStringWriter sb)
     {
-        if (!run.GetEffectiveProperty<Vanish>().ToBool())
+        if (!run.GetEffectiveProperty<Vanish>(Styles).ToBool())
         {
             foreach (var element in run.Elements())
             {
@@ -245,7 +245,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         string font = string.Empty;
         if (text.Parent is Run run)
         {
-            var fonts = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run);
+            var fonts = run.GetEffectiveProperty<RunFonts>(Styles);
             font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
         }
         sb.WriteText(text.InnerText, font);
@@ -253,7 +253,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal override void ProcessParagraph(Paragraph paragraph, TxtStringWriter sb)
     {
-        var numberingProperties = OpenXmlHelpers.GetEffectiveProperty<NumberingProperties>(paragraph);
+        var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>(Styles);
         
         if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.GetFirstChild<Vanish>() is Vanish h &&
             (h.Val is null || h.Val))

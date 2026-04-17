@@ -40,49 +40,49 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             }
         }
 
-        string? font = OpenXmlHelpers.GetEffectiveProperty<RunFonts>(run)?.Ascii?.Value;
-        var bold = OpenXmlHelpers.GetEffectiveProperty<Bold>(run);
-        var italic = OpenXmlHelpers.GetEffectiveProperty<Italic>(run);
-        var underline = OpenXmlHelpers.GetEffectiveProperty<Underline>(run);
-        var strike = OpenXmlHelpers.GetEffectiveProperty<Strike>(run);
-        var doubleStrike = OpenXmlHelpers.GetEffectiveProperty<DoubleStrike>(run);
-        var color = OpenXmlHelpers.GetEffectiveProperty<Color>(run)?.Val?.Value;
-        var fontSize = OpenXmlHelpers.GetEffectiveProperty<FontSize>(run)?.Val?.Value;
-        var smallCaps = OpenXmlHelpers.GetEffectiveProperty<SmallCaps>(run);
-        var allCaps = OpenXmlHelpers.GetEffectiveProperty<Caps>(run);
-        var verticalAlignment = OpenXmlHelpers.GetEffectiveProperty<VerticalTextAlignment>(run);
-        var position = OpenXmlHelpers.GetEffectiveProperty<Position>(run);
-        var border = OpenXmlHelpers.GetEffectiveProperty<Border>(run);
-        var fontStretch = OpenXmlHelpers.GetEffectiveProperty<Spacing>(run);
-        var fontScaling = OpenXmlHelpers.GetEffectiveProperty<CharacterScale>(run);
-        var kerning = OpenXmlHelpers.GetEffectiveProperty<Kern>(run);
-        var hidden = OpenXmlHelpers.GetEffectiveProperty<Vanish>(run);
+        string? font = run.GetEffectiveProperty<RunFonts>(Styles)?.Ascii?.Value;
+        var bold = run.GetEffectiveProperty<Bold>(Styles);
+        var italic = run.GetEffectiveProperty<Italic>(Styles);
+        var underline = run.GetEffectiveProperty<Underline>(Styles);
+        var strike = run.GetEffectiveProperty<Strike>(Styles);
+        var doubleStrike = run.GetEffectiveProperty<DoubleStrike>(Styles);
+        var color = run.GetEffectiveProperty<Color>(Styles)?.Val?.Value;
+        var fontSize = run.GetEffectiveProperty<FontSize>(Styles)?.Val?.Value;
+        var smallCaps = run.GetEffectiveProperty<SmallCaps>(Styles);
+        var allCaps = run.GetEffectiveProperty<Caps>(Styles);
+        var verticalAlignment = run.GetEffectiveProperty<VerticalTextAlignment>(Styles);
+        var position = run.GetEffectiveProperty<Position>(Styles);
+        var border = run.GetEffectiveProperty<Border>(Styles);
+        var fontStretch = run.GetEffectiveProperty<Spacing>(Styles);
+        var fontScaling = run.GetEffectiveProperty<CharacterScale>(Styles);
+        var kerning = run.GetEffectiveProperty<Kern>(Styles);
+        var hidden = run.GetEffectiveProperty<Vanish>(Styles);
 
         // These are legacy effects and can be easily emulated in CSS.
-        var shadow = OpenXmlHelpers.GetEffectiveProperty<Shadow>(run);
-        var outline = OpenXmlHelpers.GetEffectiveProperty<Outline>(run);
-        var emboss = OpenXmlHelpers.GetEffectiveProperty<Emboss>(run);
-        var imprint = OpenXmlHelpers.GetEffectiveProperty<Imprint>(run);
+        var shadow = run.GetEffectiveProperty<Shadow>(Styles);
+        var outline = run.GetEffectiveProperty<Outline>(Styles);
+        var emboss = run.GetEffectiveProperty<Emboss>(Styles);
+        var imprint = run.GetEffectiveProperty<Imprint>(Styles);
 
         // Modern effects allow much more customization (used for WordArt too); 
         // currently only fill, shadow and outline are partially supported.
-        var fill14 = OpenXmlHelpers.GetEffectiveProperty<W14.FillTextEffect>(run);
-        var outline14 = OpenXmlHelpers.GetEffectiveProperty<W14.TextOutlineEffect>(run);
-        var shadow14 = OpenXmlHelpers.GetEffectiveProperty<W14.Shadow>(run);
-        //var properties3D = OpenXmlHelpers.GetEffectiveProperty<W14.Properties3D>(run);
-        //var scene3D = OpenXmlHelpers.GetEffectiveProperty<W14.Scene3D>(run);
-        //var reflection = OpenXmlHelpers.GetEffectiveProperty<W14.Reflection>(run);
-        //var glow = OpenXmlHelpers.GetEffectiveProperty<W14.Glow>(run);
+        var fill14 = run.GetEffectiveProperty<W14.FillTextEffect>(Styles);
+        var outline14 = run.GetEffectiveProperty<W14.TextOutlineEffect>(Styles);
+        var shadow14 = run.GetEffectiveProperty<W14.Shadow>(Styles);
+        //var properties3D = run.GetEffectiveProperty<W14.Properties3D>(Styles);
+        //var scene3D = run.GetEffectiveProperty<W14.Scene3D>(Styles);
+        //var reflection = run.GetEffectiveProperty<W14.Reflection>(Styles);
+        //var glow = run.GetEffectiveProperty<W14.Glow>(Styles);
 
         // Animated text effects, not supported by recent Microsoft Word versions
-        //var textEffect = OpenXmlHelpers.GetEffectiveProperty<TextEffect>(run);
+        //var textEffect = run.GetEffectiveProperty<TextEffect>(Styles);
 
         // Advanced typography features, not supported yet.
         // Could be (partially) achieved using font-feature-settings in CSS.
-        //var ligatures = OpenXmlHelpers.GetEffectiveProperty<W14.Ligatures>(run);
-        //var stylisticSets = OpenXmlHelpers.GetEffectiveProperty<W14.StylisticSets>(run); // A list of stylistic sets that modify the display of OpenType fonts
-        //var numberingFormat = OpenXmlHelpers.GetEffectiveProperty<W14.NumberingFormat>(run);
-        //var numberSpacing = OpenXmlHelpers.GetEffectiveProperty<W14.NumberSpacing>(run);
+        //var ligatures = run.GetEffectiveProperty<W14.Ligatures>(Styles);
+        //var stylisticSets = run.GetEffectiveProperty<W14.StylisticSets>(Styles); // A list of stylistic sets that modify the display of OpenType fonts
+        //var numberingFormat = run.GetEffectiveProperty<W14.NumberingFormat>(Styles);
+        //var numberSpacing = run.GetEffectiveProperty<W14.NumberSpacing>(Styles);
 
         // Build CSS style string
         var styles = new List<string>
@@ -127,7 +127,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add($"font-stretch: {fontScaling.Val.Value.ToStringInvariant()}%;");
         }
 
-        //if (run.GetEffectiveProperty<FitText>() is FitText fitText && fitText.Val != null)
+        //if (run.GetEffectiveProperty<FitText>(Styles) is FitText fitText && fitText.Val != null)
         //{
         //    var fitTextInPoints = fitText.Val.Value / 20m;
         //}
@@ -257,7 +257,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
 
         // Highlight and shading (highlight has priority over shading)
-        string? hex = run.GetEffectiveBackgroundColor();
+        string? hex = run.GetEffectiveBackgroundColor(Styles);
         if (!string.IsNullOrWhiteSpace(hex))
         {
             styles.Add($"background-color: #{hex};");
@@ -385,8 +385,8 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
 
         // Add lang attribute
-        var languages = OpenXmlHelpers.GetEffectiveProperty<Languages>(run);
-        //var noProof = OpenXmlHelpers.GetEffectiveProperty<NoProof>(run);
+        var languages = run.GetEffectiveProperty<Languages>(Styles);
+        //var noProof = run.GetEffectiveProperty<NoProof>(Styles);
         //if (noProof != null)
         //{
         //    // Is this relevant for HTML?

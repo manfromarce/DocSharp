@@ -40,13 +40,14 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             if (fieldChar.FieldCharType == FieldCharValues.Begin)
             {
                 sb.WriteLine(@"{\field");
-                if (fieldChar.FieldLock != null && ((!fieldChar.FieldLock.HasValue) || fieldChar.FieldLock.Value))
-                {
-                    sb.Write("\\fldlock");
-                }
                 if (fieldChar.Dirty != null && ((!fieldChar.Dirty.HasValue) || fieldChar.Dirty.Value))
                 {
                     sb.Write("\\flddirty");
+                }
+                // sb.Write("\\fldedit");
+                if (fieldChar.FieldLock != null && ((!fieldChar.FieldLock.HasValue) || fieldChar.FieldLock.Value))
+                {
+                    sb.Write("\\fldlock");
                 }
 
                 if (fieldChar.FormFieldData != null)
