@@ -1,3 +1,9 @@
+## 0.19.0 - not published yet
+
+- Improve performance in DOCX converters by caching styles
+- Improve highlight detection logic in DOCX ➡️ Markdown converter
+- Code cleanup
+
 ## 0.18.1 - 2026.04.10
 
 - Fix: images in header/footer were not preserved in DOCX to HTML/Markdown conversion

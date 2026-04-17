@@ -323,7 +323,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                               || (run.GetEffectiveProperty<Strike>(Styles) is Strike s && (s.Val is null || s.Val));
 
             isHighlight = (run.GetEffectiveProperty<Highlight>(Styles) is Highlight h && h.Val != null && h.Val != HighlightColorValues.None)
-                            || (run.GetEffectiveProperty<Shading>(Styles) is Shading sh && sh.Val != null && sh.Val != ShadingPatternValues.Clear && sh.Val != ShadingPatternValues.Nil);
+                            || (run.GetEffectiveProperty<Shading>(Styles) is Shading sh && sh.IsSolid());
 
             var vta = run.GetEffectiveProperty<VerticalTextAlignment>(Styles);
             isSubscript = vta != null && vta.Val != null && vta.Val == VerticalPositionValues.Subscript;

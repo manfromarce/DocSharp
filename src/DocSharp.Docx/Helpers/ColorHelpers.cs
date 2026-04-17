@@ -107,7 +107,7 @@ public static class ColorHelpers
         // - The pure primary color (Fill) is displayed for ShadingPatternValues.Clear
         // or if no pattern (Shading.Val) is specified.
         // - The pure secondary color (Color) is displayed for ShadingPatternValues.Solid. 
-        // - Other values are displayed as a combination of the two (stripes, checkerboard, ...)
+        // - Other values (stripes, checkerboard, ...) are displayed as a combination of the two colors.
         // This functions returns the primary color (Fill) in all cases, 
         // except Solid (for which the secondary color is returned) and Nil (for which null is returned).
         // If a converter supports pattern types (for example DOCX --> RTF), 
