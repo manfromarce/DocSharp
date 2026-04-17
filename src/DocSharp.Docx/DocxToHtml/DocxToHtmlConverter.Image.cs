@@ -24,7 +24,16 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb)
+    /// <summary>
+    /// By default only inline images are supported,  
+    /// because other DOCX image layouts have no direct equivalent in HTML/Markdown and can lead to unexpected results.  
+    /// However, if desired, this property can be set to ImageLayoutType.InlineAndAnchored 
+    /// to preserve the "top and bottom", "square", "tight" and "through" wrap layouts too, 
+    /// or to ImageLayoutType.All to preserve absolutely positioned images ("in front of"/"behind" text) too.
+    /// </summary>
+    public ImageLayoutType SupportedImagesLayout { get; set; } = ImageLayoutType.Inline;
+
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb, bool isInline)
     {
         try
         {
@@ -54,9 +63,13 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                         sb.WriteAttributeString("src", imageUri);
                     }
                 }
+
+                // If the image is not inline, write it as a block.
+                sb.WriteAttributeString("style", isInline ? "display:inline;" : "display:block;");
+
                 sb.WriteAttributeString("alt", relId);
-                sb.WriteAttributeString("width", width.ToStringInvariant());
-                sb.WriteAttributeString("height", height.ToStringInvariant());
+                sb.WriteAttributeString("width", width.ToStringInvariant() + "pt");
+                sb.WriteAttributeString("height", height.ToStringInvariant() + "pt");
                 sb.WriteEndElement();
             }
         }

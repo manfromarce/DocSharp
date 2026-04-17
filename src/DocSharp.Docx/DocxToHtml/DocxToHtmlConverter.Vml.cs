@@ -24,6 +24,8 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessVml(OpenXmlElement element, HtmlTextWriter sb)
     {
+        // TODO: detect inline / anchored / floating for VML images
+
         if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
@@ -67,7 +69,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 if (width > 0 && height > 0)
                 {
                     var rootPart = OpenXmlHelpers.GetRootPart(element);
-                    ProcessImagePart(rootPart, relId, width, height, sb);
+                    ProcessImagePart(rootPart, relId, width, height, sb, true);
                 }
             }
         }

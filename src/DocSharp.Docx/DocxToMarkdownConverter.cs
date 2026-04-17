@@ -14,6 +14,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
+using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using M = DocumentFormat.OpenXml.Math;
 using Path = System.IO.Path;
 
@@ -31,6 +32,15 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     /// that should be mapped to an inline code element in Markdown. 
     /// </summary>
     public string[]? CodeFontFamilies { get; set; } = null;
+
+    /// <summary>
+    /// By default only inline images are supported,  
+    /// because other DOCX image layouts have no direct equivalent in HTML/Markdown and can lead to unexpected results.  
+    /// However, if desired, this property can be set to ImageLayoutType.InlineAndAnchored 
+    /// to preserve the "top and bottom", "square", "tight" and "through" wrap layouts too, 
+    /// or to ImageLayoutType.All to preserve absolutely positioned images ("in front of"/"behind" text) too.
+    /// </summary>
+    public ImageLayoutType SupportedImagesLayout { get; set; } = ImageLayoutType.Inline;
 
     /// <summary>
     /// If this property is set to a directory, images will be exported to that folder
@@ -610,21 +620,23 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     {
         if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
         {
-            if (drawing.Inline?.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
+            if (drawing.IsLayoutSupported(this.SupportedImagesLayout))
             {
-                string? hyperlinkId = drawing.Inline.DocProperties?.HyperlinkOnClick?.Id?.Value;
-                string? tooltip = drawing.Inline.DocProperties?.HyperlinkOnClick?.Tooltip?.Value;
+                if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
+                {
+                    string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id?.Value;
+                    string? tooltip = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Tooltip?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Tooltip?.Value;
 
-                var mainDocumentPart = OpenXmlHelpers.GetMainDocumentPart(drawing);
-                if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
-                    svgBlip.Embed?.Value is string svgRelId)
-                {
-                    // Prefer the actual SVG image as web browsers can display it.
-                    ProcessImagePart(drawing.GetRootPart(), svgRelId, sb);
-                }
-                else if (blip.Embed?.Value is string relId)
-                {
-                    ProcessImagePart(drawing.GetRootPart(), relId, sb, hyperlinkId, tooltip);
+                    if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
+                        svgBlip.Embed?.Value is string svgRelId)
+                    {
+                        // Prefer the actual SVG image as web browsers can display it.
+                        ProcessImagePart(drawing.GetRootPart(), svgRelId, sb, drawing.Inline != null, hyperlinkId, tooltip);
+                    }
+                    else if (blip.Embed?.Value is string relId)
+                    {
+                        ProcessImagePart(drawing.GetRootPart(), relId, sb, drawing.Inline != null, hyperlinkId, tooltip);
+                    }
                 }
             }
         }
@@ -632,17 +644,19 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessVml(OpenXmlElement element, MarkdownStringWriter sb)
     {
+        // TODO: detect inline / anchored / floating and hyperlink for VML images
+
         if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
         {
             if (element.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
             {
-                ProcessImagePart(element.GetRootPart(), relId, sb);
+                ProcessImagePart(element.GetRootPart(), relId, sb, true);
             }
         }
     }
 
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, MarkdownStringWriter sb, string? hyperlinkId = null, string? hyperlinkTooltip = null)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, MarkdownStringWriter sb, bool isInline, string? hyperlinkId = null, string? hyperlinkTooltip = null)
     {
         try
         {
@@ -723,6 +737,11 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     }
                     EnsureWhiteSpace(sb);
 
+                    // If the image is not inline, write it as a block.
+                    if (!isInline)
+                    {
+                        sb.EnsureEmptyLine();
+                    }
                     if (hyperlinkId != null &&
                         (rootPart.OpenXmlPackage as WordprocessingDocument)?.MainDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
                     {
@@ -733,6 +752,10 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     {
                         // Regular image
                         sb.Write($"![{relId}]({uri.ToString().Replace(" ", "%20")})");
+                    }
+                    if (!isInline)
+                    {
+                        sb.EnsureEmptyLine();
                     }
                 }
             }

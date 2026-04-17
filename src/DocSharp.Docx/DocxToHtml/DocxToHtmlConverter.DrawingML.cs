@@ -24,7 +24,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         // DrawingML object or picture
 
-        if (drawing.Inline != null) // Currently only inline images are supported
+        if (drawing.IsLayoutSupported(this.SupportedImagesLayout))
         {
             var extent = drawing.Descendants<Wp.Extent>().FirstOrDefault();
 
@@ -38,24 +38,24 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 {
                     if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip)
                     {
-                        ProcessPictureFill(blip, drawing, width, height, sb);
+                        ProcessPictureFill(blip, drawing, width, height, sb, drawing.Inline != null);
                     }
                 }
             }
         }
     }
 
-    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb)
+    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb, bool isInline)
     {
         if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
             svgBlip.Embed?.Value is string svgRelId)
         {
             // Prefer the actual SVG image as web browsers can display it.
-            ProcessImagePart(drawing.GetRootPart(), svgRelId, width, height, sb);
+            ProcessImagePart(drawing.GetRootPart(), svgRelId, width, height, sb, isInline);
         }
         else if (blip.Embed?.Value is string relId)
         {
-            ProcessImagePart(drawing.GetRootPart(), relId, width, height, sb);
+            ProcessImagePart(drawing.GetRootPart(), relId, width, height, sb, isInline);
         }
     }
 }
