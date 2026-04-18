@@ -375,79 +375,56 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add($"color: #{hexColor};");
         }
 
-        // Start a new span / inline code element
-        sb.WriteStartElement(tag);
-        
-        // Add styles
-        if (styles.Count > 0)
+        bool tagsOpened = false;
+        void OpenTags()
         {
-            sb.WriteAttributeString("style", string.Join(" ", styles));
+            if (tagsOpened) return;
+            sb.WriteStartElement(tag);
+            if (styles.Count > 0)
+                sb.WriteAttributeString("style", string.Join(" ", styles));
+
+            var languages = run.GetEffectiveProperty<Languages>(Styles);
+            if (languages?.Val?.Value != null)
+                sb.WriteAttributeString("lang", languages.Val.Value);
+
+            if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
+                sb.WriteStartElement("sup");
+            else if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Subscript)
+                sb.WriteStartElement("sub");
+
+            if (isEmphasis) sb.WriteStartElement("em");
+            else if (isStrong) sb.WriteStartElement("strong");
+            tagsOpened = true;
         }
 
-        // Add lang attribute
-        var languages = run.GetEffectiveProperty<Languages>(Styles);
-        //var noProof = run.GetEffectiveProperty<NoProof>(Styles);
-        //if (noProof != null)
-        //{
-        //    // Is this relevant for HTML?
-        //}
-        //else if (languages != null)
-        if (languages != null)
+        void CloseTags()
         {
-            // Set language for this span
-            if (!string.IsNullOrEmpty(languages.Val?.Value))
-            {
-                sb.WriteAttributeString($"lang", languages.Val!.Value);
-            }
-            //if (!string.IsNullOrEmpty(languages?.Bidi?.Value))
-            //{
-            //    // ?
-            //}
+            if (!tagsOpened) return;
+            if (isEmphasis) sb.WriteEndElement("em");
+            else if (isStrong) sb.WriteEndElement("strong");
+
+            if (verticalAlignment?.Val != null && (verticalAlignment.Val == VerticalPositionValues.Superscript || verticalAlignment.Val == VerticalPositionValues.Subscript))
+                sb.WriteEndElement();
+
+            sb.WriteEndElement(tag);
+            tagsOpened = false;
         }
 
-        // Enclose element in superscript/subscript and em/strong tags if necessary
-        if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
-        {
-            sb.WriteStartElement("sup");
-        }
-        else if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Subscript)
-        {
-            sb.WriteStartElement("sub");
-        }
-        if (isEmphasis)
-        {
-            sb.WriteStartElement("em");
-        }
-        else if (isStrong)
-        {
-            sb.WriteStartElement("strong");
-        }
-
-        // Process run content
         foreach (var element in run.Elements())
         {
-            base.ProcessRunElement(element, sb);            
+            // Images (Drawing or VML Picture) should be written outside formatting tags
+            if (element is Drawing || element is Picture)
+            {
+                CloseTags();
+                base.ProcessRunElement(element, sb);
+            }
+            else
+            {
+                OpenTags();
+                base.ProcessRunElement(element, sb);
+            }
         }
 
-        // Close superscript/subscript if necessary
-        if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Superscript)
-        {
-            sb.WriteEndElement("sup");
-        }
-        else if (verticalAlignment?.Val != null && verticalAlignment.Val == VerticalPositionValues.Subscript)
-        {
-            sb.WriteEndElement("sub");
-        }
-        if (isEmphasis)
-        {
-            sb.WriteEndElement("em");
-        }
-        else if (isStrong)
-        {
-            sb.WriteEndElement("strong");
-        }                
-
-        // End of the current element
-        sb.WriteEndElement(tag);
+        CloseTags();
     }
 }

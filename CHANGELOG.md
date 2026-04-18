@@ -4,6 +4,7 @@
 - Improve highlight detection logic in DOCX ➡️ Markdown converter
 - Code cleanup
 - Add option to preserve anchored and floating images in DOCX ➡️ HTML/Markdown converter
+- Fix: inline images incorrectly always created a new line in DOCX ➡️ HTML converter
 
 ## 0.18.1 - 2026.04.10
 
