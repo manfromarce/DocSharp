@@ -33,12 +33,26 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     /// </summary>
     public ImageLayoutType SupportedImagesLayout { get; set; } = ImageLayoutType.Inline;
 
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb, bool isInline)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null)
     {
         try
         {
             if (rootPart?.TryGetPartById(relId!, out OpenXmlPart? part) == true && part is ImagePart imagePart)
             {
+                bool hasHyperlink = !string.IsNullOrEmpty(hyperlinkUrl);
+                if (hasHyperlink)
+                {
+                    // Microsoft Word usually escapes spaces in the relationship, but we ensure it here.
+                    string target = hyperlinkUrl!.Replace(" ", "%20");
+                    sb.WriteStartElement("a");
+                    sb.WriteAttributeString("href", target);
+                    
+                    if (!string.IsNullOrEmpty(hyperlinkTooltip))
+                    {
+                        sb.WriteAttributeString("title", hyperlinkTooltip!);
+                    }
+                }
+
                 if (string.IsNullOrWhiteSpace(ImagesOutputFolder))
                 {
                     // Convert image to Base64 and append to HTML
@@ -71,6 +85,11 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 sb.WriteAttributeString("width", width.ToStringInvariant() + "pt");
                 sb.WriteAttributeString("height", height.ToStringInvariant() + "pt");
                 sb.WriteEndElement();
+
+                if (hasHyperlink)
+                {
+                    sb.WriteEndElement(); // </a>
+                }
             }
         }
         catch (Exception ex)
