@@ -12,6 +12,9 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using V = DocumentFormat.OpenXml.Vml;
+using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using A = DocumentFormat.OpenXml.Drawing;
+using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace DocSharp.Docx;
 
@@ -34,6 +37,12 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
     /// Set this property to false to ignore footnotes and endnotes.
     /// </summary>
     public bool ExportFootnotesEndnotes { get; set; } = true;
+
+    /// <summary>
+    /// Sets whether the image description or alternate text (if available) 
+    /// should be written in the output plain text instead of the image (default is false). 
+    /// </summary>
+    public bool WriteImageDescription { get; set; } = false;
 
     internal override void ProcessDocument(Document document, TxtStringWriter sb)
     {
@@ -449,6 +458,24 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             foreach (var element in txbxContent.Elements())
             {
                 ProcessBodyElement(element, sb);
+            }
+        }
+        else if (WriteImageDescription && drawing.Descendants<Pic.Picture>().FirstOrDefault() is Pic.Picture pic)
+        {
+            string? altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Description?.Value;
+            if (string.IsNullOrWhiteSpace(altText))
+            {
+                altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Title?.Value;
+            }
+            if (string.IsNullOrWhiteSpace(altText))
+            {
+                altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Name?.Value;
+            }
+            if (!string.IsNullOrWhiteSpace(altText))
+            {
+                EnsureEmptyLine(sb);
+                sb.WriteLine(altText);
+                sb.WriteLine();
             }
         }
     }

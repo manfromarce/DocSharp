@@ -89,5 +89,21 @@ public sealed class MarkdownStringWriter : BaseStringWriter
             return (lastChar == '*' || lastChar == '~' || lastChar == '_') && previousChar != '\\';
         }
     }
-   
+
+    public void WriteHyperlink(string displayText, string target, bool isAnchor, string? tooltip)
+    {
+        if (isAnchor)
+            target = "#" + target;
+        else
+            // Microsoft Word usually escapes spaces in the relationship, but we ensure it here.
+            target = target.Replace(" ", "%20");
+
+        Write($"[{displayText}]({target}");
+        if (!string.IsNullOrWhiteSpace(tooltip))
+        {
+            // Escape quotes (if any) and remove new line chars, they are not supported in tooltips.
+            Write($" \"{tooltip!.Replace("\"", "\\\"").ReplaceLineEndings(string.Empty)}\"");
+        }
+        Write(')');
+    }
 }

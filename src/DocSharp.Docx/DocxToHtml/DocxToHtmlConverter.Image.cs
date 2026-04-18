@@ -33,7 +33,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     /// </summary>
     public ImageLayoutType SupportedImagesLayout { get; set; } = ImageLayoutType.Inline;
 
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? altText = null)
     {
         try
         {
@@ -81,7 +81,10 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 // If the image is not inline, write it as a block.
                 sb.WriteAttributeString("style", isInline ? "display:inline;" : "display:block;");
 
-                sb.WriteAttributeString("alt", relId);
+                // Write alt text if available
+                if (!string.IsNullOrWhiteSpace(altText))
+                    sb.WriteAttributeString("alt", altText);
+
                 sb.WriteAttributeString("width", width.ToStringInvariant() + "pt");
                 sb.WriteAttributeString("height", height.ToStringInvariant() + "pt");
                 sb.WriteEndElement();

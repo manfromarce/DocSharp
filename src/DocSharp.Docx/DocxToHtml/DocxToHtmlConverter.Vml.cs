@@ -69,7 +69,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 if (width > 0 && height > 0)
                 {
                     var rootPart = OpenXmlHelpers.GetRootPart(element);
-                    ProcessImagePart(rootPart, relId, width, height, sb, true, null, null);
+                    ProcessImagePart(rootPart, relId, width, height, sb, true, null, null, null);
                 }
             }
         }

@@ -25,8 +25,8 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         if (drawing.IsLayoutSupported(this.SupportedImagesLayout))
         {
-            var extent = drawing.Descendants<Wp.Extent>().FirstOrDefault();
-
+            var extent = drawing.Inline?.Extent ?? drawing.Anchor?.Extent;
+            
             string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id?.Value;
             string? hyperlinkUrl = null;
             string? hyperlinkTooltip = null;
@@ -36,7 +36,8 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 hyperlinkTooltip = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Tooltip?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Tooltip?.Value;
             }
 
-            var graphicData = drawing.Descendants<A.GraphicData>().FirstOrDefault();
+            var graphic = drawing.Inline?.Graphic ?? drawing.Anchor?.GetFirstChild<A.Graphic>();
+            var graphicData = graphic?.GraphicData;
             if (graphicData != null && extent?.Cx != null && extent?.Cy != null)
             {
                 double width = extent.Cx.Value / 12700.0; // Convert EMUs to points
@@ -44,26 +45,35 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
                 if (graphicData.GetFirstChild<Pic.Picture>() is Pic.Picture pic)
                 {
+                    string? altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Description?.Value;
+                    if (string.IsNullOrWhiteSpace(altText))
+                    {
+                        altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Title?.Value;
+                    }
+                    if (string.IsNullOrWhiteSpace(altText))
+                    {
+                        altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Name?.Value;
+                    }
                     if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip)
                     {
-                        ProcessPictureFill(blip, drawing, width, height, sb, drawing.Inline != null, hyperlinkUrl, hyperlinkTooltip);
+                        ProcessPictureFill(blip, drawing, width, height, sb, drawing.Inline != null, hyperlinkUrl, hyperlinkTooltip, altText);
                     }
                 }
             }
         }
     }
 
-    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null)
+    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? altText = null)
     {
         if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
             svgBlip.Embed?.Value is string svgRelId)
         {
             // Prefer the actual SVG image as web browsers can display it.
-            ProcessImagePart(drawing.GetRootPart(), svgRelId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip);
+            ProcessImagePart(drawing.GetRootPart(), svgRelId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip, altText);
         }
         else if (blip.Embed?.Value is string relId)
         {
-            ProcessImagePart(drawing.GetRootPart(), relId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip);
+            ProcessImagePart(drawing.GetRootPart(), relId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip, altText);
         }
     }
 }

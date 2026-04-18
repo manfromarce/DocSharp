@@ -15,6 +15,8 @@ using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DrawingML = DocumentFormat.OpenXml.Drawing;
 using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using A = DocumentFormat.OpenXml.Drawing;
+using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 using M = DocumentFormat.OpenXml.Math;
 using Path = System.IO.Path;
 
@@ -588,31 +590,13 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         {
             if (hyperlink.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
-                WriteHyperlink(displayTextBuilder.ToString(), relationship.Uri.OriginalString, false, hyperlink.Tooltip?.Value, sb);
+                sb.WriteHyperlink(displayTextBuilder.ToString(), relationship.Uri.OriginalString, false, hyperlink.Tooltip?.Value);
             }
         }
         else if (hyperlink.Anchor?.Value is string anchor)
         {
-            WriteHyperlink(displayTextBuilder.ToString(), anchor, true, hyperlink.Tooltip?.Value, sb);
+            sb.WriteHyperlink(displayTextBuilder.ToString(), anchor, true, hyperlink.Tooltip?.Value);
         }
-    }
-
-    internal void WriteHyperlink(string displayText, string target, bool isAnchor, string? tooltip, MarkdownStringWriter sb)
-    {
-        if (isAnchor)
-            target = "#" + target;
-        else
-            // Microsoft Word already escapes spaces, but other DOCX writers may not do it, 
-            // causing the link not to be recognized properly by some Markdown processors.
-            target = target.Replace(" ", "%20");
-
-        sb.Write($"[{displayText}]({target}");
-        if (!string.IsNullOrWhiteSpace(tooltip))
-        {
-            // Escape quotes (if any) and remove new line chars, they are not supported in tooltips.
-            sb.Write($" \"{tooltip!.Replace("\"", "\\\"").ReplaceLineEndings(string.Empty)}\"");
-        }
-        sb.Write(')');
     }
 
     internal override void ProcessDrawing(Drawing drawing, MarkdownStringWriter sb)
@@ -621,20 +605,51 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         {
             if (drawing.IsLayoutSupported(this.SupportedImagesLayout))
             {
-                if (drawing.Descendants<DrawingML.Blip>().FirstOrDefault() is DrawingML.Blip blip)
+                string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id?.Value;
+                string? hyperlinkUrl = null;
+                string? hyperlinkTooltip = null;            
+                if (hyperlinkId != null && drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
                 {
-                    string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id?.Value;
-                    string? tooltip = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Tooltip?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Tooltip?.Value;
+                    hyperlinkUrl = relationship.Uri.OriginalString;
+                    hyperlinkTooltip = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Tooltip?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Tooltip?.Value;
+                }
 
-                    if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
-                        svgBlip.Embed?.Value is string svgRelId)
+                var graphic = drawing.Inline?.Graphic ?? drawing.Anchor?.GetFirstChild<A.Graphic>();
+                var graphicData = graphic?.GraphicData;
+
+                if (graphicData != null)
+                {
+                    if (graphicData.GetFirstChild<Pic.Picture>() is Pic.Picture pic)
                     {
-                        // Prefer the actual SVG image as web browsers can display it.
-                        ProcessImagePart(drawing.GetRootPart(), svgRelId, sb, drawing.Inline != null, hyperlinkId, tooltip);
-                    }
-                    else if (blip.Embed?.Value is string relId)
-                    {
-                        ProcessImagePart(drawing.GetRootPart(), relId, sb, drawing.Inline != null, hyperlinkId, tooltip);
+                        // In Markdown, give precedence to title (if available) rather than long description.
+                        string? altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Description?.Value;
+                        if (string.IsNullOrWhiteSpace(altText))
+                        {
+                            altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Title?.Value;
+                        }
+                        if (string.IsNullOrWhiteSpace(altText))
+                        {
+                            altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Name?.Value;
+                        }
+                        // Ensure there aren't any characters that would disrupt the markdown syntax.
+                        if (!string.IsNullOrWhiteSpace(altText))
+                        {
+                            altText = altText.ReplaceAll(['\r', '\n', '[', ']'], ' ').Replace("(", "\\(").Replace(")", "\\)");
+                        }
+
+                        if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip)
+                        {
+                            if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
+                                svgBlip.Embed?.Value is string svgRelId)
+                            {
+                                // Prefer the actual SVG image as web browsers can display it.
+                                ProcessImagePart(drawing.GetRootPart(), svgRelId, sb, drawing.Inline != null, hyperlinkUrl, hyperlinkTooltip, altText);
+                            }
+                            else if (blip.Embed?.Value is string relId)
+                            {
+                                ProcessImagePart(drawing.GetRootPart(), relId, sb, drawing.Inline != null, hyperlinkId, hyperlinkTooltip, altText);
+                            }
+                        }
                     }
                 }
             }
@@ -655,7 +670,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         }
     }
 
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, MarkdownStringWriter sb, bool isInline, string? hyperlinkId = null, string? hyperlinkTooltip = null)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, MarkdownStringWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? title = null)
     {
         try
         {
@@ -741,15 +756,14 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     {
                         sb.EnsureEmptyLine();
                     }
-                    if (hyperlinkId != null && rootPart.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+                    title ??= $"Image {relId}";
+                    if (!string.IsNullOrWhiteSpace(hyperlinkUrl)) // Image with hyperlink
                     {
-                        // Image with hyperlink
-                        WriteHyperlink($"![{relId}]({uri.ToString().Replace(" ", "%20")})", relationship.Uri.OriginalString, false, hyperlinkTooltip, sb);
+                        sb.WriteHyperlink($"![{title}]({uri.ToString().Replace(" ", "%20")})", hyperlinkUrl, false, hyperlinkTooltip);
                     }
-                    else
+                    else // Regular image
                     {
-                        // Regular image
-                        sb.Write($"![{relId}]({uri.ToString().Replace(" ", "%20")})");
+                        sb.Write($"![{title}]({uri.ToString().Replace(" ", "%20")})");
                     }
                     if (!isInline)
                     {
