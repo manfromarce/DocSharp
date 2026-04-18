@@ -11,8 +11,7 @@ public static class HyperlinkHelpers
     {
         if (hyperlink.Id?.Value is string rId)
         {
-            var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
-            if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+            if (hyperlink.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 return relationship.Uri.OriginalString;
             }
@@ -22,12 +21,12 @@ public static class HyperlinkHelpers
 
     public static void SetUrl(this Hyperlink hyperlink, string url)
     {
-        if (OpenXmlHelpers.GetMainDocumentPart(hyperlink) is MainDocumentPart mainPart)
+        if (hyperlink.GetRootPart() is OpenXmlPart part)
         {
-            if (hyperlink.Id?.Value is string rId && mainPart.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
-                mainPart.DeleteReferenceRelationship(relationship);
+            if (hyperlink.Id?.Value is string rId && part.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+                part.DeleteReferenceRelationship(relationship);
 
-            var rel = mainPart.AddHyperlinkRelationship(new Uri(url), true);
+            var rel = part.AddHyperlinkRelationship(new Uri(url), true);
             hyperlink.Anchor = null;
             hyperlink.Id = rel.Id;
         }
@@ -44,10 +43,10 @@ public static class HyperlinkHelpers
 
     public static void SetAnchor(this Hyperlink hyperlink, string anchor)
     {
-        if (OpenXmlHelpers.GetMainDocumentPart(hyperlink) is MainDocumentPart mainPart)
+        if (hyperlink.GetRootPart() is OpenXmlPart part)
         {
-            if (hyperlink.Id?.Value is string rId && mainPart.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
-                mainPart.DeleteReferenceRelationship(relationship);
+            if (hyperlink.Id?.Value is string rId && part.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+                part.DeleteReferenceRelationship(relationship);
 
             hyperlink.Anchor = anchor;
             hyperlink.Id = null;

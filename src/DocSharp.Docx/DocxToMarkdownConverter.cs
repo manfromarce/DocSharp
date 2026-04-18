@@ -586,8 +586,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
         if (hyperlink.Id?.Value is string rId)
         {
-            var mainPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
-            if (mainPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+            if (hyperlink.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 WriteHyperlink(displayTextBuilder.ToString(), relationship.Uri.OriginalString, false, hyperlink.Tooltip?.Value, sb);
             }
@@ -742,8 +741,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                     {
                         sb.EnsureEmptyLine();
                     }
-                    if (hyperlinkId != null &&
-                        (rootPart.OpenXmlPackage as WordprocessingDocument)?.MainDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+                    if (hyperlinkId != null && rootPart.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
                     {
                         // Image with hyperlink
                         WriteHyperlink($"![{relId}]({uri.ToString().Replace(" ", "%20")})", relationship.Uri.OriginalString, false, hyperlinkTooltip, sb);

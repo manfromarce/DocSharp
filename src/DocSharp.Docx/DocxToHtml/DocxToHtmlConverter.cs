@@ -339,8 +339,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         bool hasUrl = false;
         if (hyperlink.Id?.Value is string rId)
         {
-            var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
-            if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+            if (hyperlink.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 string url = relationship.Uri.OriginalString.Replace(" ", "%20");
                 hasUrl = true;

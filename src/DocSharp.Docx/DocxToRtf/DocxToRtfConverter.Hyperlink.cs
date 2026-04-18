@@ -15,8 +15,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         sb.Write(@"{\field{\*\fldinst{HYPERLINK ");
         if (hyperlink.Id?.Value is string rId)
         {
-            var maindDocumentPart = OpenXmlHelpers.GetMainDocumentPart(hyperlink);
-            if (maindDocumentPart?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
+            if (hyperlink.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == rId) is HyperlinkRelationship relationship)
             {
                 sb.Write(@"""");
                 // Escape chars that are valid for filenames but not valid in RTF,

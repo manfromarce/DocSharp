@@ -30,8 +30,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id?.Value;
             string? hyperlinkUrl = null;
             string? hyperlinkTooltip = null;
-            if (hyperlinkId != null &&
-                drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+            if (hyperlinkId != null && drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
             {
                 hyperlinkUrl = relationship.Uri.OriginalString;
                 hyperlinkTooltip = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Tooltip?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Tooltip?.Value;

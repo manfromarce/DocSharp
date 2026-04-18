@@ -38,18 +38,18 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
                 if (graphicData.GetFirstChild<Pic.Picture>() is Pic.Picture pic)
                 {
-                    if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip && drawing.GetMainDocumentPart() is MainDocumentPart mainPart)
+                    if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip && drawing.GetRootPart() is OpenXmlPart rootPart)
                     {
                         QuestPdfImage? image = null;
                         if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
                             svgBlip.Embed?.Value is string svgRelId && 
-                            mainPart?.TryGetPartById(svgRelId!, out OpenXmlPart? svgPart) == true && svgPart is ImagePart svgImagePart)
+                            rootPart?.TryGetPartById(svgRelId!, out OpenXmlPart? svgPart) == true && svgPart is ImagePart svgImagePart)
                         {
                             string svgText = svgImagePart.GetStream().ReadStreamToEndAsText();
                             image = new QuestPdfImage(svgText, width, height);
                         }
                         else if (blip.Embed?.Value is string relId && 
-                                 mainPart?.TryGetPartById(relId!, out OpenXmlPart? part) == true && part is ImagePart imagePart)
+                                 rootPart?.TryGetPartById(relId!, out OpenXmlPart? part) == true && part is ImagePart imagePart)
                         {
                             // Use bytes, as the stream is disposed by the time the QuestPdfModel is rendered.
                             var bytes = imagePart.GetStream().ReadStreamToEnd();
@@ -106,9 +106,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                         }
                     }
                 }
-                if (width > 0 && height > 0 && element.GetMainDocumentPart() is MainDocumentPart mainPart)
+                if (width > 0 && height > 0 && element.GetRootPart() is OpenXmlPart rootPart)
                 {
-                    if (mainPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
+                    if (rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
                     {
                         // Use bytes, as the stream is disposed by the time the QuestPdfModel is rendered.
                         byte[] bytes = imagePart.GetStream().ReadStreamToEnd();
