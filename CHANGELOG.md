@@ -11,6 +11,7 @@
 - Optionally write alternate text (if available) in place of images in DOCX ➡️ plain text converter
 - Support for grouped shapes and drawing canvas in DOCX ➡️ RTF converter
 - Fix: "pseudo inline" shapes created an incorrect layout in DOCX ➡️ RTF converter
+- Fix: SchemeColor were incorrectly mapped in DOCX ➡️ RTF converter
 
 ## 0.18.1 - 2026.04.10
 

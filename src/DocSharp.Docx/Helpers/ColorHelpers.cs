@@ -916,9 +916,9 @@ public static class ColorHelpers
 
     public static string ConvertPresetColorToHex(A.PresetColor presetColor)
     {
-        if (presetColor.Val != null)
+        if (presetColor.Val?.InnerText != null)
         {
-            string? hex = ConvertNamedColorToHex(presetColor.Val.Value.ToString());
+            string? hex = ConvertNamedColorToHex(presetColor.Val.InnerText);
             if (!string.IsNullOrEmpty(hex))
             {
                 string finalColor = ApplyAdjustments(hex!, presetColor, out int alpha);
@@ -936,110 +936,99 @@ public static class ColorHelpers
         // - don't use IsEmpty or IsNamedColor to check the result, as they return true for invalid names too
         if (color.IsKnownColor)
             return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
-        else if (name.Equals(A.PresetColorValues.DarkBlue.ToString(), StringComparison.OrdinalIgnoreCase))
-            // DarkBlue is "dkBlue" that is not recognized by System.Drawing, while DarkBlue2010 is "darkBlue" that is recognized.
-            // The same applies to most of the others.
+        // Open XML also accepts "dk" in place of "dark", "lt" in place of "light" and "grey" in place of "gray", 
+        // but these are not recognized by .NET as they are not standard HTML names, 
+        // so we need to map them manually. 
+        else if (name.Equals("dkBlue", StringComparison.OrdinalIgnoreCase))
             return "#00008B";
-        else if (name.Equals(A.PresetColorValues.DarkCyan.ToString(), StringComparison.OrdinalIgnoreCase))
+        else if (name.Equals("dkCyan", StringComparison.OrdinalIgnoreCase))
             return "#008B8B";
-        else if (name.Equals(A.PresetColorValues.DarkGoldenrod.ToString(), StringComparison.OrdinalIgnoreCase))
+        else if (name.Equals("dkGoldenrod", StringComparison.OrdinalIgnoreCase))
             return "#B8860B";
-        else if (name.Equals(A.PresetColorValues.DarkGray.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#A9A9A9";
-        else if (name.Equals(A.PresetColorValues.DarkGreen.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#006400";
-        else if (name.Equals(A.PresetColorValues.DarkGrey.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#A9A9A9";
-        else if (name.Equals(A.PresetColorValues.DarkKhaki.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#BDB76B";
-        else if (name.Equals(A.PresetColorValues.DarkMagenta.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#8B008B";
-        else if (name.Equals(A.PresetColorValues.DarkOliveGreen.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#556B2F";
-        else if (name.Equals(A.PresetColorValues.DarkOrange.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#FF8C00";
-        else if (name.Equals(A.PresetColorValues.DarkOrchid.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#9932CC";
-        else if (name.Equals(A.PresetColorValues.DarkRed.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#8B0000";
-        else if (name.Equals(A.PresetColorValues.DarkSalmon.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#E9967A";
-        else if (name.Equals(A.PresetColorValues.DarkSeaGreen.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#8FBC8B";
-        else if (name.Equals(A.PresetColorValues.DarkSlateBlue.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#483D8B";
-        else if (name.Equals(A.PresetColorValues.DarkSlateGray.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#2F4F4F";
-        else if (name.Equals(A.PresetColorValues.DarkSlateGrey.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#2F4F4F";
-        else if (name.Equals(A.PresetColorValues.DarkTurquoise.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#00CED1";
-        else if (name.Equals(A.PresetColorValues.DarkViolet.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#9400D3";
-        else if (name.Equals(A.PresetColorValues.LightBlue.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#ADD8E6";
-        else if (name.Equals(A.PresetColorValues.LightCoral.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#F08080";
-        else if (name.Equals(A.PresetColorValues.LightCyan.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#E0FFFF";
-        else if (name.Equals(A.PresetColorValues.LightGoldenrodYellow.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#FAFAD2";
-        else if (name.Equals(A.PresetColorValues.LightGray.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#D3D3D3";
-        else if (name.Equals(A.PresetColorValues.LightGrey.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#D3D3D3";
-        else if (name.Equals(A.PresetColorValues.LightPink.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#FFB6C1";
-        else if (name.Equals(A.PresetColorValues.LightSalmon.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#FFA07A";
-        else if (name.Equals(A.PresetColorValues.LightSeaGreen.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#20B2AA";
-        else if (name.Equals(A.PresetColorValues.LightSkyBlue.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#87CEFA";
-        else if (name.Equals(A.PresetColorValues.LightSlateGray.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#778899";
-        else if (name.Equals(A.PresetColorValues.LightSlateGrey.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#778899";
-        else if (name.Equals(A.PresetColorValues.LightSteelBlue.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#B0C4DE";
-        else if (name.Equals(A.PresetColorValues.LightYellow.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#FFFFE0";
-        else if (name.Equals(A.PresetColorValues.MedAquamarine.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#66CDAA";
-        else if (name.Equals(A.PresetColorValues.MediumBlue.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#0000CD";
-        else if (name.Equals(A.PresetColorValues.MediumOrchid.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#BA55D3";
-        else if (name.Equals(A.PresetColorValues.MediumPurple.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#9370DB";
-        else if (name.Equals(A.PresetColorValues.MediumSeaGreen.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#3CB371";
-        else if (name.Equals(A.PresetColorValues.MediumSlateBlue.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#7B68EE";
-        else if (name.Equals(A.PresetColorValues.MediumSpringGreen.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#00FA9A";
-        else if (name.Equals(A.PresetColorValues.MediumTurquoise.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#48D1CC";
-        else if (name.Equals(A.PresetColorValues.MediumVioletRed.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#C71585";
-
-        else if (name.Equals(A.PresetColorValues.Grey.ToString(), StringComparison.OrdinalIgnoreCase))
-            // "grey" is not recognized because it should be "gray" in HTML (while Open XML accepts both), 
-            // the same applies to the following values.
+        else if (name.Equals("grey", StringComparison.OrdinalIgnoreCase))
             return "#808080";
-        else if (name.Equals(A.PresetColorValues.DarkGrey2010.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#A9A9A9";
-        else if (name.Equals(A.PresetColorValues.DarkSlateGrey2010.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#2F4F4F";
-        else if (name.Equals(A.PresetColorValues.DimGrey.ToString(), StringComparison.OrdinalIgnoreCase))
+        else if (name.Equals("dimGrey", StringComparison.OrdinalIgnoreCase))
             return "#696969";
-        else if (name.Equals(A.PresetColorValues.LightGrey2010.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#D3D3D3";
-        else if (name.Equals(A.PresetColorValues.LightSlateGrey2010.ToString(), StringComparison.OrdinalIgnoreCase))
-            return "#778899";
-        else if (name.Equals(A.PresetColorValues.SlateGrey.ToString(), StringComparison.OrdinalIgnoreCase))
+        else if (name.Equals("slateGrey", StringComparison.OrdinalIgnoreCase))
             return "#708090";
-
+        else if (name.Equals("dkGray", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("dkGrey", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("darkGrey", StringComparison.OrdinalIgnoreCase))
+            return "#A9A9A9";
+        else if (name.Equals("ltGray", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("ltGrey", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("lightGrey", StringComparison.OrdinalIgnoreCase))
+            return "#D3D3D3";
+        else if (name.Equals("darkSlateGrey", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("dkSlateGray", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("dkSlateGrey", StringComparison.OrdinalIgnoreCase))
+            return "#2F4F4F";
+        else if (name.Equals("ltSlateGray", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("ltSlateGrey", StringComparison.OrdinalIgnoreCase) || 
+                 name.Equals("lightSlateGrey", StringComparison.OrdinalIgnoreCase))
+            return "#778899";
+        else if (name.Equals("dkGreen", StringComparison.OrdinalIgnoreCase))
+            return "#006400";
+        else if (name.Equals("dkKhaki", StringComparison.OrdinalIgnoreCase))
+            return "#BDB76B";
+        else if (name.Equals("dkMagenta", StringComparison.OrdinalIgnoreCase))
+            return "#8B008B";
+        else if (name.Equals("dkOliveGreen", StringComparison.OrdinalIgnoreCase))
+            return "#556B2F";
+        else if (name.Equals("dkOrange", StringComparison.OrdinalIgnoreCase))
+            return "#FF8C00";
+        else if (name.Equals("dkOrchid", StringComparison.OrdinalIgnoreCase))
+            return "#9932CC";
+        else if (name.Equals("dkRed", StringComparison.OrdinalIgnoreCase))
+            return "#8B0000";
+        else if (name.Equals("dkSalmon", StringComparison.OrdinalIgnoreCase))
+            return "#E9967A";
+        else if (name.Equals("dkSeaGreen", StringComparison.OrdinalIgnoreCase))
+            return "#8FBC8B";
+        else if (name.Equals("dkSlateBlue", StringComparison.OrdinalIgnoreCase))
+            return "#483D8B";
+        else if (name.Equals("dkTurquoise", StringComparison.OrdinalIgnoreCase))
+            return "#00CED1";
+        else if (name.Equals("dkViolet", StringComparison.OrdinalIgnoreCase))
+            return "#9400D3";
+        else if (name.Equals("ltBlue", StringComparison.OrdinalIgnoreCase))
+            return "#ADD8E6";
+        else if (name.Equals("ltCoral", StringComparison.OrdinalIgnoreCase))
+            return "#F08080";
+        else if (name.Equals("ltCyan", StringComparison.OrdinalIgnoreCase))
+            return "#E0FFFF";
+        else if (name.Equals("ltGoldenrodYellow", StringComparison.OrdinalIgnoreCase))
+            return "#FAFAD2";
+        else if (name.Equals("ltPink", StringComparison.OrdinalIgnoreCase))
+            return "#FFB6C1";
+        else if (name.Equals("ltSalmon", StringComparison.OrdinalIgnoreCase))
+            return "#FFA07A";
+        else if (name.Equals("ltSeaGreen", StringComparison.OrdinalIgnoreCase))
+            return "#20B2AA";
+        else if (name.Equals("ltSkyBlue", StringComparison.OrdinalIgnoreCase))
+            return "#87CEFA";
+        else if (name.Equals("ltSteelBlue", StringComparison.OrdinalIgnoreCase))
+            return "#B0C4DE";
+        else if (name.Equals("ltYellow", StringComparison.OrdinalIgnoreCase))
+            return "#FFFFE0";
+        else if (name.Equals("medAquamarine", StringComparison.OrdinalIgnoreCase))
+            return "#66CDAA";
+        else if (name.Equals("medBlue", StringComparison.OrdinalIgnoreCase))
+            return "#0000CD";
+        else if (name.Equals("medOrchid", StringComparison.OrdinalIgnoreCase))
+            return "#BA55D3";
+        else if (name.Equals("medPurple", StringComparison.OrdinalIgnoreCase))
+            return "#9370DB";
+        else if (name.Equals("medSeaGreen", StringComparison.OrdinalIgnoreCase))
+            return "#3CB371";
+        else if (name.Equals("medSlateBlue", StringComparison.OrdinalIgnoreCase))
+            return "#7B68EE";
+        else if (name.Equals("medSpringGreen", StringComparison.OrdinalIgnoreCase))
+            return "#00FA9A";
+        else if (name.Equals("medTurquoise", StringComparison.OrdinalIgnoreCase))
+            return "#48D1CC";
+        else if (name.Equals("medVioletRed", StringComparison.OrdinalIgnoreCase))
+            return "#C71585";
         else
             return null;
     }
