@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
-using Pictures = DocumentFormat.OpenXml.Drawing.Pictures;
+using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 using Wp14 = DocumentFormat.OpenXml.Office2010.Word.Drawing;
 using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 using Wpc = DocumentFormat.OpenXml.Office2010.Word.DrawingCanvas;
@@ -27,7 +27,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 {
     internal override bool IsSupportedGraphicData(A.GraphicData graphicData)
     {
-        return graphicData.GetFirstChild<Pictures.Picture>() != null ||
+        return graphicData.GetFirstChild<Pic.Picture>() != null ||
                graphicData.GetFirstChild<Wps.WordprocessingShape>() != null ||
                graphicData.GetFirstChild<Wpc.WordprocessingCanvas>() != null ||
                graphicData.GetFirstChild<Wpg.WordprocessingGroup>() != null;
@@ -51,13 +51,37 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         if (extent == null || extent.Cx == null || extent.Cy == null)
             return; // Dimensions must be specified
 
-        string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id;
-        ProcessNonVisualGraphicFrameDrawingProperties(drawing.Inline?.NonVisualGraphicFrameDrawingProperties ?? drawing.Anchor?.GetFirstChild<Wp.NonVisualGraphicFrameDrawingProperties>(), sb);
+        ProcessShapes(graphicData, drawing, sb, false, ignoreWrapLayouts, extent);
 
-        ProcessShapes(graphicData, drawing, sb, false, ignoreWrapLayouts, extent, hyperlinkId);
+        // Inline shapes that are not pictures require some "tricks" in RTF
+        // to ensure that subsequent text content does not overlap with the shape.
+        bool isPseudoInline = drawing.Inline != null && graphicData.FirstChild is not Pic.Picture;
+        if (isPseudoInline)
+        {
+            long width = drawing.Inline?.Extent?.Cx ?? 0;
+            long height = drawing.Inline?.Extent?.Cy ?? 0;
+            long widthInTwips = Math.Max((long)Math.Round(width / 635m), 1);
+            long heightInTwips = Math.Max((long)Math.Round(height / 635m), 1);
+            WritePseudoInlinePlaceholder(widthInTwips, heightInTwips,sb);
+        }
     }
 
-    private void ProcessGroupProperties(Wpg.WordprocessingGroupType group, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent, string? hyperlinkId = null)
+    private void WritePseudoInlinePlaceholder(long width, long height, RtfStringWriter sb)
+    {
+        sb.Write(@$"{{\pict{{\*\picprop\defshp{{\sp{{\sn shapeType}}{{\sv 75}}}}{{\sp{{\sn fFlipH}}{{\sv 0}}}}{{\sp{{\sn fFlipV}}{{\sv 0}}}}{{\sp{{\sn fPseudoInline}}{{\sv 1}}}}{{\sp{{\sn fLayoutInCell}}{{\sv 1}}}}
+{{\sp{{\sn fLockPosition}}{{\sv 1}}}}{{\sp{{\sn fLockRotation}}{{\sv 1}}}}}}\picscalex100\picscaley100\piccropl0\piccropr0\piccropt-5039\piccropb5039
+\picw{width.ToStringInvariant()}\pich{height.ToStringInvariant()}\picwgoal{width.ToStringInvariant()}\pichgoal{height.ToStringInvariant()}\wmetafile8
+010009000003f100000003001c00000000000400000003010800050000000b0200000000050000000c023508110e040000002e0118001c000000fb0214000000
+00000000bc02000000000102022253797374656d0000000000000000000000000000000000000000000000000000040000002d0100001c000000fb0214000900
+00000000bc02000000000102022253797374656d0000000000000000000000000000000000000000000000000000040000002d01010004000000f00100001c00
+0000fb021400000000000000bc02000000000102022253797374656d0000000000000000000000000000000000000000000000000000040000002d0100000400
+00002d01010004000000f00100001c000000fb029cff000000000000900100000000044000224170746f73000000000000000000000000000000000000000000
+000000000000040000002d010000040000002d010000040000002d0100000400000002010100050000000902000000020d000000320a5e000000010004000000
+0000100e340820003800050000000902000000021c000000fb02100007000000000090010000000001020222417269616c000000000000000000000000000000000000000000000000000000040000002d010200040000002d010200030000000000}}
+");
+    }
+
+    private void ProcessGroupProperties(Wpg.WordprocessingGroupType group, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent)
     {
         if (!isInGroup)
         {
@@ -69,11 +93,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             else if (drawing.Anchor != null)
             {
                 // Floating/anchored group
-                ProcessDrawingAnchor(drawing.Anchor, sb);
+                ProcessDrawingAnchor(drawing.Anchor, sb,
+                    skipHyperlink: !string.IsNullOrWhiteSpace(group.NonVisualDrawingProperties?.HyperlinkOnClick?.Id));
             }
         }
         ProcessGroupShapeProperties(group.GroupShapeProperties, sb);
-        ProcessNonVisualDrawingProperties(group.NonVisualDrawingProperties, sb, hyperlinkId);
+        ProcessNonVisualDrawingProperties(group.NonVisualDrawingProperties, sb);
         ProcessNonVisualDrawingShapeProperties(group.NonVisualGroupDrawingShapeProperties, sb);
     }
 
@@ -85,7 +110,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // and can be overriden by more specific shape properties. 
         // In RTF, there is no group level formatting, so we have to detect and preserve these 
         // when processing individual shapes. 
-
         ProcessTransform2D(groupShapeProperties?.TransformGroup, sb);
     }
 
@@ -101,7 +125,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             else if (drawing.Anchor != null)
             {
                 // Floating/anchored group
-                ProcessDrawingAnchor(drawing.Anchor, sb);
+                ProcessDrawingAnchor(drawing.Anchor, sb, skipHyperlink: false);
             }
         }
 
@@ -144,17 +168,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    private void ProcessShapes(OpenXmlElement parent, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent, string? hyperlinkId = null)
+    private void ProcessShapes(OpenXmlElement parent, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent)
     {
         foreach(var element in parent.Elements())
         {
-            if (element is Pictures.Picture pic)
+            if (element is Pic.Picture pic)
             {
-                ProcessDrawingPicture(drawing, sb, ignoreWrapLayouts, extent, pic, true, hyperlinkId);
+                ProcessDrawingPicture(drawing, sb, ignoreWrapLayouts, extent, pic, true);
             }
             else if (element is Wps.WordprocessingShape wpShape)
             {
-                ProcessShape(drawing, sb, wpShape, isInGroup, hyperlinkId);
+                ProcessShape(drawing, sb, wpShape, isInGroup);
             }
             else if (element is Wpg.WordprocessingGroupType group)
             // Both Wpg.WordprocessingGroup and Wpg.GroupShape inherit from WordprocessingGroupType.
@@ -167,8 +191,11 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 // Start new shape group destination
                 sb.Write(@"{\shpgrp{\*\shpinst"); // or \shp to create groups inside groups?
                 
+                if (drawing.GetRootPart() is MainDocumentPart)
+                    sb.Write(@"\shpfhdr0");
+
                 // Process group properties
-                ProcessGroupProperties(group, drawing, sb, isInGroup, ignoreWrapLayouts, extent, hyperlinkId);
+                ProcessGroupProperties(group, drawing, sb, isInGroup, ignoreWrapLayouts, extent);
 
                 // Enumerate shapes (including sub-groups)
                 ProcessShapes(group, drawing, sb, true, ignoreWrapLayouts, extent);
@@ -185,12 +212,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             {
                 // Start new shape group destination
                 sb.Write(@"{\shpgrp{\*\shpinst");
+
+                if (drawing.GetRootPart() is MainDocumentPart)
+                    sb.Write(@"\shpfhdr0");
                 
                 // Process canvas properties
                 ProcessCanvasProperties(canvas, drawing, sb, isInGroup, ignoreWrapLayouts, extent);
-
-                // Write hyperlink if present
-                WriteShapeHyperlink(drawing, sb, hyperlinkId);
 
                 // Enumerate shapes (including groups)
                 ProcessShapes(canvas, drawing, sb, true, ignoreWrapLayouts, extent);
@@ -221,7 +248,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    private void ProcessDrawingPicture(Drawing drawing, RtfStringWriter sb, bool ignoreWrapLayouts, Wp.Extent extent, Pictures.Picture pic, bool isInGroup, string? hyperlinkId = null)
+    private void ProcessDrawingPicture(Drawing drawing, RtfStringWriter sb, bool ignoreWrapLayouts, Wp.Extent extent, Pic.Picture pic, bool isInGroup)
     {
         if (extent.Cx == null || extent.Cy == null)
             return; // Dimensions must be specified
@@ -285,19 +312,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 if (rootPart is MainDocumentPart)
                     sb.Write(@"\shpfhdr0");
 
-                // Write position properties
                 if (!isInGroup)
-                {
-                    ProcessDrawingAnchor(drawing.Anchor, sb);
-                }
+                    ProcessDrawingAnchor(drawing.Anchor, sb, 
+                        skipHyperlink: !string.IsNullOrWhiteSpace(pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.HyperlinkOnClick?.Id));
+
+                ProcessNonVisualDrawingShapeProperties(pic.NonVisualPictureProperties?.NonVisualPictureDrawingProperties, sb);
+                ProcessNonVisualDrawingProperties(pic.NonVisualPictureProperties?.NonVisualDrawingProperties, sb);
 
                 // Write generic shape properties 
-                // (process after inline so that all standard control words such as \shpleft have been written
+                // (process after Anchor so that all standard control words such as \shpleft have been written
                 // before writing {\sp ...} groups)
                 sb.Write(shapeProperties);
-
-                // Write non visual properties (currently hyperlink only)
-                ProcessNonVisualDrawingProperties(pic.NonVisualPictureProperties?.NonVisualDrawingProperties, sb, hyperlinkId);
 
                 // Write the pict group itself.
                 sb.Write(@"{\sp{\sn pib}{\sv ");
@@ -325,12 +350,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    private void ProcessShape(Drawing drawing, RtfStringWriter sb, Wps.WordprocessingShape wpShape, bool isInGroup, string? hyperlinkId = null)
+    private void ProcessShape(Drawing drawing, RtfStringWriter sb, Wps.WordprocessingShape wpShape, bool isInGroup)
     {
         // Open shape destination
         sb.Write(@"{\shp{\*\shpinst");
 
-        var rootPart = OpenXmlHelpers.GetRootPart(drawing);
+        var rootPart = drawing.GetRootPart();
         if (rootPart is MainDocumentPart)
             sb.Write(@"\shpfhdr0");
 
@@ -344,11 +369,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             else if (drawing.Anchor != null)
             {
                 // Floating/anchored shape
-                ProcessDrawingAnchor(drawing.Anchor, sb);
+                ProcessDrawingAnchor(drawing.Anchor, sb, 
+                    skipHyperlink: !string.IsNullOrWhiteSpace(wpShape.NonVisualDrawingProperties?.HyperlinkOnClick?.Id));
             }
         }
 
-        ProcessNonVisualDrawingProperties(wpShape.NonVisualDrawingProperties, sb, hyperlinkId);
+        ProcessNonVisualDrawingProperties(wpShape.NonVisualDrawingProperties, sb);
         ProcessNonVisualDrawingShapeProperties(wpShape.GetFirstChild<Wps.NonVisualDrawingShapeProperties>(), sb);
         // var connectorProperties = wpShape.GetFirstChild<Wps.NonVisualConnectorProperties>();
         var shapeStyle = wpShape.GetFirstChild<Wps.ShapeStyle>();
@@ -382,29 +408,40 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     }
 
     // Unified method for Wps.NonVisualDrawingProperties, Wpg.NonVisualDrawingProperties, Pic.NonVisualDrawingProperties.
-    internal void ProcessNonVisualDrawingProperties(OpenXmlElement? element, RtfStringWriter sb, string? hyperlinkId)
+    internal void ProcessNonVisualDrawingProperties(OpenXmlElement? element, RtfStringWriter sb)
     {
         if (element == null) return; 
-
+    
         var hyperlinkOnClick = element.GetFirstChild<A.HyperlinkOnClick>();
         // var hyperlinkOnHover = element.GetFirstChild<A.HyperlinkOnHover>();
 
         if (!string.IsNullOrWhiteSpace(hyperlinkOnClick?.Id))
         {
-            // Override parent drawing hyperlink in case of conflict
-            hyperlinkId = hyperlinkOnClick.Id;
+            WriteShapeHyperlink(element, sb, hyperlinkOnClick.Id);
         }
-
-        // Write hyperlink if present
-        WriteShapeHyperlink(element, sb, hyperlinkId);
     }
 
+    // Unified method for Wps.NonVisualDrawingShapeProperties, Wpg.NonVisualGroupDrawingShapeProperties, Pic.NonVisualPictureDrawingProperties
     private void ProcessNonVisualDrawingShapeProperties(OpenXmlElement? nonVisualGroupDrawingShapeProperties, RtfStringWriter sb)
     {
     }
 
     internal void ProcessNonVisualGraphicFrameDrawingProperties(Wp.NonVisualGraphicFrameDrawingProperties? nonVisualGraphicFrameDrawingPr, RtfStringWriter sb)
     {
+    }
+
+    private void ProcessDrawingDocProperties(Wp.DocProperties? docProperties, RtfStringWriter sb)
+    {
+        if (docProperties == null) return;
+
+        if (docProperties.Name != null && !string.IsNullOrWhiteSpace(docProperties.Name.Value))
+            sb.WriteShapeProperty("wzName", docProperties.Name.Value!);
+        
+        var hyperlinkOnClick = docProperties.GetFirstChild<A.HyperlinkOnClick>();
+        // var hyperlinkOnHover = docProperties.GetFirstChild<A.HyperlinkOnHover>();
+
+        if (!string.IsNullOrWhiteSpace(hyperlinkOnClick?.Id))
+            WriteShapeHyperlink(docProperties, sb, hyperlinkOnClick.Id);
     }
 
     internal void ProcessTextBodyProperties(Wps.TextBodyProperties? textBodyProperties, RtfStringWriter sb)
@@ -603,7 +640,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     internal (int borderWidth, int borderColor)? ProcessShapeProperties(OpenXmlElement? shapePr, OpenXmlElement? shapeStyle, RtfStringWriter sb, bool isInGroup, bool isPicture = false)
     {
         if (shapePr is not Wps.ShapeProperties &&
-            shapePr is not Pictures.ShapeProperties)
+            shapePr is not Pic.ShapeProperties)
             // Unexpected element
             return null;
 
@@ -713,7 +750,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     internal void ProcessEffects(OpenXmlElement shapePr, A.EffectReference? effectReference, RtfStringWriter sb)
     {
         if (shapePr is not Wps.ShapeProperties &&
-            shapePr is not Pictures.ShapeProperties)
+            shapePr is not Pic.ShapeProperties)
             // Unexpected element
             return;
 
@@ -1584,10 +1621,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     internal void ProcessDrawingInline(Wp.Inline inline, RtfStringWriter sb)
     {
-        // TODO: for inline shapes with "fPseudoInline" in RTF, 
-        // we should also write a pict element of the same size as the shape, 
-        // otherwise RTF readers do not leave space for the shape and it overlaps with text, 
-        // also it's not vertically aligned with text baseline.
         var distT = inline.DistanceFromTop;
         var distB = inline.DistanceFromBottom;
         var distL = inline.DistanceFromLeft;
@@ -1625,6 +1658,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         sb.WriteShapeProperty("posrelh", "3");
         sb.WriteShapeProperty("posrelv", "3");
 
+        ProcessDrawingDocProperties(inline.DocProperties, sb);
+        ProcessNonVisualGraphicFrameDrawingProperties(inline.NonVisualGraphicFrameDrawingProperties, sb);
+
         // Not supported for inlines ? (however set to 0 in tested DOCX files)
         //if (distT != null)
         //{
@@ -1644,7 +1680,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         //}
     }
 
-    internal void ProcessDrawingAnchor(Wp.Anchor anchor, RtfStringWriter sb)
+    internal void ProcessDrawingAnchor(Wp.Anchor anchor, RtfStringWriter sb, bool skipHyperlink)
     {
         var extent = anchor.Extent;
         // var effectExtent = inline.EffectExtent;
@@ -2101,6 +2137,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             // 8 = number of bytes (2 numbers for each pair)
             sb.WriteShapeProperty("pWrapPolygonVertices", $"8;{count};{polygonVertices.ToString().TrimEnd(';')}");
         }
+
+        ProcessDrawingDocProperties(anchor.GetFirstChild<Wp.DocProperties>(), sb);
+        ProcessNonVisualGraphicFrameDrawingProperties(anchor.GetFirstChild<Wp.NonVisualGraphicFrameDrawingProperties>(), sb);
     }
 
     private void WriteShapeHyperlink(OpenXmlElement element, RtfStringWriter sb, string? hyperlinkId = null)
