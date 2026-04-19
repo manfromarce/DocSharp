@@ -44,188 +44,367 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // Drawing -> Inline or Anchor -> Graphic -> GraphicData -> Picture/WordprocessingShape/...
 
         // Check if the structure is valid before proceeding.
-        if (drawing.Inline == null && drawing.Anchor == null)
-            return;
-        var graphicData = drawing.Descendants<A.GraphicData>().FirstOrDefault();
+        var graphicData = (drawing.Inline?.Graphic ?? drawing.Anchor?.GetFirstChild<A.Graphic>())?.GraphicData;
         if (graphicData == null)
             return; 
+        var extent = drawing.Inline?.Extent ?? drawing.Anchor?.Extent;
+        if (extent == null || extent.Cx == null || extent.Cy == null)
+            return; // Dimensions must be specified
 
-        var extent = drawing.Descendants<Wp.Extent>().FirstOrDefault();
-        
-        if (graphicData.GetFirstChild<Pictures.Picture>() is Pictures.Picture pic && 
-            extent?.Cx != null && extent?.Cy != null)
+        string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id;
+        ProcessNonVisualGraphicFrameDrawingProperties(drawing.Inline?.NonVisualGraphicFrameDrawingProperties ?? drawing.Anchor?.GetFirstChild<Wp.NonVisualGraphicFrameDrawingProperties>(), sb);
+
+        ProcessShapes(graphicData, drawing, sb, false, ignoreWrapLayouts, extent, hyperlinkId);
+    }
+
+    private void ProcessGroupProperties(Wpg.WordprocessingGroupType group, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent, string? hyperlinkId = null)
+    {
+        if (!isInGroup)
         {
-            var properties = new PictureProperties();
-
-            // Convert EMUs to twips
-            long w = (long)Math.Round(extent.Cx.Value / 635m);
-            long h = (long)Math.Round(extent.Cy.Value / 635m);
-
-            var blipFill = pic.BlipFill;
-            if (blipFill?.SourceRectangle != null)
+            if (drawing.Inline != null)
             {
-                // Convert relative value used by Open XML to twips
-                if (blipFill.SourceRectangle?.Left != null)
-                {
-                    properties.CropLeft = (long)Math.Round(w * blipFill.SourceRectangle.Left / 100000m);
-                }
-                if (blipFill.SourceRectangle?.Right != null)
-                {
-                    properties.CropRight = (long)Math.Round(w * blipFill.SourceRectangle.Right / 100000m);
-                }
-                if (blipFill.SourceRectangle?.Top != null)
-                {
-                    properties.CropTop = (long)Math.Round(h * blipFill.SourceRectangle.Top / 100000m);
-                }
-                if (blipFill.SourceRectangle?.Bottom != null)
-                {
-                    properties.CropBottom = (long)Math.Round(h * blipFill.SourceRectangle.Bottom / 100000m);
-                }
+                // Inline group
+                ProcessDrawingInline(drawing.Inline, sb);
             }
-            // In RTF width and height should not be decreased by the crop value.
-            properties.Width = w + properties.CropLeft + properties.CropRight;
-            properties.Height = h + properties.CropTop + properties.CropBottom;
-            properties.WidthGoal = properties.Width;
-            properties.HeightGoal = properties.Height;
-
-            if (blipFill?.Blip?.Embed?.Value is string relId)
+            else if (drawing.Anchor != null)
             {
-                var rootPart = OpenXmlHelpers.GetRootPart(drawing);
+                // Floating/anchored group
+                ProcessDrawingAnchor(drawing.Anchor, sb);
+            }
+        }
+        ProcessGroupShapeProperties(group.GroupShapeProperties, sb);
+        ProcessNonVisualDrawingProperties(group.NonVisualDrawingProperties, sb, hyperlinkId);
+        ProcessNonVisualDrawingShapeProperties(group.NonVisualGroupDrawingShapeProperties, sb);
+    }
 
-                // Generic properties (rotation, flip) and some effects (recolor, shadow, 3D)
-                // are supported for both inline and floating/anchored images.
-                var shapePropertiesBuilder = new RtfStringWriter();
-                var shapeStyle = pic.GetFirstChild<Pic14.ShapeStyle>();
-                var borderInfo = ProcessShapeProperties(pic.ShapeProperties, shapeStyle, shapePropertiesBuilder, true);
-                ProcessBlipEffects(blipFill.Blip, shapePropertiesBuilder);
-                string shapeProperties = shapePropertiesBuilder.ToString();
+    private void ProcessGroupShapeProperties(Wpg.GroupShapeProperties? groupShapeProperties, RtfStringWriter sb)
+    {
+        // Compared to Canvas background/whole formatting, group properties are applied to invidual shapes  
+        // instead of the group area as a whole. 
+        // So they act as "default properties" for shapes contained within the group, 
+        // and can be overriden by more specific shape properties. 
+        // In RTF, there is no group level formatting, so we have to detect and preserve these 
+        // when processing individual shapes. 
 
-                if (ignoreWrapLayouts || drawing.Inline != null)
+        ProcessTransform2D(groupShapeProperties?.TransformGroup, sb);
+    }
+
+    private void ProcessCanvasProperties(Wpc.WordprocessingCanvas canvas, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent)
+    {
+        if (!isInGroup)
+        {
+            if (drawing.Inline != null)
+            {
+                // Inline group
+                ProcessDrawingInline(drawing.Inline, sb);
+            }
+            else if (drawing.Anchor != null)
+            {
+                // Floating/anchored group
+                ProcessDrawingAnchor(drawing.Anchor, sb);
+            }
+        }
+
+        // Canvas does not have a Transform2D element, but we need to calculate groupLeft, groupRight, ...
+        // to make the group work properly in RTF. 
+        long left = 0;
+        long top = 0;
+        long width = drawing?.Inline?.Extent?.Cx ?? drawing?.Anchor?.Extent?.Cx ?? 1;
+        long height = drawing?.Inline?.Extent?.Cy ?? drawing?.Anchor?.Extent?.Cy ?? 1;   
+        // These are already in EMUs (when writing \shpleft, \shptop, etc we convert them to twips, 
+        // but for properties of type {\sp} EMUs are correct).
+        sb.WriteShapeProperty("groupLeft", left);
+        sb.WriteShapeProperty("groupTop", top);
+        sb.WriteShapeProperty("groupRight", left + width);
+        sb.WriteShapeProperty("groupBottom", + top + height);
+
+        if (canvas.BackgroundFormatting != null)
+        {
+            // Try to find fill
+            if (canvas.BackgroundFormatting.GetFirstChild<A.NoFill>() is A.NoFill noFill)
+                ProcessFill(noFill, sb);
+            else if (canvas.BackgroundFormatting.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
+                ProcessFill(solidFill, sb);
+            else if (canvas.BackgroundFormatting.GetFirstChild<A.GradientFill>() is A.GradientFill gradientFill)
+                ProcessFill(gradientFill, sb);
+            else if (canvas.BackgroundFormatting.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
+                ProcessFill(patternFill, sb);
+            else if (canvas.BackgroundFormatting.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill)
+                ProcessFill(blipFill, sb);
+            else if (canvas.BackgroundFormatting.GetFirstChild<A.GroupFill>() is A.GroupFill groupFill)
+                ProcessFill(groupFill, sb);
+        }
+        if (canvas.WholeFormatting != null)
+        {
+            // Effects are not currently supported (in other contexts too), so only outline is processed.
+            if (canvas.WholeFormatting.Outline is A.Outline outline)
+            {
+                ProcessOutline(canvas.WholeFormatting.Outline, null, sb, null);
+            }
+        }
+    }
+
+    private void ProcessShapes(OpenXmlElement parent, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent, string? hyperlinkId = null)
+    {
+        foreach(var element in parent.Elements())
+        {
+            if (element is Pictures.Picture pic)
+            {
+                ProcessDrawingPicture(drawing, sb, ignoreWrapLayouts, extent, pic, true, hyperlinkId);
+            }
+            else if (element is Wps.WordprocessingShape wpShape)
+            {
+                ProcessShape(drawing, sb, wpShape, isInGroup, hyperlinkId);
+            }
+            else if (element is Wpg.WordprocessingGroupType group)
+            // Both Wpg.WordprocessingGroup and Wpg.GroupShape inherit from WordprocessingGroupType.
+            // They have the same child elements but: 
+            // - WordprocessingGroup is used for the top level group (inside GraphicData or WordprocessingCanvas), 
+            // - GroupShape is used for nested groups (inside WordprocessingGroup)
+            //
+            // Canvas cannot be nested inside a groupo or another canvas.
+            {
+                // Start new shape group destination
+                sb.Write(@"{\shpgrp{\*\shpinst"); // or \shp to create groups inside groups?
+                
+                // Process group properties
+                ProcessGroupProperties(group, drawing, sb, isInGroup, ignoreWrapLayouts, extent, hyperlinkId);
+
+                // Enumerate shapes (including sub-groups)
+                ProcessShapes(group, drawing, sb, true, ignoreWrapLayouts, extent);
+                
+                // Close shape instruction and open shape result
+                sb.Write(@"}{\shprslt ");
+
+                // TODO: write fallback for RTF reader that don't support shapes.
+                // Microsoft Word writes a Word 95/6.0 drawing object {\*\do ...}.
+
+                sb.WriteLine("}}"); // Close shape result and shape group destination
+            }
+            else if (element is Wpc.WordprocessingCanvas canvas)
+            {
+                // Start new shape group destination
+                sb.Write(@"{\shpgrp{\*\shpinst");
+                
+                // Process canvas properties
+                ProcessCanvasProperties(canvas, drawing, sb, isInGroup, ignoreWrapLayouts, extent);
+
+                // Write hyperlink if present
+                WriteShapeHyperlink(drawing, sb, hyperlinkId);
+
+                // Enumerate shapes (including groups)
+                ProcessShapes(canvas, drawing, sb, true, ignoreWrapLayouts, extent);
+                
+                // Close shape instruction and open shape result
+                sb.Write(@"}{\shprslt ");
+
+                // TODO: write fallback for RTF reader that don't support shapes.
+                // Microsoft Word writes a Word 95/6.0 drawing object {\*\do ...}.
+
+                sb.WriteLine("}}"); // Close shape result and shpgrp destination
+            }
+            else if (element is Wpg.GraphicFrame || element is Wpc.GraphicFrameType)
+            {
+                // TODO: <wpg/wpc:graphicFrame> can be container in both WordprocessingGroup and WordprocessingCanvas
+                // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.office2010.word.drawinggroup.graphicframe)
+            }            
+            // TODO: process other types of GraphicData, notably SmartArt diagrams (dgm:relationshipIds type) 
+            // and freehand ink (w14:contentPart type) 
+            // (a picture fallback is often written by Word for ink and we already support that, 
+            // but it's not present e.g. when inside a WordprocessingCanvas)
+            //
+            // VML elements are currently ignored here and handled in DocxToRtfConverter.Vml only, 
+            // because they have always been found in the <w:pict> element (rather than <w:drawing>) in tested documents.
+            //
+            // Charts are ignored because they are not supported in RTF and would need to be converted
+            // to images or OLE objects (complex task, currently considered out-of-scope for this library)
+        }
+    }
+
+    private void ProcessDrawingPicture(Drawing drawing, RtfStringWriter sb, bool ignoreWrapLayouts, Wp.Extent extent, Pictures.Picture pic, bool isInGroup, string? hyperlinkId = null)
+    {
+        if (extent.Cx == null || extent.Cy == null)
+            return; // Dimensions must be specified
+        
+        var properties = new PictureProperties();
+
+        // Convert EMUs to twips
+        long w = (long)Math.Round(extent.Cx.Value / 635m);
+        long h = (long)Math.Round(extent.Cy.Value / 635m);
+
+        var blipFill = pic.BlipFill;
+        if (blipFill?.SourceRectangle != null)
+        {
+            // Convert relative value used by Open XML to twips
+            if (blipFill.SourceRectangle?.Left != null)
+            {
+                properties.CropLeft = (long)Math.Round(w * blipFill.SourceRectangle.Left / 100000m);
+            }
+            if (blipFill.SourceRectangle?.Right != null)
+            {
+                properties.CropRight = (long)Math.Round(w * blipFill.SourceRectangle.Right / 100000m);
+            }
+            if (blipFill.SourceRectangle?.Top != null)
+            {
+                properties.CropTop = (long)Math.Round(h * blipFill.SourceRectangle.Top / 100000m);
+            }
+            if (blipFill.SourceRectangle?.Bottom != null)
+            {
+                properties.CropBottom = (long)Math.Round(h * blipFill.SourceRectangle.Bottom / 100000m);
+            }
+        }
+        // In RTF width and height should not be decreased by the crop value.
+        properties.Width = w + properties.CropLeft + properties.CropRight;
+        properties.Height = h + properties.CropTop + properties.CropBottom;
+        properties.WidthGoal = properties.Width;
+        properties.HeightGoal = properties.Height;
+
+        if (blipFill?.Blip?.Embed?.Value is string relId)
+        {
+            var rootPart = OpenXmlHelpers.GetRootPart(drawing);
+
+            // Generic properties (rotation, flip) and some effects (recolor, shadow, 3D)
+            // are supported for both inline and floating/anchored images.
+            var shapePropertiesBuilder = new RtfStringWriter();
+            var shapeStyle = pic.GetFirstChild<Pic14.ShapeStyle>();
+            var borderInfo = ProcessShapeProperties(pic.ShapeProperties, shapeStyle, shapePropertiesBuilder, isInGroup, true);
+            ProcessBlipEffects(blipFill.Blip, shapePropertiesBuilder);
+            string shapeProperties = shapePropertiesBuilder.ToString();
+
+            if ((ignoreWrapLayouts || drawing.Inline != null) && !isInGroup) // \pict directly inside a group does not work
+            {
+                // Inline image (\pict destination)
+                ProcessImagePart(rootPart, relId, properties, sb, shapeProperties, borderInfo);
+            }
+            else if (drawing.Anchor != null)
+            {
+                // Image with advanced properties (\shp destination)
+
+                sb.Write(@"{\shp{\*\shpinst");
+
+                if (rootPart is MainDocumentPart)
+                    sb.Write(@"\shpfhdr0");
+
+                // Write position properties
+                if (!isInGroup)
                 {
-                    // Inline image (\pict destination)
-                    ProcessImagePart(rootPart, relId, properties, sb, shapeProperties, borderInfo);
-                }
-                else if (drawing.Anchor != null)
-                {
-                    // Image with advanced properties (\shp destination)
-
-                    sb.Write(@"{\shp{\*\shpinst");
-
-                    if (rootPart is MainDocumentPart)
-                        sb.Write(@"\shpfhdr0");
-
-                    // Write position properties
                     ProcessDrawingAnchor(drawing.Anchor, sb);
+                }
 
-                    // Write generic shape properties 
-                    // (process after inline so that all standard control words such as \shpleft have been written
-                    // before writing {\sp ...} groups)
-                    sb.Write(shapeProperties);
+                // Write generic shape properties 
+                // (process after inline so that all standard control words such as \shpleft have been written
+                // before writing {\sp ...} groups)
+                sb.Write(shapeProperties);
 
-                    // Write the pict group itself.
-                    sb.Write(@"{\sp{\sn pib}{\sv ");
-                    ProcessImagePart(rootPart, relId, properties, sb);
-                    sb.WriteLine("}}"); // close property
+                // Write non visual properties (currently hyperlink only)
+                ProcessNonVisualDrawingProperties(pic.NonVisualPictureProperties?.NonVisualDrawingProperties, sb, hyperlinkId);
 
-                    // Close shape instruction group and open shape result group
-                    sb.Write(@"}{\shprslt ");
+                // Write the pict group itself.
+                sb.Write(@"{\sp{\sn pib}{\sv ");
+                ProcessImagePart(rootPart, relId, properties, sb);
+                sb.WriteLine("}}"); // close property
 
+                // Close shape instruction and open shape result 
+                // (unless we are inside a shapes group, in that case only the top-level result should be written)
+                sb.Write(@"}");
+                if(!isInGroup)
+                {
+                    sb.WriteLine();
+                    sb.Write(@"{\shprslt ");
+                    
                     // Write fallback for RTF reader that don't support shapes.
                     // This is the same behavior as Microsoft Word but less evolved, 
                     // currently just writes an inline picture.
                     ProcessImagePart(rootPart, relId, properties, sb);
 
-                    sb.WriteLine("}}"); // Close shape result group and shape destination
+                    sb.Write(@"}");
                 }
+
+                sb.WriteLine("}"); // Close shape destination
             }
         }
-        else if (graphicData.GetFirstChild<Wps.WordprocessingShape>() is Wps.WordprocessingShape wpShape)
+    }
+
+    private void ProcessShape(Drawing drawing, RtfStringWriter sb, Wps.WordprocessingShape wpShape, bool isInGroup, string? hyperlinkId = null)
+    {
+        // Open shape destination
+        sb.Write(@"{\shp{\*\shpinst");
+
+        var rootPart = OpenXmlHelpers.GetRootPart(drawing);
+        if (rootPart is MainDocumentPart)
+            sb.Write(@"\shpfhdr0");
+
+        if (!isInGroup)
         {
-            // Open shape destination
-            sb.Write(@"{\shp{\*\shpinst");
-
-            var rootPart = OpenXmlHelpers.GetRootPart(drawing);
-            if (rootPart is MainDocumentPart)
-                sb.Write(@"\shpfhdr0");
-
-            Wp.DocProperties? docProperties = null;
-            Wp.NonVisualGraphicFrameDrawingProperties? nonVisualGraphicFrameDrawingPr = null;
-            Wp.Extent? shapeExtent = null;
-            Wp.EffectExtent? effectExtent = null;
-
             if (drawing.Inline != null)
             {
                 // Inline shape
-                docProperties = drawing.Inline.DocProperties;
-                nonVisualGraphicFrameDrawingPr = drawing.Inline.NonVisualGraphicFrameDrawingProperties;
-                shapeExtent = drawing.Inline.Extent;
-                effectExtent = drawing.Inline.EffectExtent;
                 ProcessDrawingInline(drawing.Inline, sb);
             }
             else if (drawing.Anchor != null)
             {
                 // Floating/anchored shape
-                docProperties = drawing.Anchor.GetFirstChild<Wp.DocProperties>();
-                nonVisualGraphicFrameDrawingPr = drawing.Anchor.GetFirstChild<Wp.NonVisualGraphicFrameDrawingProperties>();
-                shapeExtent = drawing.Anchor.Extent;
-                effectExtent = drawing.Anchor.EffectExtent;
                 ProcessDrawingAnchor(drawing.Anchor, sb);
             }
+        }
 
-            ProcessNonVisualDrawingProperties(wpShape.NonVisualDrawingProperties, sb);
-            //var nonVisualShapeProperties = wpShape.GetFirstChild<Wps.NonVisualDrawingShapeProperties>();
-            var connectorProperties = wpShape.GetFirstChild<Wps.NonVisualConnectorProperties>();
-            var shapeStyle = wpShape.GetFirstChild<Wps.ShapeStyle>();
-            ProcessShapeProperties(wpShape.GetFirstChild<Wps.ShapeProperties>(), shapeStyle, sb);
-            //var officeArtExtensionList = wpShape.GetFirstChild<Wps.OfficeArtExtensionList>();
-            //var linkedTextBox = wpShape.GetFirstChild<Wps.LinkedTextBox>();
-            ProcessTextBodyProperties(wpShape.GetFirstChild<Wps.TextBodyProperties>(), sb);
+        ProcessNonVisualDrawingProperties(wpShape.NonVisualDrawingProperties, sb, hyperlinkId);
+        ProcessNonVisualDrawingShapeProperties(wpShape.GetFirstChild<Wps.NonVisualDrawingShapeProperties>(), sb);
+        // var connectorProperties = wpShape.GetFirstChild<Wps.NonVisualConnectorProperties>();
+        var shapeStyle = wpShape.GetFirstChild<Wps.ShapeStyle>();
+        ProcessShapeProperties(wpShape.GetFirstChild<Wps.ShapeProperties>(), shapeStyle, sb, isInGroup);
+        //var officeArtExtensionList = wpShape.GetFirstChild<Wps.OfficeArtExtensionList>();
+        //var linkedTextBox = wpShape.GetFirstChild<Wps.LinkedTextBox>();
 
-            if (shapeStyle?.FontReference != null) 
-                // This is the only element in ShapeStyle that has not been considered yet.
-            {
-            }
+        ProcessTextBodyProperties(wpShape.GetFirstChild<Wps.TextBodyProperties>(), sb);
 
-            sb.WriteLine(); // Separate shape properties from text box content (if present) and shape result
+        if (shapeStyle?.FontReference != null)
+        // TODO: FontReference is the only element in ShapeStyle that has not been considered yet.
+        {
+        }
 
-            ProcessTextBox(wpShape.GetFirstChild<Wps.TextBoxInfo2>(), sb); // Process text box content (if present)
+        sb.WriteLine(); // Separate shape properties from text box content (if present) and shape result
 
-            // Close shape instruction group and open shape result group
-            sb.Write(@"}{\shprslt ");
+        ProcessTextBox(wpShape.GetFirstChild<Wps.TextBoxInfo2>(), sb); // Process text box content (if present)
 
+        // Close shape instruction and open shape result 
+        // (unless we are inside a shapes group, in that case only the top-level result should be written)
+        sb.Write(@"}");
+        if(!isInGroup)
+        {
             // TODO: write fallback for RTF reader that don't support shapes.
             // Microsoft Word writes a Word 95/6.0 drawing object {\*\do ...}.
+            sb.WriteLine();
+            sb.Write(@"{\shprslt }");           
+        }
 
-            sb.WriteLine("}}"); // Close shape result group and shape destination
-        }
-        else if (graphicData.GetFirstChild<Wpc.WordprocessingCanvas>() is Wpc.WordprocessingCanvas canvas)
-        {
-            // TODO: process drawing canvas
-        }
-        else if (graphicData.GetFirstChild<Wpg.WordprocessingGroup>() is Wpg.WordprocessingGroup group)
-        {
-            // TODO: process group
-        }
-        else if (graphicData.GetFirstChild<Dgm.RelationshipIds>() is Dgm.RelationshipIds relIds)
-        {
-            // TODO: process SmartArt diagram
-        }
-        else
-        {
-            // TODO: process other types of GraphicData if needed.
-            // 
-            // Currently:
-            // - VML elements are ignored because in all tested documents they are in a <w:pict> element, 
-            // not <w:drawing>.
-            // - Charts are ignored because they are not supported in RTF and would need to be converted
-            // to images or OLE objects (complex task, currently considered out-of-scope for this library)
-        }
+        sb.WriteLine("}"); // Close shape destination
     }
 
-    internal void ProcessNonVisualDrawingProperties(Wps.NonVisualDrawingProperties? nonVisualDrawingProperties, RtfStringWriter sb)
+    // Unified method for Wps.NonVisualDrawingProperties, Wpg.NonVisualDrawingProperties, Pic.NonVisualDrawingProperties.
+    internal void ProcessNonVisualDrawingProperties(OpenXmlElement? element, RtfStringWriter sb, string? hyperlinkId)
     {
-        // Used for associating an hyperlink to the shape.
-        // TODO
+        if (element == null) return; 
+
+        var hyperlinkOnClick = element.GetFirstChild<A.HyperlinkOnClick>();
+        // var hyperlinkOnHover = element.GetFirstChild<A.HyperlinkOnHover>();
+
+        if (!string.IsNullOrWhiteSpace(hyperlinkOnClick?.Id))
+        {
+            // Override parent drawing hyperlink in case of conflict
+            hyperlinkId = hyperlinkOnClick.Id;
+        }
+
+        // Write hyperlink if present
+        WriteShapeHyperlink(element, sb, hyperlinkId);
+    }
+
+    private void ProcessNonVisualDrawingShapeProperties(OpenXmlElement? nonVisualGroupDrawingShapeProperties, RtfStringWriter sb)
+    {
+    }
+
+    internal void ProcessNonVisualGraphicFrameDrawingProperties(Wp.NonVisualGraphicFrameDrawingProperties? nonVisualGraphicFrameDrawingPr, RtfStringWriter sb)
+    {
     }
 
     internal void ProcessTextBodyProperties(Wps.TextBodyProperties? textBodyProperties, RtfStringWriter sb)
@@ -264,32 +443,25 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (textBodyProperties.GetFirstChild<A.NoAutoFit>() != null)
         {
-            sb.WriteShapeProperty("fFitShapeToText", "0");
+            sb.WriteShapeProperty("fFitTextToShape", "0");
             sb.WriteShapeProperty("fFitShapeToText", "0");
         }
-        if (textBodyProperties.GetFirstChild<A.NormalAutoFit>() != null) // fit text to shape
+        else if (textBodyProperties.GetFirstChild<A.NormalAutoFit>() != null) // fit text to shape
         {
             sb.WriteShapeProperty("fFitTextToShape", "1");
             sb.WriteShapeProperty("fFitShapeToText", "0");
             //sb.WriteShapeProperty("scaleText", "1"); // is this needed?
         }
-        if (textBodyProperties.GetFirstChild<A.ShapeAutoFit>() != null) // fit shape to text
+        else if (textBodyProperties.GetFirstChild<A.ShapeAutoFit>() != null) // fit shape to text
         {
             sb.WriteShapeProperty("fFitShapeToText", "1");
             sb.WriteShapeProperty("fFitTextToShape", "0");
         }
-
-        if (textBodyProperties.Wrap != null)
+        else if (textBodyProperties.Wrap != null && textBodyProperties.Wrap.Value == A.TextWrappingValues.None)
         {
-            if (textBodyProperties.Wrap.Value == A.TextWrappingValues.None)
-            {
-                sb.WriteShapeProperty("fFitTextToShape", "2"); // Do not wrap text
-            }
-            else if (textBodyProperties.Wrap.Value == A.TextWrappingValues.Square)
-            {
-                sb.WriteShapeProperty("fFitTextToShape", "0"); // Default (wrap text at shape margins)
-            }
+            sb.WriteShapeProperty("fFitTextToShape", "2"); // Do not wrap text
         }
+
 
         if (textBodyProperties.ColumnCount != null)
         {
@@ -428,7 +600,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    internal (int borderWidth, int borderColor)? ProcessShapeProperties(OpenXmlElement? shapePr, OpenXmlElement? shapeStyle, RtfStringWriter sb, bool isPicture = false)
+    internal (int borderWidth, int borderColor)? ProcessShapeProperties(OpenXmlElement? shapePr, OpenXmlElement? shapeStyle, RtfStringWriter sb, bool isInGroup, bool isPicture = false)
     {
         if (shapePr is not Wps.ShapeProperties &&
             shapePr is not Pictures.ShapeProperties)
@@ -438,7 +610,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         (int borderWidth, int borderColor)? borderInfo = null;
 
         ProcessGeometry(shapePr, sb, isPicture);
-        ProcessTransform2D(shapePr.GetFirstChild<A.Transform2D>(), sb);
+        ProcessTransform2D(shapePr.GetFirstChild<A.Transform2D>(), sb, isInGroup: isInGroup);
 
         var fillReference = (shapeStyle as Wps.ShapeStyle)?.FillReference ?? (shapeStyle as Pic14.ShapeStyle)?.FillReference;
         var lineReference = (shapeStyle as Wps.ShapeStyle)?.LineReference ?? (shapeStyle as Pic14.ShapeStyle)?.LineReference;
@@ -670,7 +842,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             if (dashStop.DashLength != null && dashStop.SpaceLength != null)
             {
                 // TODO: check units
-
                 builder.Append('(');
                 builder.Append(dashStop.DashLength.Value.ToString(CultureInfo.InvariantCulture));
                 builder.Append(',');
@@ -1338,7 +1509,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         //sb.WriteShapeProperty("shapePath", "2"); // when is this different from 4?
     }
 
-    internal void ProcessTransform2D(A.Transform2D? transform2D, RtfStringWriter sb)
+    internal void ProcessTransform2D(A.Transform2D? transform2D, RtfStringWriter sb, bool isInGroup)
     {
         if (transform2D == null)
             return;
@@ -1356,13 +1527,59 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.WriteShapeProperty("rotation", (long)Math.Round(transform2D.Rotation.Value * 16.0m / 15.0m));
         }
 
-        //if (transform2D.Offset != null)
-        // Not supported in RTF
+        if (transform2D.Offset?.X != null && isInGroup)
+        {
+            sb.WriteShapeProperty("relLeft", transform2D.Offset.X.Value);
+        }
+        if (transform2D.Offset?.Y != null && isInGroup)
+        {
+            sb.WriteShapeProperty("relTop", transform2D.Offset.Y.Value);
+        }
+        if (transform2D.Extents?.Cx != null && isInGroup)
+        {
+            sb.WriteShapeProperty("relRight", transform2D.Extents.Cx.Value + (transform2D.Offset?.X ?? 0L));
+        }
+        if (transform2D.Extents?.Cy != null)
+        {
+            sb.WriteShapeProperty("relBottom", transform2D.Extents.Cy.Value + (transform2D.Offset?.Y ?? 0L));
+        }
+        // (may also be geoTop, geoLeft, geoRight, geoBottom in some contexts)
+    }
 
-        //if (transform2D.Extents != null)
-        // TODO
-        // (this is usually the same as Anchor/Inline extents, but might be different in some cases)
-        // (should be geoTop, geoLeft, geoRight, geoBottom)
+    internal void ProcessTransform2D(A.TransformGroup? transform2D, RtfStringWriter sb)
+    {
+        if (transform2D == null)
+            return;
+
+        sb.WriteShapeProperty("fFlipH", transform2D.HorizontalFlip != null && transform2D.HorizontalFlip.Value);
+        sb.WriteShapeProperty("fFlipV", transform2D.VerticalFlip != null && transform2D.VerticalFlip.Value);
+        
+        /*
+         The standard states that the rot attribute specifies the clockwise rotation in 1/64000ths of a degree. (This is also used in RTF and VML).
+         In Office and the schema, the rot attribute specifies the clockwise rotation in 1/60000ths of a degree
+        */
+        if (transform2D.Rotation != null)
+        {
+            // Convert 1/60000 of degree to 1/64000 of degree.
+            sb.WriteShapeProperty("rotation", (long)Math.Round(transform2D.Rotation.Value * 16.0m / 15.0m));
+        }
+
+        if (transform2D.Offset?.X != null)
+        {
+            sb.WriteShapeProperty("groupLeft", transform2D.Offset.X.Value);
+        }
+        if (transform2D.Offset?.Y != null)
+        {
+            sb.WriteShapeProperty("groupTop", transform2D.Offset.Y.Value);
+        }
+        if (transform2D.Extents?.Cx != null)
+        {
+            sb.WriteShapeProperty("groupRight", transform2D.Extents.Cx.Value + (transform2D.Offset?.X ?? 0L));
+        }
+        if (transform2D.Extents?.Cy != null)
+        {
+            sb.WriteShapeProperty("groupBottom", transform2D.Extents.Cy.Value + (transform2D.Offset?.Y ?? 0L));
+        }
     }
 
     internal void ProcessDrawingInline(Wp.Inline inline, RtfStringWriter sb)
@@ -1429,28 +1646,10 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     internal void ProcessDrawingAnchor(Wp.Anchor anchor, RtfStringWriter sb)
     {
-        var distT = anchor.DistanceFromTop;
-        var distB = anchor.DistanceFromBottom;
-        var distL = anchor.DistanceFromLeft;
-        var distR = anchor.DistanceFromRight;
-        var relativeH = anchor.RelativeHeight;
-        var behind = anchor.BehindDoc;
-        var locked = anchor.Locked;
-        var layoutInCell = anchor.LayoutInCell;
-        var allowOverlap = anchor.AllowOverlap;
-        var hidden = anchor.Hidden;
-        Wp.WrapPolygon? polygon = null;
-
-        //bool useSimplePos = inline.SimplePos != null && inline.SimplePos.Value; 
-        // Does not seem to be relevant for images, only for shapes.
-
-        var positionH = anchor.HorizontalPosition;
-        var positionV = anchor.VerticalPosition;
-
         var extent = anchor.Extent;
         // var effectExtent = inline.EffectExtent;
-        var sizeRelH = anchor.GetFirstChild<Wp14.RelativeWidth>();
-        var sizeRelV = anchor.GetFirstChild<Wp14.RelativeHeight>();
+
+        Wp.WrapPolygon? polygon = null;
 
         if (anchor.GetFirstChild<Wp.WrapNone>() is not null)
         {
@@ -1523,12 +1722,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (locked != null && locked.Value)
+        if (anchor.Locked != null && anchor.Locked.Value)
         {
             sb.Write(@"\shplockanchor");
         }
 
-        if (behind != null && behind.Value)
+        if (anchor.BehindDoc != null && anchor.BehindDoc.Value)
         {
             sb.Write(@"\shpfblwtxt1");
         }
@@ -1537,7 +1736,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\shpfblwtxt0");
         }
 
-        //if (useSimplePos) // Unclear how simple position should be used in RTF
+        //bool useSimplePos = inline.SimplePos != null && inline.SimplePos.Value; 
+        //if (useSimplePos) // Unclear how simple position should be used in RTF.
+        //                  // Does not seem to be relevant for images (for shapes only).
         //{
         //    if (inline.SimplePosition is Wp.SimplePosition sp && sp.X != null && sp.Y != null)
         //    {
@@ -1561,6 +1762,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         //}
         //else
         //{
+            var positionH = anchor.HorizontalPosition;
+            var positionV = anchor.VerticalPosition;
             decimal posHtwips = 0;
             decimal posVtwips = 0;
             decimal extentXtwips = 0;
@@ -1641,10 +1844,10 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         sb.WriteLine();
 
-        sb.WriteShapeProperty("fHidden", hidden != null && hidden.Value);
-        sb.WriteShapeProperty("fBehindDocument", behind != null && behind.Value);
-        sb.WriteShapeProperty("fAllowOverlap", allowOverlap != null && allowOverlap.Value);
-        sb.WriteShapeProperty("fLayoutInCell", layoutInCell != null && layoutInCell.Value);
+        sb.WriteShapeProperty("fHidden", anchor.Hidden != null && anchor.Hidden.Value);
+        sb.WriteShapeProperty("fBehindDocument", anchor.BehindDoc != null && anchor.BehindDoc.Value);
+        sb.WriteShapeProperty("fAllowOverlap", anchor.AllowOverlap != null && anchor.AllowOverlap.Value);
+        sb.WriteShapeProperty("fLayoutInCell", anchor.LayoutInCell != null && anchor.LayoutInCell.Value);
         sb.WriteShapeProperty("fUseShapeAnchor", true);
 
         //if (!useSimplePos)
@@ -1787,29 +1990,29 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         //}
 
-        if (distT != null)
+        if (anchor.DistanceFromTop != null)
         {
-            sb.WriteShapeProperty("dyWrapDistTop", distT.Value);
+            sb.WriteShapeProperty("dyWrapDistTop", anchor.DistanceFromTop.Value);
         }
-        if (distB != null)
+        if (anchor.DistanceFromBottom != null)
         {
-            sb.WriteShapeProperty("dyWrapDistBottom", distB.Value);
+            sb.WriteShapeProperty("dyWrapDistBottom", anchor.DistanceFromBottom.Value);
         }
-        if (distL != null)
+        if (anchor.DistanceFromLeft != null)
         {
-            sb.WriteShapeProperty("dxWrapDistLeft", distL.Value);
+            sb.WriteShapeProperty("dxWrapDistLeft", anchor.DistanceFromLeft.Value);
         }
-        if (distR != null)
+        if (anchor.DistanceFromRight != null)
         {
-            sb.WriteShapeProperty("dxWrapDistRight", distR.Value);
-        }
-
-        if (relativeH?.Value != null)
-        {
-            sb.WriteShapeProperty("dhgt", relativeH.Value);
+            sb.WriteShapeProperty("dxWrapDistRight", anchor.DistanceFromRight.Value);
         }
 
-        if (sizeRelH?.PercentageWidth != null && long.TryParse(sizeRelH.PercentageWidth.InnerText, NumberStyles.Number, CultureInfo.InvariantCulture, out long sizeRelHValue))
+        if (anchor.RelativeHeight?.Value != null)
+        {
+            sb.WriteShapeProperty("dhgt", anchor.RelativeHeight.Value);
+        }
+
+        if (anchor.GetFirstChild<Wp14.RelativeWidth>() is Wp14.RelativeWidth sizeRelH && sizeRelH?.PercentageWidth != null && long.TryParse(sizeRelH.PercentageWidth.InnerText, NumberStyles.Number, CultureInfo.InvariantCulture, out long sizeRelHValue))
         {
             // Convert thousandths of a percent to tenths of a percent
             sb.WriteShapeProperty("pctHoriz", sizeRelHValue / 100.0m); 
@@ -1844,7 +2047,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 }
             }
         }
-        if (sizeRelV?.PercentageHeight != null && long.TryParse(sizeRelV.PercentageHeight.InnerText, NumberStyles.Number, CultureInfo.InvariantCulture, out long sizeRelVValue))
+        if (anchor.GetFirstChild<Wp14.RelativeHeight>() is Wp14.RelativeHeight sizeRelV && sizeRelV?.PercentageHeight != null && long.TryParse(sizeRelV.PercentageHeight.InnerText, NumberStyles.Number, CultureInfo.InvariantCulture, out long sizeRelVValue))
         {
             // Convert thousandths of a percent to tenths of a percent
             sb.WriteShapeProperty("pctVert", sizeRelVValue / 100.0m);
@@ -1897,6 +2100,21 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
             // 8 = number of bytes (2 numbers for each pair)
             sb.WriteShapeProperty("pWrapPolygonVertices", $"8;{count};{polygonVertices.ToString().TrimEnd(';')}");
+        }
+    }
+
+    private void WriteShapeHyperlink(OpenXmlElement element, RtfStringWriter sb, string? hyperlinkId = null)
+    {
+        if (!string.IsNullOrWhiteSpace(hyperlinkId))
+        {
+            if (hyperlinkId != null && element.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+            {
+                string? hyperlinkTarget = relationship.Uri.OriginalString;
+                if (!string.IsNullOrWhiteSpace(hyperlinkTarget))
+                {
+                    sb.WriteShapeProperty("pihlShape", @"{\*\hl{\hlfr " + hyperlinkTarget! + @"}{\hlsrc " + hyperlinkTarget! + "}}");
+                }
+            }
         }
     }
 }

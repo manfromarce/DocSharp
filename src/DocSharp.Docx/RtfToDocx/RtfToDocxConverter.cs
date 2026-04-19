@@ -577,6 +577,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                                 continue;
                             }
 
+                            else if (dname == "shp")
+                            {
+                                // Shapes and floating pictures are currently not supported.
+                                continue;
+                            }
                             else if (dname == "shppict")
                             {
                                 // Handle as regular group

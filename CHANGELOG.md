@@ -9,6 +9,7 @@
 - Fix: hyperlinks and images in header/footer/footnote/endnote were sometimes lost in DOCX converters
 - Preserve image alternate text in DOCX ➡️ HTML/Markdown converter
 - Optionally write alternate text (if available) in place of images in DOCX ➡️ plain text converter
+- Support for grouped shapes and drawing canvas in DOCX ➡️ RTF converter
 
 ## 0.18.1 - 2026.04.10
 
