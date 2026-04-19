@@ -27,6 +27,16 @@ public static class RtfHelpers
         return $"\\uc1\\u{charCode.ToString("D4")}?";
     }
 
+    public static string EscapeString(string s)
+    {
+        var sb = new StringBuilder();
+        foreach (var c in s)
+        {
+            sb.Append(EscapeChar(c));
+        }
+        return sb.ToString();
+    }
+
     public static string EscapeChar(char c)
     {
         if (c == '{')

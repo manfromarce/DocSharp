@@ -5,7 +5,7 @@
 - Code cleanup
 - Add option to preserve anchored and floating images in DOCX ➡️ HTML/Markdown converter
 - Fix: inline images incorrectly always created a new line in DOCX ➡️ HTML converter
-- Preserve hyperlinks on images in DOCX ➡️ HTML converter
+- Preserve hyperlinks on images in DOCX ➡️ HTML/RTF converter
 - Fix: hyperlinks and images in header/footer/footnote/endnote were sometimes lost in DOCX converters
 - Preserve image alternate text in DOCX ➡️ HTML/Markdown converter
 - Optionally write alternate text (if available) in place of images in DOCX ➡️ plain text converter

@@ -132,7 +132,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         // Canvas does not have a Transform (xfrm) element, but we need to calculate groupLeft, groupRight, ...
         // to make the group work properly in RTF. 
-        long left = 0; // TODO: check if left and top are different from 0 when the canvas is absolutely positioned and not inline.
+        long left = 0;
         long top = 0;
         long width = drawing?.Inline?.Extent?.Cx ?? drawing?.Anchor?.Extent?.Cx ?? 1;
         long height = drawing?.Inline?.Extent?.Cy ?? drawing?.Anchor?.Extent?.Cy ?? 1;   
@@ -185,7 +185,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {
             if (element is Pic.Picture pic)
             {
-                ProcessDrawingPicture(drawing, sb, ignoreWrapLayouts, extent, pic, true);
+                ProcessDrawingPicture(drawing, sb, ignoreWrapLayouts, extent, pic, isInGroup);
             }
             else if (element is Wps.WordprocessingShape wpShape)
             {
@@ -303,22 +303,28 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (blipFill?.Blip?.Embed?.Value is string relId)
         {
-            var rootPart = OpenXmlHelpers.GetRootPart(drawing);
+            var rootPart = drawing.GetRootPart();
 
             // Generic properties (rotation, flip) and some effects (recolor, shadow, 3D)
             // are supported for both inline and floating/anchored images.
             var shapePropertiesBuilder = new RtfStringWriter();
             var shapeStyle = pic.GetFirstChild<Pic14.ShapeStyle>();
             var borderInfo = ProcessShapeProperties(pic.ShapeProperties, shapeStyle, shapePropertiesBuilder, isInGroup, true);
-            ProcessBlipEffects(blipFill.Blip, shapePropertiesBuilder);
-            string shapeProperties = shapePropertiesBuilder.ToString();
+
+            // ProcessBlipEffects(blipFill.Blip, shapePropertiesBuilder);
 
             if ((ignoreWrapLayouts || drawing.Inline != null) && !isInGroup) // \pict directly inside a group does not work
             {
                 // Inline image (\pict destination)
-                ProcessImagePart(rootPart, relId, properties, sb, shapeProperties, borderInfo);
+
+                // Write hyperlink if present.
+                string? hyperlinkId = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.HyperlinkOnClick?.Id ??
+                                      drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id;
+                WriteShapeHyperlink(drawing, shapePropertiesBuilder, hyperlinkId);
+
+                ProcessImagePart(rootPart, relId, properties, sb, shapePropertiesBuilder.ToString(), borderInfo);
             }
-            else if (drawing.Anchor != null)
+            else if (drawing.Anchor != null || isInGroup)
             {
                 // Image with advanced properties (\shp destination)
 
@@ -327,9 +333,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 if (rootPart is MainDocumentPart)
                     sb.Write(@"\shpfhdr0");
 
-                if (!isInGroup)
-                    ProcessDrawingAnchor(drawing.Anchor, sb, 
-                        skipHyperlink: !string.IsNullOrWhiteSpace(pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.HyperlinkOnClick?.Id));
+                if (!isInGroup && drawing.Anchor != null)
+                    ProcessDrawingAnchor(drawing.Anchor, sb, skipHyperlink: !string.IsNullOrWhiteSpace(pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.HyperlinkOnClick?.Id));
 
                 ProcessNonVisualDrawingShapeProperties(pic.NonVisualPictureProperties?.NonVisualPictureDrawingProperties, sb);
                 ProcessNonVisualDrawingProperties(pic.NonVisualPictureProperties?.NonVisualDrawingProperties, sb);
@@ -337,7 +342,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 // Write generic shape properties 
                 // (process after Anchor so that all standard control words such as \shpleft have been written
                 // before writing {\sp ...} groups)
-                sb.Write(shapeProperties);
+                sb.Write(shapePropertiesBuilder.ToString());
 
                 // Write the pict group itself.
                 sb.Write(@"{\sp{\sn pib}{\sv ");
@@ -2175,7 +2180,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {
             if (hyperlinkId != null && element.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
             {
-                string? hyperlinkTarget = relationship.Uri.OriginalString;
+                // TODO: escape other chars that are valid for filenames but problematic in RTF.
+                string hyperlinkTarget = relationship.Uri.OriginalString.Replace(@"\", "/");
                 if (!string.IsNullOrWhiteSpace(hyperlinkTarget))
                 {
                     sb.WriteShapeProperty("pihlShape", @"{\*\hl{\hlfr " + hyperlinkTarget! + @"}{\hlsrc " + hyperlinkTarget! + "}}");
