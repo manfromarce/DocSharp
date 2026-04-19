@@ -104,12 +104,11 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     private void ProcessGroupShapeProperties(Wpg.GroupShapeProperties? groupShapeProperties, RtfStringWriter sb, bool isSubGroup)
     {
-        // Compared to Canvas background/whole formatting, group properties are applied to invidual shapes  
-        // instead of the group area as a whole. 
-        // So they act as "default properties" for shapes contained within the group, 
-        // and can be overriden by more specific shape properties. 
-        // In RTF, there is no group level formatting, so we have to detect and preserve these 
-        // when processing individual shapes. 
+        // Group properties act as default properties for invidual shapes, which can override them.
+        // This is different from Canvas (which applies properties to the whole area instead) and 
+        // is not directly supported in RTF. 
+        // So we process only basic position properties here, and check for parent group formatting
+        // when processing individual shapes.
         ProcessTransformGroup(groupShapeProperties?.TransformGroup, sb, isSubGroup);
     }
 
@@ -666,17 +665,22 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         (int borderWidth, int borderColor)? borderInfo = null;
 
+        var parentGroupProperties = shapePr.GetFirstAncestor<Wpg.WordprocessingGroupType>()?.GroupShapeProperties;
+        // Note that group properties only support fill and effects. 
+        // We don't need to check for other formatting (e.g. outline) in the group.
+        // (You can set group outline in the Word user interface, but it is internally written on individual shapes)
+
         ProcessGeometry(shapePr, sb, isPicture);
         ProcessTransform2D(shapePr.GetFirstChild<A.Transform2D>(), sb, isInGroup: isInGroup);
 
-        var fillReference = (shapeStyle as Wps.ShapeStyle)?.FillReference ?? (shapeStyle as Pic14.ShapeStyle)?.FillReference;
-        var lineReference = (shapeStyle as Wps.ShapeStyle)?.LineReference ?? (shapeStyle as Pic14.ShapeStyle)?.LineReference;
-        var effectReference = (shapeStyle as Wps.ShapeStyle)?.EffectReference ?? (shapeStyle as Pic14.ShapeStyle)?.EffectReference;
-        //var fontReference = (shapeStyle as Wps.ShapeStyle)?.FontReference ?? (shapeStyle as Pic14.ShapeStyle)?.FontReference;
+        var fillReference = shapeStyle?.GetFirstChild<A.FillReference>();
+        var lineReference = shapeStyle?.GetFirstChild<A.LineReference>();
+        // var effectReference = shapeStyle?.GetFirstChild<A.EffectReference>();
+        // var fontReference = shapeStyle?.GetFirstChild<A.FontReference>();
 
         // Outline contained directly in the ShapeProperties has priority over style, 
         // but if outline is present and a property is not defined we need to search for it in the style too.
-        if (lineReference != null && lineReference.Index != null)
+        if (lineReference?.Index != null)
         {
             // Note: the color contained in shapeStyle.LineReference directly is the second style
             // and is only relevant if the index points to phColor style, 
@@ -700,18 +704,26 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         if (!isPicture)
         {
             // Try to find fill
-            if (shapePr.GetFirstChild<A.NoFill>() is A.NoFill noFill)
-                ProcessFill(noFill, sb);
-            else if (shapePr.GetFirstChild<A.SolidFill>() is A.SolidFill solidFill)
-                ProcessFill(solidFill, sb);
-            else if (shapePr.GetFirstChild<A.GradientFill>() is A.GradientFill gradientFill)
-                ProcessFill(gradientFill, sb);
-            else if (shapePr.GetFirstChild<A.PatternFill>() is A.PatternFill patternFill)
-                ProcessFill(patternFill, sb);
-            else if (shapePr.GetFirstChild<A.BlipFill>() is A.BlipFill blipFill)
-                ProcessFill(blipFill, sb);
-            else if (shapePr.GetFirstChild<A.GroupFill>() is A.GroupFill groupFill)
-                ProcessFill(groupFill, sb);
+            OpenXmlElement? fill = shapePr.GetFirstChild<A.NoFill>() ?? 
+                                   shapePr.GetFirstChild<A.SolidFill>() ?? 
+                                   shapePr.GetFirstChild<A.GradientFill>() ?? 
+                                   shapePr.GetFirstChild<A.PatternFill>() ?? 
+                                   shapePr.GetFirstChild<A.BlipFill>() ?? 
+                                   parentGroupProperties?.GetFirstChild<A.NoFill>() ?? 
+                                   parentGroupProperties?.GetFirstChild<A.SolidFill>() ?? 
+                                   parentGroupProperties?.GetFirstChild<A.GradientFill>() ?? 
+                                   parentGroupProperties?.GetFirstChild<A.PatternFill>() ?? 
+                                   parentGroupProperties?.GetFirstChild<A.BlipFill>() ?? 
+                                   shapePr.GetFirstChild<A.GroupFill>() ?? 
+                                   (parentGroupProperties?.GetFirstChild<A.GroupFill>() as OpenXmlElement);
+            // Note: it's intentional that group fill is searched for last.
+            // If a shape specifies "group fill" (empty element), 
+            // it uses the parent group's fill (if present) rather than the document background fill.
+
+            if (fill != null)
+            {
+                ProcessFill(fill, sb);
+            }
             else
             {
                 // No fill found, try to find style
@@ -762,7 +774,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         //{
         //}
 
-        ProcessEffects(shapePr, effectReference, sb);
+        // ProcessEffects(shapePr, effectReference, sb);
 
         return borderInfo;
     }
