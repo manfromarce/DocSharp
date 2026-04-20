@@ -823,6 +823,12 @@ private Task WriteInternalAsync(string value)
         WriteEndElement();
     }
 
+    public void WriteHorizontalLine()
+    {
+        WriteStartElement("hr");
+        WriteEndElement();
+    }
+
     private class NamespaceScope : List<Namespace>
     {
         public string Default { get; set; } = string.Empty;

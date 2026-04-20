@@ -14,6 +14,7 @@
 - Fix: SchemeColor were incorrectly mapped in DOCX ➡️ RTF converter
 - The new `HorizontalRuleForPageBreaks` and `HorizontalRuleForSectionBreaks` properties allow to set set whether horizontal rule should be written for section breaks and forced page breaks in DOCX ➡️ Markdown converter. In precedence this behavior was always enabled.
 - The new `RecognizeHorizontalLines` property allows to set whether horizontal rule should be written when detecting top/bottom only borders on paragraphs or the special "horizontal line" VML shape in DOCX ➡️ Markdown converter
+- Convert the special "horizontal line" VML shape to `<hr>` in DOCX ➡️ HTML converter
 
 ## 0.18.1 - 2026.04.10
 

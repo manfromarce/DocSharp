@@ -24,11 +24,18 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessVml(OpenXmlElement element, HtmlTextWriter sb)
     {
-        // TODO: detect inline / anchored / floating for VML images
+        if (element is Picture pic && pic.FirstChild is V.Rectangle rect && 
+            rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
+        {
+            sb.WriteHorizontalLine();
+            return;
+        }
 
         if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
+            // TODO: detect inline / anchored / floating for VML images
+
             // For VML, width and height should be in a v:shape element with this attribute: 
             // style="width:165.6pt;height:110.4pt;visibility:visible..."
 
