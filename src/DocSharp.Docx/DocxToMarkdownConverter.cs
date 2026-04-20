@@ -18,6 +18,7 @@ using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
 using M = DocumentFormat.OpenXml.Math;
+using V = DocumentFormat.OpenXml.Vml;
 using Path = System.IO.Path;
 
 namespace DocSharp.Docx;
@@ -98,6 +99,21 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     /// </summary>
     public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
 
+    /// <summary>
+    /// Get or set whether top/bottom paragraph borders and special horizontal line shapes in DOCX should produce an horizontal rule (---) in Markdown.
+    /// </summary>
+    public bool RecognizeHorizontalLines { get; set; } = true;
+
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written between different sections.
+    /// </summary>
+    public bool HorizontalRuleForSectionBreaks { get; set; } = true;
+
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written after forced page breaks.
+    /// </summary>
+    public bool HorizontalRuleForPageBreaks { get; set; } = true;
+
     private bool _isInEmphasis = false;
     private bool _isAllCaps = false;
     private bool _isInCodeBlockParagraph = false;
@@ -133,7 +149,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         base.ProcessSection(section, mainPart, writer);
 
         // Add horizontal rule between sections
-        if (section != Sections[Sections.Count - 1])
+        if (HorizontalRuleForSectionBreaks && section != Sections[Sections.Count - 1])
         {
             writer.WriteHorizontalLine();
         }
@@ -155,6 +171,16 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         }
 
         EnsureEmptyLine(sb); // Add a blank line before the paragraph
+
+        if (RecognizeHorizontalLines && 
+            paragraph.GetEffectiveBorder<LeftBorder>() is null && 
+            paragraph.GetEffectiveBorder<RightBorder>() is null && 
+            (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder && 
+            topBorder.Val != null && topBorder.Val.Value != BorderValues.Nil && topBorder.Val.Value != BorderValues.None && 
+            topBorder.Size != null && topBorder.Size > 0))
+        {
+            sb.WriteHorizontalLine();
+        }
 
         var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>(Styles);
         bool isCode = false;
@@ -212,7 +238,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 this._isInCodeBlockParagraph = false;
 
                 // Start code block
-                sb.WriteLine(" ```");
+                sb.WriteLine("```");
 
                 // Calculate indent for subsequent lines of the fenced block
                 string indent = new string(' ', (levelIndex + 1) * 4);
@@ -226,7 +252,6 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
                 sb.Write(indent);
                 sb.WriteLine("```");
-                return;
             }
             else
             {
@@ -237,17 +262,28 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                 this._isInCodeBlockParagraph = false;
                 sb.WriteLine();
                 sb.WriteLine("```");
-                return;
             }
         }
-
-        if (numberingProperties != null && !isCode)
+        else
         {
-            ProcessListItem(numberingProperties, sb);
+            if (numberingProperties != null && !isCode)
+            {
+                ProcessListItem(numberingProperties, sb);
+            }
+
+            // Process paragraph content
+            base.ProcessParagraph(paragraph, sb);
         }
 
-        // Process paragraph content
-        base.ProcessParagraph(paragraph, sb);
+        if (RecognizeHorizontalLines && 
+            paragraph.GetEffectiveBorder<LeftBorder>() is null && 
+            paragraph.GetEffectiveBorder<RightBorder>() is null && 
+            (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder && 
+            bottomBorder.Val != null && bottomBorder.Val.Value != BorderValues.Nil && bottomBorder.Val.Value != BorderValues.None && 
+            bottomBorder.Size != null && bottomBorder.Size > 0))
+        {
+            sb.WriteHorizontalLine();
+        }
     }
 
     internal void ProcessListItem(NumberingProperties numPr, MarkdownStringWriter sb)
@@ -454,7 +490,8 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     {
         if (br.Type != null && br.Type == BreakValues.Page)
         {
-            sb.WriteHorizontalLine(); // rendered as horizontal rule
+            if (HorizontalRuleForPageBreaks)
+                sb.WriteHorizontalLine(); // rendered as horizontal rule
         }
         else
         {
@@ -658,10 +695,17 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessVml(OpenXmlElement element, MarkdownStringWriter sb)
     {
-        // TODO: detect inline / anchored / floating and hyperlink for VML images
+        if (RecognizeHorizontalLines && 
+            element is Picture pic && pic.FirstChild is V.Rectangle rect && 
+            rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
+        {
+            sb.WriteHorizontalLine();
+            return;
+        }
 
         if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
         {
+            // TODO: detect inline / anchored / floating and hyperlink for VML images
             if (element.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
             {
