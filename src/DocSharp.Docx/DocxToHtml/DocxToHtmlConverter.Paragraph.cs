@@ -107,22 +107,45 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add("vertical-align: top;");
         }
 
-        if (paragraph.GetEffectiveBorder<TopBorder>(Styles) is TopBorder topBorder)
-            ProcessBorder(topBorder, MapParagraphBorderAttribute(topBorder), ref styles);
+        // Group paragraph borders similarly to the Markdown converter: Word groups consecutive
+        // paragraphs with the same style and identical borders and does not draw internal borders.
+        var borders = paragraph.GetEffectiveBorders(Styles);
+        var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
+        var nextBorders = paragraph.GetNextParagraphBorders(Styles);
 
-        if (paragraph.GetEffectiveBorder<BottomBorder>(Styles) is BottomBorder bottomBorder)
-            ProcessBorder(bottomBorder, MapParagraphBorderAttribute(bottomBorder), ref styles);
-        // In the current implementation both BottomBorder and BetweenBorder are mapped to border-bottom in HTML,
-        // so avoid writing duplicate attributes.
-        else if (paragraph.GetEffectiveBorder<BetweenBorder>(Styles) is BetweenBorder betweenBorder)
-            ProcessBorder(betweenBorder, MapParagraphBorderAttribute(betweenBorder), ref styles);
+        if (borders != null)
+        {
+            bool hasLeft = borders.LeftBorder != null;
+            bool hasRight = borders.RightBorder != null;
+            bool hasBar = borders.BarBorder != null;
+            bool hasTop = borders.TopBorder != null;
+            bool hasBottom = borders.BottomBorder != null;
+            bool hasBetween = borders.BetweenBorder != null;
 
-        if (paragraph.GetEffectiveBorder<LeftBorder>(Styles) is LeftBorder leftBorder)
-            ProcessBorder(leftBorder, MapParagraphBorderAttribute(leftBorder), ref styles);
-        if (paragraph.GetEffectiveBorder<RightBorder>(Styles) is RightBorder rightBorder)
-            ProcessBorder(rightBorder, MapParagraphBorderAttribute(rightBorder), ref styles);
-        if (paragraph.GetEffectiveBorder<BarBorder>(Styles) is BarBorder barBorder)
-            ProcessBorder(barBorder, MapParagraphBorderAttribute(barBorder), ref styles);
+            // Apply top border only if it's visible (first of style or differs from previous paragraph)
+            if (hasTop && (paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)))
+            {
+                ProcessBorder(borders.TopBorder, MapParagraphBorderAttribute(borders.TopBorder), ref styles);
+            }
+
+            // Always apply vertical/bar borders when present
+            if (hasLeft)
+                ProcessBorder(borders.LeftBorder, MapParagraphBorderAttribute(borders.LeftBorder), ref styles);
+            if (hasRight)
+                ProcessBorder(borders.RightBorder, MapParagraphBorderAttribute(borders.RightBorder), ref styles);
+            if (hasBar)
+                ProcessBorder(borders.BarBorder, MapParagraphBorderAttribute(borders.BarBorder), ref styles);
+
+            // Apply bottom/between border only if visible (last of style or differs from next paragraph)
+            if (hasBottom && (paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)))
+            {
+                ProcessBorder(borders.BottomBorder, MapParagraphBorderAttribute(borders.BottomBorder), ref styles);
+            }
+            else if (hasBetween && !paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders))
+            {
+                ProcessBorder(borders.BetweenBorder, MapParagraphBorderAttribute(borders.BetweenBorder), ref styles);
+            }
+        }
 
         ProcessShading(paragraph.GetEffectiveProperty<Shading>(Styles), ref styles);
 
@@ -170,7 +193,6 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                     afterValue = afterSpacing / 20m; // Convert twips to points
                 }
             }
-
             styles.Add($"margin-top: {beforeValue.ToStringInvariant(2)}pt;");
             styles.Add($"margin-bottom: {afterValue.ToStringInvariant(2)}pt;");
 

@@ -21,8 +21,6 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
     internal Run? ProcessListItem(NumberingProperties numPr, bool isHidden = false)
     {
-        // Note: we don't produce real HTML lists (<ul> / <ol>) because they are very limited compared to DOCX,
-        // and preserving the original list format would be complicated. 
         var numberingPart = numPr.GetNumberingPart();
         if (numberingPart != null && numPr.NumberingId?.Val != null)
         {

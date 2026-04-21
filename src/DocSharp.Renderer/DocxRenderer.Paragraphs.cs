@@ -58,43 +58,73 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             p.BackgroundColor = QuestPDF.Infrastructure.Color.FromHex(docxBgColor!);
         }
 
-        if (paragraph.GetEffectiveBorder<TopBorder>(Styles) is TopBorder topBorder)
+        // Group paragraph borders similar to HTML/Markdown converters: avoid drawing internal
+        // borders between consecutive paragraphs that share identical borders/styles.
+        var borders = paragraph.GetEffectiveBorders(Styles);
+        var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
+        var nextBorders = paragraph.GetNextParagraphBorders(Styles);
+        string? bordersColor = null;
+
+        if (borders != null)
         {
-            if (topBorder.Size != null)
+            bool hasLeft = borders.LeftBorder != null;
+            bool hasRight = borders.RightBorder != null;
+            bool hasBar = borders.BarBorder != null;
+            bool hasTop = borders.TopBorder != null;
+            bool hasBottom = borders.BottomBorder != null;
+            bool hasBetween = borders.BetweenBorder != null;
+
+            // Apply top border only if visible (first of style or differs from previous)
+            if (hasTop && (paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)))
             {
-                // Open XML uses 1/8 points for border width
-                p.TopBorderThickness = topBorder.Size.Value / 8f;
+                if (borders.TopBorder.Size != null)
+                    p.TopBorderThickness = borders.TopBorder.Size.Value / 8f;
+                if (!string.IsNullOrWhiteSpace(borders.TopBorder.Color?.Value))
+                    bordersColor ??= ColorHelpers.EnsureHexColor(borders.TopBorder.Color.Value);
             }
-            if (ColorHelpers.EnsureHexColor(topBorder.Color?.Value) is string borderColor)
+
+            // Always apply left/right/bar borders when present
+            if (hasLeft)
             {
-                p.BordersColor = borderColor;
+                if (borders.LeftBorder.Size != null)
+                    p.LeftBorderThickness = borders.LeftBorder.Size.Value / 8f;
+                if (!string.IsNullOrWhiteSpace(borders.LeftBorder.Color?.Value))
+                    bordersColor ??= ColorHelpers.EnsureHexColor(borders.LeftBorder.Color.Value);
+            }
+            if (hasRight)
+            {
+                if (borders.RightBorder.Size != null)
+                    p.RightBorderThickness = borders.RightBorder.Size.Value / 8f;
+                if (!string.IsNullOrWhiteSpace(borders.RightBorder.Color?.Value))
+                    bordersColor ??= ColorHelpers.EnsureHexColor(borders.RightBorder.Color.Value);
+            }
+            if (hasBar)
+            {
+                if (borders.BarBorder.Size != null)
+                    p.RightBorderThickness = borders.BarBorder.Size.Value / 8f;
+                if (!string.IsNullOrWhiteSpace(borders.BarBorder.Color?.Value))
+                    bordersColor ??= ColorHelpers.EnsureHexColor(borders.BarBorder.Color.Value);
+            }
+
+            // Apply bottom/between border only if visible (last of style or differs from next)
+            if (hasBottom && (paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)))
+            {
+                if (borders.BottomBorder.Size != null)
+                    p.BottomBorderThickness = borders.BottomBorder.Size.Value / 8f;
+                if (!string.IsNullOrWhiteSpace(borders.BottomBorder.Color?.Value))
+                    bordersColor ??= ColorHelpers.EnsureHexColor(borders.BottomBorder.Color.Value);
+            }
+            else if (hasBetween && !paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders))
+            {
+                if (borders.BetweenBorder.Size != null)
+                    p.BottomBorderThickness = borders.BetweenBorder.Size.Value / 8f;
+                if (!string.IsNullOrWhiteSpace(borders.BetweenBorder.Color?.Value))
+                    bordersColor ??= ColorHelpers.EnsureHexColor(borders.BetweenBorder.Color.Value);
             }
         }
-        BorderType? bottomBorder = paragraph.GetEffectiveBorder<BottomBorder>(Styles) as BorderType ?? paragraph.GetEffectiveBorder<BetweenBorder>(Styles) as BorderType;
-        // In the current implementation BetweenBorder is treated as BottomBorder
-        if (bottomBorder != null)
-        {
-            if (bottomBorder.Size != null)
-            {
-                p.BottomBorderThickness = bottomBorder.Size.Value / 8f;
-            }
-        }
-        if (paragraph.GetEffectiveBorder<LeftBorder>(Styles) is LeftBorder leftBorder)
-        {
-            if (leftBorder.Size != null)
-            {
-                p.LeftBorderThickness = leftBorder.Size.Value / 8f;
-            }
-        }
-        BorderType? rightBorder = paragraph.GetEffectiveBorder<RightBorder>(Styles) as BorderType ?? paragraph.GetEffectiveBorder<BarBorder>(Styles) as BorderType;
-        // In the current implementation BarBorder is treated as RightBorder
-        if (rightBorder != null)
-        {
-            if (rightBorder.Size != null)
-            {
-                p.RightBorderThickness = rightBorder.Size.Value / 8f;
-            }
-        }
+
+        if (!string.IsNullOrWhiteSpace(bordersColor))
+            p.BordersColor = bordersColor;
 
         var spacing = paragraph.GetEffectiveSpacingValues(Styles);
         p.SpaceBefore = spacing.SpaceBefore;

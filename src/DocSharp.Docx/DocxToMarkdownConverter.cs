@@ -100,9 +100,14 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
 
     /// <summary>
-    /// Get or set whether top/bottom paragraph borders and special horizontal line shapes in DOCX should produce an horizontal rule (---) in Markdown.
+    /// Get or set whether special horizontal line shapes in DOCX should produce an horizontal rule (---) in Markdown.
     /// </summary>
-    public bool RecognizeHorizontalLines { get; set; } = true;
+    public bool HorizontalRuleForHorizontalLineShapes { get; set; } = true;
+
+    /// <summary>
+    /// Get or set whether top/bottom/between paragraph borders in DOCX should produce an horizontal rule (---) in Markdown.
+    /// </summary>
+    public bool HorizontalRuleForTopBottomBorders { get; set; } = true;
 
     /// <summary>
     /// Get or set whether an horizontal rule (---) should be written between different sections.
@@ -182,7 +187,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         // (having just e.g. the left border different would close the previous "box" and trigger a new one).
         // In addition, the borders should have non-zero width and non-null style.
         ParagraphBorders? borders = null;
-        if (RecognizeHorizontalLines)
+        if (HorizontalRuleForTopBottomBorders)
         {
             borders = paragraph.GetEffectiveBorders(Styles);
             var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
@@ -190,7 +195,6 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             if ((paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)) &&
                 borders != null && 
                 borders.TopBorder != null && 
-                borders.LeftBorder == null && borders.RightBorder == null && borders.BarBorder == null &&
                 borders.TopBorder.Val != null && borders.TopBorder.Val.Value != BorderValues.Nil && borders.TopBorder.Val.Value != BorderValues.None && 
                 borders.TopBorder.Size != null && borders.TopBorder.Size > 0)
                 // Bottom/between borders is analyzed later
@@ -292,16 +296,15 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             base.ProcessParagraph(paragraph, sb);
         }
 
-        if (RecognizeHorizontalLines)
+        if (HorizontalRuleForTopBottomBorders)
         {
             var nextBorders = paragraph.GetNextParagraphBorders(Styles);            
             if (borders != null && 
-                borders.LeftBorder == null && borders.RightBorder == null && borders.BarBorder == null &&
                 (((paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)) &&
                 borders.BottomBorder != null && 
                 borders.BottomBorder.Val != null && borders.BottomBorder.Val.Value != BorderValues.Nil && borders.BottomBorder.Val.Value != BorderValues.None && 
                 borders.BottomBorder.Size != null && borders.BottomBorder.Size > 0) || 
-                (!paragraph.IsLastOfStyle() &&
+                ((!paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders)) &&
                 borders.BetweenBorder != null && 
                 borders.BetweenBorder.Val != null && borders.BetweenBorder.Val.Value != BorderValues.Nil && borders.BetweenBorder.Val.Value != BorderValues.None && 
                 borders.BetweenBorder.Size != null && borders.BetweenBorder.Size > 0)))
@@ -720,7 +723,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessVml(OpenXmlElement element, MarkdownStringWriter sb)
     {
-        if (RecognizeHorizontalLines && 
+        if (HorizontalRuleForHorizontalLineShapes && 
             element is Picture pic && pic.FirstChild is V.Rectangle rect && 
             rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
         {

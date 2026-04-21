@@ -13,9 +13,11 @@
 - Fix: "pseudo inline" shapes created an incorrect layout in DOCX ➡️ RTF converter
 - Fix: SchemeColor were incorrectly mapped in DOCX ➡️ RTF converter
 - The new `HorizontalRuleForPageBreaks` and `HorizontalRuleForSectionBreaks` properties allow to set set whether horizontal rule should be written for section breaks and forced page breaks in DOCX ➡️ Markdown converter. In precedence this behavior was always enabled.
-- The new `RecognizeHorizontalLines` property allows to set whether horizontal rule should be written when detecting top/bottom only borders on paragraphs or the special "horizontal line" VML shape in DOCX ➡️ Markdown converter
+- The new `HorizontalRuleForHorizontalLineShapes` property allows to set whether horizontal rule should be written for the special "horizontal line" VML shape in DOCX ➡️ Markdown converter (true by default)
+- The new `HorizontalRuleForTopBottomBorders` property allows to set whether horizontal rule should be written for top/bottom paragraph borders in DOCX ➡️ Markdown converter (*false* by default)
 - Convert the special "horizontal line" VML shape to `<hr>` in DOCX ➡️ HTML converter
 - Fix: the paragraph style is now considered for ContextualSpacing in DOCX ➡️ HTML converter
+- Fix: the DOCX paragraph grouping logic for outer/inner borders is now preserved in DOCX ➡️ HTML/PDF converter
 
 ## 0.18.1 - 2026.04.10
 
