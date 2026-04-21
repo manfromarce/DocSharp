@@ -40,7 +40,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             }
         }
 
-        string? font = run.GetEffectiveProperty<RunFonts>(Styles)?.Ascii?.Value;
+        string? font = run.GetEffectiveFont(Styles);
         var bold = run.GetEffectiveProperty<Bold>(Styles);
         var italic = run.GetEffectiveProperty<Italic>(Styles);
         var underline = run.GetEffectiveProperty<Underline>(Styles);

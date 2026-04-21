@@ -254,8 +254,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         string font = string.Empty;
         if (text.Parent is Run run)
         {
-            var fonts = run.GetEffectiveProperty<RunFonts>(Styles);
-            font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
+            font = run.GetEffectiveFont(Styles) ?? string.Empty;
         }
         sb.WriteText(text.InnerText, font);
     }

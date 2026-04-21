@@ -733,6 +733,96 @@ public static class FormattingHelpers
         return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>();
     }
 
+    public static string? GetEffectiveFont(this Run run, Styles? stylesPart = null)
+    {
+        // Check run properties
+        var propertyValue = run.RunProperties?.RunFonts?.Ascii;
+        if (propertyValue != null)
+        {
+            return propertyValue;
+        }
+
+        stylesPart ??= run.GetStylesPart();
+
+        // Check conditional formatting, if any
+        var paragraph = run.GetFirstAncestor<Paragraph>();
+        var conditionalFormattingType = paragraph is null ? ConditionalFormattingFlags.None : paragraph.GetCombinedConditionalFormattingFlags();
+        if (paragraph != null && conditionalFormattingType != ConditionalFormattingFlags.None)
+        {
+            propertyValue = GetConditionalFormattingProperty<RunFonts>(stylesPart, paragraph, conditionalFormattingType)?.Ascii;
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+        }
+
+        // Check run style
+        var runStyle = stylesPart.GetStyleFromId(run.RunProperties?.RunStyle?.Val, StyleValues.Character);
+        while (runStyle != null)
+        {
+            propertyValue = runStyle.StyleRunProperties?.RunFonts?.Ascii;
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check styles from which the current style inherits
+            runStyle = stylesPart.GetBaseStyle(runStyle);
+        }
+
+        // Check paragraph style
+        var paragraphProperties = paragraph?.ParagraphProperties;
+        var paragraphStyle = stylesPart.GetStyleFromId(paragraphProperties?.ParagraphStyleId?.Val, StyleValues.Paragraph);
+        while (paragraphStyle != null)
+        {
+            // Check paragraph style run properties
+            propertyValue = paragraphStyle.StyleRunProperties?.RunFonts?.Ascii;
+            if (propertyValue != null)
+            {
+                return propertyValue;
+            }
+
+            // Check linked style, if any
+            var linkedStyleId = paragraphStyle.LinkedStyle?.Val;
+            if (linkedStyleId != null)
+            {
+                var linkedStyle = stylesPart.GetStyleFromId(linkedStyleId, StyleValues.Character);
+                if (linkedStyle != null)
+                {
+                    propertyValue = linkedStyle.StyleRunProperties?.RunFonts?.Ascii;
+                    if (propertyValue != null)
+                    {
+                        return propertyValue;
+                    }
+                }
+            }
+
+            // Check styles from which the current style inherits
+            paragraphStyle = stylesPart.GetBaseStyle(paragraphStyle);
+        }
+
+        // Check table run style
+        if (run.GetFirstAncestor<Table>() is Table table &&
+            table.GetFirstChild<TableProperties>() is TableProperties tableProperties)
+        {
+            var tableStyle = stylesPart.GetStyleFromId(tableProperties?.TableStyle?.Val, StyleValues.Table);
+            while (tableStyle != null)
+            {
+                propertyValue = tableStyle.StyleRunProperties?.RunFonts?.Ascii;
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+
+                // Check styles from which the current style inherits
+                tableStyle = stylesPart.GetBaseStyle(tableStyle);
+            }
+        }
+
+        // Check default run style for the current document
+        return stylesPart.GetDefaultRunStyle()?.RunFonts?.Ascii;
+    }
+
     /// <summary>
     /// Helper function to get text background color from cell/table properties, style or default style.
     /// Patterns are ignored, returning the primary color only, unless only the secondary color is used.

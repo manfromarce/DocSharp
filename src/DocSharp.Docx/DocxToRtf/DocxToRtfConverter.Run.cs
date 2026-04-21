@@ -79,9 +79,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\noproof\lang1024");
         }
 
-        // To be improved (Ascii value may not be present, although rare)
-        var runFonts = run.GetEffectiveProperty<RunFonts>(Styles);
-        string? asciiFont = runFonts?.Ascii?.Value;       
+        // TODO: map values other than Ascii, such as HighAnsi, EastAsia and ComplexScript fonts.
+        string? asciiFont = (run as Run)?.GetEffectiveFont(Styles);       
         if (!string.IsNullOrEmpty(asciiFont))
         {
             fonts.TryAddAndGetIndex(asciiFont!, out int fontIndex);

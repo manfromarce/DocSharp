@@ -440,8 +440,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         bool isCode = false;
         if ((styleName != null && styleName.Equals("html code", StringComparison.OrdinalIgnoreCase)) ||
             (CodeFontFamilies != null &&
-             run.GetEffectiveProperty<RunFonts>(Styles) is RunFonts rf && rf?.Ascii?.Value != null &&
-             CodeFontFamilies.Contains(rf.Ascii.Value)))
+             run.GetEffectiveFont(Styles) is string font && CodeFontFamilies.Contains(font)))
         // (the "HTML Code" style is created by Microsoft Word when an HTML file is saved as DOCX)
         {
             isCode = true;
@@ -540,8 +539,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         string font = string.Empty;
         if (text.Parent is Run run)
         {
-            var fonts = run.GetEffectiveProperty<RunFonts>(Styles);
-            font = fonts?.Ascii?.Value?.ToLowerInvariant() ?? string.Empty;
+            font = run.GetEffectiveFont(Styles) ?? string.Empty;
         }
         string t = text.InnerText;
         if (_isInEmphasis)

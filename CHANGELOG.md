@@ -18,6 +18,7 @@
 - Convert the special "horizontal line" VML shape to `<hr>` in DOCX ➡️ HTML converter
 - Fix: the paragraph style is now considered for ContextualSpacing in DOCX ➡️ HTML converter
 - Fix: the DOCX paragraph grouping logic for outer/inner borders is now preserved in DOCX ➡️ HTML/PDF converter
+- Fix: in some cases the font family was not preserved in DOCX converters
 
 ## 0.18.1 - 2026.04.10
 

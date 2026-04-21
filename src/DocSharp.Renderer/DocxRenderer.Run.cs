@@ -99,10 +99,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         }
 
         string? fontFamily = null; 
-        if (run.GetEffectiveProperty<RunFonts>(Styles)?.Ascii?.Value is string asciiFont && 
-            !string.IsNullOrWhiteSpace(asciiFont))
+        if (run.GetEffectiveFont(Styles) is string font && !string.IsNullOrWhiteSpace(font))
         {
-            fontFamily = asciiFont;
+            fontFamily = font;
         }
         // TODO: improve fonts handling to support complex scripts;
         // check font embedding license; check QuestPDF subsetting options
