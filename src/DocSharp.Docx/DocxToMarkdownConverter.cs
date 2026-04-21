@@ -172,14 +172,31 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
         EnsureEmptyLine(sb); // Add a blank line before the paragraph
 
-        if (RecognizeHorizontalLines && 
-            paragraph.GetEffectiveBorder<LeftBorder>() is null && 
-            paragraph.GetEffectiveBorder<RightBorder>() is null && 
-            (paragraph.GetEffectiveBorder<TopBorder>() is TopBorder topBorder && 
-            topBorder.Val != null && topBorder.Val.Value != BorderValues.Nil && topBorder.Val.Value != BorderValues.None && 
-            topBorder.Size != null && topBorder.Size > 0))
+        // Borders logic: 
+        // if there are no left/right/bar borders, the border can potentially be rendered as a horizontal line, 
+        // but only if the top/bottom/between border is visible.
+        // A top/bottom border is visible if it is different from the next/previous paragraph border 
+        // OR the paragraph must be the last/first of its style, 
+        // otherwise the two paragraph are grouped under the same "boxed" border.
+        // A "between" border is visible if the two paragraphs have the same style, and also the same borders 
+        // (having just e.g. the left border different would close the previous "box" and trigger a new one).
+        // In addition, the borders should have non-zero width and non-null style.
+        ParagraphBorders? borders = null;
+        if (RecognizeHorizontalLines)
         {
-            sb.WriteHorizontalLine();
+            borders = paragraph.GetEffectiveBorders(Styles);
+            var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
+
+            if ((paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)) &&
+                borders != null && 
+                borders.TopBorder != null && 
+                borders.LeftBorder == null && borders.RightBorder == null && borders.BarBorder == null &&
+                borders.TopBorder.Val != null && borders.TopBorder.Val.Value != BorderValues.Nil && borders.TopBorder.Val.Value != BorderValues.None && 
+                borders.TopBorder.Size != null && borders.TopBorder.Size > 0)
+                // Bottom/between borders is analyzed later
+            {
+                sb.WriteHorizontalLine();
+            }
         }
 
         var numberingProperties = paragraph.GetEffectiveProperty<NumberingProperties>(Styles);
@@ -275,14 +292,22 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             base.ProcessParagraph(paragraph, sb);
         }
 
-        if (RecognizeHorizontalLines && 
-            paragraph.GetEffectiveBorder<LeftBorder>() is null && 
-            paragraph.GetEffectiveBorder<RightBorder>() is null && 
-            (paragraph.GetEffectiveBorder<BottomBorder>() is BottomBorder bottomBorder && 
-            bottomBorder.Val != null && bottomBorder.Val.Value != BorderValues.Nil && bottomBorder.Val.Value != BorderValues.None && 
-            bottomBorder.Size != null && bottomBorder.Size > 0))
+        if (RecognizeHorizontalLines)
         {
-            sb.WriteHorizontalLine();
+            var nextBorders = paragraph.GetNextParagraphBorders(Styles);            
+            if (borders != null && 
+                borders.LeftBorder == null && borders.RightBorder == null && borders.BarBorder == null &&
+                (((paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)) &&
+                borders.BottomBorder != null && 
+                borders.BottomBorder.Val != null && borders.BottomBorder.Val.Value != BorderValues.Nil && borders.BottomBorder.Val.Value != BorderValues.None && 
+                borders.BottomBorder.Size != null && borders.BottomBorder.Size > 0) || 
+                (!paragraph.IsLastOfStyle() &&
+                borders.BetweenBorder != null && 
+                borders.BetweenBorder.Val != null && borders.BetweenBorder.Val.Value != BorderValues.Nil && borders.BetweenBorder.Val.Value != BorderValues.None && 
+                borders.BetweenBorder.Size != null && borders.BetweenBorder.Size > 0)))
+            {
+                sb.WriteHorizontalLine();
+            }
         }
     }
 

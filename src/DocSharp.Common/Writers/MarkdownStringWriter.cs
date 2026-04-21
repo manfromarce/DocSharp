@@ -23,7 +23,24 @@ public sealed class MarkdownStringWriter : BaseStringWriter
 
     public void WriteHorizontalLine()
     {
-        EnsureEmptyLine();
+        if (sb.Length == 0)
+        {
+            // If we are just at the start of the document, add an empty line, 
+            // otherwise the horizontal line is wrongly considered a front matter.
+            WriteLine();
+        }
+        else
+        {
+            if (!EndsWithParagraph()) // If the string ends with 1 or 0 new line chars
+            {
+                WriteLine(); 
+            }
+            if (!EndsWithParagraph()) // If the string ends with only 1 new line char
+            {
+                WriteLine();
+            }
+        }
+        
         WriteLine("-----");
         WriteLine();
     }

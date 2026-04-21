@@ -413,7 +413,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
         long cellSpacing = 0;
-        if (OpenXmlHelpers.GetEffectiveProperty<TableCellSpacing>(Styles) is TableCellSpacing spacing &&
+        if (row.GetEffectiveProperty<TableCellSpacing>(Styles) is TableCellSpacing spacing &&
             spacing.Type != null && spacing.Type.HasValue)
         {
             if (spacing.Type.Value == TableWidthUnitValues.Nil)

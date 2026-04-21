@@ -11,12 +11,53 @@ namespace DocSharp.Docx;
 
 public static class ParagraphHelpers
 {
-    public static bool IsFirst(this Paragraph paragraph)
+    public static bool HasSameStyle(this Paragraph p1, Paragraph p2)
     {
-        return paragraph.PreviousSibling<Paragraph>() == null;
+        var style1 = p1.ParagraphProperties?.ParagraphStyleId?.Val;
+        var style2 = p2.ParagraphProperties?.ParagraphStyleId?.Val;
+        return (style1 == null && style2 == null) || (style1 == style2);
     }
 
-    public static bool IsLast(this Paragraph paragraph)
+    public static bool HasSameStyleAsPrevious(this Paragraph p)
+    {
+        var previous = p.PreviousSibling<Paragraph>();
+        return previous != null && p.HasSameStyle(previous);
+    }
+
+    public static bool HasSameStyleAsNext(this Paragraph p)
+    {
+        var next = p.NextSibling<Paragraph>();
+        return next != null && p.HasSameStyle(next);
+    }
+
+    public static bool IsFirstOfStyle(this Paragraph p)
+    {
+        var previous = p.PreviousSibling() as Paragraph;
+        return previous == null || !p.HasSameStyle(previous);
+    }
+
+    public static bool IsLastOfStyle(this Paragraph p)
+    {
+        var next = p.NextSibling() as Paragraph;
+        return next == null || !p.HasSameStyle(next);
+    }
+
+    public static bool IsFirstConsecutive(this Paragraph paragraph)
+    {
+        return paragraph.PreviousSibling() as Paragraph == null;
+    }
+
+    public static bool IsLastConsecutive(this Paragraph paragraph)
+    {
+        return paragraph.NextSibling() as Paragraph == null;
+    }
+
+    public static bool IsFirstElement(this Paragraph paragraph)
+    {
+        return paragraph.Parent != null && paragraph.Parent.FirstChild == paragraph;
+    }
+
+    public static bool IsLastElement(this Paragraph paragraph)
     {
         return paragraph.Parent != null && paragraph.Parent.LastChild == paragraph;
     }

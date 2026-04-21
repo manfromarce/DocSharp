@@ -122,9 +122,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             return "border-bottom";
         else if (border is BetweenBorder) // horizontal border between identical paragraphs
             return "border-bottom";
-        else if (border is BarBorder) // paragraph border between facing pages
-            return isVertical ? "border-right" : "border-inline-end";
-        // If the paragraph has vertical orientation, inline-end is considered the bottom border (incorrect)
+        // else if (border is BarBorder) // paragraph border between facing pages
+        //     return isVertical ? "border-right" : "border-inline-end";
+        // // If the paragraph has vertical orientation, inline-end is considered the bottom border (incorrect)
         else
             return null;
     }
