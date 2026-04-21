@@ -150,29 +150,29 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                     }
                 }
             }
-
-            if (paragraph.GetEffectiveProperty<ContextualSpacing>(Styles).ToBool())
+ 
+            decimal beforeValue = 0;
+            decimal afterValue = 0;
+            bool contextualSpacing = paragraph.GetEffectiveProperty<ContextualSpacing>(Styles).ToBool();
+            // Check if the previous and next paragraphs have the same style, 
+            // in that case do not apply spacing if ContextualSpacing is on, as Word will not render it in that case.
+            if (paragraph.IsFirstOfStyle() || !contextualSpacing)
             {
-                // Remove spacing between paragraphs of the same styles, to be improved
-                styles.Add($"margin-top: 0pt;");
-                styles.Add($"margin-bottom: 0pt;");
-            }
-            else
-            {
-                decimal beforeValue = 0;
-                decimal afterValue = 0;
                 if (spacing.Before?.Value != null && decimal.TryParse(spacing.Before.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal beforeSpacing))
                 {
                     beforeValue = beforeSpacing / 20m; // Convert twips to points
                 }
-                styles.Add($"margin-top: {beforeValue.ToStringInvariant(2)}pt;");
-
+            }
+            if (paragraph.IsLastOfStyle() || !contextualSpacing)
+            {
                 if (spacing.After?.Value != null && decimal.TryParse(spacing.After.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal afterSpacing))
                 {
                     afterValue = afterSpacing / 20m; // Convert twips to points
                 }
-                styles.Add($"margin-bottom: {afterValue.ToStringInvariant(2)}pt;");
             }
+
+            styles.Add($"margin-top: {beforeValue.ToStringInvariant(2)}pt;");
+            styles.Add($"margin-bottom: {afterValue.ToStringInvariant(2)}pt;");
 
             // TODO: BeforeLines, AfterLines, BeforeAutoSpacing, AfterAutoSpacing
         }

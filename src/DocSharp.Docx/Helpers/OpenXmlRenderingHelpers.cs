@@ -22,8 +22,7 @@ public static class OpenXmlRenderingHelpers
         // If the paragraph has ContextualSpacing enabled and the next paragraph has the same style, 
         // set SpaceAfter to 0
         if (paragraph.GetEffectiveProperty<ContextualSpacing>(stylesPart).ToBool() && 
-            paragraph.NextSibling<Paragraph>() is Paragraph nextParagraph && 
-            StylesHelpers.IsSameStyle(paragraph, nextParagraph))
+            !paragraph.IsLastOfStyle())
         {
             after = 0;
         }
