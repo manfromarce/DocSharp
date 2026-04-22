@@ -44,12 +44,43 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
     /// </summary>
     public bool WriteImageDescription { get; set; } = false;
 
+    /// <summary>
+    /// Get or set whether special horizontal line shapes in DOCX should produce an horizontal line (---) in plain text.
+    /// </summary>
+    public bool HorizontalRuleForHorizontalLineShapes { get; set; } = true;
+
+    /// <summary>
+    /// Get or set whether top/bottom/between paragraph borders in DOCX should produce an horizontal line (---) in plain text.
+    /// </summary>
+    public bool HorizontalRuleForTopBottomBorders { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether an horizontal line (---) should be written between different sections.
+    /// </summary>
+    public bool HorizontalRuleForSectionBreaks { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether an horizontal line (---) should be written after forced page breaks.
+    /// </summary>
+    public bool HorizontalRuleForPageBreaks { get; set; } = false;
+
     internal override void ProcessDocument(Document document, TxtStringWriter sb)
     {
         // Reset state
         this._cellsText.Clear();
         this._listLevelCounters.Clear();
         base.ProcessDocument(document, sb);
+    }
+
+    internal override void ProcessSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, TxtStringWriter sb)
+    {
+        base.ProcessSection(section, mainPart, sb);
+        if (this.HorizontalRuleForSectionBreaks)
+        {
+            sb.WriteLine();
+            sb.WriteLine(new string('-', 20));
+            sb.WriteLine();
+        }
     }
 
     internal override void ProcessHeader(Header header, TxtStringWriter writer)
@@ -106,7 +137,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             return;
         }
 
-        EnsureEmptyLine(sb); // Add a blank line before the table
+        sb.EnsureEmptyLine(); // Add a blank line before the table
 
         var rows = table.Elements<TableRow>();
         int maxCellsPerRow = rows.Max(c => c.Elements<TableCell>().Count());
@@ -277,13 +308,50 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             return;
         }
 
-        EnsureEmptyLine(sb); // Add a blank line before the paragraph
+        sb.EnsureEmptyLine(); // Add a blank line before the paragraph
+
+        ParagraphBorders? borders = null;
+        if (HorizontalRuleForTopBottomBorders)
+        {
+            borders = paragraph.GetEffectiveBorders(Styles);
+            var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
+
+            if ((paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)) &&
+                borders != null && 
+                borders.TopBorder != null && 
+                borders.TopBorder.Val != null && borders.TopBorder.Val.Value != BorderValues.Nil && borders.TopBorder.Val.Value != BorderValues.None && 
+                borders.TopBorder.Size != null && borders.TopBorder.Size > 0)
+                // Bottom/between borders is analyzed later
+            {
+                sb.WriteLine(new string('-', 20));
+                sb.WriteLine();
+            }
+        }
 
         if (numberingProperties != null)
         {
             ProcessListItem(numberingProperties, sb);
         }
         base.ProcessParagraph(paragraph, sb);
+
+        if (HorizontalRuleForTopBottomBorders)
+        {
+            var nextBorders = paragraph.GetNextParagraphBorders(Styles);            
+            if (borders != null && 
+                (((paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)) &&
+                borders.BottomBorder != null && 
+                borders.BottomBorder.Val != null && borders.BottomBorder.Val.Value != BorderValues.Nil && borders.BottomBorder.Val.Value != BorderValues.None && 
+                borders.BottomBorder.Size != null && borders.BottomBorder.Size > 0) || 
+                ((!paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders)) &&
+                borders.BetweenBorder != null && 
+                borders.BetweenBorder.Val != null && borders.BetweenBorder.Val.Value != BorderValues.Nil && borders.BetweenBorder.Val.Value != BorderValues.None && 
+                borders.BetweenBorder.Size != null && borders.BetweenBorder.Size > 0)))
+            {
+                sb.EnsureEmptyLine();
+                sb.WriteLine(new string('-', 20));
+                sb.WriteLine();
+            }
+        }
     }
 
     private readonly Dictionary<int, (int numId, int abstractNumId, int counter)> _listLevelCounters = new();
@@ -432,7 +500,13 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         if (br.Type != null && (br.Type.Value == BreakValues.Column || br.Type.Value == BreakValues.Page))
         {
             // Hard break
-            sb.WriteLine();
+            sb.EnsureEmptyLine();
+
+            if (br.Type.Value == BreakValues.Page && this.HorizontalRuleForPageBreaks)
+            {
+                sb.WriteLine(new string('-', 20));
+                sb.WriteLine();
+            }
         }
     }
 
@@ -472,7 +546,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             }
             if (!string.IsNullOrWhiteSpace(altText))
             {
-                EnsureEmptyLine(sb);
+                sb.EnsureEmptyLine();
                 sb.WriteLine(altText);
                 sb.WriteLine();
             }
@@ -481,7 +555,15 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb)
     {
-        if (picture.Descendants<TextBoxContent>().FirstOrDefault() is TextBoxContent txbxContent)
+        if (HorizontalRuleForHorizontalLineShapes && 
+            picture is Picture pic && pic.FirstChild is V.Rectangle rect && 
+            rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
+        {
+            sb.EnsureEmptyLine();
+            sb.WriteLine(new string('-', 20));
+            sb.WriteLine();            
+        }
+        else if (picture.Descendants<TextBoxContent>().FirstOrDefault() is TextBoxContent txbxContent)
         {
             foreach (var element in txbxContent.Elements())
             {
@@ -492,7 +574,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
                  shape.GetFirstChild<V.TextPath>() is V.TextPath textPath &&
                  textPath.String?.Value != null)
         {
-            EnsureEmptyLine(sb);
+            sb.EnsureEmptyLine();
             ProcessText(new Text(textPath.String.Value), sb);
         }
     }
@@ -531,7 +613,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal override void ProcessBody(Body body, TxtStringWriter sb)
     {
-        EnsureEmptyLine(sb); // For sub-documents / AltChunks
+        sb.EnsureEmptyLine(); // For sub-documents / AltChunks
         base.ProcessBody(body, sb);
     }
 

@@ -78,6 +78,16 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     /// </summary>
     public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
 
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written between different sections.
+    /// </summary>
+    public bool HorizontalRuleForSectionBreaks { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written after forced page breaks.
+    /// </summary>
+    public bool HorizontalRuleForPageBreaks { get; set; } = false;
+
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
         // Reset state
@@ -317,6 +327,10 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         if (@break.Type != null && @break.Type == BreakValues.Page)
         {
+            if (HorizontalRuleForPageBreaks)
+            {
+                writer.WriteHorizontalLine();
+            }
             writer.WriteStartElement("div");
             writer.WriteAttributeString("style", "break-after: page;");
             writer.WriteEndElement();

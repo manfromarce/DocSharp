@@ -27,6 +27,10 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
         base.ProcessSection(section, mainPart, sb);
         sb.WriteEndElement();
+        if (this.HorizontalRuleForSectionBreaks)
+        {
+            sb.WriteHorizontalLine();
+        }
     }
 
     internal override void ProcessHeader(Header header, HtmlTextWriter writer)

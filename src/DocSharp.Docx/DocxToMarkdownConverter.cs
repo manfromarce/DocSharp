@@ -107,7 +107,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     /// <summary>
     /// Get or set whether top/bottom/between paragraph borders in DOCX should produce an horizontal rule (---) in Markdown.
     /// </summary>
-    public bool HorizontalRuleForTopBottomBorders { get; set; } = true;
+    public bool HorizontalRuleForTopBottomBorders { get; set; } = false;
 
     /// <summary>
     /// Get or set whether an horizontal rule (---) should be written between different sections.
