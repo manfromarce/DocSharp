@@ -22,11 +22,77 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
     internal void ProcessVml(OpenXmlElement element, RtfStringWriter sb, bool ignoreWrapLayouts)
     {
-        if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
+        if (element is Picture pic && pic.FirstChild is V.Rectangle rect && 
+            rect.Horizontal != null && rect.Horizontal != null)
+        {
+            // Write standard shape properties for horizontal line
+            sb.Write(@"{\pict{\*\picprop");
+            sb.WriteShapeProperty("shapeType", 1);
+            sb.WriteShapeProperty("fFlipH", 0);
+            sb.WriteShapeProperty("fFlipV", 0);
+            sb.WriteShapeProperty("fHorizRule", true); // Specifies that a shape is a horizontal rule
+            sb.WriteShapeProperty("fStandardHR", rect.HorizontalStandard == null || rect.HorizontalStandard.Value); // true by default
+            
+            if (rect.HorizontalAlignment != null && rect.HorizontalAlignment.Value == V.Office.HorizontalRuleAlignmentValues.Left)
+            {
+                sb.WriteShapeProperty("alignHR", 0);
+            }
+            else if (rect.HorizontalAlignment != null && rect.HorizontalAlignment.Value == V.Office.HorizontalRuleAlignmentValues.Right)
+            {
+                sb.WriteShapeProperty("alignHR", 2);
+            }
+            else
+            {
+                sb.WriteShapeProperty("alignHR", 1); // center by default
+            }
+
+            sb.WriteShapeProperty("fNoShadeHR", rect.HorizontalNoShade != null && rect.HorizontalNoShade.Value);
+
+            // Check if the style contains a custom fill color, 
+            // otherwise use the default Word color for horizontal line (light gray 160,160,160).
+            int? bgr = ColorHelpers.HexToBgr(rect.FillColor);
+            if (bgr != null)
+            {
+                sb.WriteShapeProperty("fillColor", bgr.Value);
+            }
+            else
+            {
+                sb.WriteShapeProperty("fillColor", "10526880");
+            }
+            sb.WriteShapeProperty("fFilled", true);
+            sb.WriteShapeProperty("fLine", false);
+            
+            // Check if the style contains a custom height value, 
+            // otherwise use the default Word height for horizontal lines which is 1.5 points (30 twips).
+            if (rect.Style?.Value != null && 
+                GetShapeStyleProperties(rect.Style.Value, out long width, out long height) is Dictionary<string, string> styleProperties && 
+                height > 0)
+            {
+                sb.WriteShapeProperty("dxHeightHR", height); // already converted to twips in GetShapeStyleProperties
+            }
+            else
+            {
+                sb.WriteShapeProperty("dxHeightHR", 30); 
+            }
+
+            if (rect.HorizontalPercentage != null && rect.HorizontalPercentage.Value > 0)
+            {
+                sb.WriteShapeProperty("pctHR", rect.HorizontalPercentage.Value); // in 10ths of percent (no conversion needed)
+            }
+
+            sb.WriteShapeProperty("fLayoutInCell", true);
+            
+            // Close picprop group
+            sb.WriteLine("}"); 
+
+            // Write standard picture for horizontal line
+            sb.WriteLine(@"\picscalex1\picscaley1\piccropl0\piccropr0\piccropt0\piccropb0\picw7620\pich7620\picwgoal4320\pichgoal4320\wmetafile8}");
+        }
+        else if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
             OpenXmlElement? shape;
-            // This method supports can be called for either a picture container (w:pict)
+            // This method can be called for either a picture container (w:pict)
             // or the underlying shape/rectangle.
             // Usually ImageData is contained in a shape of type 75 (picture),
             // but a rectangle may also be used (e.g. by WordPad for OLE objects).
