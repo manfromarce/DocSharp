@@ -25,6 +25,58 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
 {
     private T? ProcessPicture<T>(RtfDestination picture, bool isPictureBullet = false) where T : OpenXmlElement, new()
     {
+        if (!isPictureBullet && 
+            picture.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name.Equals("picprop", StringComparison.OrdinalIgnoreCase)) is RtfDestination picProp && 
+            ReadShapePropertyAsBool(picProp, "fHorizRule") == true)
+        {            
+            // Special handling for horizontal line
+
+            decimal height = 1.5m; // default to 1.5pt (30 twips) if not specified; can be overriden by dxHeightHR property
+            if (ReadShapePropertyAsLong(picProp, "dxHeightHR") is long heightTokenValue)
+            {
+                height = heightTokenValue / 20.0m; // convert from twips to points
+            }
+            string width = "0"; // If not specified, leave it to 0 without unit, as Word will automatically use the full available width for horizontal lines.
+            if (ReadShapePropertyAsLong(picProp, "dxWidthHR") is long widthTokenValue)
+            {
+                width = $"{(widthTokenValue / 20.0m).ToStringInvariant()}pt"; // convert from twips to points
+            }
+
+            string? fillColor = ColorHelpers.BgrToHex(ReadShapePropertyAsLong(picProp, "fillColor") ?? 0);
+            var hrShape = new V.Rectangle()
+            {
+                Style = $"width:{width};height:{height.ToStringInvariant()}pt;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text",
+                Horizontal = true,
+                HorizontalStandard = ReadShapePropertyAsBool(picProp, "fStandardHR") == true,
+                HorizontalNoShade = ReadShapePropertyAsBool(picProp, "fNoShadeHR") == true,
+                HorizontalAlignment = ReadShapeProperty(picProp, "alignHR") switch
+                {
+                    "0" => V.Office.HorizontalRuleAlignmentValues.Left,
+                    "1" => V.Office.HorizontalRuleAlignmentValues.Center,
+                    "2" => V.Office.HorizontalRuleAlignmentValues.Right,
+                    _ => V.Office.HorizontalRuleAlignmentValues.Center // center is the default
+                },
+                Stroked = false
+            };
+            if (hrShape.HorizontalNoShade && fillColor != null)
+            {
+                hrShape.FillColor = fillColor;
+                // hrShape.Filled = true;
+            }
+            else
+            {
+                hrShape.FillColor = "#a0a0a0"; // Default Word fill color for horizontal lines
+            }
+            if (ReadShapePropertyAsLong(picProp, "pctHR") is long pctHrValue)
+            {
+                hrShape.HorizontalPercentage = pctHrValue;
+            }
+
+            var hrPict = new T();
+            hrPict.Append(hrShape);
+            return hrPict;
+        }
+
         double? widthInPoints = 0;
         double? heightInPoints = 0;
         PartTypeInfo? imagePartType = null;
@@ -113,4 +165,78 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
         
         return pict;
     }
+
+    private RtfGroup? FindShapeProperty(RtfGroup parent, string propertyName)
+    {
+        var sp = parent.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name.Equals("sp", StringComparison.OrdinalIgnoreCase) && 
+                 d.Tokens.OfType<RtfDestination>().FirstOrDefault(subDest => subDest.Name.Equals("sn", StringComparison.OrdinalIgnoreCase) && 
+                 subDest.Tokens.FirstOrDefault() is RtfText text && text.Text.Equals(propertyName, StringComparison.OrdinalIgnoreCase)) != null);        
+        return sp?.Tokens.OfType<RtfDestination>().FirstOrDefault(d => d.Name.Equals("sv", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Helper method to read properties of type {\sp{\sn propertyName}{\sv propertyValue}} that can be found in RTF pictures and shapes.
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+	private string? ReadShapeProperty(RtfGroup parent, string propertyName)
+    {
+        if (FindShapeProperty(parent, propertyName) is RtfDestination sv)
+        {
+            return sv.Tokens.OfType<RtfText>().FirstOrDefault()?.Text.Trim() ?? string.Empty;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Helper method to read properties of type {\sp{\sn propertyName}{\sv propertyValue}} (which can be found in RTF pictures and shapes) as boolean.
+    /// These properties are expected to have a value of "1" for true and "0" for false, and cannot have any other value according to the RTF specification.
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+	private bool? ReadShapePropertyAsBool(RtfGroup parent, string propertyName)
+    {
+        if (FindShapeProperty(parent, propertyName) is RtfDestination sv)
+        {
+            return sv.Tokens.OfType<RtfText>().FirstOrDefault()?.Text.Trim() switch
+            {
+                "1" => true,
+                "0" => false,
+                _ => null
+            };
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Helper method to read properties of type {\sp{\sn propertyName}{\sv propertyValue}} (which can be found in RTF pictures and shapes) as long.
+    /// These properties are expected to have a numeric value according to the RTF specification.
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+	private long? ReadShapePropertyAsLong(RtfGroup parent, string propertyName)
+    {
+        if (FindShapeProperty(parent, propertyName) is RtfDestination sv)
+        {
+            var valueText = sv.Tokens.OfType<RtfText>().FirstOrDefault()?.Text.Trim();
+            if (long.TryParse(valueText, NumberStyles.Integer, CultureInfo.InvariantCulture, out long result))
+                return result;
+            else
+                return null;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
 }

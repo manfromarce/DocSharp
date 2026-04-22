@@ -201,11 +201,11 @@ public static class ColorHelpers
         return (0, 0, 0);
     }
 
-    public static string BgrToHex(int bgr)
+    public static string BgrToHex(long bgr)
     {
-        int b = (bgr >> 16) & 0xFF;
-        int g = (bgr >> 8) & 0xFF;
-        int r = bgr & 0xFF;
+        long b = (bgr >> 16) & 0xFF;
+        long g = (bgr >> 8) & 0xFF;
+        long r = bgr & 0xFF;
 
         return $"#{r:X2}{g:X2}{b:X2}";
     }

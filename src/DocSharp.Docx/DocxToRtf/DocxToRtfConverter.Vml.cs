@@ -62,18 +62,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.WriteShapeProperty("fFilled", true);
             sb.WriteShapeProperty("fLine", false);
             
-            // Check if the style contains a custom height value, 
-            // otherwise use the default Word height for horizontal lines which is 1.5 points (30 twips).
+            // Check if the style contains width and height.
+            long height = 0;
             if (rect.Style?.Value != null && 
-                GetShapeStyleProperties(rect.Style.Value, out long width, out long height) is Dictionary<string, string> styleProperties && 
-                height > 0)
+                GetShapeStyleProperties(rect.Style.Value, out long width, out height) != null)
             {
-                sb.WriteShapeProperty("dxHeightHR", height); // already converted to twips in GetShapeStyleProperties
+                if (width > 0)
+                    sb.WriteShapeProperty("dxWidthHR", width); // already converted to twips in GetShapeStyleProperties
             }
-            else
-            {
-                sb.WriteShapeProperty("dxHeightHR", 30); 
-            }
+            // If no line height (thickness) is found use the default Word value which is 1.5 points (30 twips).
+            // Width is not mandatory instead, as it can also be specified as percentage or calculated automatically.
+            sb.WriteShapeProperty("dxHeightHR", height > 0 ? height : 30);
 
             if (rect.HorizontalPercentage != null && rect.HorizontalPercentage.Value > 0)
             {

@@ -16,7 +16,7 @@
 - The new `HorizontalRuleForHorizontalLineShapes` property allows to set whether horizontal rule should be written for the special "horizontal line" VML shape in DOCX ➡️ Markdown/plain text converter (true by default)
 - The new `HorizontalRuleForTopBottomBorders` property allows to set whether horizontal rule should be written for top/bottom paragraph borders in DOCX ➡️ Markdown/plain text converter (*false* by default)
 - Convert the special "horizontal line" VML shape to `<hr>` in DOCX ➡️ HTML converter
-- Preserve the special "horizontal line" VML shape in DOCX ➡️ RTF converter
+- Preserve the special "horizontal line" VML shape in DOCX ➡️ RTF and RTF ➡️ DOCX converters
 - Fix: the paragraph style is now considered for ContextualSpacing in DOCX ➡️ HTML converter
 - Fix: the DOCX paragraph grouping logic for outer/inner borders is now preserved in DOCX ➡️ HTML/PDF converter
 - Fix: in some cases the font family was not preserved in DOCX converters

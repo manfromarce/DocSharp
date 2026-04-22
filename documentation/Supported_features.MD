@@ -34,6 +34,7 @@ Known issues:
 | Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[9] | ❌ | - |
 | Modern shapes, text boxes and image/shape effects (DrawingML) | 🟡[14] | ❌ | ❌ | 🟡 [10] |
 | Legacy shapes, text boxes, effects and WordArt (VML) | 🟡[14] | ❌ | ❌ | 🟡 [10] |
+| Horizontal line | ✅ | ✅ | ✅ | ✅ |
 | SmartArt diagrams | ❌[14] | ❌ | ❌ | - |
 | Legacy diagrams | ❌[14] | ❌ | ❌ | - |
 | Charts | -[15] | ❌ | ❌ | - |
@@ -47,6 +48,7 @@ Known issues:
 | Comments | ✅ | ❌ | - | - |
 | Revisions | ❌ | ❌ | - | - |
 | Mail merge | ❌ | - | - | - |
+| Custom XML (Smart tags) | ❌ | ❌ | - | - |
 | Macros | ❌ | - | - | - |
 | Document background | 🟡[12] | 🟡[13] | - | - |
 | Document information (title, author, ...) | ✅ | ❌ | - | - |
@@ -119,6 +121,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Header and footer
 - ✅ Footnotes and endnotes
 - 🟡 Pictures (supported but text wrapping layouts and many properties written by Word are not recognized, all pictures are rendered in line with text)
+- ✅ Horizontal lines
 - ✅ Math formulas
 - ❌ Drawings (text boxes, shapes, diagrams, WordArt)
 - 🟡 OLE objects (preserved as images)
@@ -133,8 +136,9 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ❌ Custom XML (smart tags)
 - ❌ Sub-documents
 - ❌ Encapsulated HTML
+- ❌ Macros
 - ❌ Theme data
-- ❌ Colore scheme
+- ❌ Color scheme
 
 ## DOCX to QuestPDF renderer
 
@@ -156,7 +160,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
     - Limitation: not every type of bookmark is currently supported (but the most common work properly)
 - ✅ Lists
 - 🟡 Pictures - supported but text wrapping layouts and many properties written by Word are not recognized (always rendered in line with text)
-- ⌛ Math formulas
+- ❌ Math formulas
 - ✅ Tables
     - Not supported: external spacing between cells; cell border styles (double, dashed, shadow, ...); diagonal internal borders; vertical text; some options such as CantSplit, NoWrap, TableCellFitText; some advanced text wrapping / position properties; some types of cell/row width (percentage, or TableLayout set to Auto); space before/after single row (different from table)
     - Limitations: the border color is the same for top/bottom/left/right of each cell due to a limitation in the QuestPDF API  
