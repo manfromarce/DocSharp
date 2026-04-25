@@ -93,18 +93,9 @@ public class HtmlSaveOptions : ISaveOptions
     /// </summary>
     public string? ImagesBaseUriOverride { get; set; } = null;
 
-    /// <summary>
-    /// Since HTML is not paginated, only the header of the first section and
-    /// footer of the last section are exported.
-    /// Set this property to false to ignore headers and footers.
-    /// </summary>
-    public bool ExportHeaderFooter { get; set; } = true;
+    public HeaderFooterExportOptions HeaderFooterExportOptions { get; set; } = HeaderFooterExportOptions.FirstHeaderLastFooter;
 
-    /// <summary>
-    /// Since HTML is not paginated, both footnotes and endnotes are exported at the end of the document.
-    /// Set this property to false to ignore footnotes and endnotes.
-    /// </summary>
-    public bool ExportFootnotesEndnotes { get; set; } = true;
+    public FootnoteEndnoteExportOptions FootnoteEndnoteExportOptions { get; set; } = FootnoteEndnoteExportOptions.EndOfDocument;
 
     /// <summary>
     /// Get or set the base file path for processing external sub-documents (if any).

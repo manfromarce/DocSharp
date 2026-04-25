@@ -60,18 +60,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     /// </summary>
     public string? ImagesBaseUriOverride { get; set; } = null;
 
-    /// <summary>
-    /// Since HTML is not paginated, only the header of the first section and
-    /// footer of the last section are exported.
-    /// Set this property to false to ignore headers and footers.
-    /// </summary>
-    public bool ExportHeaderFooter { get; set; } = true;
+    public HeaderFooterExportOptions HeaderFooterExportOptions { get; set; } = HeaderFooterExportOptions.FirstHeaderLastFooter;
 
-    /// <summary>
-    /// Since HTML is not paginated, both footnotes and endnotes are exported at the end of the document.
-    /// Set this property to false to ignore footnotes and endnotes.
-    /// </summary>
-    public bool ExportFootnotesEndnotes { get; set; } = true;
+    public FootnoteEndnoteExportOptions FootnoteEndnoteExportOptions { get; set; } = FootnoteEndnoteExportOptions.EndOfDocument;
 
     /// <summary>
     /// Used to map DOCX styles by name. The default <see cref="DefaultStyleNamingResolver"/> can be overriden to customize style mappings.
@@ -87,6 +78,13 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     /// Get or set whether an horizontal rule (---) should be written after forced page breaks.
     /// </summary>
     public bool HorizontalRuleForPageBreaks { get; set; } = false;
+
+    /// <summary>
+    /// If true, the converter will produce a fixed-layout page-like container for sections
+    /// (applies width, padding/margins and borders to the section `div` and centers it).
+    /// Default is false (fluid layout).
+    /// </summary>
+    public bool FixedLayout { get; set; } = false;
 
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
@@ -105,9 +103,14 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
 
         // Process body content
-        if (document.Body is Body body)
+        if (document.Body is Body body && document.MainDocumentPart != null)
         {
-            base.ProcessBody(body, sb);
+            Sections = body.GetSections();
+
+            foreach (var section in Sections)
+            {
+                ProcessSection(section, document.MainDocumentPart, sb);
+            }
         }
 
         sb.WriteEndElement("body");

@@ -55,8 +55,8 @@ public static class DocxExtensions
             case HtmlSaveOptions htmlSaveOptions: 
                 var docxToHtmlConverter = new DocxToHtmlConverter()
                 {
-                    ExportFootnotesEndnotes = htmlSaveOptions.ExportFootnotesEndnotes,
-                    ExportHeaderFooter = htmlSaveOptions.ExportHeaderFooter,
+                    FootnoteEndnoteExportOptions = htmlSaveOptions.FootnoteEndnoteExportOptions,
+                    HeaderFooterExportOptions = htmlSaveOptions.HeaderFooterExportOptions,
                     OriginalFolderPath = htmlSaveOptions.OriginalFolderPath,
                     ImageConverter = htmlSaveOptions.ImageConverter,
                     ImagesBaseUriOverride = htmlSaveOptions.ImagesBaseUriOverride,

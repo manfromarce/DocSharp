@@ -163,8 +163,8 @@ public partial class MainWindow : Window
                 {
                     var converter = new DocxToHtmlConverter()
                     {
-                        ExportHeaderFooter = true,
-                        ExportFootnotesEndnotes = true,
+                        HeaderFooterExportOptions = HeaderFooterExportOptions.FirstHeaderLastFooter,
+                        FootnoteEndnoteExportOptions = FootnoteEndnoteExportOptions.EndOfDocument,
                         ImageConverter = new ImageSharpConverter(), // Converts TIFF and WMF that are not supported by browsers
                         // ImageConverter = new SystemDrawingConverter(), // Supports EMF too
                         OriginalFolderPath = Path.GetDirectoryName(ofd.FileName) // converts sub-documents (if any)
@@ -285,6 +285,27 @@ public partial class MainWindow : Window
 
     private void RtfToDocx_Click(object sender, RoutedEventArgs e)
     {
+        // var ofd = new OpenFileDialog()
+        // {
+        //     Filter = "Rich Text Format|*.rtf",
+        //     Multiselect = true,
+        // };
+        // if (ofd.ShowDialog(this) == true && ofd.FileNames.Length > 0)
+        // {
+        //     foreach (var file in ofd.FileNames)
+        //     {
+        //         try
+        //         {
+        //             var conv = new RtfToDocxConverter();
+        //             conv.Convert(file, Path.ChangeExtension(file, ".docx"));
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             string content = ex.Message + System.Environment.NewLine + (ex.StackTrace ?? "");
+        //             File.WriteAllText(Path.ChangeExtension(file, ".txt"), content);
+        //         }
+        //     }
+        // }
         var ofd = new OpenFileDialog()
         {
             Filter = "Rich Text Format|*.rtf",
@@ -934,8 +955,8 @@ public partial class MainWindow : Window
                     // Convert document to HTML
                     wordDocument.SaveTo(htmlFilePath, new HtmlSaveOptions()
                     {
-                        ExportHeaderFooter = true,
-                        ExportFootnotesEndnotes = true,
+                        HeaderFooterExportOptions = HeaderFooterExportOptions.FirstHeaderLastFooter,
+                        FootnoteEndnoteExportOptions = FootnoteEndnoteExportOptions.EndOfDocument,
                         ImageConverter = new SystemDrawingConverter(), // Converts TIFF, WMF and EMF
                                                                        // (ImageSharp does not support WMF / EMF yet)
                     });

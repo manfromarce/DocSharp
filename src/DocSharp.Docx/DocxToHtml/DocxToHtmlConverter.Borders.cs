@@ -12,7 +12,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
-    internal void ProcessBorder(BorderType? border, string? cssAttribute, ref List<string> styles)
+    internal void ProcessBorder(BorderType? border, string? cssAttribute, ref List<string> styles, MapBorderSpacing mapBorderSpacing = MapBorderSpacing.None)
     {
         if (border == null || cssAttribute == null)
         {
@@ -94,9 +94,17 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         //{
         //}
 
-        if (border.Space != null && border.Space.Value > 0) // for paragraphs only
+        if (mapBorderSpacing != MapBorderSpacing.None && border.Space != null && border.Space.Value > 0)
         {
-            string? paddingAttribute = MapParagraphBorderToPadding(border);
+            string? paddingAttribute = null;
+            if (mapBorderSpacing == MapBorderSpacing.Margin)
+            {
+                paddingAttribute = MapParagraphBorderToMargin(border);
+            }
+            else if (mapBorderSpacing == MapBorderSpacing.Padding)
+            {
+                paddingAttribute = MapParagraphBorderToPadding(border);
+            }
             if (paddingAttribute != null)
             {
                 // Border spacing is expressed in points (not twips) in DOCX.
@@ -114,8 +122,6 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             return "border-left";
         else if (border is RightBorder)
             return "border-right";
-        // TODO: top and bottom borders should create a box around paragraphs with the same borders;
-        // currently they are treated like the "Between" border.
         else if (border is TopBorder)
             return "border-top";
         else if (border is BottomBorder)
@@ -129,6 +135,21 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             return null;
     }
 
+    internal string? MapParagraphBorderToMargin(BorderType border, bool isVertical = false)
+    {
+        // Only border types that can be found in ParagraphBorders are processed here.
+        if (border is LeftBorder)
+            return "margin-left";
+        else if (border is RightBorder)
+            return "margin-right";
+        else if (border is TopBorder)
+            return "margin-top";
+        else if (border is BottomBorder)
+            return "margin-bottom";
+        else
+            return null;
+    }
+
     internal string? MapParagraphBorderToPadding(BorderType border, bool isVertical = false)
     {
         // Only border types that can be found in ParagraphBorders are processed here.
@@ -136,17 +157,12 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             return "padding-left";
         else if (border is RightBorder)
             return "padding-right";
-        // TODO: top and bottom borders should create a box around paragraphs with the same borders;
-        // currently they are treated like the "Between" border.
         else if (border is TopBorder)
             return "padding-top";
         else if (border is BottomBorder)
             return "padding-bottom";
         else if (border is BetweenBorder) // horizontal border between identical paragraphs
             return "padding-bottom";
-        else if (border is BarBorder) // paragraph border between facing pages
-            return isVertical ? "padding-right" : "padding-inline-end";
-        // If the paragraph has vertical orientation, inline-end is considered the bottom border (incorrect)
         else
             return null;
     }

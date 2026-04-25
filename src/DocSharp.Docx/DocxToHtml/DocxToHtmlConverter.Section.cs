@@ -19,15 +19,52 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     private bool _pagePrintStyleEmitted = false;
     internal override void ProcessSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, HtmlTextWriter sb)
     {
-        var styles = new List<string>();
+        var visualStyles = new List<string>();
+        var contentStyles = new List<string>();
+        ProcessSectionProperties(section.properties, ref visualStyles, ref contentStyles, sb);
+
+        // Outer visual container (shadow, decorative border) - not printed
         sb.WriteStartElement("div");
-        ProcessSectionProperties(section.properties, ref styles, sb);
-        if (styles.Count > 0)
+        sb.WriteAttributeString("class", "page-visual");
+        if (visualStyles.Count > 0)
         {
-            sb.WriteAttributeString("style", string.Join(" ", styles));
+            sb.WriteAttributeString("style", string.Join(" ", visualStyles));
         }
+
+        // Inner content container - this is the printable area inside the fake border
+        sb.WriteStartElement("div");
+        sb.WriteAttributeString("class", "page-content");
+        if (contentStyles.Count > 0)
+        {
+            sb.WriteAttributeString("style", string.Join(" ", contentStyles));
+        }
+
+        if (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooterPerSection 
+           || (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooter && 
+              ( Sections.Count == 1 || section == Sections.FirstOrDefault())))
+        {
+            ProcessFirstHeader(section.properties, sb);
+        }
+
         base.ProcessSection(section, mainPart, sb);
-        sb.WriteEndElement();
+
+        if (FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.EndOfDocument && 
+            (Sections.Count == 1 || section == Sections.LastOrDefault()))
+        {
+            ProcessFootnotes(mainPart?.FootnotesPart, sb);
+            ProcessEndnotes(mainPart?.EndnotesPart, sb);
+        };
+
+        if (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooterPerSection 
+           || (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooter && 
+              ( Sections.Count == 1 || section == Sections.LastOrDefault())))
+        {
+            ProcessLastFooter(section.properties, sb);
+        }
+
+        sb.WriteEndElement(); // .page-content
+        sb.WriteEndElement(); // .page-visual
+
         if (this.HorizontalRuleForSectionBreaks)
         {
             sb.WriteHorizontalLine();
@@ -36,7 +73,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal override void ProcessHeader(Header header, HtmlTextWriter writer)
     {
-        if (this.ExportHeaderFooter)
+        if (this.HeaderFooterExportOptions != HeaderFooterExportOptions.None)
         {
             writer.WriteStartElement("div");
             writer.WriteAttributeString("style", "opacity: 0.7;");
@@ -47,7 +84,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal override void ProcessFooter(Footer footer, HtmlTextWriter writer)
     {
-        if (this.ExportHeaderFooter)
+        if (this.HeaderFooterExportOptions != HeaderFooterExportOptions.None)
         {
             writer.WriteStartElement("div");
             writer.WriteAttributeString("style", "opacity: 0.7;");
@@ -56,7 +93,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
     }
 
-    internal void ProcessSectionProperties(SectionProperties? sectionProperties, ref List<string> styles, HtmlTextWriter sb)
+    internal void ProcessSectionProperties(SectionProperties? sectionProperties, ref List<string> visualStyles, ref List<string> contentStyles, HtmlTextWriter sb)
     {
         if (sectionProperties == null)
         {
@@ -66,66 +103,135 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         var columns = sectionProperties.GetFirstChild<Columns>();
         if (columns != null)
         {
-            if (columns.ColumnCount != null)
+            if (columns.ColumnCount != null && columns.ColumnCount.Value > 0)
             {
-                styles.Add($"column-count: {columns.ColumnCount.Value};");
-            }
+                contentStyles.Add($"column-count: {columns.ColumnCount.Value};");
+                
+                if (columns.Space.ToDecimal() is decimal columnGap)
+                {
+                    contentStyles.Add($"column-gap: {(columnGap / 20m).ToStringInvariant(2)}pt;");
+                }
 
-            if (columns.Space.ToDecimal() is decimal columnGap)
-            {
-                styles.Add($"column-gap: {(columnGap / 20m).ToStringInvariant(2)}pt;");
-            }
-
-            if (columns.EqualWidth != null && columns.EqualWidth.Value == false)
-            {
-                // CSS does not support different column widths directly
+                // if (columns.EqualWidth != null && columns.EqualWidth.Value == false)
+                // {
+                //     // CSS does not support different column widths directly
+                // }
             }
         }  
 
         // Prepare variables for page size and margins (converted from twips to points)
         decimal pageWidthPt = 0m;
         decimal pageHeightPt = 0m;
-        decimal mt = 0m, mb = 0m, ml = 0m, mr = 0m;
+        decimal outerMarginTop = 0m, outerMarginBottom = 0m, outerMarginLeft = 0m, outerMarginRight = 0m;
+        decimal innerMarginTop = 0m, innerMarginBottom = 0m, innerMarginLeft = 0m, innerMarginRight = 0m;
 
-        // Width and height are currently not written, as they would only be useful in fixed layout conversion 
-        // (which would be optional and is currently not supported).
-        // if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
-        // {
-        //     // PageSize.Width/Height are in twentieths of a point (twips). Convert to points.
-        //     if (size.Width != null)
-        //     {
-        //         pageWidthPt = (decimal)size.Width.Value / 20m;
-        //     }
-        //     if (size.Height != null)
-        //     {
-        //         pageHeightPt = (decimal)size.Height.Value / 20m;
-        //     }
-        //     if (size.Orient != null && size.Orient.Value == PageOrientationValues.Landscape)
-        //     {
-        //         var tmp = pageWidthPt;
-        //         pageWidthPt = pageHeightPt;
-        //         pageHeightPt = tmp;
-        //     }
+        if (sectionProperties.GetFirstChild<PageBorders>() is PageBorders borders)
+        {
+            if (borders?.Display != null)
+            {
+                if (borders.Display.Value == PageBorderDisplayValues.FirstPage)
+                {
+                }
+                else if (borders.Display.Value == PageBorderDisplayValues.NotFirstPage)
+                {
+                }
+                else if (borders.Display.Value == PageBorderDisplayValues.AllPages)
+                {
+                }
+            }
+            if (borders?.ZOrder != null)
+            {
+                if (borders.ZOrder == PageBorderZOrderValues.Back)
+                {
+                }
+                else if (borders.ZOrder == PageBorderZOrderValues.Front)
+                {
+                }
+            }
+            var mapBorderSpacing = (borders?.OffsetFrom != null && borders.OffsetFrom.Value == PageBorderOffsetValues.Text) ? 
+                                    MapBorderSpacing.Padding : 
+                                    MapBorderSpacing.Margin; // margin is default for page borders
 
-        //     if (pageWidthPt > 0m && pageHeightPt > 0m)
-        //     {
-        //         styles.Add($"width: {pageWidthPt.ToStringInvariant(2)}pt;");
-        //         styles.Add($"height: {pageHeightPt.ToStringInvariant(2)}pt;");
-        //         styles.Add("box-sizing: border-box;");
-        //     }
-        // }
+            // If FixedLayout, map page borders to CSS border-* properties on the section div.
+            if (this.FixedLayout)
+            {
+                // Page borders must be internal to the content area (additional to the decorative outer border)
+                if (borders?.TopBorder != null)
+                    ProcessBorder(borders.TopBorder, "border-top", ref contentStyles, mapBorderSpacing);
+                if (borders?.LeftBorder != null)
+                    ProcessBorder(borders.LeftBorder, "border-left", ref contentStyles, mapBorderSpacing);
+                if (borders?.BottomBorder != null)
+                    ProcessBorder(borders.BottomBorder, "border-bottom", ref contentStyles, mapBorderSpacing);
+                if (borders?.RightBorder != null)
+                    ProcessBorder(borders.RightBorder, "border-right", ref contentStyles, mapBorderSpacing);
 
+                outerMarginTop = borders?.TopBorder?.Space != null ? (decimal)borders.TopBorder.Space.Value : 0m;
+                outerMarginBottom = borders?.BottomBorder?.Space != null ? (decimal)borders.BottomBorder.Space.Value : 0m;
+                outerMarginLeft = borders?.LeftBorder?.Space != null ? (decimal)borders.LeftBorder.Space.Value : 0m;
+                outerMarginRight = borders?.RightBorder?.Space != null ? (decimal)borders.RightBorder.Space.Value : 0m;
+            }
+        }
+        
         if (sectionProperties.GetFirstChild<PageMargin>() is PageMargin margins)
         {
             // PageMargin values are in twentieths of a point (twips). Convert to points and
             // apply as padding so printed page content respects Word margins.
-            mt = margins.Top != null ? (decimal)margins.Top.Value / 20m : 0m;
-            mb = margins.Bottom != null ? (decimal)margins.Bottom.Value / 20m : 0m;
-            ml = margins.Left != null ? (decimal)margins.Left.Value / 20m : 0m;
-            mr = margins.Right != null ? (decimal)margins.Right.Value / 20m : 0m;
+            var totalMarginTop = margins.Top != null ? (decimal)margins.Top.Value / 20m : 0m;
+            var totalMarginBottom = margins.Bottom != null ? (decimal)margins.Bottom.Value / 20m : 0m;
+            var totalMarginLeft = margins.Left != null ? (decimal)margins.Left.Value / 20m : 0m;
+            var totalMarginRight = margins.Right != null ? (decimal)margins.Right.Value / 20m : 0m;
+            innerMarginTop = Math.Max(totalMarginTop - outerMarginTop, 0m);
+            innerMarginBottom = Math.Max(totalMarginBottom - outerMarginBottom, 0m);
+            innerMarginLeft = Math.Max(totalMarginLeft - outerMarginLeft, 0m);
+            innerMarginRight = Math.Max(totalMarginRight - outerMarginRight, 0m);
 
-            // Use padding to emulate page margins inside the page container.
-            styles.Add($"padding: {mt.ToStringInvariant(2)}pt {mr.ToStringInvariant(2)}pt {mb.ToStringInvariant(2)}pt {ml.ToStringInvariant(2)}pt;");
+            // Use padding to emulate page margins inside the page content area.
+            if (this.FixedLayout)
+            {
+                contentStyles.Add($"padding: {innerMarginTop.ToStringInvariant(2)}pt {innerMarginRight.ToStringInvariant(2)}pt {innerMarginBottom.ToStringInvariant(2)}pt {innerMarginLeft.ToStringInvariant(2)}pt;");
+            }
+        }
+
+        if (sectionProperties.GetFirstChild<PageSize>() is PageSize size)
+        {
+            // PageSize.Width/Height are in twentieths of a point (twips). Convert to points.
+            if (size.Width != null)
+            {
+                pageWidthPt = (decimal)size.Width.Value / 20m;
+            }
+            if (size.Height != null)
+            {
+                pageHeightPt = (decimal)size.Height.Value / 20m;
+            }
+            if (size.Orient != null && size.Orient.Value == PageOrientationValues.Landscape)
+            {
+                var tmp = pageWidthPt;
+                pageWidthPt = pageHeightPt;
+                pageHeightPt = tmp;
+            }
+
+            if (this.FixedLayout && pageWidthPt > 0m && pageHeightPt > 0m)
+            {
+                // Visual styles for the outer container
+                visualStyles.Add($"width: {pageWidthPt.ToStringInvariant(2)}pt;");
+                visualStyles.Add($"min-height: {pageHeightPt.ToStringInvariant(2)}pt;");
+                visualStyles.Add("box-sizing: border-box;");
+                // Center the page container and give a page-like appearance
+                visualStyles.Add("margin: 10pt auto;");
+                visualStyles.Add("background: transparent;");
+                visualStyles.Add("border: 1px solid #ddd;");
+                visualStyles.Add("box-shadow: 0 2px 8px rgba(0,0,0,0.08);");
+                // The decorative outer border is visual-only; default inner border will be added later
+
+                // Content area gets white background and will host actual printable content
+                contentStyles.Add("background: #ffffff;");
+                contentStyles.Add("box-sizing: border-box;");
+                // Calculate width and height in points excluding the margins between DOCX page borders and the visual page borders
+                decimal actualWidthPt = pageWidthPt - outerMarginLeft - outerMarginRight;
+                contentStyles.Add($"width: {actualWidthPt.ToStringInvariant(2)}pt;"); // the result is the same without writing the width explicitly here
+                decimal actualHeightPt = pageHeightPt - outerMarginTop - outerMarginBottom;
+                contentStyles.Add($"min-height: {actualHeightPt.ToStringInvariant(2)}pt;");
+            }
         }
 
         // Emit a single @page rule inside a @media print block once per document output.
@@ -133,56 +239,29 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         {
             sb.WriteStartElement("style");
             sb.WriteAttributeString("type", "text/css");
-            var pageCss = $"@media print {{ @page {{ size: {pageWidthPt.ToStringInvariant(2)}pt {pageHeightPt.ToStringInvariant(2)}pt; margin: {mt.ToStringInvariant(2)}pt {mr.ToStringInvariant(2)}pt {mb.ToStringInvariant(2)}pt {ml.ToStringInvariant(2)}pt; }} }}";
+
+            // string margin = FixedLayout ? "0mm" : $"{mt.ToStringInvariant(2)}pt {mr.ToStringInvariant(2)}pt {mb.ToStringInvariant(2)}pt {ml.ToStringInvariant(2)}pt";
+            // The margin is intentionally set to 0 in fixed layout mode to hide the browser header/footer, 
+            // and because the page content area already includes the margins as section padding + eventual margin outside the page borders.
+            // However, the attempt to print the internal content only failed (see below)
+            // so we use a negative margins instead to hide the "fake" visual page border and its margins/shadow.
+            string margin = FixedLayout ? $"-11pt -11pt -11pt -11pt" : 
+                                          $"{innerMarginTop.ToStringInvariant(2)}pt {innerMarginRight.ToStringInvariant(2)}pt {innerMarginBottom.ToStringInvariant(2)}pt {innerMarginLeft.ToStringInvariant(2)}pt";
+
+            var pageCss = $"@media print {{ @page {{ size: {pageWidthPt.ToStringInvariant(2)}pt {pageHeightPt.ToStringInvariant(2)}pt; margin: {margin}; }} ";
+            
+            // Hide decorative visual container, and
+            // make printable area the only visible element in print preview so the browser suggests printing it.
+            // pageCss += ".page-visual { display: none !important; } ";
+            // pageCss += "body * { visibility: hidden !important; } ";
+            // pageCss += ".page-content, .page-content * { visibility: visible !important; } ";
+            // pageCss += ".page-content { position: static !important; margin: 0 auto !important; }";
+
+            // Close media block
+            pageCss += " }";
             sb.WriteString(pageCss);
             sb.WriteEndElement();
             _pagePrintStyleEmitted = true;
         }
-        
-        // if (sectionProperties.GetFirstChild<PageBorders>() is PageBorders borders)
-        // {
-        //     int pageBorderOptions = 0;
-        //     if (borders?.Display != null)
-        //     {
-        //         //PageBorderDisplayValues.AllPages --> 0
-        //         if (borders.Display.Value == PageBorderDisplayValues.FirstPage)
-        //         {
-        //             pageBorderOptions |= 1;
-        //         }
-        //         else if (borders.Display.Value == PageBorderDisplayValues.NotFirstPage)
-        //         {
-        //             pageBorderOptions |= 2;
-        //         }
-        //     }
-        //     if (borders?.ZOrder != null && borders.ZOrder == PageBorderZOrderValues.Back)
-        //     {
-        //         pageBorderOptions |= 1 << 3;
-        //     }
-        //     else
-        //     {
-        //         pageBorderOptions |= 0 << 3; // Front (default)
-        //     }
-        //     if (borders?.OffsetFrom != null && borders.OffsetFrom.Value == PageBorderOffsetValues.Page)
-        //     {
-        //         pageBorderOptions |= 1 << 5;
-        //     }
-        //     else
-        //     {
-        //         pageBorderOptions |= 0 << 5; // Offset from text
-        //     }
-        //     if (borders?.TopBorder != null)
-        //     {
-        //     }
-        //     if (borders?.LeftBorder != null)
-        //     {
-        //     }
-        //     if (borders?.BottomBorder != null)
-        //     {
-        //     }
-        //     if (borders?.RightBorder != null)
-        //     {
-        //     }
-        // }
-
     }
 }

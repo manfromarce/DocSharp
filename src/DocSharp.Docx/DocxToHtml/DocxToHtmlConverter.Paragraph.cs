@@ -125,25 +125,25 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             // Apply top border only if it's visible (first of style or differs from previous paragraph)
             if (hasTop && (paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)))
             {
-                ProcessBorder(borders.TopBorder, MapParagraphBorderAttribute(borders.TopBorder), ref styles);
+                ProcessBorder(borders.TopBorder, MapParagraphBorderAttribute(borders.TopBorder!), ref styles, MapBorderSpacing.Padding);
             }
 
             // Always apply vertical/bar borders when present
             if (hasLeft)
-                ProcessBorder(borders.LeftBorder, MapParagraphBorderAttribute(borders.LeftBorder), ref styles);
+                ProcessBorder(borders.LeftBorder, MapParagraphBorderAttribute(borders.LeftBorder!), ref styles, MapBorderSpacing.Padding);
             if (hasRight)
-                ProcessBorder(borders.RightBorder, MapParagraphBorderAttribute(borders.RightBorder), ref styles);
+                ProcessBorder(borders.RightBorder, MapParagraphBorderAttribute(borders.RightBorder!), ref styles, MapBorderSpacing.Padding);
             if (hasBar)
-                ProcessBorder(borders.BarBorder, MapParagraphBorderAttribute(borders.BarBorder), ref styles);
+                ProcessBorder(borders.BarBorder, MapParagraphBorderAttribute(borders.BarBorder!), ref styles, MapBorderSpacing.Padding);
 
             // Apply bottom/between border only if visible (last of style or differs from next paragraph)
             if (hasBottom && (paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)))
             {
-                ProcessBorder(borders.BottomBorder, MapParagraphBorderAttribute(borders.BottomBorder), ref styles);
+                ProcessBorder(borders.BottomBorder, MapParagraphBorderAttribute(borders.BottomBorder!), ref styles, MapBorderSpacing.Padding);
             }
             else if (hasBetween && !paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders))
             {
-                ProcessBorder(borders.BetweenBorder, MapParagraphBorderAttribute(borders.BetweenBorder), ref styles);
+                ProcessBorder(borders.BetweenBorder, MapParagraphBorderAttribute(borders.BetweenBorder!), ref styles, MapBorderSpacing.Padding);
             }
         }
 

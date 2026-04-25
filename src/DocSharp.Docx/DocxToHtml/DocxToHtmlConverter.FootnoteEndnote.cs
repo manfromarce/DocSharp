@@ -20,7 +20,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     // this overrides are just to avoid writing square brackets in HTML (the base writer adds them for Markdown/plain text).
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, HtmlTextWriter sb)
     {
-        if (this.ExportFootnotesEndnotes)
+        if (this.FootnoteEndnoteExportOptions != FootnoteEndnoteExportOptions.None)
         {
             ProcessText(new Text($"{footnoteReference.GetFootnoteIdString()}"), sb);
         }
@@ -28,7 +28,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal override void ProcessEndnoteReference(EndnoteReference endnoteReference, HtmlTextWriter sb)
     {
-        if (this.ExportFootnotesEndnotes)
+        if (this.FootnoteEndnoteExportOptions != FootnoteEndnoteExportOptions.None)
         {
             ProcessText(new Text($"{endnoteReference.GetEndnoteIdString()}"), sb);
         }
@@ -36,7 +36,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal override void ProcessFootnotes(FootnotesPart? footnotesPart, HtmlTextWriter sb)
     {
-        if (this.ExportFootnotesEndnotes)
+        if (this.FootnoteEndnoteExportOptions != FootnoteEndnoteExportOptions.None)
         {
             sb.WriteStartElement("div");
             base.ProcessFootnotes(footnotesPart, sb);
@@ -46,7 +46,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal override void ProcessEndnotes(EndnotesPart? endnotesPart, HtmlTextWriter sb)
     {
-        if (this.ExportFootnotesEndnotes)
+        if (this.FootnoteEndnoteExportOptions != FootnoteEndnoteExportOptions.None)
         {
             sb.WriteStartElement("div");
             base.ProcessEndnotes(endnotesPart, sb);

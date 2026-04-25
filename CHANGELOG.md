@@ -2,7 +2,6 @@
 
 - Improve performance in DOCX converters by caching styles
 - Improve highlight detection logic in DOCX ➡️ Markdown converter
-- Code cleanup
 - Add option to preserve anchored and floating images in DOCX ➡️ HTML/Markdown converter
 - Fix: inline images incorrectly always created a new line in DOCX ➡️ HTML converter
 - Preserve hyperlinks on images in DOCX ➡️ HTML/RTF converter
@@ -21,6 +20,11 @@
 - Fix: the DOCX paragraph grouping logic for outer/inner borders is now preserved in DOCX ➡️ HTML/PDF converters
 - Fix: in some cases the font family was not preserved in DOCX converters
 - Set DOCX page size, margins and orientation in CSS page settings (`@media print`)
+- Implemented new "pseudo" fixed layout mode (disabled by default) in DOCX ➡️ HTML converter
+- The new `HeaderFooterExportOptions` and `FootnoteEndnoteExportOptions` allow to control the header/footer/footnotes/endnotes behavior in DOCX ➡️ HTML converter
+- Fix various minor bugs
+- Code cleanup
+- Update dependencies
 
 ## 0.18.1 - 2026.04.10
 
