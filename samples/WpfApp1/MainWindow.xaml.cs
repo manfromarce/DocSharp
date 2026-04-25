@@ -285,27 +285,6 @@ public partial class MainWindow : Window
 
     private void RtfToDocx_Click(object sender, RoutedEventArgs e)
     {
-        // var ofd = new OpenFileDialog()
-        // {
-        //     Filter = "Rich Text Format|*.rtf",
-        //     Multiselect = true,
-        // };
-        // if (ofd.ShowDialog(this) == true && ofd.FileNames.Length > 0)
-        // {
-        //     foreach (var file in ofd.FileNames)
-        //     {
-        //         try
-        //         {
-        //             var conv = new RtfToDocxConverter();
-        //             conv.Convert(file, Path.ChangeExtension(file, ".docx"));
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             string content = ex.Message + System.Environment.NewLine + (ex.StackTrace ?? "");
-        //             File.WriteAllText(Path.ChangeExtension(file, ".txt"), content);
-        //         }
-        //     }
-        // }
         var ofd = new OpenFileDialog()
         {
             Filter = "Rich Text Format|*.rtf",
