@@ -115,6 +115,42 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 // Replace the document-level setting if found.
                 CreateSetting<MirrorMargins>(true);
                 return true;
+            case "pgbrdrl":
+                currentBorder = EnsureSectionProperty<PageBorders>().GetOrAddFirstChild<LeftBorder>();
+                return true;
+            case "pgbrdrr":
+                currentBorder = EnsureSectionProperty<PageBorders>().GetOrAddFirstChild<RightBorder>();
+                return true;
+            case "pgbrdrt":
+                currentBorder = EnsureSectionProperty<PageBorders>().GetOrAddFirstChild<TopBorder>();
+                return true;
+            case "pgbrdrb":
+                currentBorder = EnsureSectionProperty<PageBorders>().GetOrAddFirstChild<BottomBorder>();
+                return true;
+            case "pgbrdropt":
+                if (cw.HasValue)
+                {
+                    var pageBorderOptions = cw.Value!.Value;
+                    var pb = EnsureSectionProperty<PageBorders>();
+                    
+                    // bits 0-1: display (0 = AllPages, 1 = FirstPage, 2 = NotFirstPage)
+                    var displayBits = pageBorderOptions & 0x3;
+                    if (displayBits == 1)
+                        pb.Display = PageBorderDisplayValues.FirstPage;
+                    else if (displayBits == 2)
+                        pb.Display = PageBorderDisplayValues.NotFirstPage;
+                    else
+                        pb.Display = PageBorderDisplayValues.AllPages;
+
+                    // bit 3: z-order (1 = Back)
+                    var zBack = (pageBorderOptions & (1 << 3)) != 0;
+                    pb.ZOrder = zBack ? PageBorderZOrderValues.Back : PageBorderZOrderValues.Front;
+
+                    // bit 5: offset from (1 = Page, 0 = Text)
+                    var offsetPage = (pageBorderOptions & (1 << 5)) != 0;
+                    pb.OffsetFrom = offsetPage ? PageBorderOffsetValues.Page : PageBorderOffsetValues.Text;
+                }
+                return true;
             case "pgwsxn":
                 if (cw.HasValue)
                     EnsureSectionProperty<PageSize>().Width = (uint)cw.Value!.Value;
@@ -251,7 +287,6 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "vertalt":
                 EnsureSectionProperty<VerticalTextAlignmentOnPage>().Val = VerticalJustificationValues.Top;
                 return true;
-            // TODO: page borders
         }
         return false;
     }

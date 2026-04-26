@@ -112,7 +112,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Lists
 - 🟡 Tables (some issues might still be found as table syntax can be very complex in RTF)
 - 🟡 Section properties
-- 🟡 Default section properties / document-level formatting and settings
+- 🟡 Document-level formatting and settings
 - 🟡 Fields (supported but additional work is needed for some complex fields and form fields)
 - ✅ Hyperlinks (fields in RTF)
 - ✅ Bookmarks
@@ -127,9 +127,9 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - 🟡 OLE objects (preserved as images)
 - ❌ Table of contents (in RTF can be a dedicated structure, while in DOCX it's a group of fields)
 - ❌ Index entries
+- 🟡 Document background: only solid color background is supported
 - ✅ Document information
 - ❌ Document protection
-- ❌ Document background
 - ❌ Comments
 - ❌ Revisions
 - ❌ Mail merge
