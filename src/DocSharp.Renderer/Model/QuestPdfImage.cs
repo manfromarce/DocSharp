@@ -16,11 +16,11 @@ internal class QuestPdfImage : QuestPdfInlineElement
     internal ImageFormat ImageType { get; set; }
     internal IImageConverter? ImageConverter { get; set; }
 
-    internal QuestPdfImage(byte[] bytes, double width, double height, ImageFormat imageType, IImageConverter? imageConverter = null)
+    internal QuestPdfImage(byte[] bytes, float width, float height, ImageFormat imageType, IImageConverter? imageConverter = null)
     {
         Bytes = bytes;
-        Width = SafeTypeConverter.ToFloat(width);
-        Height = SafeTypeConverter.ToFloat(height);
+        Width = width;
+        Height = height;
         ImageType = imageType;
         ImageConverter = imageConverter;
         if (imageType != ImageFormat.Png && imageType != ImageFormat.Jpeg)
@@ -47,12 +47,12 @@ internal class QuestPdfImage : QuestPdfInlineElement
         }
     }
 
-    internal QuestPdfImage(string svgText, double width, double height)
+    internal QuestPdfImage(string svgText, float width, float height)
     {
         SvgText = svgText;
         IsSvg = true;
-        Width = SafeTypeConverter.ToFloat(width);
-        Height = SafeTypeConverter.ToFloat(height);
+        Width = width;
+        Height = height;
         ImageType = ImageFormat.Svg;
     }
 }

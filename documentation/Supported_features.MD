@@ -147,7 +147,7 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
 - ✅ Character formatting
     - Not supported: small caps, text effects, letters spacing, horizontal font scaling, FitText, borders around text runs, dash-dot/dash-dot-dot/double wavy underline types
 - ✅ Paragraph formatting
-    - Not supported: hanging indentation (negative first line indentation, blocked by lack of support in QuestPDF), custom tab stops, some options such as KeepNext, some advanced text wrapping / position properties
+    - Not supported: hanging indentation (negative first line indentation, blocked by lack of support in QuestPDF), custom tab stops, some options such as KeepNext, some advanced text wrapping / position properties, paragraph border style (dashed, dotted, etc. are always rendered as solid)
     - Limitation: the paragraph border (if present) has the same color for top/bottom/left/right due to a limitation in the QuestPDF API
 - ✅ Section properties
     - Supported: page size, orientation, margins, background color color, multi-column layout
@@ -157,13 +157,17 @@ However, some charts may already be OLE objects (Excel/MS Graph object; usually 
     - Not supported: column break
     - All sections cause a page break and start on the next page (continuous/odd/even section types are not implemented)
 - ✅ Hyperlinks
-    - Limitation: not every type of bookmark is currently supported (but the most common work properly)
+    - Both internal and external hyperlinks are supported
+    - Limitation: bookmarks do not produce a PDF outline that is navigable in PDF viewers
 - ✅ Lists
 - 🟡 Pictures - supported but text wrapping layouts and many properties written by Word are not recognized (always rendered in line with text)
+- ✅ Horizontal lines
 - ❌ Math formulas
+- ❌ Shapes, charts, diagrams
 - ✅ Tables
-    - Not supported: external spacing between cells; cell border styles (double, dashed, shadow, ...); diagonal internal borders; vertical text; some options such as CantSplit, NoWrap, TableCellFitText; some advanced text wrapping / position properties; some types of cell/row width (percentage, or TableLayout set to Auto); space before/after single row (different from table)
-    - Limitations: the border color is the same for top/bottom/left/right of each cell due to a limitation in the QuestPDF API  
+    - Supported: basic cell formatting (border color and thickenss, background color, padding); vertical text alignment; row height; absolute column width
+    - Not supported: outside spacing between cells; cell border styles (double, dashed, dotted, etc. are always rendered as solid), diagonal internal borders; vertical text; some options such as CantSplit, NoWrap, TableCellFitText; some advanced text wrapping / position properties; some types of cell/row width (percentage, or TableLayout set to Auto); space before/after single row (different from table)
+    - Limitations: the border color is the same for top/bottom/left/right of each cell and due to a limitation in the QuestPDF API
 - ✅ Fields, page numbers, table of contents
     - Limitations: 
         - Field values are not updated in some cases, we need to re-calculate at least page numbers

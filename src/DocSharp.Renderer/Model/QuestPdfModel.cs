@@ -97,6 +97,12 @@ public class QuestPdfModel
                             if (item != null)
                                 AddTableToColumn(item, table);
                         }
+                        else if (element is QuestPdfHorizontalLine horizontalLine)
+                        {
+                            var item = currentColumn?.Item();
+                            if (item != null)
+                                AddHorizontalLineToColumn(item, horizontalLine);
+                        }
                     }
                 }                
             }
@@ -133,6 +139,12 @@ public class QuestPdfModel
                             item = item.ShowIf((context) => context.PageNumber == footnote.PageNumber);
                             AddTableToColumn(item, table);
                         }
+                        else if (element is QuestPdfHorizontalLine horizontalLine)
+                        {
+                            var item = column.Item();
+                            item = item.ShowIf((context) => context.PageNumber == footnote.PageNumber);
+                            AddHorizontalLineToColumn(item, horizontalLine);
+                        }
                     }
                 }                
             }
@@ -150,6 +162,11 @@ public class QuestPdfModel
             {
                 var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);
                 AddTableToColumn(item, table);
+            }
+            else if (element is QuestPdfHorizontalLine horizontalLine)
+            {
+                var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);
+                AddHorizontalLineToColumn(item, horizontalLine);
             }
             else if (element is QuestPdfPageBreak)
             {
@@ -174,6 +191,11 @@ public class QuestPdfModel
                     {
                         var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);
                         AddTableToColumn(item, table);
+                    }
+                    else if (element is QuestPdfHorizontalLine horizontalLine)
+                    {
+                        var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);
+                        AddHorizontalLineToColumn(item, horizontalLine);
                     }
                 }
             }                
@@ -221,6 +243,15 @@ public class QuestPdfModel
                 CurrentPageNumber = context.PageNumber; // cache current page number
                 return true;
             });
+        }
+    }
+
+    internal void AddHorizontalLineToColumn(IContainer item, QuestPdfHorizontalLine horizontalLine)
+    {
+        if (horizontalLine.Thickness > 0)
+        {
+            item.LineHorizontal(horizontalLine.Thickness, Unit.Point)
+                .LineColor(horizontalLine.Color ?? new Color(0xA0A0A0)); // default Word horizontal line color
         }
     }
 
@@ -293,7 +324,7 @@ public class QuestPdfModel
 
                 foreach (var inline in paragraph.Elements)
                 {
-                    if (inline is QuestPdfSpan span)
+                    if (inline is QuestPdfSpan span && !string.IsNullOrEmpty(span.Text))
                     {
                         text.Span(span.IsAllCaps ? span.Text.ToUpper() : span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);   
                     }

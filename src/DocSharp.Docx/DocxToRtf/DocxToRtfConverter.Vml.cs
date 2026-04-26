@@ -683,7 +683,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out res))
         {
             // Assume pixels if no unit
-            return (long)Math.Round(res * 15);
+            return (long)Math.Round(res * 15); // Word uses 96 DPI
         }
         return 0;
     }
