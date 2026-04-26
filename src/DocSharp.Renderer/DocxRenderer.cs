@@ -18,7 +18,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 {
     static DocxRenderer()
     {
-        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;    
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
     }
 
     /// <summary>

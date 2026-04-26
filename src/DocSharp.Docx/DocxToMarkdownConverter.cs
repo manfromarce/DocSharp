@@ -100,11 +100,6 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
 
     /// <summary>
-    /// Get or set whether special horizontal line shapes in DOCX should produce an horizontal rule (---) in Markdown.
-    /// </summary>
-    public bool HorizontalRuleForHorizontalLineShapes { get; set; } = true;
-
-    /// <summary>
     /// Get or set whether top/bottom/between paragraph borders in DOCX should produce an horizontal rule (---) in Markdown.
     /// </summary>
     public bool HorizontalRuleForTopBottomBorders { get; set; } = false;
@@ -117,7 +112,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     /// <summary>
     /// Get or set whether an horizontal rule (---) should be written after forced page breaks.
     /// </summary>
-    public bool HorizontalRuleForPageBreaks { get; set; } = true;
+    public bool HorizontalRuleForPageBreaks { get; set; } = false;
 
     private bool _isInEmphasis = false;
     private bool _isAllCaps = false;
@@ -721,8 +716,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessVml(OpenXmlElement element, MarkdownStringWriter sb)
     {
-        if (HorizontalRuleForHorizontalLineShapes && 
-            element is Picture pic && pic.FirstChild is V.Rectangle rect && 
+        if (element is Picture pic && pic.FirstChild is V.Rectangle rect && 
             rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
         {
             sb.WriteHorizontalLine();

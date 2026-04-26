@@ -65,7 +65,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         sb.WriteEndElement(); // .page-content
         sb.WriteEndElement(); // .page-visual
 
-        if (this.HorizontalRuleForSectionBreaks)
+        if (this.HorizontalRuleForSectionBreaks && !FixedLayout)
         {
             sb.WriteHorizontalLine();
         }

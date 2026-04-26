@@ -51,6 +51,17 @@ public class RtfSaveOptions : ISaveOptions
     /// If null or empty, sub-documents will not be preserved.
     /// </summary>
     public string? OriginalFolderPath { get; set; }
+
+    /// <summary>
+    /// Specifies the default code page number, that will be written in the RTF header and used to encode special characters. 
+    /// For example, "à" is encoded as \'e0 when the encoding is Windows-1252. 
+    /// For characters not available in the code page, Unicode will be used, for example (e.g. \uc1\u915). 
+    /// By default, the code page of the system region is used and changing it is not recommended. 
+    /// A full list of code pages can be found at https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers, 
+    /// but note that not all code pages are supported in RTF (notably, UTF-8 is not supported). 
+    /// The RTF specification can be found in the repository. 
+    /// </summary>
+    public int DefaultCodePage { get; set; } = Encodings.SystemCodePage;
 }
 
 public class HtmlSaveOptions : ISaveOptions
@@ -93,15 +104,46 @@ public class HtmlSaveOptions : ISaveOptions
     /// </summary>
     public string? ImagesBaseUriOverride { get; set; } = null;
 
-    public HeaderFooterExportOptions HeaderFooterExportOptions { get; set; } = HeaderFooterExportOptions.FirstHeaderLastFooter;
-
-    public FootnoteEndnoteExportOptions FootnoteEndnoteExportOptions { get; set; } = FootnoteEndnoteExportOptions.EndOfDocument;
-
     /// <summary>
     /// Get or set the base file path for processing external sub-documents (if any).
     /// If null or empty, sub-documents will not be preserved.
     /// </summary>
     public string? OriginalFolderPath { get; set; }
+
+    public HeaderFooterExportOptions HeaderFooterExportOptions { get; set; } = HeaderFooterExportOptions.FirstHeaderLastFooter;
+
+    public FootnoteEndnoteExportOptions FootnoteEndnoteExportOptions { get; set; } = FootnoteEndnoteExportOptions.EndOfDocument;
+
+    /// <summary>
+    /// Used to map DOCX styles by name. The default <see cref="DefaultStyleNamingResolver"/> can be overriden to customize style mappings.
+    /// </summary>
+    public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
+
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written between different sections.
+    /// </summary>
+    public bool HorizontalRuleForSectionBreaks { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written after forced page breaks.
+    /// </summary>
+    public bool HorizontalRuleForPageBreaks { get; set; } = false;
+
+    /// <summary>
+    /// If true, the converter will produce a fixed-layout page-like container for sections
+    /// (applies width, padding/margins and borders to the section `div` and centers it).
+    /// Default is false (fluid layout).
+    /// </summary>
+    public bool FixedLayout { get; set; } = false;
+
+    /// <summary>
+    /// By default only inline images are supported,  
+    /// because other DOCX image layouts have no direct equivalent in HTML/Markdown and can lead to unexpected results.  
+    /// However, if desired, this property can be set to ImageLayoutType.InlineAndAnchored 
+    /// to preserve the "top and bottom", "square", "tight" and "through" wrap layouts too, 
+    /// or to ImageLayoutType.All to preserve absolutely positioned images ("in front of"/"behind" text) too.
+    /// </summary>
+    public ImageLayoutType SupportedImagesLayout { get; set; } = ImageLayoutType.Inline;
 }
 
 public class MarkdownSaveOptions : ISaveOptions
@@ -162,6 +204,41 @@ public class MarkdownSaveOptions : ISaveOptions
     /// If null or empty, sub-documents will not be preserved.
     /// </summary>
     public string? OriginalFolderPath { get; set; }
+
+    /// <summary>
+    /// Get or set whether top/bottom/between paragraph borders in DOCX should produce an horizontal rule (---) in Markdown.
+    /// </summary>
+    public bool HorizontalRuleForTopBottomBorders { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written between different sections.
+    /// </summary>
+    public bool HorizontalRuleForSectionBreaks { get; set; } = true;
+
+    /// <summary>
+    /// Get or set whether an horizontal rule (---) should be written after forced page breaks.
+    /// </summary>
+    public bool HorizontalRuleForPageBreaks { get; set; } = false;
+
+    /// <summary>
+    /// This property can be used to optionally set font families (e.g. Courier New, Cascadia Code) 
+    /// that should be mapped to an inline code element in Markdown. 
+    /// </summary>
+    public string[]? CodeFontFamilies { get; set; } = null;
+
+    /// <summary>
+    /// By default only inline images are supported,  
+    /// because other DOCX image layouts have no direct equivalent in HTML/Markdown and can lead to unexpected results.  
+    /// However, if desired, this property can be set to ImageLayoutType.InlineAndAnchored 
+    /// to preserve the "top and bottom", "square", "tight" and "through" wrap layouts too, 
+    /// or to ImageLayoutType.All to preserve absolutely positioned images ("in front of"/"behind" text) too.
+    /// </summary>
+    public ImageLayoutType SupportedImagesLayout { get; set; } = ImageLayoutType.Inline;
+
+    /// <summary>
+    /// Used to map DOCX styles by name. The default <see cref="DefaultStyleNamingResolver"/> can be overriden to customize style mappings.
+    /// </summary>
+    public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
 }
 
 public class TxtSaveOptions : ISaveOptions
@@ -186,4 +263,30 @@ public class TxtSaveOptions : ISaveOptions
     /// If null or empty, sub-documents will not be preserved.
     /// </summary>
     public string? OriginalFolderPath { get; set; }
+
+    /// <summary>
+    /// Sets whether the image description or alternate text (if available) 
+    /// should be written in the output plain text instead of the image (default is false). 
+    /// </summary>
+    public bool WriteImageDescription { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether special horizontal line shapes in DOCX should produce an horizontal line (---) in plain text.
+    /// </summary>
+    public bool HorizontalRuleForHorizontalLineShapes { get; set; } = true;
+
+    /// <summary>
+    /// Get or set whether top/bottom/between paragraph borders in DOCX should produce an horizontal line (---) in plain text.
+    /// </summary>
+    public bool HorizontalRuleForTopBottomBorders { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether an horizontal line (---) should be written between different sections.
+    /// </summary>
+    public bool HorizontalRuleForSectionBreaks { get; set; } = false;
+
+    /// <summary>
+    /// Get or set whether an horizontal line (---) should be written after forced page breaks.
+    /// </summary>
+    public bool HorizontalRuleForPageBreaks { get; set; } = false;
 }

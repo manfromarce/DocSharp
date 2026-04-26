@@ -7,21 +7,20 @@
 - Preserve hyperlinks on images in DOCX ➡️ HTML/RTF converter
 - Fix: hyperlinks and images in header/footer/footnote/endnote were sometimes lost in DOCX converters
 - Preserve image alternate text in DOCX ➡️ HTML/Markdown converter
-- Optionally write alternate text (if available) in place of images in DOCX ➡️ plain text converter
+- The new `WriteImageDescription` property allows to write alternate text / description (if available) in place of images in DOCX ➡️ plain text converter (*false* by default)
 - Support for grouped shapes and drawing canvas in DOCX ➡️ RTF converter
 - Fix: "pseudo inline" shapes created an incorrect layout in DOCX ➡️ RTF converter
 - Fix: SchemeColor were incorrectly mapped in DOCX ➡️ RTF converter
-- The new `HorizontalRuleForPageBreaks` and `HorizontalRuleForSectionBreaks` properties allow to set set whether horizontal rule should be written for section breaks and forced page breaks in DOCX ➡️ HTML/Markdown/plain text converter. (In precedence this behavior was always enabled for Markdown.)
-- The new `HorizontalRuleForHorizontalLineShapes` property allows to set whether horizontal rule should be written for the special "horizontal line" VML shape in DOCX ➡️ Markdown/plain text converter (true by default)
+- Preserve the special "horizontal line" VML shape in all DOCX converters (mapped to `<hr>` in HTML and `---` in Markdown), in RTF ➡️ DOCX converters, and in DOCX renderer
+- The new `HorizontalRuleForHorizontalLineShapes` property allows to set whether a manual horizontal line should be written for the special "horizontal line" VML shape in DOCX ➡️ plain text converter (true by default)
 - The new `HorizontalRuleForTopBottomBorders` property allows to set whether horizontal rule should be written for top/bottom paragraph borders in DOCX ➡️ Markdown/plain text converter (*false* by default)
-- Convert the special "horizontal line" VML shape to `<hr>` in DOCX ➡️ HTML converter
-- Preserve the special "horizontal line" VML shape in DOCX ➡️ RTF and RTF ➡️ DOCX converters, and in DOCX renderer
+- The new `HorizontalRuleForPageBreaks` and `HorizontalRuleForSectionBreaks` properties allow to set set whether horizontal rule should be written for section breaks and forced page breaks in DOCX ➡️ HTML/Markdown/plain text converter. (*false* by default, except for section breaks in Markdown for which it is true)
 - Fix: the paragraph style is now considered for ContextualSpacing in DOCX ➡️ HTML converter
 - Fix: the DOCX paragraph grouping logic for outer/inner borders is now preserved in DOCX ➡️ HTML/PDF converters
 - Fix: in some cases the font family was not preserved in DOCX converters
 - Set DOCX page size, margins and orientation in CSS page settings (`@media print`)
-- Implemented new "pseudo" fixed layout mode (disabled by default) in DOCX ➡️ HTML converter
-- The new `HeaderFooterExportOptions` and `FootnoteEndnoteExportOptions` allow to control the header/footer/footnotes/endnotes behavior in DOCX ➡️ HTML converter
+- The new `FixedLayout` property (*false* by default) allows to enable a "pseudo" fixed layout mode in DOCX ➡️ HTML converter, which preserves page size, margins and borders.
+- The new `HeaderFooterExportOptions` and `FootnoteEndnoteExportOptions` properties allow to control the header/footer/footnotes/endnotes behavior in DOCX ➡️ HTML converter
 - Preserve solid background color in RTF ➡️ DOCX converter
 - Preserve page borders in RTF ➡️ DOCX converter
 - Fix various minor bugs

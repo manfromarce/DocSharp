@@ -48,7 +48,8 @@ public static class DocxExtensions
                     DefaultSettings = rtfSaveOptions.DefaultSettings,
                     OutputFolderPath = rtfSaveOptions.OutputFolderPath,
                     ImageConverter = rtfSaveOptions.ImageConverter,
-                    OriginalFolderPath = rtfSaveOptions.OriginalFolderPath
+                    OriginalFolderPath = rtfSaveOptions.OriginalFolderPath,
+                    DefaultCodePage = rtfSaveOptions.DefaultCodePage
                 };
                 docxToRtfConverter.Convert(document, outputStream);
                 break;
@@ -60,7 +61,12 @@ public static class DocxExtensions
                     OriginalFolderPath = htmlSaveOptions.OriginalFolderPath,
                     ImageConverter = htmlSaveOptions.ImageConverter,
                     ImagesBaseUriOverride = htmlSaveOptions.ImagesBaseUriOverride,
-                    ImagesOutputFolder = htmlSaveOptions.ImagesOutputFolder
+                    ImagesOutputFolder = htmlSaveOptions.ImagesOutputFolder,
+                    FixedLayout = htmlSaveOptions.FixedLayout,
+                    HorizontalRuleForPageBreaks = htmlSaveOptions.HorizontalRuleForPageBreaks,
+                    HorizontalRuleForSectionBreaks = htmlSaveOptions.HorizontalRuleForSectionBreaks,
+                    StyleNamingResolver = htmlSaveOptions.StyleNamingResolver,
+                    SupportedImagesLayout = htmlSaveOptions.SupportedImagesLayout
                 };
                 docxToHtmlConverter.Convert(document, outputStream);
                 break;
@@ -72,7 +78,13 @@ public static class DocxExtensions
                     OriginalFolderPath = mdSaveOptions.OriginalFolderPath,
                     ImageConverter = mdSaveOptions.ImageConverter,
                     ImagesBaseUriOverride = mdSaveOptions.ImagesBaseUriOverride,
-                    ImagesOutputFolder = mdSaveOptions.ImagesOutputFolder
+                    ImagesOutputFolder = mdSaveOptions.ImagesOutputFolder,
+                    CodeFontFamilies = mdSaveOptions.CodeFontFamilies,
+                    HorizontalRuleForPageBreaks = mdSaveOptions.HorizontalRuleForPageBreaks,
+                    HorizontalRuleForSectionBreaks = mdSaveOptions.HorizontalRuleForSectionBreaks,
+                    HorizontalRuleForTopBottomBorders = mdSaveOptions.HorizontalRuleForTopBottomBorders,
+                    StyleNamingResolver = mdSaveOptions.StyleNamingResolver,
+                    SupportedImagesLayout = mdSaveOptions.SupportedImagesLayout
                 };
                 docxToMdConverter.Convert(document, outputStream);
                 break;
@@ -81,7 +93,12 @@ public static class DocxExtensions
                 {
                     ExportFootnotesEndnotes = txtSaveOptions.ExportFootnotesEndnotes,
                     ExportHeaderFooter = txtSaveOptions.ExportHeaderFooter,
-                    OriginalFolderPath = txtSaveOptions.OriginalFolderPath,                     
+                    OriginalFolderPath = txtSaveOptions.OriginalFolderPath,
+                    HorizontalRuleForHorizontalLineShapes = txtSaveOptions.HorizontalRuleForHorizontalLineShapes,
+                    HorizontalRuleForPageBreaks = txtSaveOptions.HorizontalRuleForPageBreaks,
+                    HorizontalRuleForSectionBreaks = txtSaveOptions.HorizontalRuleForSectionBreaks,
+                    HorizontalRuleForTopBottomBorders = txtSaveOptions.HorizontalRuleForTopBottomBorders,
+                    WriteImageDescription = txtSaveOptions.WriteImageDescription
                 };
                 docxToTxtConverter.Convert(document, outputStream);
                 break;

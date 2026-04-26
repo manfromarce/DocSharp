@@ -40,7 +40,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     /// <summary>
     /// Sets whether the image description or alternate text (if available) 
-    /// should be written in the output plain text instead of the image (default is false). 
+    /// should be written in the output plain text instead of the image. 
     /// </summary>
     public bool WriteImageDescription { get; set; } = false;
 

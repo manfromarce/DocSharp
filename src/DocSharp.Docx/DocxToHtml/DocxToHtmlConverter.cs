@@ -70,12 +70,12 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     public IStyleNamingResolver StyleNamingResolver { get; set; } = new DefaultStyleNamingResolver();
 
     /// <summary>
-    /// Get or set whether an horizontal rule (---) should be written between different sections.
+    /// Get or set whether an horizontal rule (---) should be written between different sections. (This property is ignored in fixed layout mode).
     /// </summary>
     public bool HorizontalRuleForSectionBreaks { get; set; } = false;
 
     /// <summary>
-    /// Get or set whether an horizontal rule (---) should be written after forced page breaks.
+    /// Get or set whether an horizontal rule (---) should be written after forced page breaks. (This property is ignored in fixed layout mode).
     /// </summary>
     public bool HorizontalRuleForPageBreaks { get; set; } = false;
 
@@ -85,6 +85,15 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     /// Default is false (fluid layout).
     /// </summary>
     public bool FixedLayout { get; set; } = false;
+
+    /// <summary>
+    /// By default only inline images are supported,  
+    /// because other DOCX image layouts have no direct equivalent in HTML/Markdown and can lead to unexpected results.  
+    /// However, if desired, this property can be set to ImageLayoutType.InlineAndAnchored 
+    /// to preserve the "top and bottom", "square", "tight" and "through" wrap layouts too, 
+    /// or to ImageLayoutType.All to preserve absolutely positioned images ("in front of"/"behind" text) too.
+    /// </summary>
+    public ImageLayoutType SupportedImagesLayout { get; set; } = ImageLayoutType.Inline;
 
     internal override void ProcessDocument(Document document, HtmlTextWriter sb)
     {
@@ -330,7 +339,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         if (@break.Type != null && @break.Type == BreakValues.Page)
         {
-            if (HorizontalRuleForPageBreaks)
+            if (HorizontalRuleForPageBreaks && !FixedLayout)
             {
                 writer.WriteHorizontalLine();
             }
