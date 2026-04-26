@@ -28,7 +28,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             int? bgr = ColorHelpers.HexToBgr(documentBackground.Color);
             if (bgr != null)
             {
-                sb.WriteLine(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0\shplid1025");
+                sb.WriteLine(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0");
                 sb.WriteShapeProperty("shapeType", "1");
                 sb.WriteShapeProperty("fFlipH", "0");
                 sb.WriteShapeProperty("fFlipV", "0");
@@ -50,7 +50,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
     {
         if (background.Fill is V.Fill fill && fill.Type != null && fill.Type.HasValue)
         {
-            sb.WriteLine(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0\shplid1025");
+            sb.WriteLine(@"{\*\background {\shp{\*\shpinst\shpleft0\shptop0\shpright0\shpbottom0\shpfhdr0\shpbxmargin\shpbxignore\shpbymargin\shpbyignore\shpwr0\shpwrk0\shpfblwtxt1\shpz0");
 
             sb.WriteShapeProperty("shapeType", "1");
             sb.WriteShapeProperty("fFlipH", "0");

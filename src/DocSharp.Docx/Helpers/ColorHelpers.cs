@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+// using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Office2010.Word;
@@ -1137,8 +1138,29 @@ public static class ColorHelpers
         return ConvertNamedColorToHex(value) ?? value;
     }
 
-    internal static bool IsValidHexColor(string value)
+    public static bool IsValidColor(string value)
     {
         return EnsureHexColor(value) != null;
+    }
+
+    public static bool IsValidHexString(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+        
+        value = value.Trim('#');
+        // string pattern = @"^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$";
+        // return Regex.IsMatch(value, pattern);
+        
+        // Equivalent to above but more efficient as it doesn't use regex:
+        if (value.Length != 6 && value.Length != 3)
+            return false;
+
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (!Uri.IsHexDigit(value[i])) return false;
+        }
+
+        return true;
     }
 }

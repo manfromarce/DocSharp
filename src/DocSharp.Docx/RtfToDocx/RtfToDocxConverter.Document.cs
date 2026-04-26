@@ -65,6 +65,13 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
             case "bookfoldrev":
                 CreateSetting<BookFoldReversePrinting>(true); 
                 return true;
+            case "bookfoldsheets":
+                if (cw.HasValue && cw.Value > 0)
+                // if (cw.HasValue && cw.Value > 0 && cw.Value % 4 == 0) // should be a multiple of 4
+                {
+                    CreateSetting<BookFoldPrintingSheets>(cw.Value.Value.ToShort());
+                }
+                return true;
             // TODO: default fonts
             case "deff":
                 if (cw.HasValue)
@@ -114,7 +121,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 return true;
             case "formprot":
                 defaultSectPr ??= new SectionProperties();
-                var defaultProt = defaultSectPr.GetFirstChild<FormProtection>() ?? defaultSectPr.AppendChild(new FormProtection());
+                var defaultProt = defaultSectPr.GetOrAddFirstChild<FormProtection>();
                 defaultProt.Val = false;
                 return true;
             case "formshade":
@@ -124,7 +131,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageMargin = defaultSectPr.GetFirstChild<PageMargin>() ?? defaultSectPr.AppendChild(new PageMargin());
+                    var pageMargin = defaultSectPr.GetOrAddFirstChild<PageMargin>();
                     pageMargin.Gutter = (uint)cw.Value!.Value;
                 }
                 return true;
@@ -135,16 +142,24 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 // \hyphauto and \hyphauto1 turn hyphenation on, \hyphauto0 turns hyphenation off
                 CreateSetting<AutoHyphenation>(cw.Value, true); 
                 return true;
+            case "hyphhotz":
+                if (cw.HasValue)
+                {
+                    defaultSectPr ??= new SectionProperties();
+                    var hyphenationZone = defaultSectPr.GetOrAddFirstChild<HyphenationZone>();
+                    hyphenationZone.Val = cw.Value!.Value.ToStringInvariant();
+                }
+                return true;
             case "landscape":
                 defaultSectPr ??= new SectionProperties();
-                var defaultPgSize = defaultSectPr.GetFirstChild<PageSize>() ?? defaultSectPr.AppendChild(new PageSize());
+                var defaultPgSize = defaultSectPr.GetOrAddFirstChild<PageSize>();
                 defaultPgSize.Orient = PageOrientationValues.Landscape;
                 return true;
             case "margb":
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageMargin = defaultSectPr.GetFirstChild<PageMargin>() ?? defaultSectPr.AppendChild(new PageMargin());
+                    var pageMargin = defaultSectPr.GetOrAddFirstChild<PageMargin>();
                     pageMargin.Bottom = cw.Value!.Value;
                 }
                 return true;
@@ -152,7 +167,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageMargin = defaultSectPr.GetFirstChild<PageMargin>() ?? defaultSectPr.AppendChild(new PageMargin());
+                    var pageMargin = defaultSectPr.GetOrAddFirstChild<PageMargin>();
                     pageMargin.Left = (uint)cw.Value!.Value;
                 }
                 return true;
@@ -160,7 +175,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageMargin = defaultSectPr.GetFirstChild<PageMargin>() ?? defaultSectPr.AppendChild(new PageMargin());
+                    var pageMargin = defaultSectPr.GetOrAddFirstChild<PageMargin>();
                     pageMargin.Right = (uint)cw.Value!.Value;
                 }
                 return true;
@@ -168,7 +183,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageMargin = defaultSectPr.GetFirstChild<PageMargin>() ?? defaultSectPr.AppendChild(new PageMargin());
+                    var pageMargin = defaultSectPr.GetOrAddFirstChild<PageMargin>();
                     pageMargin.Top = cw.Value!.Value;
                 }
                 return true;
@@ -181,7 +196,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageSize = defaultSectPr.GetFirstChild<PageSize>() ?? defaultSectPr.AppendChild(new PageSize());
+                    var pageSize = defaultSectPr.GetOrAddFirstChild<PageSize>();
                     pageSize.Width = (uint)cw.Value!.Value;
                 }
                 return true;
@@ -189,7 +204,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageSize = defaultSectPr.GetFirstChild<PageSize>() ?? defaultSectPr.AppendChild(new PageSize());
+                    var pageSize = defaultSectPr.GetOrAddFirstChild<PageSize>();
                     pageSize.Height = (uint)cw.Value!.Value;
                 }
                 return true;            
@@ -206,7 +221,7 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 if (cw.HasValue)
                 {
                     defaultSectPr ??= new SectionProperties();
-                    var pageNumbers = defaultSectPr.GetFirstChild<PageNumberType>() ?? defaultSectPr.AppendChild(new PageNumberType());
+                    var pageNumbers = defaultSectPr.GetOrAddFirstChild<PageNumberType>();
                     pageNumbers.Start = cw.Value!.Value;
                 }
                 return true;
@@ -234,10 +249,14 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                 CreateSetting<RemovePersonalInformation>(true); 
                 return true;
             case "showplaceholdtext":
-                CreateSetting<AlwaysShowPlaceholderText>(cw.Value, null); 
+                CreateSetting<AlwaysShowPlaceholderText>(cw.Value, true); 
                 return true;
             case "twoonone":
-                CreateSetting<PrintTwoOnOne>(cw.Value, null); 
+                CreateSetting<PrintTwoOnOne>(true); 
+                return true;
+            case "viewbksp":
+                CreateSetting<DisplayBackgroundShape>(cw.Value, null); 
+                // 0 or 1 must be specified (if not, the default is to not display the background in both DOCX and RTF)
                 return true;
             case "viewkind":
                 if (cw.HasValue)
@@ -286,6 +305,9 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                     }
                 }
                 return true;
+            // case "widowctrl":
+            //     return true;
+            
         }
         return false;
     }

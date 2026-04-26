@@ -347,8 +347,8 @@ public class ConsoleApp1
     {
         var converter = new DocxToHtmlConverter()
         {
-            ExportHeaderFooter = true,
-            ExportFootnotesEndnotes = true,
+            HeaderFooterExportOptions = HeaderFooterExportOptions.FirstHeaderLastFooterPerSection,
+            FootnoteEndnoteExportOptions = FootnoteEndnoteExportOptions.EndOfDocument,
             ImageConverter = new ImageSharpConverter(), // Converts TIFF and WMF that are not supported by browsers
             OriginalFolderPath = Path.GetDirectoryName(inputFilePath) // converts sub-documents (if any)
         };

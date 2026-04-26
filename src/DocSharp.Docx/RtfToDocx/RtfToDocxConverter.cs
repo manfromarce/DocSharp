@@ -602,6 +602,11 @@ public partial class RtfToDocxConverter : ITextToDocxConverter
                                 // and contains the same inner \pict as \shppict
                                 continue;
                             }
+                            else if (dname == "background")
+                            {
+                                ProcessBackgroundDestination(destination);
+                                continue;
+                            }
 
                             else if (dname == "pn")
                             {

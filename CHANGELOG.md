@@ -22,6 +22,7 @@
 - Set DOCX page size, margins and orientation in CSS page settings (`@media print`)
 - Implemented new "pseudo" fixed layout mode (disabled by default) in DOCX ➡️ HTML converter
 - The new `HeaderFooterExportOptions` and `FootnoteEndnoteExportOptions` allow to control the header/footer/footnotes/endnotes behavior in DOCX ➡️ HTML converter
+- Preserve solid background color in RTF ➡️ DOCX converter
 - Fix various minor bugs
 - Code cleanup
 - Update dependencies
