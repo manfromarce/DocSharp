@@ -100,15 +100,15 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 }
                 else if (pictureBullet.GetFirstChild<AlternateContent>() is AlternateContent alternateContent)
                 {
-                    if (alternateContent.Descendants<PictureBulletBase>().FirstOrDefault() is PictureBulletBase pbb)
+                    if (alternateContent.GetFirstDescendant<PictureBulletBase>() is PictureBulletBase pbb)
                     {
                         ProcessVml(pbb, sb, ignoreWrapLayouts: true);
                     }
-                    else if (alternateContent.Descendants<Drawing>().FirstOrDefault() is Drawing drawing1)
+                    else if (alternateContent.GetFirstDescendant<Drawing>() is Drawing drawing1)
                     {
                         ProcessDrawing(drawing1, sb, ignoreWrapLayouts: true);
                     }
-                    else if (alternateContent.Descendants<Picture>().FirstOrDefault() is Picture pict1)
+                    else if (alternateContent.GetFirstDescendant<Picture>() is Picture pict1)
                     {
                         ProcessVml(pict1, sb, ignoreWrapLayouts: true);
                     }
@@ -223,7 +223,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             ProcessNumberingFormat(numberingFormat, sb);
         }
         // The numbering format might be specified in an <mc:Choice> or <mc:Fallback> element
-        else if (level.Descendants<NumberingFormat>().FirstOrDefault() is NumberingFormat nf)
+        else if (level.GetFirstDescendant<NumberingFormat>() is NumberingFormat nf)
         {
             ProcessNumberingFormat(nf, sb);
         }

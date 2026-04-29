@@ -45,7 +45,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 else if (effectiveLevel?.StartNumberingValue?.Val != null)
                     start = effectiveLevel.StartNumberingValue.Val.Value;
                 var levelText = effectiveLevel?.LevelText?.Val;
-                var numberingFormat = effectiveLevel?.NumberingFormat ?? effectiveLevel?.Descendants<NumberingFormat>().FirstOrDefault();
+                var numberingFormat = effectiveLevel?.NumberingFormat ?? effectiveLevel?.GetFirstDescendant<NumberingFormat>();
                 // The numbering format might be specified in an <mc:Choice> or <mc:Fallback> element
 
                 var listType = numberingFormat?.Val ?? NumberFormatValues.Decimal; // if not specified it should be assumed decimal (regular numbered list)

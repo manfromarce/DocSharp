@@ -31,7 +31,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             return;
         }
 
-        if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
+        if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
             // TODO: detect inline / anchored / floating for VML images
@@ -39,8 +39,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             // For VML, width and height should be in a v:shape element with this attribute: 
             // style="width:165.6pt;height:110.4pt;visibility:visible..."
 
-            var shape = element as V.Shape ?? element.Elements<V.Shape>().FirstOrDefault();
-            var style = shape?.Style;
+            var style = (imageData.Parent as V.Shape)?.Style ?? (imageData.Parent as V.Rectangle)?.Style;
             if (style?.Value != null)
             {
                 var values = style.Value.Split(';');

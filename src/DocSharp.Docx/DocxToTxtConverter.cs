@@ -386,7 +386,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
                 else if (effectiveLevel?.StartNumberingValue?.Val != null)
                     start = effectiveLevel.StartNumberingValue.Val.Value;
                 var levelText = effectiveLevel?.LevelText?.Val;
-                var numberingFormat = effectiveLevel?.NumberingFormat ?? effectiveLevel?.Descendants<NumberingFormat>().FirstOrDefault();
+                var numberingFormat = effectiveLevel?.NumberingFormat ?? effectiveLevel?.GetFirstDescendant<NumberingFormat>();
                 // The numbering format might be specified in an <mc:Choice> or <mc:Fallback> element
 
                 var listType = numberingFormat?.Val ?? NumberFormatValues.Decimal; // if not specified it should be assumed decimal (regular numbered list)
@@ -525,7 +525,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     internal override void ProcessDrawing(Drawing drawing, TxtStringWriter sb)
     {
-        var txbxContent = drawing.Inline?.Descendants<TextBoxContent>().FirstOrDefault();
+        var txbxContent = drawing.Inline?.GetFirstDescendant<TextBoxContent>();
         if (txbxContent != null)
         {
             foreach (var element in txbxContent.Elements())
@@ -533,7 +533,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
                 ProcessBodyElement(element, sb);
             }
         }
-        else if (WriteImageDescription && drawing.Descendants<Pic.Picture>().FirstOrDefault() is Pic.Picture pic)
+        else if (WriteImageDescription && drawing.GetFirstDescendant<Pic.Picture>() is Pic.Picture pic)
         {
             string? altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Description?.Value;
             if (string.IsNullOrWhiteSpace(altText))
@@ -563,15 +563,14 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             sb.WriteLine(new string('-', 20));
             sb.WriteLine();            
         }
-        else if (picture.Descendants<TextBoxContent>().FirstOrDefault() is TextBoxContent txbxContent)
+        else if (picture.GetFirstDescendant<TextBoxContent>() is TextBoxContent txbxContent)
         {
             foreach (var element in txbxContent.Elements())
             {
                 ProcessBodyElement(element, sb);
             }
         }
-        else if (picture.Descendants<V.Shape>() is V.Shape shape &&
-                 shape.GetFirstChild<V.TextPath>() is V.TextPath textPath &&
+        else if (picture.GetFirstDescendant<V.TextPath>() is V.TextPath textPath &&
                  textPath.String?.Value != null)
         {
             sb.EnsureEmptyLine();

@@ -67,7 +67,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? altText = null)
     {
-        if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
+        if (blip.GetFirstDescendant<SVGBlip>() is SVGBlip svgBlip &&
             svgBlip.Embed?.Value is string svgRelId)
         {
             // Prefer the actual SVG image as web browsers can display it.

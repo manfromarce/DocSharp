@@ -37,7 +37,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
         
         if (currentSectionProperties != null &&
-            element.Descendants<SectionProperties>().FirstOrDefault() is SectionProperties newSectionProperties)
+            element.GetFirstDescendant<SectionProperties>() is SectionProperties newSectionProperties)
         {
             if (newSectionProperties == currentSectionProperties)
             {

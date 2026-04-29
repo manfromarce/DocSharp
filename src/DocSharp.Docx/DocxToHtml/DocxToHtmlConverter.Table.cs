@@ -54,7 +54,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
         // Table cell spacing should be the same for all rows in DOCX.
         decimal spacing = 0;
-        var firstRow = table.Descendants<TableRow>().FirstOrDefault();
+        var firstRow = table.GetFirstDescendant<TableRow>();
         if (firstRow != null)
         {
             var tableCellSpacing = firstRow.GetEffectiveProperty<TableCellSpacing>(Styles);

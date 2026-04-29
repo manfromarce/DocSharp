@@ -87,7 +87,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             // Write standard picture for horizontal line
             sb.WriteLine(@"\picscalex1\picscaley1\piccropl0\piccropr0\piccropt0\piccropb0\picw7620\pich7620\picwgoal4320\pichgoal4320\wmetafile8}");
         }
-        else if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
+        else if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
             OpenXmlElement? shape;

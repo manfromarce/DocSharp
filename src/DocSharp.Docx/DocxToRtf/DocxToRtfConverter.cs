@@ -155,7 +155,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
         // Add document properties
-        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.Descendants<SectionProperties>().FirstOrDefault(), contentSb);
+        ProcessFirstSectionProperties(document.MainDocumentPart?.Document?.Body?.GetFirstDescendant<SectionProperties>(), contentSb);
         ProcessSettings(document.MainDocumentPart?.DocumentSettingsPart?.Settings, contentSb);
         
         switch (FootnotesEndnotes)

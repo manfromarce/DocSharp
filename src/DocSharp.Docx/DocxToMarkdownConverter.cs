@@ -11,9 +11,7 @@ using DocSharp.Writers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Office2019.Drawing.SVG;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
-using DrawingML = DocumentFormat.OpenXml.Drawing;
 using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
@@ -699,7 +697,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
                         if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip)
                         {
-                            if (blip.Descendants<SVGBlip>().FirstOrDefault() is SVGBlip svgBlip &&
+                            if (blip.GetFirstDescendant<SVGBlip>() is SVGBlip svgBlip &&
                                 svgBlip.Embed?.Value is string svgRelId)
                             {
                                 // Prefer the actual SVG image as web browsers can display it.
@@ -728,7 +726,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         if (!string.IsNullOrWhiteSpace(ImagesOutputFolder))
         {
             // TODO: detect inline / anchored / floating and hyperlink for VML images
-            if (element.Descendants<ImageData>().FirstOrDefault() is ImageData imageData &&
+            if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
             {
                 ProcessImagePart(element.GetRootPart(), relId, sb, true);
