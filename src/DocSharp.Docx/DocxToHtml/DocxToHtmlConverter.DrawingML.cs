@@ -25,17 +25,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         if (drawing.IsLayoutSupported(this.SupportedImagesLayout))
         {
-            var extent = drawing.Inline?.Extent ?? drawing.Anchor?.Extent;
-            
-            string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id?.Value;
-            string? hyperlinkUrl = null;
-            string? hyperlinkTooltip = null;
-            if (hyperlinkId != null && drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
-            {
-                hyperlinkUrl = relationship.Uri.OriginalString;
-                hyperlinkTooltip = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Tooltip?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Tooltip?.Value;
-            }
-
+            var extent = drawing.Inline?.Extent ?? drawing.Anchor?.Extent;            
             var graphic = drawing.Inline?.Graphic ?? drawing.Anchor?.GetFirstChild<A.Graphic>();
             var graphicData = graphic?.GraphicData;
             if (graphicData != null && extent?.Cx != null && extent?.Cy != null)
@@ -45,14 +35,26 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
                 if (graphicData.GetFirstChild<Pic.Picture>() is Pic.Picture pic)
                 {
-                    string? altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Description?.Value;
+                    var nonVisualDrawingProperties = pic.NonVisualPictureProperties?.NonVisualDrawingProperties;
+                    var hyperlinkOnClick = nonVisualDrawingProperties?.HyperlinkOnClick ??
+                                           drawing.Inline?.DocProperties?.HyperlinkOnClick ?? 
+                                           drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick;
+                    string? hyperlinkId = hyperlinkOnClick?.Id?.Value;
+                    string? hyperlinkUrl = null;
+                    string? hyperlinkTooltip = null;
+                    if (hyperlinkId != null && drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+                    {
+                        hyperlinkUrl = relationship.Uri.OriginalString;
+                        hyperlinkTooltip = hyperlinkOnClick?.Tooltip?.Value;
+                    }
+                    string? altText = nonVisualDrawingProperties?.Description?.Value;
                     if (string.IsNullOrWhiteSpace(altText))
                     {
-                        altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Title?.Value;
+                        altText = nonVisualDrawingProperties?.Title?.Value;
                     }
                     if (string.IsNullOrWhiteSpace(altText))
                     {
-                        altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Name?.Value;
+                        altText = nonVisualDrawingProperties?.Name?.Value;
                     }
                     if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip)
                     {

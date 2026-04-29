@@ -38,6 +38,17 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
                 if (graphicData.GetFirstChild<Pic.Picture>() is Pic.Picture pic)
                 {
+                    var nonVisualDrawingProperties = pic.NonVisualPictureProperties?.NonVisualDrawingProperties;
+                    var hyperlinkOnClick = nonVisualDrawingProperties?.HyperlinkOnClick ??
+                                           drawing.Inline?.DocProperties?.HyperlinkOnClick ?? 
+                                           drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick;
+                    string? hyperlinkId = hyperlinkOnClick?.Id?.Value;
+                    string? hyperlinkUrl = null;
+                    if (hyperlinkId != null && drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+                    {
+                        hyperlinkUrl = relationship.Uri.OriginalString;
+                    }
+                    
                     if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip && drawing.GetRootPart() is OpenXmlPart rootPart)
                     {
                         QuestPdfImage? image = null;
@@ -55,9 +66,28 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                             var bytes = imagePart.GetStream().ReadStreamToEnd();
                             image = new QuestPdfImage(bytes, width, height, ImageFormatExtensions.FromMimeType(imagePart.ContentType), ImageConverter);
                         }
-                        // Add image to the paragraph model.
+                        // Add image to the paragraph model (and create hyperlink if necessary).
                         if (image != null && currentParagraph.Count > 0)
-                            currentParagraph.Peek().Elements.Add(image);
+                        {
+                            if (!string.IsNullOrWhiteSpace(hyperlinkUrl))
+                            {
+                                var hyperlink = new QuestPdfHyperlink();
+                                if (hyperlinkUrl.StartsWith("#"))
+                                {
+                                    hyperlink.Anchor = hyperlinkUrl;
+                                }
+                                else
+                                {
+                                    hyperlink.Url = hyperlinkUrl;
+                                }
+                                hyperlink.Elements.Add(image);
+                                currentParagraph.Peek().Elements.Add(hyperlink);
+                            }
+                            else
+                            {
+                                currentParagraph.Peek().Elements.Add(image);
+                            }
+                        }
                     }
                 }
             }

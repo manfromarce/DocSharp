@@ -663,31 +663,33 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         {
             if (drawing.IsLayoutSupported(this.SupportedImagesLayout))
             {
-                string? hyperlinkId = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Id?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Id?.Value;
-                string? hyperlinkUrl = null;
-                string? hyperlinkTooltip = null;            
-                if (hyperlinkId != null && drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
-                {
-                    hyperlinkUrl = relationship.Uri.OriginalString;
-                    hyperlinkTooltip = drawing.Inline?.DocProperties?.HyperlinkOnClick?.Tooltip?.Value ?? drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick?.Tooltip?.Value;
-                }
-
                 var graphic = drawing.Inline?.Graphic ?? drawing.Anchor?.GetFirstChild<A.Graphic>();
                 var graphicData = graphic?.GraphicData;
-
                 if (graphicData != null)
                 {
                     if (graphicData.GetFirstChild<Pic.Picture>() is Pic.Picture pic)
                     {
                         // In Markdown, give precedence to title (if available) rather than long description.
-                        string? altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Description?.Value;
+                        var nonVisualDrawingProperties = pic.NonVisualPictureProperties?.NonVisualDrawingProperties;
+                        var hyperlinkOnClick = nonVisualDrawingProperties?.HyperlinkOnClick ??
+                                               drawing.Inline?.DocProperties?.HyperlinkOnClick ?? 
+                                               drawing.Anchor?.GetFirstChild<Wp.DocProperties>()?.HyperlinkOnClick;
+                        string? hyperlinkId = hyperlinkOnClick?.Id?.Value;
+                        string? hyperlinkUrl = null;
+                        string? hyperlinkTooltip = null;
+                        if (hyperlinkId != null && drawing.GetRootPart()?.HyperlinkRelationships.FirstOrDefault(x => x.Id == hyperlinkId) is HyperlinkRelationship relationship)
+                        {
+                            hyperlinkUrl = relationship.Uri.OriginalString;
+                            hyperlinkTooltip = hyperlinkOnClick?.Tooltip?.Value;
+                        }
+                        string? altText = nonVisualDrawingProperties?.Title?.Value;
                         if (string.IsNullOrWhiteSpace(altText))
                         {
-                            altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Title?.Value;
+                            altText = nonVisualDrawingProperties?.Description?.Value;
                         }
                         if (string.IsNullOrWhiteSpace(altText))
                         {
-                            altText = pic.NonVisualPictureProperties?.NonVisualDrawingProperties?.Name?.Value;
+                            altText = nonVisualDrawingProperties?.Name?.Value;
                         }
                         // Ensure there aren't any characters that would disrupt the markdown syntax.
                         if (!string.IsNullOrWhiteSpace(altText))
@@ -705,7 +707,7 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
                             }
                             else if (blip.Embed?.Value is string relId)
                             {
-                                ProcessImagePart(drawing.GetRootPart(), relId, sb, drawing.Inline != null, hyperlinkId, hyperlinkTooltip, altText);
+                                ProcessImagePart(drawing.GetRootPart(), relId, sb, drawing.Inline != null, hyperlinkUrl, hyperlinkTooltip, altText);
                             }
                         }
                     }

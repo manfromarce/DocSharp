@@ -351,6 +351,23 @@ public class QuestPdfModel
                                     // TODO: section names (bookmarks) are not created yet
                                     text.SectionLink(subSpan.Text, hyperlink.Anchor).Style(subSpan.Style).LineHeight(paragraph.LineHeight);                                    
                             }
+                            else if (subElement is QuestPdfImage image)
+                            {
+                                if (image.IsSvg && !string.IsNullOrEmpty(image.SvgText))
+                                {
+                                    if (hyperlink.Url != null)
+                                        text.Element().Hyperlink(hyperlink.Url).Width(image.Width).Height(image.Height).Svg(image.SvgText!).FitArea();
+                                    else if (hyperlink.Anchor != null)
+                                        text.Element().SectionLink(hyperlink.Anchor).Width(image.Width).Height(image.Height).Svg(image.SvgText!).FitArea();
+                                }
+                                else if (image.Bytes != null && (image.ImageType == IO.ImageFormat.Png || image.ImageType == IO.ImageFormat.Jpeg))
+                                {
+                                    if (hyperlink.Url != null)
+                                        text.Element().Hyperlink(hyperlink.Url).Width(image.Width).Height(image.Height).Image(image.Bytes).FitArea();
+                                    else if (hyperlink.Anchor != null)
+                                        text.Element().SectionLink(hyperlink.Anchor).Width(image.Width).Height(image.Height).Image(image.Bytes).FitArea();
+                                }
+                            }
                         }
                     }
                     else if (inline is QuestPdfImage image)
