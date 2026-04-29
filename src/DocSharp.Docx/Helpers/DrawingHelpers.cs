@@ -1,5 +1,6 @@
-using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Wp = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using System.Linq;
 
 namespace DocSharp.Docx;
 
@@ -12,11 +13,11 @@ public static class DrawingHelpers
 
     public static bool IsFloating(this Drawing drawing)
     {
-        return drawing.Inline == null &&
-                  drawing.Anchor?.GetFirstChild<WrapTopBottom>() == null &&
-                  drawing.Anchor?.GetFirstChild<WrapSquare>() == null &&
-                  drawing.Anchor?.GetFirstChild<WrapTight>() == null &&
-                  drawing.Anchor?.GetFirstChild<WrapThrough>() == null;
+        return drawing.Anchor != null &&
+               !drawing.Anchor.Elements<Wp.WrapTopBottom>().Any() &&
+               !drawing.Anchor.Elements<Wp.WrapSquare>().Any() &&
+               !drawing.Anchor.Elements<Wp.WrapTight>().Any() &&
+               !drawing.Anchor.Elements<Wp.WrapThrough>().Any();
         // WrapNone = in front of / behind text
     }
 
@@ -35,16 +36,4 @@ public static class DrawingHelpers
         }
         return false;
     }
-
-    // public static bool IsInline(this Picture picture)
-    // {
-    // }
-
-    // public static bool IsFloating(this Picture picture)
-    // {
-    // }
-
-    // internal static bool IsLayoutSupported(this Picture picture, ImageLayoutType layoutType)
-    // {
-    // }
 }

@@ -109,14 +109,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 return;
             }
             
-            // Width and height are specified in the style attribute, like this: 
-            // style="width:165.6pt;height:110.4pt;visibility:visible..."
-            var style = shape.GetAttribute("style", "");
-            if (style.Value != null)
+            var style = VmlHelpers.FindStyle(element);
+            if (style != null)
             {
                 var properties = new PictureProperties();
 
-                var styleProperties = VmlHelpers.GetShapeStylePropertiesInTwips(style.Value, out long width, out long height);
+                var styleProperties = VmlHelpers.GetShapeStylePropertiesInTwips(style, out long width, out long height);
 
                 if (shape != null && width > 0 && height > 0) // proceed only if width and height were found in the style attribute
                 {

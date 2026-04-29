@@ -2,11 +2,74 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.Packaging;
+using V = DocumentFormat.OpenXml.Vml;
+using W10 = DocumentFormat.OpenXml.Vml.Wordprocessing;
 
 namespace DocSharp.Docx;
 
 public static class VmlHelpers
 {
+    // These methods can be called for Picture, PictureBulletBase or an OLE object child (shape, rect, etc. directly)
+    internal static bool IsLayoutSupported(this OpenXmlElement picture, ImageLayoutType layoutType)
+    {
+        switch (layoutType)
+        {
+            case ImageLayoutType.None:
+                return false;
+            case ImageLayoutType.Inline:
+                return picture.IsInline();
+            case ImageLayoutType.InlineAndAnchored:
+                return !picture.IsFloating();
+            case ImageLayoutType.All: 
+                return true;
+        }
+        return false;
+    }
+
+    internal static bool IsInline(this OpenXmlElement picture)
+    {
+        string? style = VmlHelpers.FindStyle(picture);
+        return style == null || !style.Contains("position:absolute");
+    }
+
+    internal static bool IsFloating(this OpenXmlElement picture)
+    {
+        string? style = VmlHelpers.FindStyle(picture);
+        return style != null && 
+               style.Contains("position:absolute") && 
+               !picture.Descendants<W10.TextWrap>().Any();
+    }
+
+    internal static string? FindStyle(OpenXmlElement picture)
+    {
+        // This method can be called for Picture, PictureBulletBase or an OLE object child (shape, rect, etc. directly)
+        return picture.GetFirstChild<V.Shape>()?.Style ??
+               picture.GetFirstChild<V.Rectangle>()?.Style ??
+               picture.GetFirstChild<V.Oval>()?.Style ??
+               picture.GetFirstChild<V.RoundRectangle>()?.Style ??
+               picture.GetFirstChild<V.Line>()?.Style ??
+               picture.GetFirstChild<V.Arc>()?.Style ??
+               picture.GetFirstChild<V.Curve>()?.Style ??
+               picture.GetFirstChild<V.PolyLine>()?.Style ??
+               picture.GetFirstChild<V.ImageFile>()?.Style ??
+               picture.GetFirstChild<V.Group>()?.Style ?? 
+               picture.GetFirstChild<V.Shapetype>()?.Style ?? 
+               (picture as V.Shape)?.Style ??
+               (picture as V.Rectangle)?.Style ??
+               (picture as V.Oval)?.Style ??
+               (picture as V.RoundRectangle)?.Style ??
+               (picture as V.Line)?.Style ??
+               (picture as V.Arc)?.Style ??
+               (picture as V.Curve)?.Style ??
+               (picture as V.PolyLine)?.Style ??
+               (picture as V.ImageFile)?.Style ??
+               (picture as V.Group)?.Style ?? 
+               (picture as V.Shapetype)?.Style;
+    }
+
     internal static Dictionary<string, string> GetShapeStylePropertiesInTwips(string style, out long width, out long height)
     {
         width = 0;

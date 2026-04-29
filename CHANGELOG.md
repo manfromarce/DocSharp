@@ -2,7 +2,8 @@
 
 - Improve performance in DOCX converters by caching styles
 - Improve highlight detection logic in DOCX ➡️ Markdown converter
-- Add option to preserve anchored and floating images in DOCX ➡️ HTML/Markdown converter
+- The new `SupportedImagesLayout` allows to preserve anchored and floating images in DOCX ➡️ HTML/Markdown converters.  
+By default only inline images are converted because other layouts do not have a direct equivalent in HTML or important properties are missing (such as "both sides" for square layout).  
 - Fix: inline images incorrectly always created a new line in DOCX ➡️ HTML converter
 - Preserve hyperlinks on images in DOCX ➡️ HTML/RTF/PDF converter
 - Fix: hyperlinks and images in header/footer/footnote/endnote were sometimes lost in DOCX converters

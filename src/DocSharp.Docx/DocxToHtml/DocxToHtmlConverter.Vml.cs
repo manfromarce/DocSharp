@@ -33,12 +33,12 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         }
 
         if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
+            VmlHelpers.IsLayoutSupported(element, SupportedImagesLayout) &&
             imageData.RelationshipId?.Value is string relId)
         {
-            // TODO: detect inline / anchored / floating for VML images
-            var style = (imageData.Parent as V.Shape)?.Style ?? (imageData.Parent as V.Rectangle)?.Style;
-            if (style?.Value != null && 
-                VmlHelpers.GetShapeStylePropertiesInPoints(style.Value, out float width, out float height) != null &&
+            var style = VmlHelpers.FindStyle(element);
+            if (style != null && 
+                VmlHelpers.GetShapeStylePropertiesInPoints(style, out float width, out float height) != null &&
                 width > 0 && height > 0 && element.GetRootPart() is OpenXmlPart rootPart)
             {
                 string? altText = imageData.Title?.Value;

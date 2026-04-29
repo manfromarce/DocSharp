@@ -162,11 +162,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         else if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
-            // TODO: detect inline / anchored / floating for VML images
-            var shape = element as V.Shape ?? element.Elements<V.Shape>().FirstOrDefault();
-            var style = shape?.Style;
-            if (style?.Value != null && 
-                VmlHelpers.GetShapeStylePropertiesInPoints(style.Value, out float width, out float height) != null &&
+            var style = VmlHelpers.FindStyle(element);
+            if (style != null && 
+                VmlHelpers.GetShapeStylePropertiesInPoints(style, out float width, out float height) != null &&
                 width > 0 && height > 0 && element.GetRootPart() is OpenXmlPart rootPart)
             {
                 if (rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)

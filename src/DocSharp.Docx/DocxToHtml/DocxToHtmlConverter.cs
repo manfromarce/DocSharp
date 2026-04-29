@@ -88,7 +88,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     /// <summary>
     /// By default only inline images are supported,  
-    /// because other DOCX image layouts have no direct equivalent in HTML/Markdown and can lead to unexpected results.  
+    /// because other DOCX image layouts have no direct equivalent in HTML   
+    /// (or important properties are missing such as "both sides" for square layout)  
+    /// and can lead to unexpected results.  
     /// However, if desired, this property can be set to ImageLayoutType.InlineAndAnchored 
     /// to preserve the "top and bottom", "square", "tight" and "through" wrap layouts too, 
     /// or to ImageLayoutType.All to preserve absolutely positioned images ("in front of"/"behind" text) too.
