@@ -112,7 +112,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             }
             // Check if the style contains width and height.
             if (rect.Style?.Value != null && 
-                GetShapeStyleProperties(rect.Style.Value, out float width, out float height) != null && 
+                VmlHelpers.GetShapeStylePropertiesInPoints(rect.Style.Value, out float width, out float height) != null && 
                 height > 0)
             {
                 horizontalLine.Thickness = height;
@@ -162,13 +162,11 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         else if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
-            // For VML, width and height should be in a v:shape element with this attribute: 
-            // style="width:165.6pt;height:110.4pt;visibility:visible..."
-
+            // TODO: detect inline / anchored / floating for VML images
             var shape = element as V.Shape ?? element.Elements<V.Shape>().FirstOrDefault();
             var style = shape?.Style;
             if (style?.Value != null && 
-                GetShapeStyleProperties(style.Value, out float width, out float height) != null &&
+                VmlHelpers.GetShapeStylePropertiesInPoints(style.Value, out float width, out float height) != null &&
                 width > 0 && height > 0 && element.GetRootPart() is OpenXmlPart rootPart)
             {
                 if (rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
@@ -183,71 +181,5 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 }
             }
         }
-    }
-
-    private Dictionary<string, string> GetShapeStyleProperties(string style, out float width, out float height)
-    {
-        width = 0;
-        height = 0;
-        var dict = style.Split(';').Select(pair => pair.Split(':'))
-                               .Where(keyValue => keyValue.Length == 2)
-                               .GroupBy(keyValue => keyValue[0].ToLowerInvariant().Trim()) // group by key to avoid duplicate keys (may happen in some documents)
-                               .ToDictionary(group => group.Key, group => group.First()[1].ToLowerInvariant().Trim());
-        if (dict.TryGetValue("width", out string? w))
-        {
-            width = ParsePoints(w);
-        }
-        if (dict.TryGetValue("height", out string? h))
-        {
-            height = ParsePoints(h);
-        }
-        return dict;
-    }
-
-    private float ParsePoints(string? value)
-    {
-        if (value == null)
-        {
-            return 0;
-        }
-
-        if (value.Equals("auto", StringComparison.OrdinalIgnoreCase))
-        {
-            return 0; // TODO: handle 'auto' based on property (sometimes an equivalent may exist)
-        }
-
-        float res;
-        value = value.Trim();
-        if (value.EndsWith("pt") && float.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return res;
-        }
-        else if (value.EndsWith("px") && float.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return res * 0.75f; // Assuming 96 DPI (used by Word)
-        }
-        else if (value.EndsWith("pc") && float.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return res * 12;
-        }
-        else if (value.EndsWith("in") && float.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return res * 72;
-        }
-        else if (value.EndsWith("cm") && float.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return res * 72f / 2.54f;
-        }
-        else if (value.EndsWith("mm") && float.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return res * 72f / 25.4f;
-        }
-        // TODO: how should we handle ex, em and % ?
-        else if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            // Assume pixels if no unit
-            return res * 0.75f; // Word uses 96 DPI
-        }
-        return 0;
     }
 }

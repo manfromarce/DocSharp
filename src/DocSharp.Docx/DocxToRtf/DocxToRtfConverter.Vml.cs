@@ -65,7 +65,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             // Check if the style contains width and height.
             long height = 0;
             if (rect.Style?.Value != null && 
-                GetShapeStyleProperties(rect.Style.Value, out long width, out height) != null)
+                VmlHelpers.GetShapeStylePropertiesInTwips(rect.Style.Value, out long width, out height) != null)
             {
                 if (width > 0)
                     sb.WriteShapeProperty("dxWidthHR", width); // already converted to twips in GetShapeStyleProperties
@@ -116,7 +116,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             {
                 var properties = new PictureProperties();
 
-                var styleProperties = GetShapeStyleProperties(style.Value, out long width, out long height);
+                var styleProperties = VmlHelpers.GetShapeStylePropertiesInTwips(style.Value, out long width, out long height);
 
                 if (shape != null && width > 0 && height > 0) // proceed only if width and height were found in the style attribute
                 {
@@ -178,25 +178,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
     }
-
-    private Dictionary<string, string> GetShapeStyleProperties(string style, out long width, out long height)
-    {
-        width = 0;
-        height = 0;
-        var dict = style.Split(';').Select(pair => pair.Split(':'))
-                               .Where(keyValue => keyValue.Length == 2)
-                               .GroupBy(keyValue => keyValue[0].ToLowerInvariant().Trim()) // group by key to avoid duplicate keys (may happen in some documents)
-                               .ToDictionary(group => group.Key, group => group.First()[1].ToLowerInvariant().Trim());
-        if (dict.TryGetValue("width", out string? w))
-        {
-            width = ParseTwips(w);
-        }
-        if (dict.TryGetValue("height", out string? h))
-        {
-            height = ParseTwips(h);
-        }
-        return dict;
-    }
     
     private void ProcessVmlShapeProperties(Dictionary<string, string> properties, RtfStringWriter sb)
     {
@@ -223,7 +204,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         long top = 0;
         if (properties.TryGetValue("margin-left", out string? l))
         {
-            left = ParseTwips(l);
+            left = VmlHelpers.ParseTwips(l);
             sb.WriteWordWithValue("shpleft", left);
         }
         else
@@ -233,7 +214,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("margin-top", out string? t))
         {
-            top = ParseTwips(t);
+            top = VmlHelpers.ParseTwips(t);
             sb.WriteWordWithValue("shptop", top);
         }
         else
@@ -243,7 +224,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("margin-right", out string? right))
         {
-            sb.WriteWordWithValue("shpright", ParseTwips(right));
+            sb.WriteWordWithValue("shpright", VmlHelpers.ParseTwips(right));
         }
         else
         {
@@ -252,7 +233,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("margin-bottom", out string? bottom))
         {
-            sb.WriteWordWithValue("shpbottom", ParseTwips(bottom));
+            sb.WriteWordWithValue("shpbottom", VmlHelpers.ParseTwips(bottom));
         }
         else
         {
@@ -261,7 +242,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("mso-wrap-distance-left", out string? wrapDistanceLeft))
         {
-            sb.WriteWordWithValue("dxWrapDistLeft", ParseTwips(wrapDistanceLeft));
+            sb.WriteWordWithValue("dxWrapDistLeft", VmlHelpers.ParseTwips(wrapDistanceLeft));
         }
         else
         {
@@ -270,7 +251,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("mso-wrap-distance-top", out string? wrapDistanceTop))
         {
-            sb.WriteWordWithValue("dyWrapDistTop", ParseTwips(wrapDistanceTop));
+            sb.WriteWordWithValue("dyWrapDistTop", VmlHelpers.ParseTwips(wrapDistanceTop));
         }
         else
         {
@@ -279,7 +260,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("mso-wrap-distance-right", out string? wrapDistanceRight))
         {
-            sb.WriteWordWithValue("dxWrapDistRight", ParseTwips(wrapDistanceRight));
+            sb.WriteWordWithValue("dxWrapDistRight", VmlHelpers.ParseTwips(wrapDistanceRight));
         }
         else
         {
@@ -288,7 +269,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("mso-wrap-distance-bottom", out string? wrapDistanceBottom))
         {
-            sb.WriteWordWithValue("dyWrapDistBottom", ParseTwips(wrapDistanceBottom));
+            sb.WriteWordWithValue("dyWrapDistBottom", VmlHelpers.ParseTwips(wrapDistanceBottom));
         }
         else
         {
@@ -298,19 +279,19 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         // According to [MS-OI29500] (Office implementation of Open XML) these values are already in tenths of a percent (same as RTF)
         if (properties.TryGetValue("mso-width-percent", out string? pctWidth))
         {
-            sb.WriteWordWithValue("pctHoriz", ParseTwips(pctWidth));
+            sb.WriteWordWithValue("pctHoriz", VmlHelpers.ParseTwips(pctWidth));
         }
         if (properties.TryGetValue("mso-height-percent", out string? pctHeight))
         {
-            sb.WriteWordWithValue("pctVert", ParseTwips(pctHeight));
+            sb.WriteWordWithValue("pctVert", VmlHelpers.ParseTwips(pctHeight));
         }
         if (left == 0 && properties.TryGetValue("mso-left-percent", out string? pctLeft)) // only write mso-left-percent if margin-left is 0 or not present
         {
-            sb.WriteWordWithValue("pctHorizPos", ParseTwips(pctLeft));
+            sb.WriteWordWithValue("pctHorizPos", VmlHelpers.ParseTwips(pctLeft));
         }
         if (top == 0 && properties.TryGetValue("mso-top-percent", out string? pctTop)) // only write mso-top-percent if margin-top is 0 or not present
         {
-            sb.WriteWordWithValue("pctVertPos", ParseTwips(pctTop));
+            sb.WriteWordWithValue("pctVertPos", VmlHelpers.ParseTwips(pctTop));
         }
 
         var wrap = shape.Elements<W10.TextWrap>().FirstOrDefault();
@@ -637,53 +618,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
         {
             return (long)Math.Round(degrees);
-        }
-        return 0;
-    }
-
-    private long ParseTwips(string? value)
-    {
-        if (value == null)
-        {
-            return 0;
-        }
-
-        if (value.Equals("auto", StringComparison.OrdinalIgnoreCase))
-        {
-            return 0; // TODO: handle 'auto' based on property (sometimes an equivalent RTF control word may exist)
-        }
-
-        decimal res;
-        value = value.Trim();
-        if (value.EndsWith("pt") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return (long)Math.Round(res * 20);
-        }
-        else if (value.EndsWith("px") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return (long)Math.Round(res * 15); // Assuming 96 DPI (used by Word)
-        }
-        else if (value.EndsWith("pc") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return (long)Math.Round(res * 240);
-        }
-        else if (value.EndsWith("in") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return (long)Math.Round(res * 1440);
-        }
-        else if (value.EndsWith("cm") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return (long)Math.Round((res / 2.54m) * 1440);
-        }
-        else if (value.EndsWith("mm") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            return (long)Math.Round((res / 25.4m) * 1440);
-        }
-        // TODO: how should we handle ex, em and % ?
-        else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out res))
-        {
-            // Assume pixels if no unit
-            return (long)Math.Round(res * 15); // Word uses 96 DPI
         }
         return 0;
     }

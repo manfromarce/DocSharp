@@ -17,6 +17,7 @@ using V = DocumentFormat.OpenXml.Vml;
 using System.IO;
 using System.Diagnostics;
 using DocSharp.Writers;
+using DocumentFormat.OpenXml.Packaging;
 
 namespace DocSharp.Docx;
 
@@ -35,53 +36,17 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             imageData.RelationshipId?.Value is string relId)
         {
             // TODO: detect inline / anchored / floating for VML images
-
-            // For VML, width and height should be in a v:shape element with this attribute: 
-            // style="width:165.6pt;height:110.4pt;visibility:visible..."
-
             var style = (imageData.Parent as V.Shape)?.Style ?? (imageData.Parent as V.Rectangle)?.Style;
-            if (style?.Value != null)
+            if (style?.Value != null && 
+                VmlHelpers.GetShapeStylePropertiesInPoints(style.Value, out float width, out float height) != null &&
+                width > 0 && height > 0 && element.GetRootPart() is OpenXmlPart rootPart)
             {
                 string? altText = imageData.Title?.Value;
                 if (string.IsNullOrWhiteSpace(altText))
                 {
                     altText = (imageData.Parent as V.Shape)?.Id ?? (imageData.Parent as V.Rectangle)?.Id;
                 }
-                var values = style.Value.Split(';');
-                double width = 0;
-                double height = 0;
-                foreach (var v in values)
-                {
-                    if (v.StartsWith("width:"))
-                    {
-                        string w = v.Substring(6);
-                        if (w.EndsWith("pt"))
-                        {
-                            w = w.Substring(0, w.Length - 2);
-                        }
-                        if (double.TryParse(w, NumberStyles.Float, CultureInfo.InvariantCulture, out double wValue))
-                        {
-                            width = wValue;
-                        }
-                    }
-                    else if (v.StartsWith("height:"))
-                    {
-                        string h = v.Substring(7);
-                        if (h.EndsWith("pt"))
-                        {
-                            h = h.Substring(0, h.Length - 2);
-                        }
-                        if (double.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out double hValue))
-                        {
-                            height = hValue;
-                        }
-                    }
-                }
-                if (width > 0 && height > 0)
-                {
-                    var rootPart = OpenXmlHelpers.GetRootPart(element);
-                    ProcessImagePart(rootPart, relId, width, height, sb, true, null, null, altText);
-                }
+                ProcessImagePart(rootPart, relId, width, height, sb, true, null, null, altText);
             }
         }
     }
