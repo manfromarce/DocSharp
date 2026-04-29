@@ -576,6 +576,20 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             sb.EnsureEmptyLine();
             ProcessText(new Text(textPath.String.Value), sb);
         }
+        else if (WriteImageDescription && picture.GetFirstDescendant<V.ImageData>() is V.ImageData imageData)
+        {
+            string? altText = imageData.Title?.Value;
+            if (string.IsNullOrWhiteSpace(altText))
+            {
+                altText = (imageData.Parent as V.Shape)?.Id ?? (imageData.Parent as V.Rectangle)?.Id;
+            }
+            if (!string.IsNullOrWhiteSpace(altText))
+            {
+                sb.EnsureEmptyLine();
+                sb.WriteLine(altText);
+                sb.WriteLine();
+            }
+        }
     }
 
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb) 

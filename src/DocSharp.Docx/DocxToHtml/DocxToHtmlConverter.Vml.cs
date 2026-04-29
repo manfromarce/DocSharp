@@ -42,6 +42,11 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             var style = (imageData.Parent as V.Shape)?.Style ?? (imageData.Parent as V.Rectangle)?.Style;
             if (style?.Value != null)
             {
+                string? altText = imageData.Title?.Value;
+                if (string.IsNullOrWhiteSpace(altText))
+                {
+                    altText = (imageData.Parent as V.Shape)?.Id ?? (imageData.Parent as V.Rectangle)?.Id;
+                }
                 var values = style.Value.Split(';');
                 double width = 0;
                 double height = 0;
@@ -75,7 +80,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 if (width > 0 && height > 0)
                 {
                     var rootPart = OpenXmlHelpers.GetRootPart(element);
-                    ProcessImagePart(rootPart, relId, width, height, sb, true, null, null, null);
+                    ProcessImagePart(rootPart, relId, width, height, sb, true, null, null, altText);
                 }
             }
         }

@@ -729,7 +729,17 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
             if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
                 imageData.RelationshipId?.Value is string relId)
             {
-                ProcessImagePart(element.GetRootPart(), relId, sb, true);
+                string? altText = imageData.Title?.Value;
+                if (string.IsNullOrWhiteSpace(altText))
+                {
+                    altText = (imageData.Parent as V.Shape)?.Id ?? (imageData.Parent as V.Rectangle)?.Id;
+                }
+                // Ensure there aren't any characters that would disrupt the markdown syntax.
+                if (!string.IsNullOrWhiteSpace(altText))
+                {
+                    altText = altText.ReplaceAll(['\r', '\n', '[', ']'], ' ').Replace("(", "\\(").Replace(")", "\\)");
+                }
+                ProcessImagePart(element.GetRootPart(), relId, sb, true, title: altText);
             }
         }
     }
