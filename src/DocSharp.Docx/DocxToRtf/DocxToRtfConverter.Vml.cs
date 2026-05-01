@@ -87,8 +87,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             // Write standard picture for horizontal line
             sb.WriteLine(@"\picscalex1\picscaley1\piccropl0\piccropr0\piccropt0\piccropb0\picw7620\pich7620\picwgoal4320\pichgoal4320\wmetafile8}");
         }
-        else if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
-            imageData.RelationshipId?.Value is string relId)
+        else
         {
             var shape = VmlHelpers.FindShape(element);
             var style = VmlHelpers.FindStyle(element);
@@ -112,18 +111,27 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                     properties.WidthGoal = properties.Width;
                     properties.HeightGoal = properties.Height;
 
+                    string relId = string.Empty;
+                    bool isImage = false;
+                    if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData && imageData.RelationshipId?.Value is string s && !string.IsNullOrWhiteSpace(s))
+                    {
+                        isImage = true;
+                        relId = s;
+                    }
+
                     bool isInline = !(styleProperties.TryGetValue("position", out string? pos) &&
                                      (pos == "relative" || pos == "absolute"));
                     // If position is "static" it means in line with text;
                     // if position is not specified or an invalid value use in line with text as default.
 
-                    if (ignoreWrapLayouts || isInline)
+                    if ((ignoreWrapLayouts || isInline) && isImage)
                     {
                         // Inline image (\pict destination)
                         ProcessImagePart(rootPart, relId, properties, sb, shapeProperties);
                     }
                     else
                     {
+                        // Image with advanced properties (\shp destination)
                         // Image with advanced properties (\shp destination)
                         sb.Write(@"{\shp{\*\shpinst");
 
@@ -138,10 +146,13 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                         // before writing {\sp ...} groups)
                         sb.Write(shapeProperties);
 
-                        // Write the pict group itself.
-                        sb.Write(@"{\sp{\sn pib}{\sv ");
-                        ProcessImagePart(rootPart, relId, properties, sb);
-                        sb.WriteLine("}}"); // close property
+                        if (isImage)
+                        {
+                            // Write the pict group itself.
+                            sb.Write(@"{\sp{\sn pib}{\sv ");
+                            ProcessImagePart(rootPart, relId, properties, sb);
+                            sb.WriteLine("}}"); // close property
+                        }
 
                         // Close shape instruction group and open shape result group
                         sb.Write(@"}{\shprslt ");
@@ -149,7 +160,10 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                         // Write fallback for RTF reader that don't support shapes.
                         // This is the same behavior as Microsoft Word but less evolved, 
                         // currently just writes an inline picture.
-                        ProcessImagePart(rootPart, relId, properties, sb);
+                        if (isImage)
+                        {
+                            ProcessImagePart(rootPart, relId, properties, sb);
+                        }
 
                         sb.WriteLine("}}"); // Close shape destination and shape result group
                     }
@@ -354,19 +368,65 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.Write(@"\shpfblwtxt0");
         }
 
-        sb.WriteShapeProperty("shapeType", "75");
+        // End of control words; only shape properties from this point
 
+        int shapeType = 75; // Assume this is a picture by default, then look for more specific indications
         if (shape is V.Shape shp)
         {
-            // Default is true if not specified
-            sb.WriteShapeProperty("fAllowOverlap ", shp.AllowOverlap == null ? true : shp.AllowOverlap.Value);
-            sb.WriteShapeProperty("fLayoutInCell", shp.AllowInCell == null ? true : shp.AllowInCell.Value);
+            if (shp.Type?.Value != null)
+            {
+                if (int.TryParse(shp.Type.Value.TrimStart("#_x0000_t"), out int type))
+                {
+                    shapeType = type;
+                }
+            }
+            // If type is not found, check if the parent element contains V.ShapeType in addition to V.Shape
+            else if (shp.Parent?.GetFirstChild<V.Shapetype>() is V.Shapetype shpType)
+            {
+                if (shpType.OptionalNumber != null)
+                {
+                    shapeType = shpType.OptionalNumber.Value;
+                }
+                else if (int.TryParse(shpType.Id?.Value?.TrimStart("_x0000_t"), out int type))
+                {
+                    shapeType = type;
+                }
+            }
         }
-        else if (shape is V.Rectangle rect)
+        else if (shape is V.Rectangle)
         {
-            sb.WriteShapeProperty("fAllowOverlap ", rect.AllowOverlap == null ? true : rect.AllowOverlap.Value);
-            sb.WriteShapeProperty("fLayoutInCell", rect.AllowInCell == null ? true : rect.AllowInCell.Value);
+            shapeType = 1;
         }
+        else if (shape is V.RoundRectangle)
+        {
+            shapeType = 2;
+        }
+        else if (shape is V.Oval)
+        {
+            shapeType = 3;
+        }
+        else if (shape is V.Arc)
+        {
+            shapeType = 19;
+        }
+        else if (shape is V.Line)
+        {
+            shapeType = 20;
+        }
+        else if (shape is V.PolyLine)
+        {
+            // ?
+            shapeType = 20;
+        }
+        else if (shape is V.Curve)
+        {
+            // ?
+        }
+        sb.WriteShapeProperty("shapeType", shapeType);
+
+        // Default is true if not specified
+        sb.WriteShapeProperty("fAllowOverlap ", shape.GetVmlBoolAttribute("allowoverlap", true));
+        sb.WriteShapeProperty("fLayoutInCell", shape.GetVmlBoolAttribute("allowincell", true));
 
         if (properties.TryGetValue("mso-position-horizontal", out string? hPos))
         {
@@ -578,6 +638,189 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         {
             sb.WriteShapeProperty("shpz", shpZ > 0 ? (shpZ - 1) : 0);
             sb.WriteShapeProperty("fBehindDocument", shpZ == -1); // behind text if z-index is -1
+        }
+
+        var fillColor = ColorHelpers.EnsureHexColor(shape.GetVmlStringAttribute("fillColor"));
+        if (fillColor != null)
+        {
+            int? bgr = ColorHelpers.HexToBgr(fillColor);
+            if (bgr != null && bgr.HasValue)
+            sb.WriteShapeProperty("fillColor", bgr.Value);
+        }
+        var strokeColor = ColorHelpers.EnsureHexColor(shape.GetVmlStringAttribute("strokecolor"));
+        if (strokeColor != null)
+        {
+            int? bgr = ColorHelpers.HexToBgr(strokeColor);
+            if (bgr != null && bgr.HasValue)
+            sb.WriteShapeProperty("lineColor", bgr.Value);
+        }
+        var strokeWidth = shape.GetVmlStringAttribute("strokeweight");
+        if (strokeWidth != null)
+        {
+            double points = VmlHelpers.ParsePoints(strokeWidth) * 12700.0;
+            long emus = points.ToLong();
+            sb.WriteShapeProperty("lineWidth", emus);
+        }
+        if (shape.GetFirstChild<V.Stroke>() is V.Stroke stroke)
+        {
+            if (stroke.LineStyle != null)
+            {
+                if (stroke.LineStyle.Value == V.StrokeLineStyleValues.Single)
+                    sb.WriteShapeProperty("lineStyle", 0);
+                else if (stroke.LineStyle.Value == V.StrokeLineStyleValues.ThinThin)
+                    sb.WriteShapeProperty("lineStyle", 1);
+                else if (stroke.LineStyle.Value == V.StrokeLineStyleValues.ThickThin)
+                    sb.WriteShapeProperty("lineStyle", 2);
+                else if (stroke.LineStyle.Value == V.StrokeLineStyleValues.ThinThick)
+                    sb.WriteShapeProperty("lineStyle", 3);
+                else if (stroke.LineStyle.Value == V.StrokeLineStyleValues.ThickBetweenThin)
+                    sb.WriteShapeProperty("lineStyle", 4);
+            }
+            if (stroke.DashStyle?.Value != null)
+            {
+                if (stroke.DashStyle.Value.Equals("3 1", StringComparison.OrdinalIgnoreCase) || stroke.DashStyle.Value.Equals("1 0", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 1);
+                else if (stroke.DashStyle.Value.Equals("1 1", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 2);
+                else if (stroke.DashStyle.Value.Equals("3 1 1 1", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 3);
+                else if (stroke.DashStyle.Value.Equals("3 1 1 1 1 1", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 4);
+                else if (stroke.DashStyle.Value.Equals("dot", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 5);
+                else if (stroke.DashStyle.Value.Equals("dash", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 6);
+                else if (stroke.DashStyle.Value.Equals("longDash", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 7);
+                else if (stroke.DashStyle.Value.Equals("dashDot", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 8);
+                else if (stroke.DashStyle.Value.Equals("longDashDot", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 9);
+                else if (stroke.DashStyle.Value.Equals("longDashDotDot", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("lineDashing", 10);
+            }
+            if (stroke.StartArrow?.Value != null)
+            {
+                if (stroke.StartArrow.Value == V.StrokeArrowValues.None)
+                    sb.WriteShapeProperty("lineStartArrowhead", 0);
+                else if (stroke.StartArrow.Value == V.StrokeArrowValues.Block)
+                    sb.WriteShapeProperty("lineStartArrowhead", 1);
+                else if (stroke.StartArrow.Value == V.StrokeArrowValues.Classic)
+                    sb.WriteShapeProperty("lineStartArrowhead", 2);
+                else if (stroke.StartArrow.Value == V.StrokeArrowValues.Diamond)
+                    sb.WriteShapeProperty("lineStartArrowhead", 3);
+                else if (stroke.StartArrow.Value == V.StrokeArrowValues.Oval)
+                    sb.WriteShapeProperty("lineStartArrowhead", 4);
+                else if (stroke.StartArrow.Value == V.StrokeArrowValues.Open)
+                    sb.WriteShapeProperty("lineStartArrowhead", 5);
+            }
+            if (stroke.StartArrowLength?.Value != null)
+            {
+                if (stroke.StartArrowLength.Value == V.StrokeArrowLengthValues.Short)
+                    sb.WriteShapeProperty("lineStartArrowLength", 0);
+                else if (stroke.StartArrowLength.Value == V.StrokeArrowLengthValues.Medium)
+                    sb.WriteShapeProperty("lineStartArrowLength", 1);
+                else if (stroke.StartArrowLength.Value == V.StrokeArrowLengthValues.Long)
+                    sb.WriteShapeProperty("lineStartArrowLength", 2);
+            }
+            if (stroke.StartArrowWidth?.Value != null)
+            {
+                if (stroke.StartArrowWidth.Value == V.StrokeArrowWidthValues.Narrow)
+                    sb.WriteShapeProperty("lineStartArrowWidth", 0);
+                else if (stroke.StartArrowWidth.Value == V.StrokeArrowWidthValues.Medium)
+                    sb.WriteShapeProperty("lineStartArrowWidth", 1);
+                else if (stroke.StartArrowWidth.Value == V.StrokeArrowWidthValues.Wide)
+                    sb.WriteShapeProperty("lineStartArrowWidth", 2);
+            }
+            if (stroke.EndArrow?.Value != null)
+            {
+                if (stroke.EndArrow.Value == V.StrokeArrowValues.None)
+                    sb.WriteShapeProperty("lineEndArrowhead", 0);
+                else if (stroke.EndArrow.Value == V.StrokeArrowValues.Block)
+                    sb.WriteShapeProperty("lineEndArrowhead", 1);
+                else if (stroke.EndArrow.Value == V.StrokeArrowValues.Classic)
+                    sb.WriteShapeProperty("lineEndArrowhead", 2);
+                else if (stroke.EndArrow.Value == V.StrokeArrowValues.Diamond)
+                    sb.WriteShapeProperty("lineEndArrowhead", 3);
+                else if (stroke.EndArrow.Value == V.StrokeArrowValues.Oval)
+                    sb.WriteShapeProperty("lineEndArrowhead", 4);
+                else if (stroke.EndArrow.Value == V.StrokeArrowValues.Open)
+                    sb.WriteShapeProperty("lineEndArrowhead", 5);
+            }
+            if (stroke.EndArrowLength?.Value != null)
+            {
+                if (stroke.EndArrowLength.Value == V.StrokeArrowLengthValues.Short)
+                    sb.WriteShapeProperty("lineEndArrowLength", 0);
+                else if (stroke.EndArrowLength.Value == V.StrokeArrowLengthValues.Medium)
+                    sb.WriteShapeProperty("lineEndArrowLength", 1);
+                else if (stroke.EndArrowLength.Value == V.StrokeArrowLengthValues.Long)
+                    sb.WriteShapeProperty("lineEndArrowLength", 2);
+            }
+            if (stroke.EndArrowWidth?.Value != null)
+            {
+                if (stroke.EndArrowWidth.Value == V.StrokeArrowWidthValues.Narrow)
+                    sb.WriteShapeProperty("lineEndArrowWidth", 0);
+                else if (stroke.EndArrowWidth.Value == V.StrokeArrowWidthValues.Medium)
+                    sb.WriteShapeProperty("lineEndArrowWidth", 1);
+                else if (stroke.EndArrowWidth.Value == V.StrokeArrowWidthValues.Wide)
+                    sb.WriteShapeProperty("lineEndArrowWidth", 2);
+            }
+            if (stroke.EndCap?.Value != null)
+            {
+                if (stroke.EndCap.Value == V.StrokeEndCapValues.Round)
+                    sb.WriteShapeProperty("lineEndCapStyle", 0);
+                else if (stroke.EndCap.Value == V.StrokeEndCapValues.Square)
+                    sb.WriteShapeProperty("lineEndCapStyle", 1);
+                else if (stroke.EndCap.Value == V.StrokeEndCapValues.Flat)
+                    sb.WriteShapeProperty("lineEndCapStyle", 2);
+            }
+            if (stroke.JoinStyle?.Value != null)
+            {
+                if (stroke.JoinStyle.Value == V.StrokeJoinStyleValues.Bevel)
+                    sb.WriteShapeProperty("lineJoinStyle", 0);
+                else if (stroke.JoinStyle.Value == V.StrokeJoinStyleValues.Miter)
+                    sb.WriteShapeProperty("lineJoinStyle", 1);
+                else if (stroke.JoinStyle.Value == V.StrokeJoinStyleValues.Round)
+                    sb.WriteShapeProperty("lineJoinStyle", 2);
+            }
+            if (stroke.FillType != null)
+            {
+                if (stroke.FillType.Value == V.StrokeFillTypeValues.Solid)
+                    sb.WriteShapeProperty("lineType", 0);
+                else if (stroke.FillType.Value == V.StrokeFillTypeValues.Pattern)
+                    sb.WriteShapeProperty("lineType", 1);
+                else if (stroke.FillType.Value == V.StrokeFillTypeValues.Tile)
+                    sb.WriteShapeProperty("lineType", 2);
+                else if (stroke.FillType.Value == V.StrokeFillTypeValues.Frame)
+                    sb.WriteShapeProperty("lineType", 3);
+            }
+            // if (stroke.Miterlimit != null)
+            // {
+            // }
+            // if (stroke.Color != null)
+            // {
+            // }
+            // if (stroke.Color2 != null)
+            // {
+            // }           
+            // if (stroke.ForceDash != null)
+            // {
+            // }
+            // if (stroke.TopStroke != null)
+            // {
+            // }
+            // if (stroke.BottomStroke != null)
+            // {
+            // } 
+            // if (stroke.LeftStroke != null)
+            // {
+            // }
+            // if (stroke.RightStroke != null)
+            // {
+            // } 
+            // if (stroke.ColumnStroke != null)
+            // {
+            // }       
         }
     }
 

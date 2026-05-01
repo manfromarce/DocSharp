@@ -43,6 +43,30 @@ public static class VmlHelpers
                !picture.Descendants<W10.TextWrap>().Any();
     }
 
+    internal static bool GetVmlBoolAttribute(this OpenXmlElement shape, string attrName, bool defaultValue)
+    {
+        if (shape.GetAttributes().FirstOrDefault(a => a.LocalName.Equals(attrName, StringComparison.OrdinalIgnoreCase)) is OpenXmlAttribute attribute)
+        {
+            if (attribute.Value != null)
+            {
+                return attribute.Value.Equals("t", StringComparison.OrdinalIgnoreCase) || attribute.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        return defaultValue;
+    }
+
+    internal static string? GetVmlStringAttribute(this OpenXmlElement shape, string attrName)
+    {
+        if (shape.GetAttributes().FirstOrDefault(a => a.LocalName.Equals(attrName, StringComparison.OrdinalIgnoreCase)) is OpenXmlAttribute attribute)
+        {
+            if (attribute.Value != null)
+            {
+                return attribute.Value;
+            }
+        }
+        return null;
+    }
+
     internal static OpenXmlElement? FindShape(OpenXmlElement picture)
     {
         // This method can be called for Picture, PictureBulletBase or an OLE object child (shape, rect, etc. directly)

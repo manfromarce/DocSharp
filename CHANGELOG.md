@@ -25,6 +25,7 @@ By default only inline images are converted because other layouts do not have a 
 - Preserve solid background color in RTF ➡️ DOCX converter
 - Preserve page borders in RTF ➡️ DOCX converter
 - Improve logic for VML pictures and wrap layouts and in DOCX ➡️ RTF converter
+- Support for VML shapes in DOCX ➡️ RTF converter
 - Fix various minor bugs
 - Code cleanup
 - Update dependencies
