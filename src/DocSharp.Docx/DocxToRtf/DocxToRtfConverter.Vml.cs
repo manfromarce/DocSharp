@@ -154,6 +154,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                             sb.WriteLine("}}"); // close property
                         }
 
+                        if (shape.GetFirstChild<V.TextBox>() is V.TextBox textBox && 
+                            textBox.GetFirstChild<TextBoxContent>() is TextBoxContent content && content.HasChildren)
+                        {
+                            sb.Write("{\\shptxt ");
+                            foreach (var textBoxElement in content.Elements())
+                            {
+                                base.ProcessBodyElement(textBoxElement, sb);
+                            }
+                            sb.Write("}");
+                        }
+
                         // Close shape instruction group and open shape result group
                         sb.Write(@"}{\shprslt ");
 

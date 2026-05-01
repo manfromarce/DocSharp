@@ -95,8 +95,13 @@ Only watermarks are not supported because they require full VML support in order
 [13]: Only solid background is supported in HTML.
 
 [14]: Support for drawings is still incomplete:  
-- **Supported**: DrawingML shapes / lines / arrows (created by modern Word versions, unless in compatibility mode), text content, solid fill, gradient fill, picture/texture fill, line color, line style (dashed, dotted, double, cap, ...), line thickness, shape groups, drawing canvas
-- **Not supported**: VML (Word 2007 or compatibility mode), manual adjustments (corners / points adjustments and similar), freehand curve/polygon, few shapes that are not available in RTF and would require conversion to custom shapes, pattern fill, gradient/pattern for line, some advanced text layout options, effects, 3D effects, diagrams, legacy WordArt (VML text warp/3D effects)
+- **Supported**:
+    - DrawingML (created by modern Word versions, unless in compatibility mode): shapes, lines, arrows, text content, solid/gradient/picture/texture fill, line color/thickness/style (dashed, dotted, double, cap, ...), shape groups, drawing canvas
+    - VML (legacy, created by Word 2007 or earlier or by modern Word versions in compatibility mode): shapes, lines, arrows, solid fill, text content, line color/thickness/style (dashed, dotted, double, cap, ...)
+- **Not supported**: 
+    - DrawingML: few shapes that are not available in RTF and would require conversion to custom shapes, pattern fill, gradient/pattern for line
+    - VML: gradient/pattern/picture/texture fills, legacy WordArt (VML text warp/3D effects)
+    - Both: manual adjustments (corners / points adjustments and similar), freehand curve/polygon, some advanced text layout options, effects (shadow, 3D, ...), diagrams
 
 [15]: Real charts are not available in the RTF specification, so MS Word converts them to images or OLE objects.  
 This operation is complex and currently considered out-of-scope for this library.  
