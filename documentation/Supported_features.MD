@@ -30,13 +30,12 @@ Known issues:
 | Symbols | ✅ | ✅[5] | ✅[5] | ✅[5] |
 | Page numbers | ✅ | ❌ | ❌ | ❌ |
 | Ruby | ❌ | ✅ | ❌ | ❌ |
+| Horizontal lines | ✅ | ✅ | ✅ | ✅ |
 | Modern text effects and WordArt | -[11] | 🟡[9] | ❌ | 🟡 [10] |
 | Legacy font shadow/outline/emboss/imprint | ✅ | 🟡[9] | ❌ | - |
-| Modern shapes, text boxes and image/shape effects (DrawingML) | 🟡[14] | ❌ | ❌ | 🟡 [10] |
-| Legacy shapes, text boxes, effects and WordArt (VML) | 🟡[14] | ❌ | ❌ | 🟡 [10] |
-| Horizontal line | ✅ | ✅ | ✅ | ✅ |
-| SmartArt diagrams | ❌[14] | ❌ | ❌ | - |
-| Legacy diagrams | ❌[14] | ❌ | ❌ | - |
+| Shapes, text boxes and effects | 🟡[14] | ❌ | ❌ | 🟡 [10] |
+| Legacy WordArt (VML) | ❌[14] | ❌ | ❌ | 🟡 [10] |
+| Diagrams | ❌[14] | ❌ | ❌ | - |
 | Charts | -[15] | ❌ | ❌ | - |
 | Math | ✅ | 🟡 | ✅ | ❌ |
 | Ink [6] | 🟡 | 🟡 | 🟡 | - |
@@ -62,7 +61,8 @@ Other image formats can be converted using the DocSharp.ImageSharp or DocSharp.S
 For Markdown, the `ImagesOutputFolder` has to be set to an existing directory, otherwise images are ignored.  
 See the [Wiki](https://github.com/manfromarce/DocSharp/wiki) for additional information on preserving images in documents.
 
-[2]: Very limited support for number format and indentation in Markdown and TXT.  
+[2]: Most list formatting is lost when converting to Markdown in order to produce a compliant document, and the indentation is calculated based on the list item level only.  
+In plain text, the number format is preserved as the library can convert most number/bullet types to Unicode strings, but the indentation is also calculated based on the list item level, which may not match the original Word document appearance.
 
 [3]: In DOCX --> MD / TXT conversion only basic cell content can be preserved.  
 HTML has minor limitations, such as diagonal borders inside cells are not supported.  
@@ -97,11 +97,11 @@ Only watermarks are not supported because they require full VML support in order
 [14]: Support for drawings is still incomplete:  
 - **Supported**:
     - DrawingML (created by modern Word versions, unless in compatibility mode): shapes, lines, arrows, text content, solid/gradient/picture/texture fill, line color/thickness/style (dashed, dotted, double, cap, ...), shape groups, drawing canvas
-    - VML (legacy, created by Word 2007 or earlier or by modern Word versions in compatibility mode): shapes, lines, arrows, solid fill, text content, line color/thickness/style (dashed, dotted, double, cap, ...)
+    - VML (legacy, created by Word 2007 or earlier or by modern Word versions in compatibility mode): shapes, lines, arrows, any background fill, text content, line color/thickness/style (dashed, dotted, double, cap, ...)
 - **Not supported**: 
-    - DrawingML: few shapes that are not available in RTF and would require conversion to custom shapes, pattern fill, gradient/pattern for line
-    - VML: gradient/pattern/picture/texture fills, legacy WordArt (VML text warp/3D effects)
-    - Both: manual adjustments (corners / points adjustments and similar), freehand curve/polygon, some advanced text layout options, effects (shadow, 3D, ...), diagrams
+    - DrawingML: few shapes that are not available in RTF and would require conversion to custom shapes, pattern fill (would require converting the pattern to image bytes in RTF), SmartArt diagrams
+    - VML: groups/canvas, legacy WordArt (VML text warp/3D effects), legacy diagrams
+    - Both: manual adjustments (corners / points adjustments and similar), gradient/pattern for lines, freehand curve/polygon, some advanced text layout options, image/shape effects (shadow, 3D, ...)
 
 [15]: Real charts are not available in the RTF specification, so MS Word converts them to images or OLE objects.  
 This operation is complex and currently considered out-of-scope for this library.  

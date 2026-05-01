@@ -6,6 +6,7 @@ using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using V = DocumentFormat.OpenXml.Vml;
+using O = DocumentFormat.OpenXml.Vml.Office;
 using W10 = DocumentFormat.OpenXml.Vml.Wordprocessing;
 using DocSharp.Writers;
 using DocumentFormat.OpenXml.Packaging;
@@ -198,7 +199,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (properties.TryGetValue("rotation", out string? rotation))
         {
-            sb.WriteShapeProperty("rotation", ParseDegrees(rotation));
+            sb.WriteShapeProperty("rotation", VmlHelpers.ParseDegrees(rotation));
         }
     }
 
@@ -436,8 +437,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         sb.WriteShapeProperty("shapeType", shapeType);
 
         // Default is true if not specified
-        sb.WriteShapeProperty("fAllowOverlap ", shape.GetVmlBoolAttribute("allowoverlap", true));
-        sb.WriteShapeProperty("fLayoutInCell", shape.GetVmlBoolAttribute("allowincell", true));
+        sb.WriteShapeProperty("fAllowOverlap ", shape.GetVmlBoolAttribute("allowoverlap") ?? true);
+        sb.WriteShapeProperty("fLayoutInCell", shape.GetVmlBoolAttribute("allowincell") ?? true);
 
         if (properties.TryGetValue("mso-position-horizontal", out string? hPos))
         {
@@ -651,13 +652,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.WriteShapeProperty("fBehindDocument", shpZ == -1); // behind text if z-index is -1
         }
 
-        var fillColor = ColorHelpers.EnsureHexColor(shape.GetVmlStringAttribute("fillColor"));
-        if (fillColor != null)
-        {
-            int? bgr = ColorHelpers.HexToBgr(fillColor);
-            if (bgr != null && bgr.HasValue)
-            sb.WriteShapeProperty("fillColor", bgr.Value);
-        }
+        ProcessCommonVmlProperties(shape, sb, fillByDefault: false);
+        
         var strokeColor = ColorHelpers.EnsureHexColor(shape.GetVmlStringAttribute("strokecolor"));
         if (strokeColor != null)
         {
@@ -813,7 +809,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             // }
             // if (stroke.Color2 != null)
             // {
-            // }           
+            // }   
             // if (stroke.ForceDash != null)
             // {
             // }
@@ -835,23 +831,312 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    private long ParseDegrees(string? value)
+    internal void ProcessCommonVmlProperties(OpenXmlElement element, RtfStringWriter sb, bool fillByDefault = false)
     {
-        if (value == null)
+        // This method is called for both VML shapes and DocumentBackground
+
+        var filled = element.GetVmlBoolAttribute("fill");
+        if (filled != null) // Not required, assumed true by word processors if a fill is prsent
+            sb.WriteShapeProperty("fFilled", filled.Value);
+
+        ProcessVmlFill(element.GetFirstChild<V.Fill>(), element.GetVmlStringAttribute("fillColor"), sb);       
+
+        string? bwMode = element.GetVmlStringAttribute("bwmode");
+        if (bwMode != null)
+            ProcessBlackAndWhiteMode(bwMode, "bWMode", sb);
+
+        string? bWModePureBW = element.GetVmlStringAttribute("bwpure");
+        if (bWModePureBW != null)
+            ProcessBlackAndWhiteMode(bWModePureBW, "bWModePureBW", sb);
+
+        string? bWModeBW = element.GetVmlStringAttribute("bwnormal");
+        if (bWModeBW != null)
+            ProcessBlackAndWhiteMode(bWModeBW, "bWModeBW", sb);    
+    }
+
+    private void ProcessBlackAndWhiteMode(string blackAndWhiteMode, string propertyName, RtfStringWriter sb)
+    {
+        if (blackAndWhiteMode.Equals("color", StringComparison.OrdinalIgnoreCase))
         {
-            return 0;
+            sb.WriteShapeProperty(propertyName, "0");
+        }
+        else if (blackAndWhiteMode.Equals("auto", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "1");
+        }
+        else if (blackAndWhiteMode.Equals("grayScale", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "2");
+        }
+        else if (blackAndWhiteMode.Equals("lightGrayScale", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "3");
+        }
+        else if (blackAndWhiteMode.Equals("inverseGray", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "4");
+        }
+        else if (blackAndWhiteMode.Equals("grayOutline", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "5");
+        }
+        else if (blackAndWhiteMode.Equals("blackTextAndLines", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "6");
+        }
+        else if (blackAndWhiteMode.Equals("highContrast", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "7");
+        }
+        else if (blackAndWhiteMode.Equals("black", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "8");
+        }
+        else if (blackAndWhiteMode.Equals("white", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "9");
+        }
+        else if (blackAndWhiteMode.Equals("undrawn", StringComparison.OrdinalIgnoreCase))
+        {
+            sb.WriteShapeProperty(propertyName, "10");
+        }
+    }
+
+    internal void ProcessVmlFill(V.Fill? fill, string? parentFillColor, RtfStringWriter sb)
+    {
+        string? fillColor = fill?.Color ?? parentFillColor;
+        int? bgr = null;
+        if (fillColor != null)
+        {
+            string? hexColor = ColorHelpers.EnsureHexColor(fillColor);
+            if (hexColor != null)
+            {
+                bgr = ColorHelpers.HexToBgr(hexColor);
+                if (bgr != null)
+                {
+                    sb.WriteShapeProperty("fillColor", bgr.Value);
+                }
+            }
         }
 
-        decimal degrees;
-        if (value.EndsWith("fd") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
+        if (fill == null) return;
+
+        int? bgr2 = ColorHelpers.HexToBgr(fill.Color2, bgr);
+        if (bgr2 != null)
         {
-            return (long)Math.Round(degrees);
+            sb.WriteShapeProperty("fillBackColor", bgr2.Value);
         }
-        // fd is 1/64000 of degree and it's also used in RTF. If it is not specified, should we assume regular degrees?
-        else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
+
+        if (fill.Colors?.Value != null)
         {
-            return (long)Math.Round(degrees);
+            var gradientColors = fill.Colors.Value.Split(';');
+            string shadeColors = "";
+
+            int count = 0;
+            foreach (var gradientColor in gradientColors)
+            {
+                var properties = gradientColor.Split(' ');
+                if (properties.Length >= 2 && 
+                    double.TryParse(properties[0].Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out double pos) 
+                    && ColorHelpers.HexToBgr(properties[1].Trim()) is int color)
+                {
+                    shadeColors += $"({color},{(long)Math.Round(pos * 65536)});";
+                    ++count;
+                }
+            }
+            // 8 = number of bytes (2 numbers for each pair)
+            shadeColors = $"8;{count};{shadeColors.TrimEnd(';')}";
+            if (!string.IsNullOrEmpty(shadeColors))
+                sb.WriteShapeProperty("fillShadeColors", shadeColors);
         }
-        return 0;
+
+        var type = fill.Type;
+        if (type != null)
+        {
+            var extendedProperties = fill.GetFirstChild<O.FillExtendedProperties>();
+            // FillExtendedProperties has priority if present.
+            if ((extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.Solid) || 
+                type == V.FillTypeValues.Solid)
+            {
+                sb.WriteShapeProperty("fillType", "0");
+            }
+            else if ((extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.Pattern) ||
+                type == V.FillTypeValues.Pattern)
+            {
+                sb.WriteShapeProperty("fillType", "1");
+            }
+            else if ((extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.Tile) ||
+                type == V.FillTypeValues.Tile) // Texture
+            {
+                sb.WriteShapeProperty("fillType", "2");
+            }
+            else if ((extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.Frame) ||
+                type == V.FillTypeValues.Frame) // Picture
+            {
+                sb.WriteShapeProperty("fillType", "3");
+            }
+            else if (extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.GradientUnscaled)
+            {
+                sb.WriteShapeProperty("fillType", "4");
+            }
+            else if (extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.GradientCenter)
+            {
+                sb.WriteShapeProperty("fillType", "5"); // Gradient from center to corners
+            }
+            else if ((extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.GradientRadial) ||
+               type == V.FillTypeValues.GradientRadial)
+            {
+                sb.WriteShapeProperty("fillType", "6"); // Radial gradient
+            }
+            else if ((extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.Gradient) ||
+               type == V.FillTypeValues.Gradient) 
+            {
+                sb.WriteShapeProperty("fillType", "7"); // Horizontal, vertical or diagonal gradient (uses fillAngle)
+            }
+            else if (extendedProperties?.Type != null && extendedProperties.Type.Value == O.FillValues.Background)
+            {
+                sb.WriteShapeProperty("fillType", "9"); // Use background fill
+            }
+        }
+
+        if (fill.Method != null && fill.Method.HasValue)
+        {
+            if (fill.Method.Value == V.FillMethodValues.Any)
+            {
+                // Don't write fillShadeType
+            }
+            else if (fill.Method.Value == V.FillMethodValues.Linear)
+            {
+                sb.WriteShapeProperty("fillShadeType", "1");
+            }
+            else if (fill.Method.Value == V.FillMethodValues.Linearsigma)
+            {
+                sb.WriteShapeProperty("fillShadeType", "1073741835");
+            }
+            else if (fill.Method.Value == V.FillMethodValues.None)
+            {
+                sb.WriteShapeProperty("fillShadeType", "0");
+            }
+            else if (fill.Method.Value == V.FillMethodValues.Sigma)
+            {
+                sb.WriteShapeProperty("fillShadeType", "1073741826");
+            }
+        }
+
+        if (fill.Angle != null && fill.Angle.HasValue)
+        {
+            var dec = fill.Angle.Value * 65536;
+            sb.WriteShapeProperty("fillAngle", (long)Math.Round(dec));
+        }
+
+        if (fill.Focus?.Value != null)
+        {
+            string focus = fill.Focus.Value.TrimEnd('%');
+            if (int.TryParse(focus, NumberStyles.Number, CultureInfo.InvariantCulture, out int v))
+                sb.WriteShapeProperty("fillFocus", focus);
+        }
+
+        if (fill.FocusPosition?.Value != null)
+        {
+            string focusPos = fill.FocusPosition.Value;
+            string[] split = focusPos.Split(',');
+            if (split.Length >= 2)
+            {
+                string s1 = split[0].Trim();
+                string s2 = split[1].Trim();
+                if (!double.TryParse(s1, NumberStyles.Number, CultureInfo.InvariantCulture, out double leftRight))
+                {
+                    if (s1 == string.Empty)
+                    {
+                        leftRight = 0; // Recognize formats such as ",1" which means the first value is 0
+                    }
+                }
+                if (!double.TryParse(s2, NumberStyles.Number, CultureInfo.InvariantCulture, out double topBottom))
+                {
+                    if (s2 == string.Empty)
+                    {
+                        topBottom = 0;
+                    }
+                }
+                long val1 = (long)Math.Round(leftRight * 65536);
+                long val2 = (long)Math.Round(topBottom * 65536);
+                long width = 0;
+                long height = 0;
+
+                if (fill.FocusSize?.Value != null && !string.IsNullOrEmpty(fill.FocusSize.Value))
+                {
+                    string focusSize = fill.FocusSize.Value;
+                    string[] size = focusSize.Split(',');
+                    if (size.Length >= 2 && 
+                        double.TryParse(size[0].Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out double w) &&
+                        double.TryParse(size[1].Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out double h))
+                    {
+                        width = (long)Math.Round(w * 65536);
+                        height = (long)Math.Round(h * 65536);
+                    }
+                }
+
+                sb.WriteShapeProperty("fillToLeft", val1);
+                sb.WriteShapeProperty("fillToRight", val1 + width);
+                sb.WriteShapeProperty("fillToTop", val2);
+                sb.WriteShapeProperty("fillToBottom", val2 + height);
+            }
+        }
+
+        if (fill.Recolor != null && fill.Recolor.Value)
+        {
+            sb.WriteShapeProperty("fRecolorFillAsPicture", true); // Default is false
+        }
+
+        if (fill.Rotate != null && fill.Rotate.Value)
+        {
+            sb.WriteShapeProperty("fUseShapeAnchor", true);
+        }
+
+        if (fill.AlignShape != null && fill.AlignShape.Value)
+        {
+            sb.WriteShapeProperty("fillShape", true);
+        }
+
+        if (fill.Aspect != null && fill.Aspect.Value == V.ImageAspectValues.AtLeast)
+        {
+            sb.WriteShapeProperty("fillDztype", "8");
+        }
+        else if (fill.Aspect != null && fill.Aspect.Value == V.ImageAspectValues.AtMost)
+        {
+            sb.WriteShapeProperty("fillDztype", "4");
+        }
+        //else if (fill.Aspect != null && fill.Aspect.Value == V.ImageAspectValues.Ignore)
+        //{
+        //    sb.WriteShapeProperty("fillDztype", "0");
+        //}
+
+        //if (fill.Size != null)
+        //{
+        //}
+        //if (fill.Source != null)
+        //{
+        //}
+        //if (fill.Position != null)
+        //{
+        //}
+        //if (fill.Origin != null)
+        //{
+        //}
+        //if (fill.Opacity != null)
+        //{
+        //}
+        //if (fill.Opacity2 != null)
+        //{
+        //}
+        //if (fill.On != null)
+        //{
+        //}
+
+        if (fill.RelationshipId?.Value != null && OpenXmlHelpers.GetRootPart(fill) is OpenXmlPart rootPart)
+        // Textures, pictures and patterns are associated to an embedded image file
+        {
+            ProcessPictureFill(fill.RelationshipId.Value, rootPart, sb);
+        }
     }
 }

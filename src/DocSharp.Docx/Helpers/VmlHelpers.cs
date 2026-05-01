@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentFormat.OpenXml.Packaging;
 using V = DocumentFormat.OpenXml.Vml;
 using W10 = DocumentFormat.OpenXml.Vml.Wordprocessing;
+using DocSharp.Helpers;
 
 namespace DocSharp.Docx;
 
@@ -43,7 +44,7 @@ public static class VmlHelpers
                !picture.Descendants<W10.TextWrap>().Any();
     }
 
-    internal static bool GetVmlBoolAttribute(this OpenXmlElement shape, string attrName, bool defaultValue)
+    internal static bool? GetVmlBoolAttribute(this OpenXmlElement shape, string attrName)
     {
         if (shape.GetAttributes().FirstOrDefault(a => a.LocalName.Equals(attrName, StringComparison.OrdinalIgnoreCase)) is OpenXmlAttribute attribute)
         {
@@ -52,7 +53,7 @@ public static class VmlHelpers
                 return attribute.Value.Equals("t", StringComparison.OrdinalIgnoreCase) || attribute.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
             }
         }
-        return defaultValue;
+        return null;
     }
 
     internal static string? GetVmlStringAttribute(this OpenXmlElement shape, string attrName)
@@ -246,6 +247,28 @@ public static class VmlHelpers
         {
             // Assume pixels if no unit
             return (long)Math.Round(res * 15); // Word uses 96 DPI
+        }
+        return 0;
+    }
+
+    internal static long ParseDegrees(string? value)
+    {
+        if (value == null)
+        {
+            return 0;
+        }
+
+        decimal degrees;
+        if (value.EndsWith("fd") && decimal.TryParse(value[..^2], NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
+        {
+            return (long)Math.Round(degrees);
+        }
+        // fd is 1/64000 of degree and it's also used in RTF. 
+        // If it is not specified, we should assume regular degrees in Open XML and convert them to fd for RTF.
+        else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
+        {
+            decimal fd = degrees * 64000;
+            return fd.ToLong();
         }
         return 0;
     }
