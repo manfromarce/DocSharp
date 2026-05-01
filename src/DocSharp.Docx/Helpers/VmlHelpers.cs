@@ -43,6 +43,28 @@ public static class VmlHelpers
                !picture.Descendants<W10.TextWrap>().Any();
     }
 
+    internal static OpenXmlElement? FindShape(OpenXmlElement picture)
+    {
+        // This method can be called for Picture, PictureBulletBase or an OLE object child (shape, rect, etc. directly)
+        if (picture is V.Shape || picture is V.Oval || picture is V.Rectangle || picture is V.RoundRectangle || 
+            picture is V.ImageFile || picture is V.Line || picture is V.Arc || picture is V.Curve || 
+            picture is V.PolyLine || picture is V.Group || picture is V.Shapetype)
+            return picture;
+        return picture.GetFirstChild<V.Shape>() ??
+               picture.GetFirstChild<V.Rectangle>() ??
+               picture.GetFirstChild<V.Oval>() ??
+               picture.GetFirstChild<V.RoundRectangle>() ??
+               picture.GetFirstChild<V.Line>() ??
+               picture.GetFirstChild<V.Arc>() ??
+               picture.GetFirstChild<V.Curve>() ??
+               picture.GetFirstChild<V.PolyLine>() ??
+               picture.GetFirstChild<V.ImageFile>() ??
+               picture.GetFirstChild<V.Group>() ?? 
+               // check Shapetype as last, because it is often contained inside a Picture containing a Shape, 
+               // but Shape should be processed to detect style and image data
+               picture.GetFirstChild<V.Shapetype>() as OpenXmlElement;
+    }
+
     internal static string? FindStyle(OpenXmlElement picture)
     {
         // This method can be called for Picture, PictureBulletBase or an OLE object child (shape, rect, etc. directly)
@@ -67,6 +89,8 @@ public static class VmlHelpers
                (picture as V.PolyLine)?.Style ??
                (picture as V.ImageFile)?.Style ??
                (picture as V.Group)?.Style ?? 
+               // check Shapetype as last, because it is often contained inside a Picture containing a Shape, 
+               // but Shape should be processed to detect style and image data
                (picture as V.Shapetype)?.Style;
     }
 

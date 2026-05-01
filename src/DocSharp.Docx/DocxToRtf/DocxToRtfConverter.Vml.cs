@@ -90,33 +90,14 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         else if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
-            OpenXmlElement? shape;
-            // This method can be called for either a picture container (w:pict)
-            // or the underlying shape/rectangle.
-            // Usually ImageData is contained in a shape of type 75 (picture),
-            // but a rectangle may also be used (e.g. by WordPad for OLE objects).
-            if (element is V.Shape || element is V.Rectangle)
-            {
-                shape = element;
-            }
-            else
-            {
-                shape = element.Elements<V.Shape>().FirstOrDefault() ?? element.Elements<V.Rectangle>().FirstOrDefault() as OpenXmlElement;
-            }
-
-            if (shape == null)
-            {
-                return;
-            }
-            
+            var shape = VmlHelpers.FindShape(element);
             var style = VmlHelpers.FindStyle(element);
-            if (style != null)
+            if (shape!= null && style != null)
             {
                 var properties = new PictureProperties();
 
                 var styleProperties = VmlHelpers.GetShapeStylePropertiesInTwips(style, out long width, out long height);
-
-                if (shape != null && width > 0 && height > 0) // proceed only if width and height were found in the style attribute
+                if (width > 0 && height > 0) // proceed only if width and height were found in the style attribute
                 {
                     var rootPart = OpenXmlHelpers.GetRootPart(element);
 
