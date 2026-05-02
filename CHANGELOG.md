@@ -29,6 +29,7 @@ By default only inline images are converted because other layouts do not have a 
 - Fix: the rotation angle of shapes was not accurate in DOCX ➡️ RTF converter
 - Partial support for WordArt in DOCX ➡️ RTF converter
 - Fix: some gradient colors were not parsed properly in DOCX ➡️ RTF converter
+- Fix: fonts specified as theme font only were not detected in DOCX converters
 - Fix various minor bugs
 - Code cleanup
 - Update dependencies

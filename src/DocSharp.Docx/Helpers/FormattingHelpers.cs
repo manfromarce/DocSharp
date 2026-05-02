@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using A = DocumentFormat.OpenXml.Drawing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 using W14 = DocumentFormat.OpenXml.Office2010.Word;
 
@@ -733,13 +735,37 @@ public static class FormattingHelpers
         return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>();
     }
 
-    public static string? GetEffectiveFont(this Run run, Styles? stylesPart = null)
+    public static string? GetEffectiveFont(this Run run, Styles? stylesPart = null, MainDocumentPart? mainPart = null)
     {
         // Check run properties
         var propertyValue = run.RunProperties?.RunFonts?.Ascii;
         if (propertyValue != null)
         {
             return propertyValue;
+        }
+
+        if (run.RunProperties?.RunFonts?.AsciiTheme != null)
+        {
+            if (run.RunProperties.RunFonts.AsciiTheme.Value == ThemeFontValues.MajorAscii || 
+                run.RunProperties.RunFonts.AsciiTheme.Value == ThemeFontValues.MajorHighAnsi)
+            {
+                mainPart ??= run.GetMainDocumentPart();
+                propertyValue = mainPart?.ThemePart?.Theme?.ThemeElements?.FontScheme?.MajorFont?.LatinFont?.Typeface?.Value;
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+            }
+            else if (run.RunProperties.RunFonts.AsciiTheme.Value == ThemeFontValues.MinorAscii || 
+                     run.RunProperties.RunFonts.AsciiTheme.Value == ThemeFontValues.MinorHighAnsi)
+            {
+                mainPart ??= run.GetMainDocumentPart();
+                propertyValue = mainPart?.ThemePart?.Theme?.ThemeElements?.FontScheme?.MinorFont?.LatinFont?.Typeface?.Value;
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+            }
         }
 
         stylesPart ??= run.GetStylesPart();
@@ -820,7 +846,33 @@ public static class FormattingHelpers
         }
 
         // Check default run style for the current document
-        return stylesPart.GetDefaultRunStyle()?.RunFonts?.Ascii;
+        var defaultStyle = stylesPart.GetDefaultRunStyle();
+        propertyValue = defaultStyle?.RunFonts?.Ascii;
+        if (propertyValue != null) return propertyValue;
+        if (defaultStyle?.RunFonts?.AsciiTheme != null)
+        {
+            if (defaultStyle.RunFonts.AsciiTheme.Value == ThemeFontValues.MajorAscii || 
+                defaultStyle.RunFonts.AsciiTheme.Value == ThemeFontValues.MajorHighAnsi)
+            {
+                mainPart ??= run.GetMainDocumentPart();
+                propertyValue = mainPart?.ThemePart?.Theme?.ThemeElements?.FontScheme?.MajorFont?.LatinFont?.Typeface?.Value;
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+            }
+            else if (defaultStyle.RunFonts.AsciiTheme.Value == ThemeFontValues.MinorAscii || 
+                     defaultStyle.RunFonts.AsciiTheme.Value == ThemeFontValues.MinorHighAnsi)
+            {
+                mainPart ??= run.GetMainDocumentPart();
+                propertyValue = mainPart?.ThemePart?.Theme?.ThemeElements?.FontScheme?.MinorFont?.LatinFont?.Typeface?.Value;
+                if (propertyValue != null)
+                {
+                    return propertyValue;
+                }
+            }
+        }
+        return propertyValue;
     }
 
     /// <summary>
