@@ -99,6 +99,36 @@ public static class VmlHelpers
         return null;
     }
 
+    internal static string? GetShapeStylePropertyAsString(Dictionary<string, string> style, string propertyName)
+    {
+        if (style.TryGetValue(propertyName, out string? value) && value != null)
+        {
+            return value;
+        }
+        return null;
+    }
+
+    internal static bool? GetShapeStylePropertyAsBool(Dictionary<string, string> style, string propertyName)
+    {
+        if (style.TryGetValue(propertyName, out string? value) && value != null)
+        {
+            if (value.Equals("t", StringComparison.OrdinalIgnoreCase) || value.Equals("true", StringComparison.OrdinalIgnoreCase))
+                return true;
+            else if (value.Equals("f", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        return null;
+    }
+
+    internal static Dictionary<string, string> GetShapeStyleProperties(string style)
+    {
+        // The style string can be found in shapes (v:shape, v:rect, v:oval, ...) or in the internal v:textbox or v:textpath
+        return style.Split(';').Select(pair => pair.Split(':'))
+               .Where(keyValue => keyValue.Length == 2)
+               .GroupBy(keyValue => keyValue[0].ToLowerInvariant().Trim()) // group by key to avoid duplicate keys (may happen in some documents)
+               .ToDictionary(group => group.Key, group => group.First()[1].Trim());
+    }
+
     internal static Dictionary<string, string> GetShapeStylePropertiesInTwips(string style, out long width, out long height)
     {
         width = 0;

@@ -27,6 +27,7 @@ By default only inline images are converted because other layouts do not have a 
 - Improve logic for VML pictures and wrap layouts and in DOCX ➡️ RTF converter
 - Support for VML shapes and text boxes in DOCX ➡️ RTF converter
 - Fix: the rotation angle of shapes was not accurate in DOCX ➡️ RTF converter
+- Partial support for WordArt in DOCX ➡️ RTF converter
 - Fix various minor bugs
 - Code cleanup
 - Update dependencies

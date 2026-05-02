@@ -151,16 +151,14 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                             sb.WriteLine("}}"); // close property
                         }
 
-                        if (shape.GetFirstChild<V.TextBox>() is V.TextBox textBox && 
-                            textBox.GetFirstChild<TextBoxContent>() is TextBoxContent content && content.HasChildren)
+                        if (shape.GetFirstChild<V.TextBox>() is V.TextBox textBox)
                         {
-                            // if (textBox.Inset != null)
-                            sb.Write("{\\shptxt ");
-                            foreach (var textBoxElement in content.Elements())
-                            {
-                                base.ProcessBodyElement(textBoxElement, sb);
-                            }
-                            sb.Write("}");
+                            ProcessVmlTextBox(textBox, sb);
+                        }
+
+                        if (shape.GetFirstChild<V.TextPath>() is V.TextPath textPath)
+                        {
+                            ProcessVmlTextPath(textPath, sb);
                         }
 
                         if (isInline && !isImage)
@@ -195,6 +193,89 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void ProcessVmlTextBox(V.TextBox textBox, RtfStringWriter sb)
+    {
+        if (textBox.GetFirstChild<TextBoxContent>() is TextBoxContent content && content.HasChildren)
+        {
+            // if (textBox.Inset != null)
+            sb.Write("{\\shptxt ");
+            foreach (var textBoxElement in content.Elements())
+            {
+                base.ProcessBodyElement(textBoxElement, sb);
+            }
+            sb.Write("}");
+        }
+    }
+
+    private void ProcessVmlTextPath(V.TextPath textPath, RtfStringWriter sb)
+    {
+        sb.WriteShapeProperty("fGtext", true);
+        if (textPath.String != null && !string.IsNullOrWhiteSpace(textPath.String.Value))
+        {
+            sb.WriteShapeProperty("gtextUNICODE", textPath.String.Value);
+        }
+        if (textPath.FitPath != null)
+        {
+            sb.WriteShapeProperty("gtextFStretch", textPath.FitPath.Value);
+            sb.WriteShapeProperty("gtextFShrinkFit", textPath.FitPath.Value);
+            sb.WriteShapeProperty("gtextFBestFit", textPath.FitPath.Value);            
+        }
+        else if (textPath.FitShape != null)
+        {
+            sb.WriteShapeProperty("gtextFStretch", textPath.FitShape.Value);            
+        }
+        if (textPath.On != null)
+        {
+            
+        }
+        if (textPath.Trim != null)
+        {
+            
+        }
+        if (textPath.Style?.Value != null)
+        {
+            var dict = VmlHelpers.GetShapeStyleProperties(textPath.Style.Value);
+            if (VmlHelpers.GetShapeStylePropertyAsString(dict, "font-family") is string font && !string.IsNullOrWhiteSpace(font))
+            {
+                sb.WriteShapeProperty("gtextFont", font.Trim("&quot;").Trim('"').ToString());    
+            }
+            if (VmlHelpers.GetShapeStylePropertyAsString(dict, "v-text-align") is string align && !string.IsNullOrWhiteSpace(align))
+            {
+                if (align.Equals("stretch-justify", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("gtextAlign", "0");
+                else if (align.Equals("center", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("gtextAlign", "1");
+                else if (align.Equals("left", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("gtextAlign", "2");
+                else if (align.Equals("right", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("gtextAlign", "3");
+                else if (align.Equals("letter-justify", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("gtextAlign", "4");
+                else if (align.Equals("justify", StringComparison.OrdinalIgnoreCase))
+                    sb.WriteShapeProperty("gtextAlign", "5");
+            }
+            if (VmlHelpers.GetShapeStylePropertyAsString(dict, "v-text-spacing") is string spacing && !string.IsNullOrWhiteSpace(spacing))
+            {
+                if (long.TryParse(spacing.TrimEnd('f'), out long spacingValue))
+                {
+                    sb.WriteShapeProperty("gtextSpacing", spacingValue);
+                }
+            }
+            if (VmlHelpers.GetShapeStylePropertyAsBool(dict, "v-text-kern") is bool kern)
+            {
+                sb.WriteShapeProperty("gtextFKern", kern);    
+            }
+            if (VmlHelpers.GetShapeStylePropertyAsBool(dict, "v-same-letter-heights") is bool sameHeight)
+            {
+                sb.WriteShapeProperty("gtextFNormalize", sameHeight);    
+            }
+            if (VmlHelpers.GetShapeStylePropertyAsBool(dict, "v-rotate-letters") is bool rotate)
+            {
+                sb.WriteShapeProperty("gtextFVertical", rotate);    
             }
         }
     }
