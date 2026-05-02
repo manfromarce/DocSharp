@@ -110,11 +110,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
                     string relId = string.Empty;
                     bool isImage = false;
-                    if (shape.GetFirstDescendant<V.ImageData>() is V.ImageData imageData && imageData.RelationshipId?.Value is string s && !string.IsNullOrWhiteSpace(s))
+                    if (shape.GetFirstChild<V.ImageData>() is V.ImageData imageData && imageData.RelationshipId?.Value is string s && !string.IsNullOrWhiteSpace(s))
                     {
                         isImage = true;
                         relId = s;
                     }
+                    bool isWordArt = shape.GetFirstChild<V.TextPath>() != null;
 
                     bool isInline = !(styleProperties.TryGetValue("position", out string? pos) &&
                                      (pos == "relative" || pos == "absolute"));
@@ -126,9 +127,37 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                         // Inline image (\pict destination)
                         ProcessImagePart(rootPart, relId, properties, sb, shapeProperties);
                     }
+                    else if (isInline && isWordArt)
+                    {
+                        // Inline WordArt (\pict destination with \defshp control word)
+                        sb.Write(@"{\pict{\*\picprop\defshp");
+
+                        // Write properties
+                        ProcessVmlShapeStyleProperties(styleProperties, sb, shape, width, height, isInGroup);
+
+                        // Write generic shape properties 
+                        // (process after anchor so that all standard control words such as \shpleft have been written
+                        // before writing {\sp ...} groups)
+                        sb.Write(shapeProperties);
+                        if (shape.GetFirstChild<V.TextPath>() is V.TextPath textPath)
+                        {
+                            ProcessVmlTextPath(textPath, sb);
+                        }
+                        sb.WriteLine('}'); // Close picprop group
+                        sb.WriteWordWithValue("picw", properties.Width);
+                        sb.WriteWordWithValue("pich", properties.Height);
+                        sb.WriteWordWithValue("picwgoal", properties.WidthGoal);
+                        sb.WriteWordWithValue("pichgoal", properties.HeightGoal);
+                        sb.WriteWordWithValue("piccropl", properties.CropLeft);
+                        sb.WriteWordWithValue("piccropr", properties.CropRight);
+                        sb.WriteWordWithValue("piccropt", properties.CropTop);
+                        sb.WriteWordWithValue("piccropb", properties.CropBottom);
+                        sb.Write(@"\wmetafile8");
+                        sb.WriteLine('}'); // Close destination
+                    }
                     else
                     {
-                        // Shape or image with advanced properties (\shp destination)
+                        // Shape or floating image/WordArt (--> \shp destination)
                         sb.Write(@"{\shp{\*\shpinst");
 
                         if (rootPart is MainDocumentPart)
