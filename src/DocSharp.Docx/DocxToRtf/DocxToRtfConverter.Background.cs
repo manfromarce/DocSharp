@@ -60,7 +60,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             sb.WriteShapeProperty("fBackground", "1");
             sb.WriteShapeProperty("fLayoutInCell", "1");
 
-            ProcessCommonVmlProperties(background, sb, fillByDefault: true);
+            ProcessCommonVmlProperties(background, sb);
 
             sb.WriteLine("}}}");
 

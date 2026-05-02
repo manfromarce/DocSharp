@@ -716,33 +716,29 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
         }
     }
 
-    internal override void ProcessVml(OpenXmlElement element, MarkdownStringWriter sb)
+    internal override void ProcessVml(OpenXmlElement shape, MarkdownStringWriter sb)
     {
-        if (element is Picture pic && pic.FirstChild is V.Rectangle rect && 
+        if (shape is V.Rectangle rect && 
             rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
         {
             sb.WriteHorizontalLine();
-            return;
         }
-
-        if (!string.IsNullOrWhiteSpace(ImagesOutputFolder) && 
-            VmlHelpers.IsLayoutSupported(element, SupportedImagesLayout))
+        else if (!string.IsNullOrWhiteSpace(ImagesOutputFolder) && 
+                 VmlHelpers.IsLayoutSupported(shape, SupportedImagesLayout) && 
+                 shape.GetFirstChild<V.ImageData>() is V.ImageData imageData &&
+                 imageData.RelationshipId?.Value is string relId)
         {
-            if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
-                imageData.RelationshipId?.Value is string relId)
+            string? altText = imageData.Title?.Value;
+            if (string.IsNullOrWhiteSpace(altText))
             {
-                string? altText = imageData.Title?.Value;
-                if (string.IsNullOrWhiteSpace(altText))
-                {
-                    altText = (imageData.Parent as V.Shape)?.Id ?? (imageData.Parent as V.Rectangle)?.Id;
-                }
-                // Ensure there aren't any characters that would disrupt the markdown syntax.
-                if (!string.IsNullOrWhiteSpace(altText))
-                {
-                    altText = altText.ReplaceAll(['\r', '\n', '[', ']'], ' ').Replace("(", "\\(").Replace(")", "\\)");
-                }
-                ProcessImagePart(element.GetRootPart(), relId, sb, true, title: altText);
+                altText = (imageData.Parent as V.Shape)?.Id ?? (imageData.Parent as V.Rectangle)?.Id;
             }
+            // Ensure there aren't any characters that would disrupt the markdown syntax.
+            if (!string.IsNullOrWhiteSpace(altText))
+            {
+                altText = altText.ReplaceAll(['\r', '\n', '[', ']'], ' ').Replace("(", "\\(").Replace(")", "\\)");
+            }
+            ProcessImagePart(shape.GetRootPart(), relId, sb, true, title: altText);
         }
     }
 

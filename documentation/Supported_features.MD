@@ -100,7 +100,7 @@ Only watermarks are not supported because they require full VML support in order
     - VML (legacy, created by Word 2007 or earlier or by modern Word versions in compatibility mode): shapes, lines, arrows, any background fill, text content, line color/thickness/style (dashed, dotted, double, cap, ...)
 - **Not supported**: 
     - DrawingML: few shapes that are not available in RTF and would require conversion to custom shapes, pattern fill (would require converting the pattern to image bytes in RTF), SmartArt diagrams
-    - VML: groups/canvas, legacy WordArt (VML text warp/3D effects), legacy diagrams
+    - VML: legacy WordArt (VML text warp/3D effects), legacy diagrams
     - Both: manual adjustments (corners / points adjustments and similar), gradient/pattern for lines, freehand curve/polygon, some advanced text layout options, image/shape effects (shadow, 3D, ...)
 
 [15]: Real charts are not available in the RTF specification, so MS Word converts them to images or OLE objects.  

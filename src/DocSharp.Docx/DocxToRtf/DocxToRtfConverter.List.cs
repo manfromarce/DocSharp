@@ -88,21 +88,17 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 //}
                 if (pictureBullet.PictureBulletBase != null)
                 {
-                    ProcessVml(pictureBullet.PictureBulletBase, sb, ignoreWrapLayouts: true);
+                    ProcessVml(pictureBullet.PictureBulletBase.FindShape(), sb, ignoreWrapLayouts: true);
                 }
                 else if (pictureBullet.Drawing != null)
                 {
                     ProcessDrawing(pictureBullet.Drawing, sb, ignoreWrapLayouts: true);
                 }
-                else if (pictureBullet.Elements<Picture>().FirstOrDefault() is Picture pict)
-                {
-                    ProcessVml(pict, sb, ignoreWrapLayouts: true); // PictureBulletBase might incorrectly be interpreted as Picture
-                }
                 else if (pictureBullet.GetFirstChild<AlternateContent>() is AlternateContent alternateContent)
                 {
                     if (alternateContent.GetFirstDescendant<PictureBulletBase>() is PictureBulletBase pbb)
                     {
-                        ProcessVml(pbb, sb, ignoreWrapLayouts: true);
+                        ProcessVml(pbb.FindShape(), sb, ignoreWrapLayouts: true);
                     }
                     else if (alternateContent.GetFirstDescendant<Drawing>() is Drawing drawing1)
                     {
@@ -110,7 +106,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                     }
                     else if (alternateContent.GetFirstDescendant<Picture>() is Picture pict1)
                     {
-                        ProcessVml(pict1, sb, ignoreWrapLayouts: true);
+                        ProcessVml(pict1.FindShape(), sb, ignoreWrapLayouts: true); // PictureBulletBase might incorrectly be interpreted as Picture in this context
                     }
                 }
             }

@@ -53,9 +53,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         ProcessShapes(graphicData, drawing, sb, false, ignoreWrapLayouts, extent);
 
-        // Inline shapes that are not pictures require some "tricks" in RTF
+        // Inline groups and shapes (except pictures) require a "trick" in RTF
         // to ensure that subsequent text content does not overlap with the shape.
-        bool isPseudoInline = drawing.Inline != null && graphicData.FirstChild is not Pic.Picture;
+        bool isPseudoInline = drawing.Inline != null && graphicData.GetFirstChild<Pic.Picture>() is null;
         if (isPseudoInline)
         {
             long width = drawing.Inline?.Extent?.Cx ?? 0;
@@ -64,21 +64,6 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             long heightInTwips = Math.Max((long)Math.Round(height / 635m), 1);
             WritePseudoInlinePlaceholder(widthInTwips, heightInTwips,sb);
         }
-    }
-
-    private void WritePseudoInlinePlaceholder(long width, long height, RtfStringWriter sb)
-    {
-        sb.Write(@$"{{\pict{{\*\picprop\defshp{{\sp{{\sn shapeType}}{{\sv 75}}}}{{\sp{{\sn fFlipH}}{{\sv 0}}}}{{\sp{{\sn fFlipV}}{{\sv 0}}}}{{\sp{{\sn fPseudoInline}}{{\sv 1}}}}{{\sp{{\sn fLayoutInCell}}{{\sv 1}}}}
-{{\sp{{\sn fLockPosition}}{{\sv 1}}}}{{\sp{{\sn fLockRotation}}{{\sv 1}}}}}}\picscalex100\picscaley100\piccropl0\piccropr0\piccropt-5039\piccropb5039
-\picw{width.ToStringInvariant()}\pich{height.ToStringInvariant()}\picwgoal{width.ToStringInvariant()}\pichgoal{height.ToStringInvariant()}\wmetafile8
-010009000003f100000003001c00000000000400000003010800050000000b0200000000050000000c023508110e040000002e0118001c000000fb0214000000
-00000000bc02000000000102022253797374656d0000000000000000000000000000000000000000000000000000040000002d0100001c000000fb0214000900
-00000000bc02000000000102022253797374656d0000000000000000000000000000000000000000000000000000040000002d01010004000000f00100001c00
-0000fb021400000000000000bc02000000000102022253797374656d0000000000000000000000000000000000000000000000000000040000002d0100000400
-00002d01010004000000f00100001c000000fb029cff000000000000900100000000044000224170746f73000000000000000000000000000000000000000000
-000000000000040000002d010000040000002d010000040000002d0100000400000002010100050000000902000000020d000000320a5e000000010004000000
-0000100e340820003800050000000902000000021c000000fb02100007000000000090010000000001020222417269616c000000000000000000000000000000000000000000000000000000040000002d010200040000002d010200030000000000}}
-");
     }
 
     private void ProcessGroupProperties(Wpg.WordprocessingGroupType group, Drawing drawing, RtfStringWriter sb, bool isInGroup, bool ignoreWrapLayouts, Wp.Extent extent)
@@ -1622,13 +1607,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         if (transform2D == null)
             return;
 
-        // In the case of nested group (or group inside canvas) I am not sure whether we should use "relative" 
-        // control words (as for shapes inside groups) or not.
-
-        // sb.WriteShapeProperty(isSubGroup ? "fRelFlipH" : "fFlipH", transform2D.HorizontalFlip != null && transform2D.HorizontalFlip.Value);
-        // sb.WriteShapeProperty(isSubGroup ? "fRelFlipV" : "fFlipV", transform2D.VerticalFlip != null && transform2D.VerticalFlip.Value);
-        sb.WriteShapeProperty("fFlipH", transform2D.HorizontalFlip != null && transform2D.HorizontalFlip.Value);
-        sb.WriteShapeProperty("fFlipV", transform2D.VerticalFlip != null && transform2D.VerticalFlip.Value);
+        sb.WriteShapeProperty(isSubGroup ? "fRelFlipH" : "fFlipH", transform2D.HorizontalFlip != null && transform2D.HorizontalFlip.Value);
+        sb.WriteShapeProperty(isSubGroup ? "fRelFlipV" : "fFlipV", transform2D.VerticalFlip != null && transform2D.VerticalFlip.Value);
         
         /*
          The standard states that the rot attribute specifies the clockwise rotation in 1/64000ths of a degree. (This is also used in RTF and VML).
@@ -1637,29 +1617,27 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         if (transform2D.Rotation != null)
         {
             // Convert 1/60000 of degree to 1/64000 of degree.
-            // sb.WriteShapeProperty(isSubGroup ? "relRotation" : "rotation", (long)Math.Round(transform2D.Rotation.Value * 16.0m / 15.0m));
-            sb.WriteShapeProperty("rotation", (long)Math.Round(transform2D.Rotation.Value * 16.0m / 15.0m));
+            sb.WriteShapeProperty(isSubGroup ? "relRotation" : "rotation", (long)Math.Round(transform2D.Rotation.Value * 16.0m / 15.0m));
         }
 
-        if (transform2D.Offset?.X != null)
+        long groupLeft = transform2D.ChildOffset?.X ?? transform2D.Offset?.X ?? 0;
+        long groupTop = transform2D.ChildOffset?.Y ?? transform2D.Offset?.Y ?? 0;
+        long groupWidth = transform2D.ChildExtents?.Cx ?? transform2D.Extents?.Cx ?? 0;
+        long groupHeight = transform2D.ChildExtents?.Cy ?? transform2D.Extents?.Cy ?? 0;
+        sb.WriteShapeProperty("groupLeft", groupLeft);
+        sb.WriteShapeProperty("groupTop", groupTop);
+        sb.WriteShapeProperty("groupRight", groupLeft + groupWidth);
+        sb.WriteShapeProperty("groupBottom", groupTop + groupHeight);
+        if (isSubGroup)
         {
-            // sb.WriteShapeProperty(isSubGroup ? "relLeft" : "groupLeft", transform2D.Offset.X.Value);
-            sb.WriteShapeProperty("groupLeft", transform2D.Offset.X.Value);
-        }
-        if (transform2D.Offset?.Y != null)
-        {
-            // sb.WriteShapeProperty(isSubGroup ? "relTop" : "groupTop", transform2D.Offset.Y.Value);
-            sb.WriteShapeProperty("groupTop", transform2D.Offset.Y.Value);
-        }
-        if (transform2D.Extents?.Cx != null)
-        {
-            // sb.WriteShapeProperty(isSubGroup ? "relRight" : "groupRight", transform2D.Extents.Cx.Value + (transform2D.Offset?.X ?? 0L));
-            sb.WriteShapeProperty("groupRight", transform2D.Extents.Cx.Value + (transform2D.Offset?.X ?? 0L));
-        }
-        if (transform2D.Extents?.Cy != null)
-        {
-            // sb.WriteShapeProperty(isSubGroup ? "relBottom" : "groupBottom", transform2D.Extents.Cy.Value + (transform2D.Offset?.Y ?? 0L));
-            sb.WriteShapeProperty("groupBottom", transform2D.Extents.Cy.Value + (transform2D.Offset?.Y ?? 0L));
+            long relLeft = transform2D.Offset?.X ?? 0;
+            long relTop = transform2D.Offset?.Y ?? 0;
+            long relWidth = transform2D.Extents?.Cx ?? 0;
+            long relHeight = transform2D.Extents?.Cy ?? 0;
+            sb.WriteShapeProperty("relLeft", relLeft);
+            sb.WriteShapeProperty("relTop", relTop);
+            sb.WriteShapeProperty("relRight", relLeft + relWidth);
+            sb.WriteShapeProperty("relBottom", relTop + relHeight);
         }
     }
 

@@ -30,51 +30,25 @@ public static class VmlHelpers
         return false;
     }
 
-    internal static bool IsInline(this OpenXmlElement picture)
+    internal static bool IsInline(this OpenXmlElement shape)
     {
-        string? style = VmlHelpers.FindStyle(picture);
-        return style == null || !style.Contains("position:absolute");
+        string? style = shape.GetVmlAttributeAsString("style");
+        return style == null || !(style.Contains("position:absolute") || style.Contains("position:relative"));
+        // The shape/image is considered in line with text if position is not set or is set to "static".
     }
 
-    internal static bool IsFloating(this OpenXmlElement picture)
+    internal static bool IsFloating(this OpenXmlElement shape)
     {
-        string? style = VmlHelpers.FindStyle(picture);
+        string? style = shape.GetVmlAttributeAsString("style");
         return style != null && 
-               style.Contains("position:absolute") && 
-               !picture.Descendants<W10.TextWrap>().Any();
+               (style.Contains("position:absolute") || style.Contains("position:relative")) && 
+               !shape.Elements<W10.TextWrap>().Any(); 
+               // If position is not set or is set to "static", the shape/image is in line with text.
+               // If TextWrap is present, the shape/image is considered anchored rather than floating.
     }
 
-    internal static bool? GetVmlBoolAttribute(this OpenXmlElement shape, string attrName)
+    internal static OpenXmlElement? FindShape(this Picture picture)
     {
-        if (shape.GetAttributes().FirstOrDefault(a => a.LocalName.Equals(attrName, StringComparison.OrdinalIgnoreCase)) is OpenXmlAttribute attribute)
-        {
-            if (attribute.Value != null)
-            {
-                return attribute.Value.Equals("t", StringComparison.OrdinalIgnoreCase) || attribute.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
-            }
-        }
-        return null;
-    }
-
-    internal static string? GetVmlStringAttribute(this OpenXmlElement shape, string attrName)
-    {
-        if (shape.GetAttributes().FirstOrDefault(a => a.LocalName.Equals(attrName, StringComparison.OrdinalIgnoreCase)) is OpenXmlAttribute attribute)
-        {
-            if (attribute.Value != null)
-            {
-                return attribute.Value;
-            }
-        }
-        return null;
-    }
-
-    internal static OpenXmlElement? FindShape(OpenXmlElement picture)
-    {
-        // This method can be called for Picture, PictureBulletBase or an OLE object child (shape, rect, etc. directly)
-        if (picture is V.Shape || picture is V.Oval || picture is V.Rectangle || picture is V.RoundRectangle || 
-            picture is V.ImageFile || picture is V.Line || picture is V.Arc || picture is V.Curve || 
-            picture is V.PolyLine || picture is V.Group || picture is V.Shapetype)
-            return picture;
         return picture.GetFirstChild<V.Shape>() ??
                picture.GetFirstChild<V.Rectangle>() ??
                picture.GetFirstChild<V.Oval>() ??
@@ -84,39 +58,45 @@ public static class VmlHelpers
                picture.GetFirstChild<V.Curve>() ??
                picture.GetFirstChild<V.PolyLine>() ??
                picture.GetFirstChild<V.ImageFile>() ??
-               picture.GetFirstChild<V.Group>() ?? 
-               // check Shapetype as last, because it is often contained inside a Picture containing a Shape, 
-               // but Shape should be processed to detect style and image data
-               picture.GetFirstChild<V.Shapetype>() as OpenXmlElement;
+               picture.GetFirstChild<V.Group>() as OpenXmlElement;
+               // This method ignores V.Shapetype on purpose
     }
 
-    internal static string? FindStyle(OpenXmlElement picture)
+    internal static OpenXmlElement? FindShape(this PictureBulletBase picture)
     {
-        // This method can be called for Picture, PictureBulletBase or an OLE object child (shape, rect, etc. directly)
-        return picture.GetFirstChild<V.Shape>()?.Style ??
-               picture.GetFirstChild<V.Rectangle>()?.Style ??
-               picture.GetFirstChild<V.Oval>()?.Style ??
-               picture.GetFirstChild<V.RoundRectangle>()?.Style ??
-               picture.GetFirstChild<V.Line>()?.Style ??
-               picture.GetFirstChild<V.Arc>()?.Style ??
-               picture.GetFirstChild<V.Curve>()?.Style ??
-               picture.GetFirstChild<V.PolyLine>()?.Style ??
-               picture.GetFirstChild<V.ImageFile>()?.Style ??
-               picture.GetFirstChild<V.Group>()?.Style ?? 
-               picture.GetFirstChild<V.Shapetype>()?.Style ?? 
-               (picture as V.Shape)?.Style ??
-               (picture as V.Rectangle)?.Style ??
-               (picture as V.Oval)?.Style ??
-               (picture as V.RoundRectangle)?.Style ??
-               (picture as V.Line)?.Style ??
-               (picture as V.Arc)?.Style ??
-               (picture as V.Curve)?.Style ??
-               (picture as V.PolyLine)?.Style ??
-               (picture as V.ImageFile)?.Style ??
-               (picture as V.Group)?.Style ?? 
-               // check Shapetype as last, because it is often contained inside a Picture containing a Shape, 
-               // but Shape should be processed to detect style and image data
-               (picture as V.Shapetype)?.Style;
+        return picture.GetFirstChild<V.Shape>() ??
+               picture.GetFirstChild<V.Rectangle>() ??
+               picture.GetFirstChild<V.Oval>() ??
+               picture.GetFirstChild<V.RoundRectangle>() ??
+               picture.GetFirstChild<V.Line>() ??
+               picture.GetFirstChild<V.Arc>() ??
+               picture.GetFirstChild<V.Curve>() ??
+               picture.GetFirstChild<V.PolyLine>() ??
+               picture.GetFirstChild<V.ImageFile>() ??
+               picture.GetFirstChild<V.Group>() as OpenXmlElement;
+               // This method ignores V.Shapetype on purpose
+    }
+
+    internal static bool? GetVmlAttributeAsBool(this OpenXmlElement shape, string attrName)
+    {
+        string? s = shape.GetVmlAttributeAsString(attrName);
+        if (s != null)
+        {
+            return s.Equals("t", StringComparison.OrdinalIgnoreCase) || s.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+        return null;
+    }
+
+    internal static string? GetVmlAttributeAsString(this OpenXmlElement shape, string attrName)
+    {
+        if (shape.GetAttributes().FirstOrDefault(a => a.LocalName.Equals(attrName, StringComparison.OrdinalIgnoreCase)) is OpenXmlAttribute attribute)
+        {
+            if (attribute.Value != null)
+            {
+                return attribute.Value;
+            }
+        }
+        return null;
     }
 
     internal static Dictionary<string, string> GetShapeStylePropertiesInTwips(string style, out long width, out long height)
@@ -263,8 +243,7 @@ public static class VmlHelpers
         {
             return (long)Math.Round(degrees);
         }
-        // fd is 1/64000 of degree and it's also used in RTF. 
-        // If it is not specified, we should assume regular degrees in Open XML and convert them to fd for RTF.
+        // If "fd" is not specified, we should assume regular degrees in Open XML and convert them to fd for RTF.
         else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
         {
             decimal fd = degrees * 64000;

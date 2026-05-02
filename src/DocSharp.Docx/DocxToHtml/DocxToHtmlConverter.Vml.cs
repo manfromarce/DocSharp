@@ -23,23 +23,23 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
-    internal override void ProcessVml(OpenXmlElement element, HtmlTextWriter sb)
+    internal override void ProcessVml(OpenXmlElement shape, HtmlTextWriter sb)
     {
-        if (element is Picture pic && pic.FirstChild is V.Rectangle rect && 
+        if (shape is V.Rectangle rect && 
             rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
         {
             sb.WriteHorizontalLine();
             return;
         }
 
-        if (element.GetFirstDescendant<V.ImageData>() is V.ImageData imageData &&
-            VmlHelpers.IsLayoutSupported(element, SupportedImagesLayout) &&
+        if (shape.GetFirstChild<V.ImageData>() is V.ImageData imageData &&
+            VmlHelpers.IsLayoutSupported(shape, SupportedImagesLayout) &&
             imageData.RelationshipId?.Value is string relId)
         {
-            var style = VmlHelpers.FindStyle(element);
+            var style = shape.GetVmlAttributeAsString("style");
             if (style != null && 
                 VmlHelpers.GetShapeStylePropertiesInPoints(style, out float width, out float height) != null &&
-                width > 0 && height > 0 && element.GetRootPart() is OpenXmlPart rootPart)
+                width > 0 && height > 0 && shape.GetRootPart() is OpenXmlPart rootPart)
             {
                 string? altText = imageData.Title?.Value;
                 if (string.IsNullOrWhiteSpace(altText))

@@ -94,9 +94,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         }        
     }
 
-    internal override void ProcessVml(OpenXmlElement element, QuestPdfModel output)
+    internal override void ProcessVml(OpenXmlElement shape, QuestPdfModel output)
     {
-        if (element is Picture pic && pic.FirstChild is V.Rectangle rect && 
+        if (shape is V.Rectangle rect && 
             rect.Horizontal != null && rect.Horizontal != null)
         {
             // Close and retrieve the current span, run container (paragraph/hyperlink) and paragraph
@@ -159,13 +159,13 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             // Add paragraph to the current container (body, header, footer, table cell, ...)
             currentContainer.Peek().Content.Add(newParagraph);
         }
-        else if (element.Descendants<V.ImageData>().FirstOrDefault() is V.ImageData imageData &&
+        else if (shape.GetFirstChild<V.ImageData>() is V.ImageData imageData &&
             imageData.RelationshipId?.Value is string relId)
         {
-            var style = VmlHelpers.FindStyle(element);
+            var style = shape.GetVmlAttributeAsString("style");
             if (style != null && 
                 VmlHelpers.GetShapeStylePropertiesInPoints(style, out float width, out float height) != null &&
-                width > 0 && height > 0 && element.GetRootPart() is OpenXmlPart rootPart)
+                width > 0 && height > 0 && shape.GetRootPart() is OpenXmlPart rootPart)
             {
                 if (rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
                 {

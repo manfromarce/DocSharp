@@ -553,30 +553,30 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         }
     }
 
-    internal override void ProcessVml(OpenXmlElement picture, TxtStringWriter sb)
+    internal override void ProcessVml(OpenXmlElement shape, TxtStringWriter sb)
     {
         if (HorizontalRuleForHorizontalLineShapes && 
-            picture is Picture pic && pic.FirstChild is V.Rectangle rect && 
+            shape is V.Rectangle rect && 
             rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
         {
             sb.EnsureEmptyLine();
             sb.WriteLine(new string('-', 20));
-            sb.WriteLine();            
+            sb.WriteLine();
         }
-        else if (picture.GetFirstDescendant<TextBoxContent>() is TextBoxContent txbxContent)
+        else if (shape.GetFirstChild<TextBoxContent>() is TextBoxContent txbxContent)
         {
             foreach (var element in txbxContent.Elements())
             {
                 ProcessBodyElement(element, sb);
             }
         }
-        else if (picture.GetFirstDescendant<V.TextPath>() is V.TextPath textPath &&
+        else if (shape.GetFirstChild<V.TextPath>() is V.TextPath textPath &&
                  textPath.String?.Value != null)
         {
             sb.EnsureEmptyLine();
             ProcessText(new Text(textPath.String.Value), sb);
         }
-        else if (WriteImageDescription && picture.GetFirstDescendant<V.ImageData>() is V.ImageData imageData)
+        else if (WriteImageDescription && shape.GetFirstChild<V.ImageData>() is V.ImageData imageData)
         {
             string? altText = imageData.Title?.Value;
             if (string.IsNullOrWhiteSpace(altText))

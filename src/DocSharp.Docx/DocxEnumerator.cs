@@ -450,7 +450,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
                 ProcessText(textElement, sb);
                 return true;
             case Picture picture:
-                ProcessVml(picture, sb);
+                ProcessPicture(picture, sb);
                 return true;
             case Drawing drawing:
                 if (drawing.GetFirstDescendant<A.GraphicData>() is A.GraphicData graphicData &&
@@ -860,7 +860,8 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
 
     internal virtual void ProcessPicture(Picture picture, TOutput sb)
     {
-        ProcessVml(picture, sb);
+        if (picture.FindShape() is OpenXmlElement shape)
+            ProcessVml(shape, sb);
     }
 
     /*
@@ -1044,7 +1045,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
     internal abstract void ProcessCommentReference(CommentReference commentRef, TOutput sb);
     internal abstract void ProcessAnnotationReference(AnnotationReferenceMark annotationRef, TOutput sb);
     internal abstract void ProcessDrawing(Drawing picture, TOutput sb);
-    internal abstract void ProcessVml(OpenXmlElement picture, TOutput sb);
+    internal abstract void ProcessVml(OpenXmlElement shape, TOutput sb);
     internal abstract void ProcessText(Text text, TOutput sb);
     internal abstract void ProcessFieldChar(FieldChar field, TOutput sb);
     internal abstract void ProcessFieldCode(FieldCode field, TOutput sb);
