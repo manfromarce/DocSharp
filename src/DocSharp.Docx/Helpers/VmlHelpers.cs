@@ -246,7 +246,7 @@ public static class VmlHelpers
         // If "fd" is not specified, we should assume regular degrees in Open XML and convert them to fd for RTF.
         else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out degrees))
         {
-            decimal fd = degrees * 64000;
+            decimal fd = degrees * 65536;
             return fd.ToLong();
         }
         return 0;

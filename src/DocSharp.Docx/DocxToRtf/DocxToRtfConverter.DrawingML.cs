@@ -474,9 +474,9 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
         }
 
-        if (textBodyProperties.Rotation != null)
-        {
-        }
+        // if (textBodyProperties.Rotation != null)
+        // {
+        // }
         sb.WriteShapeProperty("fRotateText", textBodyProperties.UpRight == null || !textBodyProperties.UpRight.HasValue || !textBodyProperties.UpRight.Value);
         // If UpRight is true, it means **don't** rotate text with shape, 
         // so we set "fRotateText" to 1 in RTF in the opposite case. 
@@ -504,7 +504,7 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
 
 
-        if (textBodyProperties.ColumnCount != null)
+        if (textBodyProperties.ColumnCount != null && textBodyProperties.ColumnCount.Value > 1)
         {
             sb.WriteShapeProperty("ccol", textBodyProperties.ColumnCount.Value);
         }
@@ -1571,14 +1571,10 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         sb.WriteShapeProperty(isInGroup ? "fRelFlipH" : "fFlipH", transform2D.HorizontalFlip != null && transform2D.HorizontalFlip.Value);
         sb.WriteShapeProperty(isInGroup ? "fRelFlipV" : "fFlipV", transform2D.VerticalFlip != null && transform2D.VerticalFlip.Value);
         
-        /*
-         The standard states that the rot attribute specifies the clockwise rotation in 1/64000ths of a degree. (This is also used in RTF and VML).
-         In Office and the schema, the rot attribute specifies the clockwise rotation in 1/60000ths of a degree
-        */
         if (transform2D.Rotation != null)
         {
-            // Convert 1/60000 of degree to 1/64000 of degree.
-            sb.WriteShapeProperty(isInGroup ? "relRotation" : "rotation", (long)Math.Round(transform2D.Rotation.Value * 16.0m / 15.0m));
+            // Convert 1/60000 of degree to 1/65536 of degree (used by RTF)
+            sb.WriteShapeProperty(isInGroup ? "relRotation" : "rotation", (long)Math.Round(transform2D.Rotation.Value * 65536m / 60000m));
         }
 
         if (isInGroup)
