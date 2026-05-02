@@ -260,7 +260,8 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             }
             if (VmlHelpers.GetShapeStylePropertyAsString(dict, "v-text-spacing") is string spacing && !string.IsNullOrWhiteSpace(spacing))
             {
-                if (long.TryParse(spacing.TrimEnd('f'), out long spacingValue))
+                long spacingValue = VmlHelpers.ParseValue(spacing);
+                if (spacingValue >= 0)
                 {
                     sb.WriteShapeProperty("gtextSpacing", spacingValue);
                 }
@@ -364,10 +365,10 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
         }
     }
 
-    private void ProcessVmlShapeStyleProperties(Dictionary<string, string> properties, RtfStringWriter sb, OpenXmlElement shape, long width, long height, bool isInGroup = false)
+    private void ProcessVmlShapeStyleProperties(Dictionary<string, string> properties, RtfStringWriter sb, OpenXmlElement shape, decimal width, decimal height, bool isInGroup = false)
     {
-        long left = 0;
-        long top = 0;
+        decimal left = 0;
+        decimal top = 0;
         if (!isInGroup)
         {
             if (properties.TryGetValue("margin-left", out string? l))
@@ -548,22 +549,22 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (isInGroup)
         {
-            if (!(properties.TryGetValue("left", out string? l) && long.TryParse(l, out left)))
+            if (!(properties.TryGetValue("left", out string? l) && decimal.TryParse(l, NumberStyles.Float, CultureInfo.InvariantCulture, out left)))
             {
                 left = 0;
             }
             sb.WriteShapeProperty("relLeft", left);
-            if (!(properties.TryGetValue("top", out string? t) && long.TryParse(t, out top)))
+            if (!(properties.TryGetValue("top", out string? t) && decimal.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out top)))
             {
                 top = 0;
             }
             sb.WriteShapeProperty("relTop", top);
-            if (!(properties.TryGetValue("width", out string? w) && long.TryParse(w, out width)))
+            if (!(properties.TryGetValue("width", out string? w) && decimal.TryParse(w, NumberStyles.Float, CultureInfo.InvariantCulture, out width)))
             {
                 width = 0;
             }
             sb.WriteShapeProperty("relRight", left + width);
-            if (!(properties.TryGetValue("height", out string? h) && long.TryParse(h, out height)))
+            if (!(properties.TryGetValue("height", out string? h) && decimal.TryParse(h, NumberStyles.Float, CultureInfo.InvariantCulture, out height)))
             {
                 height = 0;
             }
@@ -572,10 +573,10 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
 
         if (shape is V.Group grp)
         {
-            long groupLeft = 0;
-            long groupTop = 0;
-            long groupWidth = 0;
-            long groupHeight = 0;
+            decimal groupLeft = 0;
+            decimal groupTop = 0;
+            decimal groupWidth = 0;
+            decimal groupHeight = 0;
             var coordinateOrigin = grp.CoordinateOrigin?.Value;
             var coordinateSize = grp.CoordinateSize?.Value;
             if (coordinateOrigin != null)
@@ -583,12 +584,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 var x_y = coordinateOrigin.Split(',');
                 if (x_y.Length == 2)
                 {
-                    if (!long.TryParse(x_y[0], out groupLeft))
+                    if (!decimal.TryParse(x_y[0], NumberStyles.Float, CultureInfo.InvariantCulture, out groupLeft))
                     {
                         groupLeft = 0;
                     }
                     sb.WriteShapeProperty("groupLeft", groupLeft);
-                    if (!long.TryParse(x_y[1], out groupTop))
+                    if (!decimal.TryParse(x_y[1], NumberStyles.Float, CultureInfo.InvariantCulture, out groupTop))
                     {
                         groupTop = 0;
                     }
@@ -600,12 +601,12 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
                 var w_h = coordinateSize.Split(',');
                 if (w_h.Length == 2)
                 {
-                    if (!long.TryParse(w_h[0], out groupWidth))
+                    if (!decimal.TryParse(w_h[0], NumberStyles.Float, CultureInfo.InvariantCulture,  out groupWidth))
                     {
                         groupWidth = 0;
                     }
                     sb.WriteShapeProperty("groupRight", groupLeft + groupWidth);
-                    if (!long.TryParse(w_h[1], out groupHeight))
+                    if (!decimal.TryParse(w_h[1], NumberStyles.Float, CultureInfo.InvariantCulture,  out groupHeight))
                     {
                         groupHeight = 0;
                     }
@@ -1229,12 +1230,15 @@ public partial class DocxToRtfConverter : DocxToStringWriterBase<RtfStringWriter
             foreach (var gradientColor in gradientColors)
             {
                 var properties = gradientColor.Split(' ');
-                if (properties.Length >= 2 && 
-                    double.TryParse(properties[0].Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out double pos) 
-                    && ColorHelpers.HexToBgr(properties[1].Trim()) is int color)
+                if (properties.Length >= 2)
                 {
-                    shadeColors += $"({color},{(long)Math.Round(pos * 65536)});";
-                    ++count;
+                    var pos = VmlHelpers.ParseValue(properties[0].Trim());
+                    if (pos >= 0 && ColorHelpers.EnsureHexColor(properties[1].Trim()) is string hex
+                        && ColorHelpers.HexToBgr(hex) is int color)
+                    {
+                        shadeColors += $"({color.ToStringInvariant()},{pos.ToStringInvariant()});";
+                        ++count;
+                    }
                 }
             }
             // 8 = number of bytes (2 numbers for each pair)

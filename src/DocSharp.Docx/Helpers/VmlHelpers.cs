@@ -214,6 +214,24 @@ public static class VmlHelpers
         return 0;
     }
 
+    internal static long ParseValue(string? value)
+    {
+        if (value == null)
+        {
+            return -1;
+        }
+        decimal res;
+        if (value.EndsWith("f") && decimal.TryParse(value[..^1], NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        {
+            return Math.Round(res).ToLong();
+        }
+        else if (decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out res))
+        {
+            return Math.Round(res * 65536m).ToLong();
+        }
+        return -1;
+    }
+
     internal static long ParseTwips(string? value)
     {
         if (value == null)

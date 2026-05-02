@@ -116,19 +116,19 @@ public sealed class RtfStringWriter : BaseStringWriter
     public void WriteWordWithValue(string word, double value)
     {
         Write($"\\{word}");
-        Write((long)Math.Round(value));
+        Write(Math.Round(value).ToLong());
     }
 
     public void WriteWordWithValue(string word, decimal value)
     {
         Write($"\\{word}");
-        Write((long)Math.Round(value));
+        Write(Math.Round(value).ToLong());
     }
 
     public void WriteWordWithValue(string word, float value)
     {
         Write($"\\{word}");
-        Write((long)Math.Round(value));
+        Write(Math.Round(value).ToLong());
     }
 
     public void WriteShapeProperty(string name, string value)
