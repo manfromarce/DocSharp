@@ -64,6 +64,12 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
     public FootnoteEndnoteExportOptions FootnoteEndnoteExportOptions { get; set; } = FootnoteEndnoteExportOptions.EndOfDocument;
 
+    [Obsolete("Deprecated in v.0.19, please use HeaderFooterExportOptions instead.")]
+    public bool ExportHeaderFooter { get; set; } = true;
+
+    [Obsolete("Deprecated in v.0.19, please use FootnoteEndnoteExportOptions instead.")]
+    public bool ExportFootnotesEndnotes { get; set; } = true;
+
     /// <summary>
     /// Used to map DOCX styles by name. The default <see cref="DefaultStyleNamingResolver"/> can be overriden to customize style mappings.
     /// </summary>
@@ -116,16 +122,60 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         // Process body content
         if (document.Body is Body body && document.MainDocumentPart != null)
         {
-            Sections = body.GetSections();
-
-            foreach (var section in Sections)
-            {
-                ProcessSection(section, document.MainDocumentPart, sb);
-            }
+            ProcessBody(body, sb);
         }
 
         sb.WriteEndElement("body");
         sb.WriteEndElement("html");
+    }
+
+    internal override void ProcessBody(Body body, HtmlTextWriter sb)
+    {
+        Sections = body.GetSections();
+
+        if (Sections.Count == 0) return;
+
+        // Add header
+        if (this.HeaderFooterExportOptions != HeaderFooterExportOptions.None)
+        {
+            ProcessFirstHeader(Sections[0].properties, sb);
+            EnsureEmptyLine(sb);
+        }
+
+        var mainPart = body.GetMainDocumentPart();
+
+        // Add sections
+        foreach (var section in Sections)
+        {
+            ProcessSection(section, mainPart, sb);
+        }
+
+        // After sections, emit endnotes at document end if required by settings/options
+        EnsureEmptyLine(sb);
+        if (this.FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.DocumentSettings)
+        {
+            var endnoteDocProps = mainPart?.DocumentSettingsPart?.Settings?.GetFirstChild<EndnoteDocumentWideProperties>();
+            var endnotePos = endnoteDocProps?.GetFirstChild<EndnotePosition>()?.Val;
+            if (endnotePos == null || endnotePos == EndnotePositionValues.DocumentEnd) // default in DOCX
+            {
+                ProcessEndnotes(mainPart?.EndnotesPart, sb);
+            }
+        }
+        else if (this.FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.FootnotesEndOfSection_EndnotesEndOfDocument)
+        {
+            ProcessEndnotes(mainPart?.EndnotesPart, sb);
+        }
+        else if (this.FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.EndOfDocument)
+        {
+            // already handled inside ProcessSection for the last section
+        }
+
+        if (this.HeaderFooterExportOptions != HeaderFooterExportOptions.None)
+        {
+            EnsureEmptyLine(sb);
+            // Add the footer
+            ProcessLastFooter(Sections[Sections.Count - 1].properties, sb);
+        }
     }
 
     internal override void ProcessDocumentBackground(DocumentBackground background, HtmlTextWriter sb)

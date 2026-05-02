@@ -9,8 +9,6 @@ using DocSharp.Writers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml.ExtendedProperties;
-using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
@@ -39,26 +37,44 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             sb.WriteAttributeString("style", string.Join(" ", contentStyles));
         }
 
-        if (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooterPerSection 
-           || (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooter && 
-              ( Sections.Count == 1 || section == Sections.FirstOrDefault())))
+        if (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooterPerSection &&
+            section != Sections.FirstOrDefault()) // The last section footer is emitted in ProcessBody after endnotes
         {
             ProcessFirstHeader(section.properties, sb);
         }
 
         base.ProcessSection(section, mainPart, sb);
 
-        if (FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.EndOfDocument && 
+        // Handle footnotes/endnotes placement according to export options
+        if (this.FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.EndOfDocument &&
             (Sections.Count == 1 || section == Sections.LastOrDefault()))
         {
             ProcessFootnotes(mainPart?.FootnotesPart, sb);
             ProcessEndnotes(mainPart?.EndnotesPart, sb);
-        };
+        }
 
-        if (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooterPerSection 
-           || (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooter && 
-              ( Sections.Count == 1 || section == Sections.LastOrDefault())))
+        // Export footnotes at the end of each section if requested
+        if (this.FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.DocumentSettings ||
+            this.FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.FootnotesEndOfSection_EndnotesEndOfDocument)
         {
+            EmitFootnotesForSection(section, mainPart, sb);
+
+            // In DocumentSettings mode, endnotes follow the document-level setting
+            if (this.FootnoteEndnoteExportOptions == FootnoteEndnoteExportOptions.DocumentSettings)
+            {
+                var endnoteDocProps = mainPart?.DocumentSettingsPart?.Settings?.GetFirstChild<EndnoteDocumentWideProperties>();
+                var endnotePos = endnoteDocProps?.GetFirstChild<EndnotePosition>()?.Val;
+                if (endnotePos != null && endnotePos == EndnotePositionValues.SectionEnd)
+                {
+                    EmitEndnotesForSection(section, mainPart, sb);
+                }
+            }
+        }
+
+        if (this.HeaderFooterExportOptions == HeaderFooterExportOptions.FirstHeaderLastFooterPerSection &&
+            section != Sections.LastOrDefault()) // The last section footer is emitted in ProcessBody after endnotes
+        {
+            EnsureEmptyLine(sb);
             ProcessLastFooter(section.properties, sb);
         }
 
@@ -263,5 +279,77 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             sb.WriteEndElement();
             _pagePrintStyleEmitted = true;
         }
+    }
+
+    // Emit footnotes referenced in the given section, in the order of first reference appearance
+    private void EmitFootnotesForSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, HtmlTextWriter sb)
+    {
+        if (mainPart?.FootnotesPart?.Footnotes == null) return;
+
+        var referencedIds = new List<long>();
+        foreach (var element in section.content)
+        {
+            foreach (var fr in element.Descendants<FootnoteReference>())
+            {
+                if (fr.Id?.Value != null)
+                {
+                    long id = fr.Id.Value;
+                    if (!referencedIds.Contains(id)) referencedIds.Add(id);
+                }
+            }
+        }
+
+        if (referencedIds.Count == 0) return;
+
+        sb.WriteStartElement("div");
+        foreach (var id in referencedIds)
+        {
+            var footnote = mainPart.FootnotesPart.Footnotes.Elements<Footnote>().FirstOrDefault(f => f.Id != null && f.Id.Value == id && (f.Type == null || f.Type == FootnoteEndnoteValues.Normal));
+            if (footnote != null)
+            {
+                foreach (var child in footnote.Elements())
+                {
+                    ProcessBodyElement(child, sb);
+                }
+                EnsureEmptyLine(sb);
+            }
+        }
+        sb.WriteEndElement();
+    }
+
+    // Emit endnotes referenced in the given section, in the order of first reference appearance
+    private void EmitEndnotesForSection((List<OpenXmlElement> content, SectionProperties properties) section, MainDocumentPart? mainPart, HtmlTextWriter sb)
+    {
+        if (mainPart?.EndnotesPart?.Endnotes == null) return;
+
+        var referencedIds = new List<long>();
+        foreach (var element in section.content)
+        {
+            foreach (var er in element.Descendants<EndnoteReference>())
+            {
+                if (er.Id?.Value != null)
+                {
+                    long id = er.Id.Value;
+                    if (!referencedIds.Contains(id)) referencedIds.Add(id);
+                }
+            }
+        }
+
+        if (referencedIds.Count == 0) return;
+
+        sb.WriteStartElement("div");
+        foreach (var id in referencedIds)
+        {
+            var endnote = mainPart.EndnotesPart.Endnotes.Elements<Endnote>().FirstOrDefault(e => e.Id != null && e.Id.Value == id && (e.Type == null || e.Type == FootnoteEndnoteValues.Normal));
+            if (endnote != null)
+            {
+                foreach (var child in endnote.Elements())
+                {
+                    ProcessBodyElement(child, sb);
+                }
+                EnsureEmptyLine(sb);
+            }
+        }
+        sb.WriteEndElement();
     }
 }

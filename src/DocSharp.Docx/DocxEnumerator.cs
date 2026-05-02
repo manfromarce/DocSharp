@@ -61,6 +61,8 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
     {
         Sections = body.GetSections();
 
+        if (Sections.Count == 0) return;
+
         // Add header
         ProcessFirstHeader(Sections[0].properties, sb);
         EnsureEmptyLine(sb); // add empty space before the body content

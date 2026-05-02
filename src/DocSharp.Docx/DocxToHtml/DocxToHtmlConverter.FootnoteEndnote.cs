@@ -8,7 +8,6 @@ using DocSharp.Writers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using M = DocumentFormat.OpenXml.Math;
 
 namespace DocSharp.Docx;
 
