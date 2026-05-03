@@ -66,25 +66,38 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                             var bytes = imagePart.GetStream().ReadStreamToEnd();
                             image = new QuestPdfImage(bytes, width, height, ImageFormatExtensions.FromMimeType(imagePart.ContentType), ImageConverter);
                         }
-                        // Add image to the paragraph model (and create hyperlink if necessary).
+
+                        // Add image to the paragraph / hyperlink model (or create hyperlink if necessary).
                         if (image != null && currentParagraph.Count > 0)
                         {
-                            if (!string.IsNullOrWhiteSpace(hyperlinkUrl))
+                            if (drawing.GetFirstAncestor<Hyperlink>() != null && 
+                                currentParagraph.Peek().Elements.LastOrDefault() is QuestPdfHyperlink hyperlink)
                             {
-                                var hyperlink = new QuestPdfHyperlink();
+                                // If the image is already contained in an hyperlink, add it to the current hyperlink.
+                                // This typically happens if the DOCX hyperlink contains both text and image 
+                                // (because otherwise the HyperlinkOnClick element is added to the drawing)
+                                hyperlink.Elements.Add(image);
+                            }
+                            else if (!string.IsNullOrWhiteSpace(hyperlinkUrl))
+                            {
+                                // If the image contains HyperlinkOnClick and a valid associated URL is found, 
+                                // create a new QuestPdfHyperlink object and add it to the current paragraph. 
+                                var hlink = new QuestPdfHyperlink();
                                 if (hyperlinkUrl!.StartsWith('#'))
                                 {
-                                    hyperlink.Anchor = hyperlinkUrl;
+                                    hlink.Anchor = hyperlinkUrl;
                                 }
                                 else
                                 {
-                                    hyperlink.Url = hyperlinkUrl;
+                                    hlink.Url = hyperlinkUrl;
                                 }
-                                hyperlink.Elements.Add(image);
-                                currentParagraph.Peek().Elements.Add(hyperlink);
+                                hlink.Elements.Add(image);
+                                currentParagraph.Peek().Elements.Add(hlink);
                             }
                             else
                             {
+                                // Add image to the paragraph
+                                currentSpan.Pop(); // the current span is closed to avoid adding subsequent text to it (in incorrect order)
                                 currentParagraph.Peek().Elements.Add(image);
                             }
                         }
@@ -178,12 +191,15 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                     {
                         if (shape.GetFirstAncestor<Hyperlink>() != null && 
                             currentParagraph.Peek().Elements.LastOrDefault() is QuestPdfHyperlink hyperlink)
-                        {                            
+                        {
+                            // If the image is already contained in an hyperlink, add it to the current hyperlink.
                             hyperlink.Elements.Add(image);
                         }
                         else
                         {
-                            currentParagraph.Peek().Elements.Add(image);
+                            // Add image to the paragraph
+                            currentSpan.Pop(); // the current span is closed to avoid adding subsequent text to it (in incorrect order)
+                            currentParagraph.Peek().Elements.Add(image);                            
                         }
                     }
                 }

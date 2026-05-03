@@ -19,8 +19,20 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 {
     internal override void ProcessText(Text text, QuestPdfModel output)
     {
-        if (currentSpan.Count > 0 && !string.IsNullOrEmpty(text.Text))
-            currentSpan.Peek().Text += text.Text;
+        if (!string.IsNullOrEmpty(text.Text))
+        {
+            if (currentSpan.Count > 0)
+            {
+                currentSpan.Peek().Text += text.Text;
+            }
+            // The span may have been closed if the DOCX run has mixed content (text + image/break)
+            else if (currentParagraph.Count > 0)
+            {
+                var newSpan = new QuestPdfSpan(text.Text);
+                currentParagraph.Peek().Elements.Add(newSpan);  
+                currentSpan.Push(newSpan);
+            }
+        }
     }
 
     internal override void ProcessSymbolChar(SymbolChar symbolChar, QuestPdfModel output)
