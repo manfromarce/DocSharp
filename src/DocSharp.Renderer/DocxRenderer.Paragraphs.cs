@@ -77,7 +77,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             // Apply top border only if visible (first of style or differs from previous)
             if (hasTop && (paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)))
             {
-                if (borders.TopBorder.Size != null)
+                if (borders.TopBorder!.Size != null)
                     p.TopBorderThickness = borders.TopBorder.Size.Value / 8f;
                 if (!string.IsNullOrWhiteSpace(borders.TopBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.TopBorder.Color.Value);
@@ -86,21 +86,21 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             // Always apply left/right/bar borders when present
             if (hasLeft)
             {
-                if (borders.LeftBorder.Size != null)
+                if (borders.LeftBorder!.Size != null)
                     p.LeftBorderThickness = borders.LeftBorder.Size.Value / 8f;
                 if (!string.IsNullOrWhiteSpace(borders.LeftBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.LeftBorder.Color.Value);
             }
             if (hasRight)
             {
-                if (borders.RightBorder.Size != null)
+                if (borders.RightBorder!.Size != null)
                     p.RightBorderThickness = borders.RightBorder.Size.Value / 8f;
                 if (!string.IsNullOrWhiteSpace(borders.RightBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.RightBorder.Color.Value);
             }
             if (hasBar)
             {
-                if (borders.BarBorder.Size != null)
+                if (borders.BarBorder!.Size != null)
                     p.RightBorderThickness = borders.BarBorder.Size.Value / 8f;
                 if (!string.IsNullOrWhiteSpace(borders.BarBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.BarBorder.Color.Value);
@@ -109,14 +109,14 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             // Apply bottom/between border only if visible (last of style or differs from next)
             if (hasBottom && (paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)))
             {
-                if (borders.BottomBorder.Size != null)
+                if (borders.BottomBorder!.Size != null)
                     p.BottomBorderThickness = borders.BottomBorder.Size.Value / 8f;
                 if (!string.IsNullOrWhiteSpace(borders.BottomBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.BottomBorder.Color.Value);
             }
             else if (hasBetween && !paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders))
             {
-                if (borders.BetweenBorder.Size != null)
+                if (borders.BetweenBorder!.Size != null)
                     p.BottomBorderThickness = borders.BetweenBorder.Size.Value / 8f;
                 if (!string.IsNullOrWhiteSpace(borders.BetweenBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.BetweenBorder.Color.Value);

@@ -346,10 +346,10 @@ public class QuestPdfModel
                             if (subElement is QuestPdfSpan subSpan)
                             {                                    
                                 if (hyperlink.Url != null)
-                                    text.Hyperlink(subSpan.Text, hyperlink.Url).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
+                                    text.Hyperlink(subSpan.IsAllCaps ? subSpan.Text.ToUpper() : subSpan.Text, hyperlink.Url).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
                                 else if (hyperlink.Anchor != null)
                                     // TODO: section names (bookmarks) are not created yet
-                                    text.SectionLink(subSpan.Text, hyperlink.Anchor).Style(subSpan.Style).LineHeight(paragraph.LineHeight);                                    
+                                    text.SectionLink(subSpan.IsAllCaps ? subSpan.Text.ToUpper() : subSpan.Text, hyperlink.Anchor).Style(subSpan.Style).LineHeight(paragraph.LineHeight);                                    
                             }
                             else if (subElement is QuestPdfImage image)
                             {

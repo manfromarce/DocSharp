@@ -72,7 +72,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                             if (!string.IsNullOrWhiteSpace(hyperlinkUrl))
                             {
                                 var hyperlink = new QuestPdfHyperlink();
-                                if (hyperlinkUrl.StartsWith("#"))
+                                if (hyperlinkUrl!.StartsWith('#'))
                                 {
                                     hyperlink.Anchor = hyperlinkUrl;
                                 }
@@ -173,9 +173,19 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                     byte[] bytes = imagePart.GetStream().ReadStreamToEnd();
                     var image = new QuestPdfImage(bytes, width, height, ImageFormatExtensions.FromMimeType(imagePart.ContentType), ImageConverter);
                     
-                    // Add image to the paragraph model.
+                    // Add image to the paragraph / hyperlink model.
                     if (currentParagraph.Count > 0)
-                        currentParagraph.Peek().Elements.Add(image);
+                    {
+                        if (shape.GetFirstAncestor<Hyperlink>() != null && 
+                            currentParagraph.Peek().Elements.LastOrDefault() is QuestPdfHyperlink hyperlink)
+                        {                            
+                            hyperlink.Elements.Add(image);
+                        }
+                        else
+                        {
+                            currentParagraph.Peek().Elements.Add(image);
+                        }
+                    }
                 }
             }
         }
