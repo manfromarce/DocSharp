@@ -30,6 +30,7 @@ By default only inline images are converted because other layouts do not have a 
 - Partial support for WordArt in DOCX ➡️ RTF converter
 - Fix: some gradient colors were not parsed properly in DOCX ➡️ RTF converter
 - Fix: fonts specified as theme font only were not detected in DOCX converters
+- Fix: the image dimensions could end up being smaller than the original in DOCX ➡️ HTML converter
 - Fix: base64 images could end up being truncated in DOCX ➡️ HTML converter
 - Preserve picture bullet for lists in DOCX ➡️ HTML converter
 - Fix: runs containing both text and images were rendered in incorrect order in DOCX ➡️ QuestPDF converter
