@@ -19,6 +19,7 @@ using DocSharp.IO;
 using System.IO;
 using System.Diagnostics;
 using DocSharp.Writers;
+using System.Security.Cryptography;
 
 namespace DocSharp.Docx;
 
@@ -131,13 +132,18 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 }
                 else
                 {
-                    // If the image format is supported by web browsers, encode the Open XML image stream directly.
-                    byte[] imageBytes = new byte[stream.Length];
-                    int count = stream.Read(imageBytes, 0, imageBytes.Length);
-                    if (count > 0)
+                    // If the image format is supported by web browsers, encode the Open XML image stream directly
+                    // using a streaming Base64 transform to avoid allocating the whole image in memory.
+                    
+                    using (var sw = new StringWriter())
+                    using (var writerStream = new TextWriterStream(sw))
+                    using (var transform = new ToBase64Transform())
+                    using (var cs = new CryptoStream(writerStream, transform, CryptoStreamMode.Write))
                     {
+                        stream.CopyTo(cs);
+                        cs.FlushFinalBlock();
                         mimeType = imagePart.ContentType;
-                        return System.Convert.ToBase64String(imageBytes);
+                        return sw.ToString();
                     }
                 }
             }
