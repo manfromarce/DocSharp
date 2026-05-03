@@ -31,6 +31,7 @@ By default only inline images are converted because other layouts do not have a 
 - Fix: some gradient colors were not parsed properly in DOCX ➡️ RTF converter
 - Fix: fonts specified as theme font only were not detected in DOCX converters
 - Fix: base64 images could end up being truncated in DOCX ➡️ HTML converter
+- Preserve picture bullet for lists in DOCX ➡️ HTML converter
 - Fix various minor bugs
 - Code cleanup
 - Update dependencies

@@ -240,7 +240,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         if (numberingProperties != null)
         {
             // Process the bullet/number text and formatting to preserve Word list options with high fidelity.
-            ProcessListItem(numberingProperties, sb);
+            ProcessListItem(numberingProperties, sb, fontSize: paragraph.GetFirstChild<Run>()?.GetEffectiveProperty<FontSize>());
         }
 
         // Process paragraph content

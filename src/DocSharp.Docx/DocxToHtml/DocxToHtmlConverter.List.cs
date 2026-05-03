@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocSharp.Helpers;
 using DocSharp.Writers;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -13,10 +15,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     private readonly Dictionary<int, (int numId, int abstractNumId, int counter)> _listLevelCounters = new();
 
-    internal void ProcessListItem(NumberingProperties numPr, HtmlTextWriter sb, bool isHidden = false)
+    internal void ProcessListItem(NumberingProperties numPr, HtmlTextWriter sb, bool isHidden = false, FontSize? fontSize = null)
     {
-        // Note: we don't produce real HTML lists (<ul> / <ol>) because they are very limited compared to DOCX,
-        // and preserving the original list format would be complicated. 
+        // Note: we don't produce real HTML lists (<ul> / <ol>) in order to preserve original DOCX list formatting as much as possible.
         var numberingPart = numPr.GetNumberingPart();
         if (numberingPart != null && numPr.NumberingId?.Val != null)
         {
@@ -50,7 +51,7 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
                 var listType = numberingFormat?.Val ?? NumberFormatValues.Decimal; // if not specified it should be assumed decimal (regular numbered list)
                                                                                                    // (https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.NumberingFormat?view=openxml-3.0.1)
-                var runPr = effectiveLevel?.NumberingSymbolRunProperties;
+                var numRunPr = effectiveLevel?.NumberingSymbolRunProperties;
 
                 if (effectiveLevel != null && listType != NumberFormatValues.None)
                 {
@@ -107,9 +108,77 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                         }
                     }
 
+                    string listText = "•";
                     if (!isHidden)
                     {
-                        string listText;
+                        // Check for picture bullets: levels can reference a NumberingPictureBullet by Id
+                        NumberingPictureBullet? pictureBullet = null;
+                        var pictureBulletId = effectiveLevel.LevelPictureBulletId?.Val;
+                        if (pictureBulletId != null)
+                        {
+                            pictureBullet = numberingPart.Elements<NumberingPictureBullet>()
+                                           .FirstOrDefault(pb => pb.NumberingPictureBulletId != null && pb.NumberingPictureBulletId == pictureBulletId);
+                        }
+
+                        if (pictureBullet != null)
+                        {
+                            int? maxSizeInPoints = null;
+                            string? fs = (numRunPr?.FontSize ?? fontSize)?.Val;
+                            if (fontSize != null && double.TryParse(fs, NumberStyles.Float, CultureInfo.InvariantCulture, out double fontSizeInHalfPts))
+                            {
+                                // Force max picture bullet size to the font size.
+                                // This seems to better match DOCX behavior, because a custom image selected by user can potentially be much bigger, 
+                                // but is not displayed at full size in MS Word when it is a list bullet. 
+                                maxSizeInPoints = (fontSizeInHalfPts / 2.0).ToInt();
+                            }
+                            // Render picture bullet using existing VML/Drawing image handlers
+                            if (pictureBullet.PictureBulletBase != null)
+                            {
+                                var shape = pictureBullet.PictureBulletBase.FindShape();
+                                if (shape != null)
+                                {
+                                    ProcessVml(shape, sb, maxSizeInPoints, true);
+                                    ProcessLevelSuffix(effectiveLevel, sb);
+                                    return;
+                                }
+                            }
+                            else if (pictureBullet.Drawing != null)
+                            {
+                                ProcessDrawing(pictureBullet.Drawing, sb, maxSizeInPoints, true);
+                                ProcessLevelSuffix(effectiveLevel, sb);
+                                return;
+                            }
+                            else if (pictureBullet.GetFirstChild<AlternateContent>() is AlternateContent alternateContent)
+                            {
+                                if (alternateContent.GetFirstDescendant<PictureBulletBase>() is PictureBulletBase pbb)
+                                {
+                                    var shape = pbb.FindShape();
+                                    if (shape != null)
+                                    {
+                                        ProcessVml(shape, sb, maxSizeInPoints, true);
+                                        ProcessLevelSuffix(effectiveLevel, sb);
+                                        return;
+                                    }
+                                }
+                                else if (alternateContent.GetFirstDescendant<Drawing>() is Drawing drawing1)
+                                {
+                                    ProcessDrawing(drawing1, sb, maxSizeInPoints, true);
+                                    ProcessLevelSuffix(effectiveLevel, sb);
+                                    return;
+                                }
+                                else if (alternateContent.GetFirstDescendant<Picture>() is Picture pict1)
+                                {
+                                    var shape = pict1.FindShape();
+                                    if (shape != null)
+                                    {
+                                        ProcessVml(shape, sb, maxSizeInPoints, true);
+                                        ProcessLevelSuffix(effectiveLevel, sb);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                        
                         if (listType == NumberFormatValues.Bullet)
                         {
                             // For bulleted lists, level text can be returned as-is.
@@ -132,11 +201,11 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                             listText += '\u00A0'; // non-breaking space (&emsp;)
                         }
 
-                        if (runPr != null)
+                        if (numRunPr != null)
                         {
                             // Process formatting for the number/bullet
                             var rPr = new RunProperties();
-                            foreach (var runProperty in runPr)
+                            foreach (var runProperty in numRunPr)
                             {
                                 rPr.AppendChild(runProperty.CloneNode(true));
                             }
@@ -145,10 +214,23 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                         else
                         {
                             ProcessRun(new Run(new Text(listText)), sb);
-                        }
+                        }                        
                     }
                 }
             }
+        }
+    }
+
+    private void ProcessLevelSuffix(Level effectiveLevel, HtmlTextWriter sb)
+    {
+        var levelSuffix = effectiveLevel.LevelSuffix?.Val;
+        if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
+        {
+            ProcessRun(new Run(new Text("\u2001")), sb); // quad space (&#x2001;)
+        }
+        else if (levelSuffix.Value == LevelSuffixValues.Space)
+        {
+            ProcessRun(new Run(new Text("\u00A0")), sb); // non-breaking space (&emsp;)
         }
     }
 }

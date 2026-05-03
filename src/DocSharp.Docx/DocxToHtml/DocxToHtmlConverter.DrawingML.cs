@@ -21,7 +21,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
-    internal override void ProcessDrawing(Drawing drawing, HtmlTextWriter sb)
+    internal void ProcessDrawing(Drawing drawing, HtmlTextWriter sb, int? maxSizeInPoints, bool isListBullet)
     {
         if (drawing.IsLayoutSupported(this.SupportedImagesLayout))
         {
@@ -58,24 +58,34 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                     }
                     if (pic.BlipFill != null && pic.BlipFill.Blip is A.Blip blip)
                     {
-                        ProcessPictureFill(blip, drawing, width, height, sb, drawing.Inline != null, hyperlinkUrl, hyperlinkTooltip, altText);
+                        if (maxSizeInPoints != null && maxSizeInPoints > 0)
+                        {
+                            width = Math.Min(width, maxSizeInPoints.Value);
+                            height = Math.Min(width, maxSizeInPoints.Value);
+                        }
+                        ProcessPictureFill(blip, drawing, width, height, sb, drawing.Inline != null, hyperlinkUrl, hyperlinkTooltip, altText, isListBullet);
                     }
                 }
             }
         }
     }
 
-    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? altText = null)
+    internal override void ProcessDrawing(Drawing drawing, HtmlTextWriter sb)
+    {
+        ProcessDrawing(drawing, sb, null, false);
+    }
+
+    internal void ProcessPictureFill(A.Blip blip, Drawing drawing, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? altText = null, bool isListBullet = false)
     {
         if (blip.GetFirstDescendant<SVGBlip>() is SVGBlip svgBlip &&
             svgBlip.Embed?.Value is string svgRelId)
         {
             // Prefer the actual SVG image as web browsers can display it.
-            ProcessImagePart(drawing.GetRootPart(), svgRelId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip, altText);
+            ProcessImagePart(drawing.GetRootPart(), svgRelId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip, altText, isListBullet);
         }
         else if (blip.Embed?.Value is string relId)
         {
-            ProcessImagePart(drawing.GetRootPart(), relId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip, altText);
+            ProcessImagePart(drawing.GetRootPart(), relId, width, height, sb, isInline, hyperlinkUrl, hyperlinkTooltip, altText, isListBullet);
         }
     }
 }

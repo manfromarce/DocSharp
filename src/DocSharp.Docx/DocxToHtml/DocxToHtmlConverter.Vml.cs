@@ -23,7 +23,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
-    internal override void ProcessVml(OpenXmlElement shape, HtmlTextWriter sb)
+    internal void ProcessVml(OpenXmlElement shape, HtmlTextWriter sb, int? maxSizeInPoints, bool isListBullet)
     {
         if (shape is V.Rectangle rect && 
             rect.Horizontal != null && rect.Horizontal) // "o:hr" is true if the shape is a standard horizontal line
@@ -46,8 +46,18 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 {
                     altText = (imageData.Parent as V.Shape)?.Id ?? (imageData.Parent as V.Rectangle)?.Id;
                 }
-                ProcessImagePart(rootPart, relId, width, height, sb, true, null, null, altText);
+                if (maxSizeInPoints != null && maxSizeInPoints > 0)
+                {
+                    width = Math.Min(width, maxSizeInPoints.Value);
+                    height = Math.Min(width, maxSizeInPoints.Value);
+                }
+                ProcessImagePart(rootPart, relId, width, height, sb, true, null, null, altText, isListBullet);
             }
         }
+    }
+
+    internal override void ProcessVml(OpenXmlElement shape, HtmlTextWriter sb)
+    {
+        ProcessVml(shape, sb, null, false);
     }
 }

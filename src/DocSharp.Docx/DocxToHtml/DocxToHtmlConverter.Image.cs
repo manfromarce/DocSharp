@@ -25,7 +25,7 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
-    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? altText = null)
+    internal void ProcessImagePart(OpenXmlPart? rootPart, string relId, double width, double height, HtmlTextWriter sb, bool isInline, string? hyperlinkUrl = null, string? hyperlinkTooltip = null, string? altText = null, bool isListBullet = false)
     {
         try
         {
@@ -70,15 +70,19 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                     }
                 }
 
+                string style = $"width:{width.ToStringInvariant(2)}pt;height:{height.ToStringInvariant(2)}pt;";
                 // If the image is not inline, write it as a block.
-                sb.WriteAttributeString("style", isInline ? "display:inline;" : "display:block;");
+                if (isListBullet)
+                {
+                    style += "vertical-align:middle;";
+                }
+                style += (isInline ? "display:inline;" : "display:block;");
+                sb.WriteAttributeString("style", style);
 
                 // Write alt text if available
                 if (!string.IsNullOrWhiteSpace(altText))
                     sb.WriteAttributeString("alt", altText);
 
-                sb.WriteAttributeString("width", width.ToStringInvariant() + "pt");
-                sb.WriteAttributeString("height", height.ToStringInvariant() + "pt");
                 sb.WriteEndElement();
 
                 if (hasHyperlink)
