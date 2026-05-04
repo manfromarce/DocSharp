@@ -86,6 +86,25 @@ public static class StylesHelpers
         return stylesPart?.DocDefaults?.ParagraphPropertiesDefault?.ParagraphPropertiesBaseStyle;
     }
 
+    public static StyleRunProperties? GetNormalRunStyle(this Styles? stylesPart)
+    {
+        return GetNormalStyle(stylesPart)?.StyleRunProperties;
+    }
+
+    public static StyleParagraphProperties? GetNormalParagraphStyle(this Styles? stylesPart)
+    {
+        return GetNormalStyle(stylesPart)?.StyleParagraphProperties;
+    }
+
+    public static Style? GetNormalStyle(this Styles? stylesPart)
+    {
+        return stylesPart?.FirstOrDefault<Style>(s => s.Type != null && s.Type == StyleValues.Paragraph && 
+                                                      s.Default != null && s.Default.Value && 
+                                                      s.PrimaryStyle != null && (s.PrimaryStyle.Val == null || s.PrimaryStyle.Val == OnOffOnlyValues.On));
+                                                      // Not mandatory, the default style might have a different name: 
+                                                      // && s.StyleName?.Val?.Value != null && s.StyleName.Val.Value.Equals("Normal", StringComparison.OrdinalIgnoreCase));
+    }
+
     // Return true if the style id is in the document, false otherwise.
     public static bool ContainsStyleId(this Styles styles, string styleId, StyleValues styleType)
     {

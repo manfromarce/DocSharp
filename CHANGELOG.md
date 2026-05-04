@@ -35,6 +35,7 @@ By default only inline images are converted because other layouts do not have a 
 - Preserve picture bullet for lists in DOCX ➡️ HTML/PDF converters
 - Fix: runs containing both text and images were rendered in incorrect order in DOCX ➡️ QuestPDF converter
 - Fix issues with Sdt and CustomXml elements in DOCX converters
+- Fix: detect formatting from Normal (default) style when necessary in DOCX converters
 - Fix various minor bugs
 - Code cleanup
 - Update dependencies

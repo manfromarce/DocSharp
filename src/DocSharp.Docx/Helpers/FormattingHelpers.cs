@@ -300,6 +300,9 @@ public static class FormattingHelpers
         // Check default paragraph style for the current document
         MergeAttributes(res, stylesPart.GetDefaultParagraphStyle()?.SpacingBetweenLines, attributes);
 
+        // Check normal paragraph style for the current document
+        MergeAttributes(res, stylesPart.GetNormalParagraphStyle()?.SpacingBetweenLines, attributes);
+
         return res;
     }
 
@@ -350,7 +353,9 @@ public static class FormattingHelpers
 
         // Check default paragraph style for the current document
         MergeAttributes(res, stylesPart.GetDefaultParagraphStyle()?.Indentation, attributes);
-
+        
+        // Check normal paragraph style for the current document
+        MergeAttributes(res, stylesPart.GetNormalParagraphStyle()?.Indentation, attributes);
         return res;
     }
 
@@ -479,6 +484,20 @@ public static class FormattingHelpers
             borders.BetweenBorder ??= defaultBorders.BetweenBorder;
             borders.BarBorder ??= defaultBorders.BarBorder;
         }
+
+        // Check normal paragraph style for the current document
+        defaultBorders = stylesPart.GetNormalParagraphStyle()?.ParagraphBorders;
+        if (defaultBorders != null)
+        {
+            borders ??= new ParagraphBorders();
+            borders.TopBorder ??= defaultBorders.TopBorder;
+            borders.BottomBorder ??= defaultBorders.BottomBorder;
+            borders.LeftBorder ??= defaultBorders.LeftBorder;
+            borders.RightBorder ??= defaultBorders.RightBorder;
+            borders.BetweenBorder ??= defaultBorders.BetweenBorder;
+            borders.BarBorder ??= defaultBorders.BarBorder;
+        }
+
         // Return borders in any case now. If some border types are still null, it means they are not defined at any level and should be treated as such in converters.
         return borders;
     }
@@ -542,7 +561,8 @@ public static class FormattingHelpers
         }
 
         // Check default paragraph style for the current document
-        return stylesPart.GetDefaultParagraphStyle()?.ParagraphBorders?.GetFirstChild<T>();
+        return stylesPart.GetDefaultParagraphStyle()?.ParagraphBorders?.GetFirstChild<T>() ?? 
+               stylesPart.GetNormalParagraphStyle()?.ParagraphBorders?.GetFirstChild<T>();
     }
 
     public static bool BordersAreEqual(ParagraphBorders? borders1, ParagraphBorders? borders2)
@@ -641,7 +661,8 @@ public static class FormattingHelpers
         }
 
         // Check default paragraph style for the current document
-        return stylesPart.GetDefaultParagraphStyle()?.GetFirstChild<T>();
+        return stylesPart.GetDefaultParagraphStyle()?.GetFirstChild<T>() ?? 
+               stylesPart.GetNormalParagraphStyle()?.GetFirstChild<T>();
     }
 
     // Helper function to get run formatting from run/paragraph properties, style or default style.
@@ -732,7 +753,7 @@ public static class FormattingHelpers
         }
 
         // Check default run style for the current document
-        return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>();
+        return stylesPart.GetDefaultRunStyle()?.GetFirstChild<T>() ?? stylesPart.GetNormalRunStyle()?.GetFirstChild<T>();
     }
 
     public static string? GetEffectiveFont(this Run run, Styles? stylesPart = null, MainDocumentPart? mainPart = null)
@@ -751,7 +772,7 @@ public static class FormattingHelpers
             {
                 mainPart ??= run.GetMainDocumentPart();
                 propertyValue = mainPart?.ThemePart?.Theme?.ThemeElements?.FontScheme?.MajorFont?.LatinFont?.Typeface?.Value;
-                if (propertyValue != null)
+                if (!string.IsNullOrEmpty(propertyValue))
                 {
                     return propertyValue;
                 }
@@ -761,7 +782,7 @@ public static class FormattingHelpers
             {
                 mainPart ??= run.GetMainDocumentPart();
                 propertyValue = mainPart?.ThemePart?.Theme?.ThemeElements?.FontScheme?.MinorFont?.LatinFont?.Typeface?.Value;
-                if (propertyValue != null)
+                if (!string.IsNullOrEmpty(propertyValue))
                 {
                     return propertyValue;
                 }
@@ -776,7 +797,7 @@ public static class FormattingHelpers
         if (paragraph != null && conditionalFormattingType != ConditionalFormattingFlags.None)
         {
             propertyValue = GetConditionalFormattingProperty<RunFonts>(stylesPart, paragraph, conditionalFormattingType)?.Ascii;
-            if (propertyValue != null)
+            if (!string.IsNullOrEmpty(propertyValue))
             {
                 return propertyValue;
             }
@@ -787,7 +808,7 @@ public static class FormattingHelpers
         while (runStyle != null)
         {
             propertyValue = runStyle.StyleRunProperties?.RunFonts?.Ascii;
-            if (propertyValue != null)
+            if (!string.IsNullOrEmpty(propertyValue))
             {
                 return propertyValue;
             }
@@ -803,7 +824,7 @@ public static class FormattingHelpers
         {
             // Check paragraph style run properties
             propertyValue = paragraphStyle.StyleRunProperties?.RunFonts?.Ascii;
-            if (propertyValue != null)
+            if (!string.IsNullOrEmpty(propertyValue))
             {
                 return propertyValue;
             }
@@ -816,7 +837,7 @@ public static class FormattingHelpers
                 if (linkedStyle != null)
                 {
                     propertyValue = linkedStyle.StyleRunProperties?.RunFonts?.Ascii;
-                    if (propertyValue != null)
+                    if (!string.IsNullOrEmpty(propertyValue))
                     {
                         return propertyValue;
                     }
@@ -835,7 +856,7 @@ public static class FormattingHelpers
             while (tableStyle != null)
             {
                 propertyValue = tableStyle.StyleRunProperties?.RunFonts?.Ascii;
-                if (propertyValue != null)
+                if (!string.IsNullOrEmpty(propertyValue))
                 {
                     return propertyValue;
                 }
@@ -848,7 +869,12 @@ public static class FormattingHelpers
         // Check default run style for the current document
         var defaultStyle = stylesPart.GetDefaultRunStyle();
         propertyValue = defaultStyle?.RunFonts?.Ascii;
-        if (propertyValue != null) return propertyValue;
+        if (!string.IsNullOrEmpty(propertyValue)) return propertyValue;
+
+        var normalStyle = stylesPart.GetNormalRunStyle();
+        propertyValue = normalStyle?.RunFonts?.Ascii;
+        if (!string.IsNullOrEmpty(propertyValue)) return propertyValue;
+
         if (defaultStyle?.RunFonts?.AsciiTheme != null)
         {
             if (defaultStyle.RunFonts.AsciiTheme.Value == ThemeFontValues.MajorAscii || 
@@ -1001,11 +1027,19 @@ public static class FormattingHelpers
                 tableStyle = stylesPart.GetBaseStyle(tableStyle);
             }
         }
-
         // Check default run style for the current document
         var defaultStyle = stylesPart.GetDefaultRunStyle();
-        return defaultStyle?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
-               defaultStyle?.Shading?.ToHexColor();
+        propertyValue = defaultStyle?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
+                        defaultStyle?.Shading?.ToHexColor();
+        if (!string.IsNullOrWhiteSpace(propertyValue))
+        {
+            return propertyValue;
+        }
+
+        // Check normal style for the current document
+        var normalStyle = stylesPart.GetNormalRunStyle();
+        return normalStyle?.GetFirstChild<W.Highlight>()?.ToHexColor() ?? 
+               normalStyle?.Shading?.ToHexColor();
     }
 
     /// <summary>
@@ -1112,8 +1146,17 @@ public static class FormattingHelpers
 
         // Check default run style for the current document
         var defaultStyle = stylesPart.GetDefaultRunStyle();
-        return defaultStyle?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
-               defaultStyle?.Color?.ToHexColor();
+        propertyValue = defaultStyle?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
+                        defaultStyle?.Color?.ToHexColor();
+        if (!string.IsNullOrWhiteSpace(propertyValue))
+        {
+            return propertyValue;
+        }
+
+        // Check normal style for the current document
+        var normalStyle = stylesPart.GetNormalRunStyle();
+        return normalStyle?.GetFirstChild<W14.FillTextEffect>()?.ToHexColor() ?? 
+               normalStyle?.Color?.ToHexColor();
     }
 
     public static T? GetEffectiveProperty<T>(this RunProperties runPr, Styles? stylesPart = null) where T : OpenXmlElement
