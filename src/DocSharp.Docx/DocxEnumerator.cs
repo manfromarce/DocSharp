@@ -119,11 +119,11 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
             case SdtBlock sdtBlock:
                 ProcessSdtBlock(sdtBlock, sb);
                 break;
-            case ContentPart contentPart:
-                ProcessContentPart(contentPart, sb);
-                break;
             case CustomXmlBlock customXmlBlock:
                 ProcessCustomXmlBlock(customXmlBlock, sb);
+                break;
+            case ContentPart contentPart:
+                ProcessContentPart(contentPart, sb);
                 break;
             case AltChunk altChunk:
                 ProcessAltChunk(altChunk, sb);
@@ -720,7 +720,7 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.customxmlblock?view=openxml-3.0.1
         foreach (var element in customXmlBlock)
         {
-            ProcessBodyElement(customXmlBlock, sb);
+            ProcessBodyElement(element, sb);
         }
         // Specific converters can override this method to process CustomXmlProperties and Element.
     }
@@ -747,11 +747,11 @@ public abstract class DocxEnumerator<TOutput> where TOutput : class
         // Specific converters can override this method to process CustomXmlProperties and Element.
     }
 
-    internal virtual void ProcessCustomXmlCell(CustomXmlCell customXmlRow, TOutput sb)
+    internal virtual void ProcessCustomXmlCell(CustomXmlCell customXmlCell, TOutput sb)
     {
         // Specifies the presence of a custom XML element around a single table cell. 
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.customxmlcell?view=openxml-3.0.1
-        foreach (var element in customXmlRow)
+        foreach (var element in customXmlCell)
         {
             ProcessTableRowElement(element, sb);
         }

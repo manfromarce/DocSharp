@@ -34,6 +34,7 @@ By default only inline images are converted because other layouts do not have a 
 - Fix: base64 images could end up being truncated in DOCX ➡️ HTML converter
 - Preserve picture bullet for lists in DOCX ➡️ HTML converter
 - Fix: runs containing both text and images were rendered in incorrect order in DOCX ➡️ QuestPDF converter
+- Fix issues with Sdt and CustomXml elements in DOCX converters
 - Fix various minor bugs
 - Code cleanup
 - Update dependencies
