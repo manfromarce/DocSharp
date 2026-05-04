@@ -28,7 +28,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             // In this case, just increment the counter in the levels dictionary and don't write the paragraph.
             if (numberingProperties != null)
             {
-                ProcessListItem(numberingProperties, isHidden: true);
+                ProcessListItem(numberingProperties, output, isHidden: true, fontSize: paragraph.GetFirstChild<Run>()?.GetEffectiveProperty<FontSize>());
             }
             return;
         }
@@ -145,11 +145,15 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         if (currentContainer.Count > 0)
             currentContainer.Peek().Content.Add(p);
 
+        // Make paragraph the current run container/paragraph so list picture bullets can add images directly.
+        currentRunContainer.Push(p);
+        currentParagraph.Push(p);
+
         // Add the list item number/bullet as a separate span at the beginning of the paragraph, to preserve original formatting as much as possible. 
         // Note: the list item indentation is already handled by GetEffectiveIndentValues(). 
         if (numberingProperties != null)
         {
-            var run = ProcessListItem(numberingProperties);
+            var run = ProcessListItem(numberingProperties, output, isHidden: false, fontSize: paragraph.GetFirstChild<Run>()?.GetEffectiveProperty<FontSize>());
             if (run != null && ProcessRunProperties(run) is QuestPdfSpan span)
             {
                 span.Text = run.InnerText;
@@ -158,8 +162,6 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         }
 
         // Enumerate and process paragraph elements (runs, hyperlinks, math formulas, ...)
-        currentRunContainer.Push(p);
-        currentParagraph.Push(p);
         base.ProcessParagraph(paragraph, output);
         if (currentRunContainer.Count > 0)
             currentRunContainer.Pop();

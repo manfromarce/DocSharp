@@ -10,7 +10,6 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 using QuestPDF.Fluent;
 using System.Globalization;
-using M = DocumentFormat.OpenXml.Math;
 using System.Diagnostics;
 
 namespace DocSharp.Renderer;
@@ -19,7 +18,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 {
     private readonly Dictionary<int, (int numId, int abstractNumId, int counter)> _listLevelCounters = new();
 
-    internal Run? ProcessListItem(NumberingProperties numPr, bool isHidden = false)
+    internal Run? ProcessListItem(NumberingProperties numPr, QuestPdfModel output, bool isHidden = false, FontSize? fontSize = null)
     {
         var numberingPart = numPr.GetNumberingPart();
         if (numberingPart != null && numPr.NumberingId?.Val != null)
@@ -113,6 +112,73 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
                     if (!isHidden)
                     {
+                        // Check for picture bullets: levels can reference a NumberingPictureBullet by Id
+                        NumberingPictureBullet? pictureBullet = null;
+                        var pictureBulletId = effectiveLevel.LevelPictureBulletId?.Val;
+                        if (pictureBulletId != null)
+                        {
+                            pictureBullet = numberingPart.Elements<NumberingPictureBullet>()
+                                           .FirstOrDefault(pb => pb.NumberingPictureBulletId != null && pb.NumberingPictureBulletId == pictureBulletId);
+                        }
+
+                        // If a picture bullet is present, render it using VML/Drawing handlers
+                        if (pictureBullet != null)
+                        {
+                            int? maxSizeInPoints = null;
+                            string? fs = (runPr?.FontSize ?? fontSize)?.Val;
+                            if (!string.IsNullOrEmpty(fs) && double.TryParse(fs, NumberStyles.Float, CultureInfo.InvariantCulture, out double fontSizeInHalfPts))
+                            {
+                                maxSizeInPoints = (int)Math.Round(fontSizeInHalfPts / 2.0);
+                            }
+
+                            if (pictureBullet.PictureBulletBase != null)
+                            {
+                                var shape = pictureBullet.PictureBulletBase.FindShape();
+                                if (shape != null)
+                                {
+                                    ProcessVml(shape, output, maxSizeInPoints, true);
+                                    // Add level suffix after picture
+                                    ProcessLevelSuffix(effectiveLevel, output);
+                                    return null;
+                                }
+                            }
+                            else if (pictureBullet.Drawing != null)
+                            {
+                                ProcessDrawing(pictureBullet.Drawing, output, maxSizeInPoints, true);
+                                ProcessLevelSuffix(effectiveLevel, output);
+                                return null;
+                            }
+                            else if (pictureBullet.GetFirstChild<AlternateContent>() is AlternateContent alternateContent)
+                            {
+                                if (alternateContent.GetFirstDescendant<PictureBulletBase>() is PictureBulletBase pbb)
+                                {
+                                    var shape = pbb.FindShape();
+                                    if (shape != null)
+                                    {
+                                        ProcessVml(shape, output, maxSizeInPoints, true);
+                                        ProcessLevelSuffix(effectiveLevel, output);
+                                        return null;
+                                    }
+                                }
+                                else if (alternateContent.GetFirstDescendant<Drawing>() is Drawing drawing1)
+                                {
+                                    ProcessDrawing(drawing1, output, maxSizeInPoints, true);
+                                    ProcessLevelSuffix(effectiveLevel, output);
+                                    return null;
+                                }
+                                else if (alternateContent.GetFirstDescendant<Picture>() is Picture pict1)
+                                {
+                                    var shape = pict1.FindShape();
+                                    if (shape != null)
+                                    {
+                                        ProcessVml(shape, output, maxSizeInPoints, true);
+                                        ProcessLevelSuffix(effectiveLevel, output);
+                                        return null;
+                                    }
+                                }
+                            }
+                        }
+
                         string listText;
                         if (listType == NumberFormatValues.Bullet)
                         {
@@ -153,5 +219,18 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             }
         }
         return null;
+    }
+
+    private void ProcessLevelSuffix(Level effectiveLevel, QuestPdfModel output)
+    {
+        var levelSuffix = effectiveLevel.LevelSuffix?.Val;
+        if (levelSuffix == null || levelSuffix.Value == LevelSuffixValues.Tab)
+        {
+            ProcessRun(new Run(new Text("\u2001")), output); // quad space (&#x2001;)
+        }
+        else if (levelSuffix.Value == LevelSuffixValues.Space)
+        {
+            ProcessRun(new Run(new Text("\u00A0")), output); // non-breaking space (&emsp;)
+        }
     }
 }

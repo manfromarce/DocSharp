@@ -26,6 +26,11 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 {
     internal override void ProcessDrawing(Drawing drawing, QuestPdfModel output)
     {
+        ProcessDrawing(drawing, output, null, false);
+    }
+
+    internal void ProcessDrawing(Drawing drawing, QuestPdfModel output, int? maxSizeInPoints, bool isListBullet)
+    {
         if (drawing.Inline != null) // Currently only inline images are supported
         {
             var extent = drawing.Descendants<Wp.Extent>().FirstOrDefault();
@@ -35,6 +40,15 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             {
                 float width = extent.Cx.Value / 12700.0f; // Convert EMUs to points
                 float height = extent.Cy.Value / 12700.0f;
+
+                // Apply max size if requested (keep aspect ratio)
+                if (maxSizeInPoints != null && maxSizeInPoints > 0)
+                {
+                    float max = maxSizeInPoints.Value;
+                    float scale = Math.Min(1f, max / Math.Max(width, height));
+                    width *= scale;
+                    height *= scale;
+                }
 
                 if (graphicData.GetFirstChild<Pic.Picture>() is Pic.Picture pic)
                 {
@@ -97,7 +111,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                             else
                             {
                                 // Add image to the paragraph
-                                currentSpan.Pop(); // the current span is closed to avoid adding subsequent text to it (in incorrect order)
+                                if (currentSpan.Count > 0)
+                                    currentSpan.Pop(); // close the current span to avoid adding subsequent text to it 
+                                                       // (incorrect order if there is an image between two Text elements)
                                 currentParagraph.Peek().Elements.Add(image);
                             }
                         }
@@ -109,13 +125,19 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
 
     internal override void ProcessVml(OpenXmlElement shape, QuestPdfModel output)
     {
+        ProcessVml(shape, output, null, false);
+    }
+
+    internal void ProcessVml(OpenXmlElement shape, QuestPdfModel output, int? maxSizeInPoints, bool isListBullet)
+    {
         if (shape is V.Rectangle rect && 
-            rect.Horizontal != null && rect.Horizontal != null)
+            rect.Horizontal != null && rect.Horizontal != null && 
+            currentContainer.Count > 0)
         {
             // Close and retrieve the current span, run container (paragraph/hyperlink) and paragraph
-            var oldSpan = currentSpan.Pop();
-            var oldRunContainer = currentRunContainer.Pop();
-            var oldParagraph = currentParagraph.Pop();
+            var oldSpan = currentSpan.TryPop();
+            var oldRunContainer = currentRunContainer.TryPop();
+            var oldParagraph = currentParagraph.TryPop();
 
             // Create a new QuestPdfHorizontalLine object and retrieve relevant properties from the VML object
             var horizontalLine = new QuestPdfHorizontalLine();
@@ -142,8 +164,8 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             // Create a new paragraph and span with the same properties to contain further elements. 
 
             // Create a new run container and span
-            var newRunContainer = oldRunContainer.CloneEmpty();
-            var newSpan = oldSpan.CloneEmpty();
+            var newRunContainer = oldRunContainer?.CloneEmpty() ?? new QuestPdfParagraph();
+            var newSpan = oldSpan?.CloneEmpty() ?? new QuestPdfSpan();
 
             // Add span to the paragraph/hyperlink
             newRunContainer.AddSpan(newSpan);              
@@ -157,7 +179,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             }
             else
             {
-                newParagraph = (QuestPdfParagraph)(oldParagraph.CloneEmpty());
+                newParagraph = oldParagraph != null ? (QuestPdfParagraph)(oldParagraph.CloneEmpty()) : new QuestPdfParagraph();
                 if (newRunContainer is QuestPdfHyperlink hyperlink)
                 {
                     newParagraph.Elements.Add(hyperlink);                        
@@ -180,6 +202,15 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 VmlHelpers.GetShapeStylePropertiesInPoints(style, out float width, out float height) != null &&
                 width > 0 && height > 0 && shape.GetRootPart() is OpenXmlPart rootPart)
             {
+                // Apply max size if requested (keep aspect ratio)
+                if (maxSizeInPoints != null && maxSizeInPoints > 0)
+                {
+                    float max = maxSizeInPoints.Value;
+                    float scale = Math.Min(1f, max / Math.Max(width, height));
+                    width *= scale;
+                    height *= scale;
+                }
+
                 if (rootPart?.TryGetPartById(relId, out OpenXmlPart? part) == true && part is ImagePart imagePart)
                 {
                     // Use bytes, as the stream is disposed by the time the QuestPdfModel is rendered.
@@ -198,7 +229,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                         else
                         {
                             // Add image to the paragraph
-                            currentSpan.Pop(); // the current span is closed to avoid adding subsequent text to it (in incorrect order)
+                            if (currentSpan.Count > 0)
+                                currentSpan.Pop(); // close the current span to avoid adding subsequent text to it 
+                                                   // (incorrect order if there is an image between two Text elements)
                             currentParagraph.Peek().Elements.Add(image);                            
                         }
                     }

@@ -28,6 +28,8 @@ internal class QuestPdfSpan : QuestPdfInlineElement
         }
     }
 
+    public QuestPdfSpan() : this(string.Empty) { }
+
     public QuestPdfSpan(string text)
     {
         Text = text;

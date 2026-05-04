@@ -12,6 +12,7 @@ using QuestPDF.Fluent;
 using System.Globalization;
 using M = DocumentFormat.OpenXml.Math;
 using System.Diagnostics;
+using DocSharp.Helpers;
 
 namespace DocSharp.Renderer;
 
@@ -53,12 +54,12 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                     currentSpan.Count > 0) // SymbolChar can only be present inside a Run, just like regular Text elements.
                 {
                     // Close and retrieve the current span
-                    var oldSpan = currentSpan.Pop();
+                    var oldSpan = currentSpan.TryPop();
 
                     // Create a new span for the symbol with the specified font and char.
                     // The SymbolChar in DOCX has the same properties (bold, italic, color, ...) as the parent run, 
                     // except for the font family.
-                    var symbolSpan = oldSpan.CloneEmpty();
+                    var symbolSpan = oldSpan?.CloneEmpty() ?? new QuestPdfSpan();
                     symbolSpan.FontFamily = symbolChar!.Font!.Value!;
                     symbolSpan.Text = ((char)decimalValue).ToString(); // convert decimal char code to string.
 
@@ -70,7 +71,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                     // The new span will be closed by the ProcessRun method.
                     // If there are no remaining elements, the new span will be empty 
                     // and will be ignored during rendering.
-                    var newSpan = oldSpan.CloneEmpty();
+                    var newSpan = oldSpan?.CloneEmpty() ?? new QuestPdfSpan();
                     currentSpan.Push(newSpan);
                 }
             }
@@ -83,7 +84,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             currentSpan.Count > 0) // PageNumber can only be present inside a Run, just like regular Text elements.
         {
             // Close and retrieve the current span
-            var oldSpan = currentSpan.Pop();
+            var oldSpan = currentSpan.TryPop();
 
             // Add a new QuestPdfPageNumber object to the current run container.
             currentRunContainer.Peek().AddPageNumber();
@@ -93,7 +94,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             // The new span will be closed by the ProcessRun method.
             // If there are no remaining elements, the new span will be empty 
             // and will be ignored during rendering.
-            var newSpan = oldSpan.CloneEmpty();
+            var newSpan = oldSpan?.CloneEmpty() ?? new QuestPdfSpan();
             currentSpan.Push(newSpan);
         }
     }

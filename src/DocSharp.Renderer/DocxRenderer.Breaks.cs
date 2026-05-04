@@ -12,6 +12,7 @@ using QuestPDF.Fluent;
 using System.Globalization;
 using M = DocumentFormat.OpenXml.Math;
 using System.Diagnostics;
+using DocSharp.Helpers;
 
 namespace DocSharp.Renderer;
 
@@ -37,25 +38,28 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 // and setting spacing between the two paragraphs to 0.
                                 
                 // Close and retrieve the current span and run container (paragraph/hyperlink)
-                var oldSpan = currentSpan.Pop();
-                var oldRunContainer = currentRunContainer.Pop();
+                var oldSpan = currentSpan.TryPop();
+                var oldRunContainer = currentRunContainer.TryPop();
 
                 // Cache "space after" value of the current paragraph (it will be used later)               
-                var oldParagraph = currentParagraph.Peek();
-                var spaceAFter = oldParagraph.SpaceAfter;
-                
-                // Set space after to 0 for the current paragraph (to simulate line break within the same paragraph)
-                oldParagraph.SpaceAfter = 0;
+                var oldParagraph = currentParagraph.TryPeek();
+                float spaceAfter = 0;
+                if (oldParagraph != null)
+                {
+                    spaceAfter = oldParagraph.SpaceAfter;
+                    // Set space after to 0 for the current paragraph (to simulate line break within the same paragraph)
+                    oldParagraph.SpaceAfter = 0;
+                }
 
                 // Remove the current paragraph from the stack
-                currentParagraph.Pop();
+                currentParagraph.TryPop();
 
                 // Create a new run container and span
-                var newRunContainer = oldRunContainer.CloneEmpty();
-                var newSpan = oldSpan.CloneEmpty();
+                var newRunContainer = oldRunContainer?.CloneEmpty() ?? new QuestPdfParagraph();
+                var newSpan = oldSpan?.CloneEmpty() ?? new QuestPdfSpan();
 
                 // Add span to the paragraph/hyperlink
-                newRunContainer.AddSpan(newSpan);              
+                newRunContainer.AddSpan(newSpan);
 
                 // If the run container is an hyperlink, enclose it into a new paragraph, 
                 // otherwise the run container is the container itself.
@@ -66,7 +70,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 }
                 else
                 {
-                    newParagraph = (QuestPdfParagraph)(oldParagraph.CloneEmpty());
+                    newParagraph = oldParagraph != null ? (QuestPdfParagraph)(oldParagraph.CloneEmpty()) : new QuestPdfParagraph();
                     if (newRunContainer is QuestPdfHyperlink hyperlink)
                     {
                         newParagraph.Elements.Add(hyperlink);                        
@@ -78,7 +82,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 // (to simulate a line break in the same paragraph).
                 newParagraph.FirstLineIndent = 0;
                 newParagraph.SpaceBefore = 0;
-                newParagraph.SpaceAfter = spaceAFter;
+                newParagraph.SpaceAfter = spaceAfter;
             
                 // Set current span, run container and paragraph
                 currentParagraph.Push(newParagraph);
@@ -91,9 +95,9 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             else if (@break.Type.HasValue && @break.Type.Value == BreakValues.Page)
             {
                 // Close and retrieve the current span, run container (paragraph/hyperlink) and paragraph
-                var oldSpan = currentSpan.Pop();
-                var oldRunContainer = currentRunContainer.Pop();
-                var oldParagraph = currentParagraph.Pop();
+                var oldSpan = currentSpan.TryPop();
+                var oldRunContainer = currentRunContainer.TryPop();
+                var oldParagraph = currentParagraph.TryPop();
 
                 // Add a new QuestPdfPageBreak object
                 currentContainer.Peek().Content.Add(new QuestPdfPageBreak());
@@ -102,8 +106,8 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 // Create a new paragraph and span with the same properties to contain further elements. 
 
                 // Create a new run container and span
-                var newRunContainer = oldRunContainer.CloneEmpty();
-                var newSpan = oldSpan.CloneEmpty();
+                var newRunContainer = oldRunContainer?.CloneEmpty() ?? new QuestPdfParagraph();
+                var newSpan = oldSpan?.CloneEmpty() ?? new QuestPdfSpan();
 
                 // Add span to the paragraph/hyperlink
                 newRunContainer.AddSpan(newSpan);              
@@ -117,7 +121,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 }
                 else
                 {
-                    newParagraph = (QuestPdfParagraph)(oldParagraph.CloneEmpty());
+                    newParagraph = oldParagraph != null ? (QuestPdfParagraph)(oldParagraph.CloneEmpty()) : new QuestPdfParagraph();
                     if (newRunContainer is QuestPdfHyperlink hyperlink)
                     {
                         newParagraph.Elements.Add(hyperlink);                        

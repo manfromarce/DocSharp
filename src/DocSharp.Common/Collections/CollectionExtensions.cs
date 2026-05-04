@@ -37,4 +37,18 @@ public static class CollectionExtensions
         Array.Reverse(arr);
         return new Stack<T>(arr);
     }
+
+    public static T? TryPop<T>(this Stack<T> stack)
+    {
+        if (stack.Count > 0)
+            return stack.Pop();
+        return default;
+    }
+
+    public static T? TryPeek<T>(this Stack<T> stack)
+    {
+        if (stack.Count > 0)
+            return stack.Peek();
+        return default;
+    }
 }
