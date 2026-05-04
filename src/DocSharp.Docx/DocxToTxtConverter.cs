@@ -139,18 +139,18 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
         sb.EnsureEmptyLine(); // Add a blank line before the table
 
-        var rows = table.Elements<TableRow>();
-        int maxCellsPerRow = rows.Max(c => c.Elements<TableCell>().Count());
+        var rows = table.GetRows().ToList();
+        int maxCellsPerRow = rows.Max(c => c.GetCells().Count());
 
         // Calculate the maximum width of each column
         var columnWidths = Enumerable.Range(0, maxCellsPerRow)
                                      .Select(col => GetColumnWidth(rows, col)).ToList();
 
-        for (int r = 0; r < rows.Count(); r++)
+        for (int r = 0; r < rows.Count; r++)
         {
-            var row = rows.ElementAt(r);
+            var row = rows[r];
             int rowHeight = GetRowHeight(row);
-            var cells = row.Elements<TableCell>();
+            var cells = row.GetCells();
             int currentColumnIndex = 0;
 
             // Add border above cell (if not in a vertically merged cell)
@@ -209,7 +209,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
 
     private int GetRowHeight(TableRow row)
     {
-        int height = row.Elements<TableCell>().Max(cell =>
+        int height = row.GetCells().Max(cell =>
         {
             string text = GetCellText(cell);
             return text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries).Length;
@@ -222,7 +222,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         return rows.Max(row =>
         {
             int currentColumnIndex = 0;
-            foreach (var cell in row.Elements<TableCell>())
+            foreach (var cell in row.GetCells())
             {
                 int gridSpan = GetGridSpan(cell);
                 if (currentColumnIndex == columnIndex)

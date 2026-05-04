@@ -549,8 +549,9 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
     internal override void ProcessTable(Table table, MarkdownStringWriter sb)
     {
-        // Calculate maximum number of cells per row.
-        int cellsCount = table.Elements<TableRow>().Max(x => x.Elements<TableCell>().Count());
+        // Calculate maximum number of cells per row (including rows/cells wrapped in Sdt/CustomXml elements).
+        var rows = table.GetRows().ToList();
+        int cellsCount = rows.Max(x => x.GetCells().Count());
         if (cellsCount == 0)
         {
             return;
@@ -558,19 +559,13 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
 
         EnsureEmptyLine(sb);
 
-        int rowIndex = 0;
-        foreach (var element in table.Elements())
+        for (int i = 0; i < rows.Count; i++)
         {
-            switch (element)
+            var row = rows[i];
+            ProcessRow(row, sb, cellsCount);
+            if (i == 0)
             {
-                case TableRow row:
-                    ProcessRow(row, sb, cellsCount);
-                    if (rowIndex == 0)
-                    {
-                        AddTableHeaderSeparator(cellsCount, sb);
-                    }
-                    ++rowIndex;
-                    break;
+                AddTableHeaderSeparator(cellsCount, sb);
             }
         }
         // Add a blank line after the table
@@ -590,24 +585,19 @@ public class DocxToMarkdownConverter : DocxToStringWriterBase<MarkdownStringWrit
     {
         sb.Write("| ");
         int currentCellCount = 0;
-        foreach (var element in tableRow.Elements())
+        foreach (var cell in tableRow.GetCells())
         {
-            switch (element)
+            ProcessCell(cell, sb);
+            ++currentCellCount;
+            if (currentCellCount < maxCellsCount &&
+                cell.TableCellProperties?.GridSpan?.Val != null)
             {
-                case TableCell cell:
-                    ProcessCell(cell, sb);
+                // Markdown does not support merged cells, add another empty cell for consistency.
+                for (int i = 1; i < cell.TableCellProperties.GridSpan.Val.Value; i++)
+                {
+                    sb.Write(" | ");
                     ++currentCellCount;
-                    if (currentCellCount < maxCellsCount &&
-                        cell.TableCellProperties?.GridSpan?.Val != null)
-                    {
-                        // Markdown does not support merged cells, add another empty cell for consistency.
-                        for (int i = 1; i < cell.TableCellProperties.GridSpan.Val.Value; i++)
-                        {
-                            sb.Write(" | ");
-                            ++currentCellCount;
-                        }
-                    }
-                    break;
+                }
             }
         }
 

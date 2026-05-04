@@ -9,6 +9,36 @@ namespace DocSharp.Docx;
 
 public static class TableHelpers
 {
+    // Returns table rows including those wrapped inside CustomXmlRow or SdtRow
+    public static IEnumerable<TableRow> GetRows(this Table table)
+    {
+        return table.Elements().SelectMany(e =>
+        {
+            if (e is TableRow tr)
+                return new[] { tr };
+            else if (e is CustomXmlRow customXmlRow)
+                return customXmlRow.Elements<TableRow>();
+            else if (e is SdtRow sdtRow)
+                return sdtRow.SdtContentRow?.Elements<TableRow>() ?? Enumerable.Empty<TableRow>();
+            return Enumerable.Empty<TableRow>();
+        });
+    }
+
+    // Returns table cells including those wrapped inside CustomXmlCell or SdtCell
+    public static IEnumerable<TableCell> GetCells(this TableRow row)
+    {
+        return row.Elements().SelectMany(e =>
+        {
+            if (e is TableCell cell)
+                return new[] { cell };
+            else if (e is CustomXmlCell customXmlCell)
+                return customXmlCell.Elements<TableCell>();
+            else if (e is SdtCell sdtCell)
+                return sdtCell.SdtContentCell?.Elements<TableCell>() ?? Enumerable.Empty<TableCell>();
+            return Enumerable.Empty<TableCell>();
+        });
+    }
+
     public static bool IsInMergedRangeNotFirst(this TableCell cell)
     {
         return (cell.TableCellProperties?.VerticalMerge != null
@@ -25,7 +55,7 @@ public static class TableHelpers
         if (cell.GetFirstAncestor<TableRow>() is TableRow row && row.GetFirstAncestor<Table>() is Table table)
         {
             int rowNumber = 1;
-            foreach (var tr in table.Elements<TableRow>())
+            foreach (var tr in table.GetRows())
             {
                 if (tr == row)
                     return rowNumber;
@@ -41,7 +71,7 @@ public static class TableHelpers
         if (cell.GetFirstAncestor<TableRow>() is TableRow row)
         {
             int columnNumber = 1;
-            foreach (var tc in row.Elements<TableCell>())
+            foreach (var tc in row.GetCells())
             {
                 if (tc == cell)
                     return columnNumber;
@@ -69,10 +99,10 @@ public static class TableHelpers
     public static int GetColumnCount(this Table table)
     {
         int maxCellsPerRow = 0;
-        foreach (var row in table.Elements<TableRow>())
+        foreach (var row in table.GetRows())
         {
             int cellsPerRow = 0;
-            foreach (var cell in row.Elements<TableCell>())
+            foreach (var cell in row.GetCells())
             {
                 cellsPerRow += cell.GetColumnSpan();
             }
@@ -95,10 +125,10 @@ public static class TableHelpers
     public static List<float> GetColumnsWidth(this Table table, Styles? styles = null)
     {
         var columnWidths = new List<float>();
-        foreach (var row in table.Elements<TableRow>())
+        foreach (var row in table.GetRows())
         {
             int cellIndex = 0;
-            foreach (var cell in row.Elements<TableCell>())
+            foreach (var cell in row.GetCells())
             {
                 var gridSpan = cell.GetGridSpan();
                 float width = cell.GetCellWidthInPoints(styles) / gridSpan;
@@ -182,18 +212,18 @@ public static class TableHelpers
         if (cell.GetFirstAncestor<TableRow>() is TableRow currentRow && currentRow.GetFirstAncestor<Table>() is Table table)
         {
             int rowIndex = 0;
-            foreach (var tr in table.Elements<TableRow>())
+            foreach (var tr in table.GetRows())
             {
                 if (tr == currentRow)
                     break;
 
                 ++rowIndex;
             }
-            var nextRow = table.Elements<TableRow>().ElementAtOrDefault(rowIndex + 1);
+            var nextRow = table.GetRows().ElementAtOrDefault(rowIndex + 1);
             if (nextRow != null)
             {
                 int cellIndex = 0;
-                foreach (var tc in currentRow.Elements<TableCell>())
+                foreach (var tc in currentRow.GetCells())
                 {
                     if (tc == cell)
                         break;
@@ -202,7 +232,7 @@ public static class TableHelpers
                 }
 
                 int nextRowCellIndex = 0;
-                foreach (var nextRowCell in nextRow.Elements<TableCell>())
+                foreach (var nextRowCell in nextRow.GetCells())
                 {
                     if (nextRowCellIndex == cellIndex)
                         return nextRowCell;

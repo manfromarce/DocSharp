@@ -15,9 +15,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
     internal override void ProcessTable(Table table, HtmlTextWriter sb)
     {
-        var rows = table.Elements<TableRow>();
+        var rows = table.GetRows().ToList();
         int rowNumber = 1;
-        int rowCount = rows.Count();
+        int rowCount = rows.Count;
         sb.WriteStartElement("table");
 
         var tableStyles = new List<string>();
@@ -198,9 +198,9 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             sb.WriteAttributeString("style", string.Join(" ", rowStyles));
         }
 
-        var cells = row.Elements<TableCell>();
+        var cells = row.GetCells().ToList();
         int columnNumber = 1;
-        int columnCount = cells.Count();
+        int columnCount = cells.Count;
         foreach (var cell in cells)
         {
             var cellStyles = new List<string>();
@@ -482,6 +482,16 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
     {
         if (width?.Width != null && decimal.TryParse(width.Width, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal w))
         {
+            if (w < 0) return; // Unexpected
+
+            if (width.Type != null && 
+                width.Type.Value == TableWidthUnitValues.Auto &&
+                w == 0)
+            {
+                // Leave auto
+                return;
+            }
+
             if (width.Type == null || 
                 width.Type.Value == TableWidthUnitValues.Auto || 
                 width.Type.Value == TableWidthUnitValues.Dxa) // Twips
