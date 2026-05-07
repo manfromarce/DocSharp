@@ -8,6 +8,13 @@ namespace DocSharp.Docx;
 
 public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 {
+    // State used to group consecutive paragraphs with identical outer borders
+    private ParagraphBorders? _openContainerBorders;
+    private bool _isContainerOpen;
+    private decimal _openContainerBottomMargin = 0m;
+    private string? _openContainerIndentKey;
+    private int _openContainerParagraphCount = 0;
+
     internal override void ProcessParagraph(Paragraph paragraph, HtmlTextWriter sb)
     {
         string tag = "p"; // Assume this is a regular paragraph by default
@@ -64,6 +71,30 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         var alignment = paragraph.GetEffectiveProperty<Justification>(Styles)?.Val?.Value;
         var indent = paragraph.GetEffectiveIndent(Styles);
         var spacing = paragraph.GetEffectiveSpacing(Styles);
+
+        // Precompute paragraph before/after spacing so we can move them to the
+        // container when appropriate (space should be outside the borders).
+        decimal beforeValue = 0m;
+        decimal afterValue = 0m;
+        if (spacing != null)
+        {
+            bool contextualSpacing = paragraph.GetEffectiveProperty<ContextualSpacing>(Styles).ToBool();
+            if (paragraph.IsFirstOfStyle() || !contextualSpacing)
+            {
+                if (spacing.Before?.Value != null && decimal.TryParse(spacing.Before.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal beforeSpacing))
+                {
+                    beforeValue = beforeSpacing / 20m; // Convert twips to points
+                }
+            }
+            if (paragraph.IsLastOfStyle() || !contextualSpacing)
+            {
+                if (spacing.After?.Value != null && decimal.TryParse(spacing.After.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal afterSpacing))
+                {
+                    afterValue = afterSpacing / 20m; // Convert twips to points
+                }
+            }
+        }
+        
         var verticalAlignment = paragraph.GetEffectiveProperty<TextAlignment>(Styles);
         var keepLines = paragraph.GetEffectiveProperty<KeepLines>(Styles);
         var keepNext = paragraph.GetEffectiveProperty<KeepNext>(Styles);
@@ -107,43 +138,98 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
             styles.Add("vertical-align: top;");
         }
 
-        // Group paragraph borders similarly to the Markdown converter: Word groups consecutive
-        // paragraphs with the same style and identical borders and does not draw internal borders.
+        // Group paragraph borders by wrapping consecutive paragraphs that share the same
+        // left/right/top/bottom borders in an external container (div). Internal horizontal
+        // borders (BetweenBorder) are still applied per-paragraph using the existing logic.
         var borders = paragraph.GetEffectiveBorders(Styles);
         var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
         var nextBorders = paragraph.GetNextParagraphBorders(Styles);
+        var nextParagraph = paragraph.NextSibling() as Paragraph;
+        var nextIndentKey = GetIndentKey(nextParagraph?.GetEffectiveIndent(Styles));
 
-        if (borders != null)
+        bool hasOuterBorders = borders != null && (borders.LeftBorder != null || borders.RightBorder != null || borders.TopBorder != null || borders.BottomBorder != null);
+
+        // If there is an open container but the current paragraph's outer borders differ
+        // or the indentation changed, close the container before rendering this paragraph.
+        var currentIndentKey = GetIndentKey(indent);
+        if (_isContainerOpen && (!FormattingHelpers.AreBordersEqual(borders, _openContainerBorders) || _openContainerIndentKey != currentIndentKey))
         {
-            bool hasLeft = borders.LeftBorder != null;
-            bool hasRight = borders.RightBorder != null;
-            bool hasBar = borders.BarBorder != null;
-            bool hasTop = borders.TopBorder != null;
-            bool hasBottom = borders.BottomBorder != null;
-            bool hasBetween = borders.BetweenBorder != null;
-
-            // Apply top border only if it's visible (first of style or differs from previous paragraph)
-            if (hasTop && (paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)))
+            sb.WriteEndElement("div");
+            // emit spacer for bottom margin outside the borders
+            if (_openContainerBottomMargin > 0m)
             {
-                ProcessBorder(borders.TopBorder, MapParagraphBorderAttribute(borders.TopBorder!), ref styles, MapBorderSpacing.Padding);
+                WriteSpacer(sb);
             }
+            _isContainerOpen = false;
+            _openContainerBorders = null;
+            _openContainerBottomMargin = 0m;
+            _openContainerIndentKey = null;
+            _openContainerParagraphCount = 0;
+        }
 
-            // Always apply vertical/bar borders when present
-            if (hasLeft)
-                ProcessBorder(borders.LeftBorder, MapParagraphBorderAttribute(borders.LeftBorder!), ref styles, MapBorderSpacing.Padding);
-            if (hasRight)
-                ProcessBorder(borders.RightBorder, MapParagraphBorderAttribute(borders.RightBorder!), ref styles, MapBorderSpacing.Padding);
-            if (hasBar)
-                ProcessBorder(borders.BarBorder, MapParagraphBorderAttribute(borders.BarBorder!), ref styles, MapBorderSpacing.Padding);
-
-            // Apply bottom/between border only if visible (last of style or differs from next paragraph)
-            if (hasBottom && (paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)))
+        // If we need a container for this paragraph and none is open, open one and
+        // apply the left/right/top/bottom borders on the container element.
+        if (!_isContainerOpen && hasOuterBorders)
+        {
+            var containerStyles = new List<string>();
+            // Move left/right indentation and the top spacing into the container so
+            // the space appears outside the borders (between box and other content).
+            if (indent != null)
             {
-                ProcessBorder(borders.BottomBorder, MapParagraphBorderAttribute(borders.BottomBorder!), ref styles, MapBorderSpacing.Padding);
+                if (indent.LeftChars != null)
+                    containerStyles.Add($"margin-left: {indent.LeftChars.Value.ToStringInvariant()}ch;");
+                else if (indent.Left.ToLong() is long left)
+                    containerStyles.Add($"margin-left: {(left / 20m).ToStringInvariant(2)}pt;");
+                else 
+                    containerStyles.Add($"margin-left: 0pt;");
+
+                if (indent.RightChars != null)
+                    containerStyles.Add($"margin-right: {indent.RightChars.Value.ToStringInvariant()}ch;");
+                else if (indent.Right.ToLong() is long right)
+                    containerStyles.Add($"margin-right: {(right / 20m).ToStringInvariant(2)}pt;");
+                else 
+                    containerStyles.Add($"margin-right: 0pt;");
             }
-            else if (hasBetween && !paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders))
+            else 
             {
-                ProcessBorder(borders.BetweenBorder, MapParagraphBorderAttribute(borders.BetweenBorder!), ref styles, MapBorderSpacing.Padding);
+                containerStyles.Add($"margin-left: 0pt;");
+                containerStyles.Add($"margin-right: 0pt;");
+            }
+            containerStyles.Add($"margin-top: {beforeValue.ToStringInvariant(2)}pt;");
+            containerStyles.Add($"margin-bottom: 0pt;"); // applied as separate spacer element when spacing.After for the last paragraph is detected
+
+            if (borders!.LeftBorder != null)
+                ProcessBorder(borders.LeftBorder, MapParagraphBorderAttribute(borders.LeftBorder!), ref containerStyles, MapBorderSpacing.Padding);
+            if (borders.RightBorder != null)
+                ProcessBorder(borders.RightBorder, MapParagraphBorderAttribute(borders.RightBorder!), ref containerStyles, MapBorderSpacing.Padding);
+            if (borders.TopBorder != null)
+                ProcessBorder(borders.TopBorder, MapParagraphBorderAttribute(borders.TopBorder!), ref containerStyles, MapBorderSpacing.Padding);
+            if (borders.BottomBorder != null)
+                ProcessBorder(borders.BottomBorder, MapParagraphBorderAttribute(borders.BottomBorder!), ref containerStyles, MapBorderSpacing.Padding);
+
+            sb.WriteStartElement("div");
+            if (containerStyles.Count > 0)
+                sb.WriteAttributeString("style", string.Join(" ", containerStyles));
+
+            _isContainerOpen = true;
+            _openContainerBorders = borders;
+            _openContainerIndentKey = currentIndentKey;
+            // initialize bottom margin for this container with the first paragraph's after spacing
+            _openContainerBottomMargin = afterValue;
+            _openContainerParagraphCount = 0;
+        }
+        else if (_isContainerOpen && FormattingHelpers.AreBordersEqual(borders, _openContainerBorders) && _openContainerIndentKey == currentIndentKey)
+        {
+            // update bottom margin to the last paragraph's after spacing
+            _openContainerBottomMargin = afterValue;
+        }
+
+        // Keep the existing logic for internal horizontal borders (BetweenBorder) per-paragraph
+        if (previousBorders != null)
+        {
+            if (previousBorders.BetweenBorder != null && FormattingHelpers.AreBordersEqual(borders, previousBorders))
+            {
+                ProcessBorder(previousBorders.BetweenBorder, MapParagraphBorderAttribute(previousBorders.BetweenBorder!), ref styles, MapBorderSpacing.Padding);
             }
         }
 
@@ -174,34 +260,31 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
                 }
             }
  
-            decimal beforeValue = 0;
-            decimal afterValue = 0;
-            bool contextualSpacing = paragraph.GetEffectiveProperty<ContextualSpacing>(Styles).ToBool();
-            // Check if the previous and next paragraphs have the same style, 
-            // in that case do not apply spacing if ContextualSpacing is on, as Word will not render it in that case.
-            if (paragraph.IsFirstOfStyle() || !contextualSpacing)
-            {
-                if (spacing.Before?.Value != null && decimal.TryParse(spacing.Before.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal beforeSpacing))
-                {
-                    beforeValue = beforeSpacing / 20m; // Convert twips to points
-                }
-            }
-            if (paragraph.IsLastOfStyle() || !contextualSpacing)
-            {
-                if (spacing.After?.Value != null && decimal.TryParse(spacing.After.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal afterSpacing))
-                {
-                    afterValue = afterSpacing / 20m; // Convert twips to points
-                }
-            }
-            styles.Add($"margin-top: {beforeValue.ToStringInvariant(2)}pt;");
-            styles.Add($"margin-bottom: {afterValue.ToStringInvariant(2)}pt;");
-
             // TODO: BeforeLines, AfterLines, BeforeAutoSpacing, AfterAutoSpacing
         }
 
+        // Determine whether this paragraph is first/last inside the currently open container.
+        bool isFirstInContainer = _isContainerOpen && _openContainerParagraphCount == 0;
+        bool isLastInContainer = _isContainerOpen && (nextBorders == null || !FormattingHelpers.AreBordersEqual(nextBorders, _openContainerBorders) || _openContainerIndentKey != nextIndentKey);
+
+        // Add top/bottom margin to paragraph. 
+        // Two different approaches were tried for better fidelity with DOCX; 
+        // overall the first one seems better.
+        // 
+        // Approach 1: inside a container we omit the top margin for 
+        // the first paragraph and the bottom margin for the last paragraph, 
+        // but keep margins between internal paragraphs to preserve spacing.
+        styles.Add($"margin-top: {(isFirstInContainer ? 0 : beforeValue).ToStringInvariant(2)}pt;");
+        styles.Add($"margin-bottom: {(isLastInContainer ? 0 : afterValue).ToStringInvariant(2)}pt;");
+
+        // Approach 2: bottom margin is also applied normally 
+        // (only the top margin is before the border box, while the bottom margin is "inside")
+        // styles.Add($"margin-top: {(isFirstInContainer ? 0 : beforeValue).ToStringInvariant(2)}pt;");
+        // styles.Add($"margin-bottom: {afterValue.ToStringInvariant(2)}pt;");
+
         if (indent != null)
         {
-            ProcessIndentation(indent, ref styles);
+            ProcessIndentation(indent, ref styles, _isContainerOpen);
         }
 
         if (widowControl.ToBool() || keepLines.ToBool())
@@ -254,30 +337,62 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
 
         // End of the element
         sb.WriteEndElement(tag);
+
+        // If a border-container is open and the next paragraph doesn't share the same
+        // outer borders or indent, close the container now (this also handles end-of-document).
+        if (_isContainerOpen && (nextBorders == null || !FormattingHelpers.AreBordersEqual(nextBorders, _openContainerBorders) || _openContainerIndentKey != nextIndentKey))
+        {
+            sb.WriteEndElement("div");
+            if (_openContainerBottomMargin > 0m)
+            {
+                WriteSpacer(sb);
+            }
+            _isContainerOpen = false;
+            _openContainerBorders = null;
+            _openContainerBottomMargin = 0m;
+            _openContainerIndentKey = null;
+            _openContainerParagraphCount = 0;
+        }
+
+        // increment container paragraph count after writing the paragraph
+        if (_isContainerOpen)
+        {
+            _openContainerParagraphCount++;
+        }
     }
 
-    internal void ProcessIndentation(Indentation indent, ref List<string> styles)
+    private void WriteSpacer(HtmlTextWriter sb)
     {
-        if (indent.LeftChars != null)
-        {
-            styles.Add($"margin-left: {indent.LeftChars.Value.ToStringInvariant()}ch;");
-        }
-        else if (indent.Left.ToLong() is long left)
-        {
-            // Convert twips to points
-            styles.Add($"margin-left: {(left / 20m).ToStringInvariant(2)}pt;");
-        }
+        sb.WriteStartElement("div");
+        sb.WriteAttributeString("style", $"margin-bottom: {_openContainerBottomMargin.ToStringInvariant(2)}pt;");
+        sb.WriteEndElement("div");
+    }
 
-        if (indent.RightChars != null)
+    internal void ProcessIndentation(Indentation indent, ref List<string> styles, bool isContainerOpen)
+    {
+        // Add left/right margin to paragraph only when not inside a border container
+        if (!isContainerOpen)
         {
-            styles.Add($"margin-right: {indent.RightChars.Value.ToStringInvariant()}ch;");
-        }
-        else if (indent.Right.ToLong() is long right)
-        {
-            styles.Add($"margin-right: {(right / 20m).ToStringInvariant(2)}pt;");
-        }
+            if (indent.LeftChars != null)
+            {
+                styles.Add($"margin-left: {indent.LeftChars.Value.ToStringInvariant()}ch;");
+            }
+            else if (indent.Left.ToLong() is long left)
+            {
+                // Convert twips to points
+                styles.Add($"margin-left: {(left / 20m).ToStringInvariant(2)}pt;");
+            }
 
-        // TODO: start / end indent
+            if (indent.RightChars != null)
+            {
+                styles.Add($"margin-right: {indent.RightChars.Value.ToStringInvariant()}ch;");
+            }
+            else if (indent.Right.ToLong() is long right)
+            {
+                styles.Add($"margin-right: {(right / 20m).ToStringInvariant(2)}pt;");
+            }
+            // TODO: start / end indent
+        }
 
         if (indent.FirstLineChars != null)
         {
@@ -295,5 +410,13 @@ public partial class DocxToHtmlConverter : DocxToXmlWriterBase<HtmlTextWriter>
         {
             styles.Add($"text-indent: -{(hanging / 20m).ToStringInvariant()}pt;");
         }
+    }
+
+    private static string GetIndentKey(Indentation? indent)
+    {
+        if (indent == null) return "";
+        var leftKey = indent.LeftChars != null ? $"LC:{indent.LeftChars.Value}" : (indent.Left.ToLong() is long l ? $"L:{l}" : "L:0");
+        var rightKey = indent.RightChars != null ? $"RC:{indent.RightChars.Value}" : (indent.Right.ToLong() is long r ? $"R:{r}" : "R:0");
+        return leftKey + "|" + rightKey;
     }
 }

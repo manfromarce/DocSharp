@@ -316,7 +316,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             borders = paragraph.GetEffectiveBorders(Styles);
             var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
 
-            if ((paragraph.IsFirstOfStyle() || !FormattingHelpers.BordersAreEqual(borders, previousBorders)) &&
+            if ((paragraph.IsFirstOfStyle() || !FormattingHelpers.AreBordersEqual(borders, previousBorders)) &&
                 borders != null && 
                 borders.TopBorder != null && 
                 borders.TopBorder.Val != null && borders.TopBorder.Val.Value != BorderValues.Nil && borders.TopBorder.Val.Value != BorderValues.None && 
@@ -338,11 +338,11 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
         {
             var nextBorders = paragraph.GetNextParagraphBorders(Styles);            
             if (borders != null && 
-                (((paragraph.IsLastOfStyle() || !FormattingHelpers.BordersAreEqual(borders, nextBorders)) &&
+                (((paragraph.IsLastOfStyle() || !FormattingHelpers.AreBordersEqual(borders, nextBorders)) &&
                 borders.BottomBorder != null && 
                 borders.BottomBorder.Val != null && borders.BottomBorder.Val.Value != BorderValues.Nil && borders.BottomBorder.Val.Value != BorderValues.None && 
                 borders.BottomBorder.Size != null && borders.BottomBorder.Size > 0) || 
-                ((!paragraph.IsLastOfStyle() && FormattingHelpers.BordersAreEqual(borders, nextBorders)) &&
+                ((!paragraph.IsLastOfStyle() && FormattingHelpers.AreBordersEqual(borders, nextBorders)) &&
                 borders.BetweenBorder != null && 
                 borders.BetweenBorder.Val != null && borders.BetweenBorder.Val.Value != BorderValues.Nil && borders.BetweenBorder.Val.Value != BorderValues.None && 
                 borders.BetweenBorder.Size != null && borders.BetweenBorder.Size > 0)))

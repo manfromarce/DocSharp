@@ -24,7 +24,7 @@ By default only inline images are converted because other layouts do not have a 
 - Fix: "pseudo inline" shapes created an incorrect layout in DOCX ➡️ RTF converter
 - Fix: SchemeColor were incorrectly mapped in DOCX ➡️ RTF converter
 - Fix: the paragraph style is now considered for ContextualSpacing in DOCX ➡️ HTML converter
-- Fix: the DOCX paragraph grouping logic for outer/inner borders is now preserved in DOCX ➡️ HTML/PDF converters
+- Fix: the DOCX paragraph grouping logic for outer/inner borders is now preserved in DOCX ➡️ HTML/PDF converters, and paragraph borders have higher visual fidelity to the original document overall
 - Fix: in some cases the font family was not preserved in DOCX converters
 - Fix: the rotation angle of shapes was not accurate in DOCX ➡️ RTF converter
 - Fix: some gradient colors were not parsed properly in DOCX ➡️ RTF converter

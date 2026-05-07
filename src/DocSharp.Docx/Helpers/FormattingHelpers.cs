@@ -579,20 +579,18 @@ public static class FormattingHelpers
         return stylesPart.GetDefaultParagraphStyle()?.ParagraphBorders?.GetFirstChild<T>();
     }
 
-    public static bool BordersAreEqual(ParagraphBorders? borders1, ParagraphBorders? borders2)
+    public static bool AreBordersEqual(ParagraphBorders? borders1, ParagraphBorders? borders2)
     {
         if (borders1 == null && borders2 == null) return true;
         if (borders1 == null || borders2 == null) return false;
 
-        return BordersAreEqual(borders1.LeftBorder, borders2.LeftBorder) &&
-               BordersAreEqual(borders1.RightBorder, borders2.RightBorder) &&
-               BordersAreEqual(borders1.TopBorder, borders2.TopBorder) &&
-               BordersAreEqual(borders1.BottomBorder, borders2.BottomBorder) &&
-               BordersAreEqual(borders1.BetweenBorder, borders2.BetweenBorder) &&
-               BordersAreEqual(borders1.BarBorder, borders2.BarBorder);
+        return AreBordersEqual(borders1.LeftBorder, borders2.LeftBorder) &&
+               AreBordersEqual(borders1.RightBorder, borders2.RightBorder) &&
+               AreBordersEqual(borders1.TopBorder, borders2.TopBorder) &&
+               AreBordersEqual(borders1.BottomBorder, borders2.BottomBorder);
     }
 
-    public static bool BordersAreEqual(BorderType? border1, BorderType? border2)
+    public static bool AreBordersEqual(BorderType? border1, BorderType? border2)
     {
         if (border1 == null && border2 == null) return true;
         if (border1 == null || border2 == null) return false;
