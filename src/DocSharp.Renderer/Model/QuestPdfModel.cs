@@ -91,6 +91,12 @@ public class QuestPdfModel
                             if (item != null)
                                 AddParagraphToColumn(item, paragraph);
                         }
+                        else if (element is QuestPdfParagraphGroup group)
+                        {
+                            var item = currentColumn?.Item();
+                            if (item != null)
+                                AddParagraphGroupToColumn(item, group);
+                        }
                         else if (element is QuestPdfTable table)
                         {
                             var item = currentColumn?.Item();
@@ -133,6 +139,12 @@ public class QuestPdfModel
                             item = item.ShowIf((context) => context.PageNumber == footnote.PageNumber);
                             AddParagraphToColumn(item, paragraph);
                         }
+                        else if (element is QuestPdfParagraphGroup group)
+                        {
+                            var item = column.Item();
+                            item = item.ShowIf((context) => context.PageNumber == footnote.PageNumber);
+                            AddParagraphGroupToColumn(item, group);
+                        }
                         else if (element is QuestPdfTable table)
                         {
                             var item = column.Item();
@@ -157,6 +169,11 @@ public class QuestPdfModel
             {
                 var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);              
                 AddParagraphToColumn(item, paragraph);
+            }
+            else if (element is QuestPdfParagraphGroup group)
+            {
+                var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);              
+                AddParagraphGroupToColumn(item, group);
             }
             else if (element is QuestPdfTable table)
             {
@@ -186,6 +203,11 @@ public class QuestPdfModel
                     {
                         var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);
                         AddParagraphToColumn(item, paragraph);
+                    }
+                    else if (element is QuestPdfParagraphGroup group)
+                    {
+                        var item = AddShowIfToItem(column.Item(), containerType, differentHeaderFooterForFirstPage, differentHeaderFooterForOddAndEvenPages);              
+                        AddParagraphGroupToColumn(item, group);
                     }
                     else if (element is QuestPdfTable table)
                     {
@@ -379,6 +401,135 @@ public class QuestPdfModel
                     }
                 }
             });
+    }
+
+    internal void AddParagraphGroupToColumn(IContainer item, QuestPdfParagraphGroup group)
+    {
+        // Apply outer spacing and borders to the container representing the group
+        item = item.PaddingTop(group.SpaceBefore, Unit.Point)
+               .PaddingBottom(group.SpaceAfter, Unit.Point)
+               .BorderLeft(group.LeftBorderThickness, Unit.Point)
+               .BorderTop(group.TopBorderThickness, Unit.Point)
+               .BorderRight(group.RightBorderThickness, Unit.Point)
+               .BorderBottom(group.BottomBorderThickness, Unit.Point)
+               .BorderColor(group.BordersColor);
+
+        // Apply container-level left/right padding (indent)
+        if (group.LeftIndent > 0)
+            item = item.PaddingLeft(group.LeftIndent, Unit.Point);
+        else
+            item = item.PaddingLeft(0);
+        if (group.RightIndent > 0)
+            item = item.PaddingRight(group.RightIndent, Unit.Point);
+        else
+            item = item.PaddingRight(0);
+
+        // Render paragraphs inside the container preserving inter-paragraph spacing
+        item.Column(column =>
+        {
+            for (int i = 0; i < group.Paragraphs.Count; i++)
+            {
+                var paragraph = group.Paragraphs[i];
+                var it = column.Item();
+
+                // Do not apply borders per-paragraph: container has borders
+                it = it.Background(paragraph.BackgroundColor ?? Colors.Transparent);
+
+                if (paragraph.KeepTogether)
+                {
+                    it = it.PreventPageBreak();
+                }
+
+                // Apply paragraph internal spacing
+                it = it.PaddingTop(paragraph.SpaceBefore, Unit.Point)
+                       .PaddingBottom(paragraph.SpaceAfter, Unit.Point);
+
+                // Indentation inside container handled by container padding; only apply first-line indent on paragraph
+                it = it.PaddingLeft(0).PaddingRight(0);
+
+                if (paragraph.IsEmpty)
+                    it.Text(t => t.Span(" "));
+                else
+                    it.Text(text =>
+                    {
+                        if (paragraph.FirstLineIndent > 0)
+                            text.ParagraphFirstLineIndentation(paragraph.FirstLineIndent, Unit.Point);
+
+                        switch (paragraph.Alignment)
+                        {
+                            case ParagraphAlignment.Left: text.AlignLeft(); break;
+                            case ParagraphAlignment.Center: text.AlignCenter(); break;
+                            case ParagraphAlignment.Right: text.AlignRight(); break;
+                            case ParagraphAlignment.Start: text.AlignStart(); break;
+                            case ParagraphAlignment.End: text.AlignEnd(); break;
+                            case ParagraphAlignment.Justify: text.Justify(); break;
+                        }
+
+                        foreach (var inline in paragraph.Elements)
+                        {
+                            if (inline is QuestPdfSpan span && !string.IsNullOrEmpty(span.Text))
+                            {
+                                text.Span(span.IsAllCaps ? span.Text.ToUpper() : span.Text).Style(span.Style).LineHeight(paragraph.LineHeight);
+                            }
+                            else if (inline is QuestPdfPageNumber)
+                            {
+                                text.CurrentPageNumber();
+                            }
+                            else if (inline is QuestPdfFootnoteReference footnoteReference)
+                            {
+                                var footnote = currentPageSet?.Footnotes?.FirstOrDefault(f => f.Id == footnoteReference.Id);
+                                if (footnote != null)
+                                    footnote.PageNumber = CurrentPageNumber;
+                            }
+                            else if (inline is QuestPdfHyperlink hyperlink)
+                            {
+                                foreach (var subElement in hyperlink.Elements)
+                                {
+                                    if (subElement is QuestPdfSpan subSpan)
+                                    {
+                                        if (hyperlink.Url != null)
+                                            text.Hyperlink(subSpan.IsAllCaps ? subSpan.Text.ToUpper() : subSpan.Text, hyperlink.Url).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
+                                        else if (hyperlink.Anchor != null)
+                                            text.SectionLink(subSpan.IsAllCaps ? subSpan.Text.ToUpper() : subSpan.Text, hyperlink.Anchor).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
+                                    }
+                                    else if (subElement is QuestPdfImage image)
+                                    {
+                                        if (image.IsSvg && !string.IsNullOrEmpty(image.SvgText))
+                                        {
+                                            if (hyperlink.Url != null)
+                                                text.Element().Hyperlink(hyperlink.Url).Width(image.Width).Height(image.Height).Svg(image.SvgText!).FitArea();
+                                            else if (hyperlink.Anchor != null)
+                                                text.Element().SectionLink(hyperlink.Anchor).Width(image.Width).Height(image.Height).Svg(image.SvgText!).FitArea();
+                                        }
+                                        else if (image.Bytes != null && (image.ImageType == IO.ImageFormat.Png || image.ImageType == IO.ImageFormat.Jpeg))
+                                        {
+                                            if (hyperlink.Url != null)
+                                                text.Element().Hyperlink(hyperlink.Url).Width(image.Width).Height(image.Height).Image(image.Bytes).FitArea();
+                                            else if (hyperlink.Anchor != null)
+                                                text.Element().SectionLink(hyperlink.Anchor).Width(image.Width).Height(image.Height).Image(image.Bytes).FitArea();
+                                        }
+                                    }
+                                }
+                            }
+                            else if (inline is QuestPdfImage image)
+                            {
+                                if (image.IsSvg && !string.IsNullOrEmpty(image.SvgText))
+                                    text.Element().Width(image.Width).Height(image.Height).Svg(image.SvgText!).FitArea();
+                                else if (image.Bytes != null && (image.ImageType == IO.ImageFormat.Png || image.ImageType == IO.ImageFormat.Jpeg))
+                                    text.Element().Width(image.Width).Height(image.Height).Image(image.Bytes).FitArea();
+                            }
+                        }
+                    });
+
+                // Render internal horizontal border (BetweenBorder) between this paragraph and the next
+                if (paragraph.BottomBorderThickness > 0f && i < group.Paragraphs.Count - 1)
+                {
+                    column.Item()
+                          .LineHorizontal(paragraph.BottomBorderThickness, Unit.Point)
+                          .LineColor(paragraph.BordersColor);
+                }
+            }
+        });
     }
 
     internal void AddTableToColumn(IContainer item, QuestPdfTable table)

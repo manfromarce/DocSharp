@@ -63,19 +63,20 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         var borders = paragraph.GetEffectiveBorders(Styles);
         var previousBorders = paragraph.GetPreviousParagraphBorders(Styles);
         var nextBorders = paragraph.GetNextParagraphBorders(Styles);
+        var indentObj = paragraph.GetEffectiveIndent(Styles);
+        var currentIndentKey = GetIndentKey(indentObj);
         string? bordersColor = null;
 
         if (borders != null)
         {
             bool hasLeft = borders.LeftBorder != null;
             bool hasRight = borders.RightBorder != null;
-            bool hasBar = borders.BarBorder != null;
             bool hasTop = borders.TopBorder != null;
             bool hasBottom = borders.BottomBorder != null;
             bool hasBetween = borders.BetweenBorder != null;
 
             // Apply top border only if visible (first of style or differs from previous)
-            if (hasTop && (paragraph.IsFirstOfStyle() || !FormattingHelpers.AreBordersEqual(borders, previousBorders)))
+            if (hasTop && !FormattingHelpers.AreBordersEqual(borders, previousBorders))
             {
                 if (borders.TopBorder!.Size != null)
                     p.TopBorderThickness = borders.TopBorder.Size.Value / 8f;
@@ -83,7 +84,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.TopBorder.Color!.Value);
             }
 
-            // Always apply left/right/bar borders when present
+            // Always apply left/right borders when present
             if (hasLeft)
             {
                 if (borders.LeftBorder!.Size != null)
@@ -98,23 +99,16 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 if (!string.IsNullOrWhiteSpace(borders.RightBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.RightBorder.Color!.Value);
             }
-            if (hasBar)
-            {
-                if (borders.BarBorder!.Size != null)
-                    p.RightBorderThickness = borders.BarBorder.Size.Value / 8f;
-                if (!string.IsNullOrWhiteSpace(borders.BarBorder.Color?.Value))
-                    bordersColor ??= ColorHelpers.EnsureHexColor(borders.BarBorder.Color!.Value);
-            }
 
             // Apply bottom/between border only if visible (last of style or differs from next)
-            if (hasBottom && (paragraph.IsLastOfStyle() || !FormattingHelpers.AreBordersEqual(borders, nextBorders)))
+            if (hasBottom && !FormattingHelpers.AreBordersEqual(borders, nextBorders))
             {
                 if (borders.BottomBorder!.Size != null)
                     p.BottomBorderThickness = borders.BottomBorder.Size.Value / 8f;
                 if (!string.IsNullOrWhiteSpace(borders.BottomBorder.Color?.Value))
                     bordersColor ??= ColorHelpers.EnsureHexColor(borders.BottomBorder.Color!.Value);
             }
-            else if (hasBetween && !paragraph.IsLastOfStyle() && FormattingHelpers.AreBordersEqual(borders, nextBorders))
+            else if (hasBetween && FormattingHelpers.AreBordersEqual(borders, nextBorders))
             {
                 if (borders.BetweenBorder!.Size != null)
                     p.BottomBorderThickness = borders.BetweenBorder.Size.Value / 8f;
@@ -124,7 +118,7 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         }
 
         if (!string.IsNullOrWhiteSpace(bordersColor))
-            p.BordersColor = bordersColor!;
+            p.BordersColor = QuestPDF.Infrastructure.Color.FromHex(bordersColor!);
 
         var spacing = paragraph.GetEffectiveSpacingValues(Styles);
         p.SpaceBefore = spacing.SpaceBefore;
@@ -141,9 +135,107 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
         p.KeepTogether = paragraph.GetEffectiveProperty<KeepLines>(Styles).ToBool();
         // TODO: KeepNext (cannot be set at paragraph level in QuestPDF and requires a different approach)
 
-        // Add paragraph to the current container (body, header, footer, table cell, ...)
-        if (currentContainer.Count > 0)
-            currentContainer.Peek().Content.Add(p);
+        // Decide whether this paragraph should be grouped in a paragraph container
+        bool hasOuterBorders = borders != null && (borders.LeftBorder != null || borders.RightBorder != null || borders.TopBorder != null || borders.BottomBorder != null);
+
+        if (_isParagraphGroupOpen && (!FormattingHelpers.AreBordersEqual(borders, _openParagraphGroupBorders) || _openParagraphGroupIndentKey != currentIndentKey))
+        {
+            // close existing group
+            if (currentContainer.Count > 0 && _openParagraphGroup != null)
+            {
+                // ensure last paragraph doesn't duplicate the group's bottom spacing
+                if (_openParagraphGroup.Paragraphs.Count > 0)
+                    _openParagraphGroup.Paragraphs[^1].SpaceAfter = 0f;
+                currentContainer.Peek().Content.Add(_openParagraphGroup);
+            }
+            _isParagraphGroupOpen = false;
+            _openParagraphGroup = null;
+            _openParagraphGroupBorders = null;
+            _openParagraphGroupIndentKey = null;
+            _openParagraphGroupBottomSpace = 0f;
+            _openParagraphGroupCount = 0;
+        }
+
+        if (hasOuterBorders)
+        {
+            // open or append to group
+            if (!_isParagraphGroupOpen)
+            {
+                var group = new QuestPdfParagraphGroup();
+                // container-level indentation
+                group.LeftIndent = p.LeftIndent;
+                group.RightIndent = p.RightIndent;
+                // container-level spacing
+                group.SpaceBefore = p.SpaceBefore;
+                group.SpaceAfter = p.SpaceAfter;
+                // container borders: prefer paragraph borders values
+                if (borders!.LeftBorder?.Size != null)
+                    group.LeftBorderThickness = borders.LeftBorder.Size.Value / 8f;
+                if (borders.RightBorder?.Size != null)
+                    group.RightBorderThickness = borders.RightBorder.Size.Value / 8f;
+                if (borders.TopBorder?.Size != null)
+                    group.TopBorderThickness = borders.TopBorder.Size.Value / 8f;
+                if (borders.BottomBorder?.Size != null)
+                    group.BottomBorderThickness = borders.BottomBorder.Size.Value / 8f;
+                // color
+                if (!string.IsNullOrWhiteSpace(bordersColor))
+                    group.BordersColor = QuestPDF.Infrastructure.Color.FromHex(bordersColor!);
+
+                // adjust paragraph borders: remove outer borders from paragraph to avoid double-draw
+                bool betweenVisible = borders.BetweenBorder != null && FormattingHelpers.AreBordersEqual(borders, nextBorders);
+                p.LeftBorderThickness = 0f;
+                p.RightBorderThickness = 0f;
+                p.TopBorderThickness = 0f;
+                if (!betweenVisible)
+                    p.BottomBorderThickness = 0f; // keep between borders if present
+
+                // move top spacing out to container; first paragraph inside group should not keep top spacing
+                p.SpaceBefore = 0f;
+
+                // move left/right indents out to container; paragraphs inside container shouldn't have outer indents
+                p.LeftIndent = 0f;
+                p.RightIndent = 0f;
+                p.StartIndent = 0f;
+                p.EndIndent = 0f;
+
+                group.Paragraphs.Add(p);
+                _isParagraphGroupOpen = true;
+                _openParagraphGroup = group;
+                _openParagraphGroupBorders = borders;
+                _openParagraphGroupIndentKey = currentIndentKey;
+                _openParagraphGroupBottomSpace = 0f;
+                _openParagraphGroupCount = 0;
+                _openParagraphGroupBottomSpace = p.SpaceAfter;
+                _openParagraphGroupCount = 1;
+            }
+            else
+            {
+                // append to existing group
+                // keep between border if present on paragraph (p.BottomBorderThickness may have been set earlier)
+                bool betweenVisible = borders!.BetweenBorder != null && FormattingHelpers.AreBordersEqual(borders, nextBorders);
+                p.LeftBorderThickness = 0f;
+                p.RightBorderThickness = 0f;
+                p.TopBorderThickness = 0f;
+                if (!betweenVisible)
+                    p.BottomBorderThickness = 0f;
+
+                // remove outer indents on appended paragraphs as well
+                p.LeftIndent = 0f;
+                p.RightIndent = 0f;
+                p.StartIndent = 0f;
+                p.EndIndent = 0f;
+
+                _openParagraphGroup!.Paragraphs.Add(p);
+                _openParagraphGroupBottomSpace = p.SpaceAfter;
+                _openParagraphGroupCount++;
+            }
+        }
+        else
+        {
+            // Not grouped: add paragraph directly
+            if (currentContainer.Count > 0)
+                currentContainer.Peek().Content.Add(p);
+        }
 
         // Make paragraph the current run container/paragraph so list picture bullets can add images directly.
         currentRunContainer.Push(p);
@@ -167,5 +259,21 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
             currentRunContainer.Pop();
         if (currentParagraph.Count > 0)
             currentParagraph.Pop();
+
+        // If group is open but the next paragraph won't continue it, close now
+        var nextIndentKey = GetIndentKey(paragraph.NextSibling() as Paragraph is Paragraph np ? np.GetEffectiveIndent(Styles) : null);
+        if (_isParagraphGroupOpen && (nextBorders == null || !FormattingHelpers.AreBordersEqual(nextBorders, _openParagraphGroupBorders) || _openParagraphGroupIndentKey != nextIndentKey))
+        {
+            if (currentContainer.Count > 0 && _openParagraphGroup != null)
+            {
+                currentContainer.Peek().Content.Add(_openParagraphGroup);
+            }
+            _isParagraphGroupOpen = false;
+            _openParagraphGroup = null;
+            _openParagraphGroupBorders = null;
+            _openParagraphGroupIndentKey = null;
+            _openParagraphGroupBottomSpace = 0f;
+            _openParagraphGroupCount = 0;
+        }
     }
 }

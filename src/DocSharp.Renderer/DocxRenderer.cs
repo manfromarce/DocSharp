@@ -44,6 +44,13 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
     private Stack<QuestPdfTableRow> currentRow = new(); // Cells can only be added to a table row
     private Stack<QuestPdfSpan> currentSpan = new(); // Text can only be added to a span
     private QuestPDF.Infrastructure.Color? pageColor; // Page color is the same for all sections in DOCX
+    // State used to group consecutive paragraphs with identical outer borders into a container
+    private bool _isParagraphGroupOpen = false;
+    private QuestPdfParagraphGroup? _openParagraphGroup;
+    private ParagraphBorders? _openParagraphGroupBorders;
+    private string? _openParagraphGroupIndentKey;
+    private float _openParagraphGroupBottomSpace = 0f;
+    private int _openParagraphGroupCount = 0;
 
     /// <summary>
     /// Render a DOCX document to a QuestPDF document.
@@ -75,6 +82,14 @@ public partial class DocxRenderer : DocxEnumerator<QuestPdfModel>, IDocumentRend
                 });
             });
         }
+    }
+
+    private static string GetIndentKey(Indentation? indent)
+    {
+        if (indent == null) return "";
+        var leftKey = indent.LeftChars != null ? $"LC:{indent.LeftChars.Value}" : (indent.Left.ToLong() is long l ? $"L:{l}" : "L:");
+        var rightKey = indent.RightChars != null ? $"RC:{indent.RightChars.Value}" : (indent.Right.ToLong() is long r ? $"R:{r}" : "R:");
+        return leftKey + "|" + rightKey;
     }
 
     /// <summary>
