@@ -1,4 +1,4 @@
-## 0.19.0 - not published yet
+## 0.19.0 - 2026.05.13
 
 - Improve performance in DOCX converters by caching styles
 - Improve highlight detection logic in DOCX ➡️ Markdown converter

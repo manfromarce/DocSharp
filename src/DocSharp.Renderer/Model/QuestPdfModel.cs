@@ -26,9 +26,9 @@ public class QuestPdfModel
                 // QuestPDF automatically creates a new page when content exceeds page size
                 container.Page(page => {
                     page.Size(pageSet.PagesSize);
-                    page.MarginLeft(pageSet.MarginLeft, pageSet.Unit);            
-                    page.MarginTop(pageSet.MarginTop, pageSet.Unit);            
-                    page.MarginRight(pageSet.MarginRight, pageSet.Unit);            
+                    page.MarginLeft(pageSet.MarginLeft, pageSet.Unit);
+                    page.MarginTop(pageSet.MarginTop, pageSet.Unit);
+                    page.MarginRight(pageSet.MarginRight, pageSet.Unit);
                     page.MarginBottom(pageSet.MarginBottom, pageSet.Unit);
                     page.PageColor(pageSet.BackgroundColor);
 
@@ -39,7 +39,7 @@ public class QuestPdfModel
                         AddItemsToColumn(header, pageSet.HeaderFirst?.Content, QuestPdfContainerType.HeaderFirstPage, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
                         AddItemsToColumn(header, pageSet.HeaderEven?.Content, QuestPdfContainerType.HeaderEvenPages, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
                         AddItemsToColumn(header, pageSet.HeaderOddOrDefault?.Content, QuestPdfContainerType.HeaderOddOrDefault, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages);
-                    });                
+                    });
 
                     if (pageSet.Content != null && pageSet.NumberOfColumns > 0 && pageSet.Content.Content != null)
                     {
@@ -57,7 +57,7 @@ public class QuestPdfModel
                                     AddItemsToColumn(column, pageSet.Content.Content, endnotes: pageSet.Endnotes);                                   
                                 });
 
-                            });                        
+                            });
                         }
                         else
                         {
@@ -74,7 +74,7 @@ public class QuestPdfModel
                         AddItemsToColumn(footer, pageSet.FooterFirst?.Content, QuestPdfContainerType.FooterFirstPage, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages, pageSet.Footnotes);
                         AddItemsToColumn(footer, pageSet.FooterEven?.Content, QuestPdfContainerType.FooterEvenPages, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages, pageSet.Footnotes);
                         AddItemsToColumn(footer, pageSet.FooterOddOrDefault?.Content, QuestPdfContainerType.FooterOddOrDefault, pageSet.DifferentHeaderFooterForFirstPage, pageSet.DifferentHeaderFooterForOddAndEvenPages, pageSet.Footnotes);
-                    });    
+                    });
                 });
             }
             
@@ -110,7 +110,7 @@ public class QuestPdfModel
                                 AddHorizontalLineToColumn(item, horizontalLine);
                         }
                     }
-                }                
+                }
             }
         });
     }   
@@ -158,7 +158,7 @@ public class QuestPdfModel
                             AddHorizontalLineToColumn(item, horizontalLine);
                         }
                     }
-                }                
+                }
             }
         }
 
@@ -220,7 +220,7 @@ public class QuestPdfModel
                         AddHorizontalLineToColumn(item, horizontalLine);
                     }
                 }
-            }                
+            }
         }
     }
 
@@ -314,7 +314,7 @@ public class QuestPdfModel
 
         var bookmark = paragraph.Elements.OfType<QuestPdfBookmark>().FirstOrDefault();
         // TODO: process this inside paragraph directly (currently not possible in QuestPdf) 
-        // (there might be more than one bookmark per paragraph in DOCX))
+        // (there might be more than one bookmark per paragraph in DOCX)
         if (bookmark != null)
         {
             item = item.Section(bookmark.Name);
@@ -331,7 +331,7 @@ public class QuestPdfModel
                 // currently "hanging" (negative) first line indent is not supported by QuestPDF
                 // (I have filled an issue on GitHub for this)
                 {
-                    text.ParagraphFirstLineIndentation(paragraph.FirstLineIndent, Unit.Point);                        
+                    text.ParagraphFirstLineIndentation(paragraph.FirstLineIndent, Unit.Point);
                 } 
                 
                 switch (paragraph.Alignment)
@@ -366,7 +366,7 @@ public class QuestPdfModel
                         foreach (var subElement in hyperlink.Elements)
                         { 
                             if (subElement is QuestPdfSpan subSpan)
-                            {                                    
+                            {
                                 if (hyperlink.Url != null)
                                     text.Hyperlink(subSpan.IsAllCaps ? subSpan.Text.ToUpper() : subSpan.Text, hyperlink.Url).Style(subSpan.Style).LineHeight(paragraph.LineHeight);
                                 else if (hyperlink.Anchor != null)
@@ -594,7 +594,7 @@ public class QuestPdfModel
                     if (tc.MinHeight > 0)
                         cell = cell.MinHeight(tc.MinHeight, Unit.Point);
                     if (tc.Height > 0)
-                        cell = cell.Height(tc.Height, Unit.Point);              
+                        cell = cell.Height(tc.Height, Unit.Point);
 
                     if (tc.VertAlignment == VerticalAlignment.Center)
                         cell = cell.AlignMiddle();
@@ -621,7 +621,7 @@ public class QuestPdfModel
     {
         // Force page break
         if (containerType == QuestPdfContainerType.Body)
-            column.Item().PageBreak();        
+            column.Item().PageBreak();
     }
 }
 
