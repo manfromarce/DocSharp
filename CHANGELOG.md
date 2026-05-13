@@ -8,7 +8,7 @@ By default only inline images are converted because other layouts do not have a 
 - Page size, margins and orientation are now written in CSS page style (`@media print`) in DOCX ➡️ HTML converter
 - The new `HeaderFooterExportOptions` and `FootnoteEndnoteExportOptions` properties allow to control the header/footer/footnotes/endnotes behavior in DOCX ➡️ HTML converter
 - The new `HorizontalRuleForPageBreaks` and `HorizontalRuleForSectionBreaks` properties allow to set set whether horizontal rule should be written for section breaks and forced page breaks in DOCX ➡️ HTML/Markdown/plain text converter. (*false* by default, except for section breaks in Markdown)
-- The new `HorizontalRuleForTopBottomBorders` property allows to set whether horizontal rule should be written for top/bottom paragraph borders in DOCX ➡️ Markdown/plain text converter (*false* by default)
+- The new `HorizontalRuleForTopBottomBorders` property allows to set whether horizontal rule should be written for top/bottom paragraph borders in DOCX ➡️ Markdown/plain text converter (*false* by default) (the property is not available when converting to HTML/RTF/PDF, where all border types are preserved)
 - Preserve the special "horizontal line" VML shape in DOCX ➡️ RTF/HTML/Markdown/PDF converter (mapped to `<hr>` in HTML and `---` in Markdown), in RTF ➡️ DOCX converters, and in DOCX renderer
 - The new `HorizontalRuleForHorizontalLineShapes` property allows to set whether a manual horizontal line should be written for the special "horizontal line" VML shape in DOCX ➡️ plain text converter (true by default)
 - Preserve image alternate text in DOCX ➡️ HTML/Markdown converter
