@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="QuestPDF" Version="2026.2.4" />
+    <PackageReference Include="QuestPDF" Version="2026.5.0" />
 
     <!-- <PackageReference Include="CSharpMath.Rendering" Version="0.5.1" /> -->
     <!-- <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" /> -->
