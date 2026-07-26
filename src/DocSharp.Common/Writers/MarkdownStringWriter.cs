@@ -114,6 +114,8 @@ public sealed class MarkdownStringWriter : BaseStringWriter
         else
             // Microsoft Word usually escapes spaces in the relationship, but we ensure it here.
             target = target.Replace(" ", "%20");
+            // Escape parentheses to avoid breaking markdown link syntax: [text](url)
+            target = target.Replace("(", "%28").Replace(")", "%29");
 
         Write($"[{displayText}]({target}");
         if (!string.IsNullOrWhiteSpace(tooltip))
