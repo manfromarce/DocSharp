@@ -157,10 +157,7 @@ namespace DocSharp.Binary.PresentationMLMapping
                 imgPart.TargetDirectory = "..\\media";
                 var outStream = imgPart.GetStream();
 
-                var mb = this._ctx.Ppt.PicturesContainer._pictures[bse.foDelay];
-
-                //write the blip
-                if (mb != null)
+                if (this._ctx.Ppt.PicturesContainer._pictures.TryGetValue(bse.foDelay, out var mb) && mb != null)
                 {
                     switch (bse.btWin32)
                     {

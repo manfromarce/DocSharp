@@ -86,7 +86,9 @@ namespace DocSharp.Binary.PptFileFormat
             if (slide == null)
                 throw new NotSupportedException("Can't find TextHeaderAtom for OutlineTextRefAtom which has no Slide ancestor");
 
-            var thAtoms = this.SlideToPlaceholderTextHeaders[slide.PersistAtom];
+            if (!this.SlideToPlaceholderTextHeaders.TryGetValue(slide.PersistAtom, out var thAtoms))
+                throw new KeyNotFoundException($"TextHeaderAtom list not found for slide PersistAtom {slide.PersistAtom}");
+
             return thAtoms[otrAtom.Index];
         }
     }

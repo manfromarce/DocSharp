@@ -181,27 +181,23 @@ namespace DocSharp.Binary.PresentationMLMapping
                     {
                         var bse = (BlipStoreEntry)gr.FirstChildWithType<BlipStoreContainer>().Children[(int)blipIndex - 1];
 
-                        if (this._ctx.Ppt.PicturesContainer._pictures.ContainsKey(bse.foDelay))
+                    if (this._ctx.Ppt.PicturesContainer._pictures.TryGetValue(bse.foDelay, out var rec))
+                    {
+                        if (rec is BitmapBlip bitmapBlip)
                         {
-                            var rec = this._ctx.Ppt.PicturesContainer._pictures[bse.foDelay];
-                           
-                            if (rec is BitmapBlip)
-                            {
-                                var b = (BitmapBlip)this._ctx.Ppt.PicturesContainer._pictures[bse.foDelay];                                
-                                imgPart = this._parentSlideMapping.targetPart.AddImagePart(ShapeTreeMapping.getImageType(b.TypeCode));
-                                imgPart.TargetDirectory = "..\\media";
-                                var outStream = imgPart.GetStream();
-                                outStream.Write(b.m_pvBits, 0, b.m_pvBits.Length);
-                            }
-                            else
-                            {
-                                var b = (MetafilePictBlip)this._ctx.Ppt.PicturesContainer._pictures[bse.foDelay];
-                                imgPart = this._parentSlideMapping.targetPart.AddImagePart(ShapeTreeMapping.getImageType(b.TypeCode));
-                                imgPart.TargetDirectory = "..\\media";
-                                var outStream = imgPart.GetStream();
-                                var decompressed = b.Decrompress();
-                                outStream.Write(decompressed, 0, decompressed.Length);
-                            }
+                            imgPart = this._parentSlideMapping.targetPart.AddImagePart(ShapeTreeMapping.getImageType(bitmapBlip.TypeCode));
+                            imgPart.TargetDirectory = "..\\media";
+                            var outStream = imgPart.GetStream();
+                            outStream.Write(bitmapBlip.m_pvBits, 0, bitmapBlip.m_pvBits.Length);
+                        }
+                        else if (rec is MetafilePictBlip metafileBlip)
+                        {
+                            imgPart = this._parentSlideMapping.targetPart.AddImagePart(ShapeTreeMapping.getImageType(metafileBlip.TypeCode));
+                            imgPart.TargetDirectory = "..\\media";
+                            var outStream = imgPart.GetStream();
+                            var decompressed = metafileBlip.Decrompress();
+                            outStream.Write(decompressed, 0, decompressed.Length);
+                        }                    
 
                             rId = imgPart.RelIdToString;
 
@@ -211,8 +207,6 @@ namespace DocSharp.Binary.PresentationMLMapping
 
                             this._writer.WriteStartElement("a", "blip", OpenXmlNamespaces.DrawingML);
                             this._writer.WriteAttributeString("r", "embed", OpenXmlNamespaces.Relationships, rId);
-
-
 
                             this._writer.WriteEndElement();
 

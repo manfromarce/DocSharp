@@ -287,7 +287,9 @@ namespace DocSharp.Binary.PresentationMLMapping
                     var otrAtom = (OutlineTextRefAtom)rec;
                     var slideListWithText = this._ctx.Ppt.DocumentRecord.RegularSlideListWithText;
                                   
-                    var thAtoms = slideListWithText.SlideToPlaceholderTextHeaders[textbox.FirstAncestorWithType<Slide>().PersistAtom];
+                    var slidePersistAtom = textbox.FirstAncestorWithType<Slide>().PersistAtom;
+                    if (!slideListWithText.SlideToPlaceholderTextHeaders.TryGetValue(slidePersistAtom, out var thAtoms))
+                        throw new KeyNotFoundException($"TextHeaderAtom list not found for slide PersistAtom {slidePersistAtom}");
                     thAtom = thAtoms[otrAtom.Index];
 
                     if (thAtom.TextAtom != null) text = thAtom.TextAtom.Text;

@@ -196,14 +196,21 @@ namespace DocSharp.Binary.PresentationMLMapping
             int availableWidth = anch.rcgBounds.Width;
             int currentLeft = anch.Left;
 
-            while (availableWidth > 0)
+            while (availableWidth > 0 && count < this.ColumnWidthsByYPos.Count)
             {
-                availableWidth -= this.ColumnWidthsByYPos[currentLeft];
-                currentLeft += this.ColumnWidthsByYPos[currentLeft];
-                count++;
-            }            
+                if (!this.ColumnWidthsByYPos.TryGetValue(currentLeft, out int columnWidth) || columnWidth <= 0)
+                {
+                    // If the current grid boundary is missing, we cannot reliably continue.
+                    // Return at least one span so the output remains valid instead of crashing.
+                    return Math.Max(count, 1);
+                }
 
-            return count;
+                availableWidth -= columnWidth;
+                currentLeft += columnWidth;
+                count++;
+            }
+
+            return Math.Max(count, 1);
         }
 
         private int GetRowSpanCount(ChildAnchor anch, int row)
@@ -478,7 +485,7 @@ namespace DocSharp.Binary.PresentationMLMapping
                         var container = table[row, col];
 
                         var anch = container.FirstChildWithType<ChildAnchor>();
-                        int colWidth = this.ColumnWidthsByYPos[anch.Left];
+                        int colWidth = this.ColumnWidthsByYPos.TryGetValue(anch.Left, out int width) ? width : anch.rcgBounds.Width;
 
                         if (anch.rcgBounds.Height > this.RowHeights[row] && GetRowSpanCount(anch, row) > 1)
                         {
@@ -586,7 +593,8 @@ namespace DocSharp.Binary.PresentationMLMapping
                             //    _writer.WriteAttributeString("rowSpan", "2");
                             //}
 
-                            if (anch.rcgBounds.Width > this.ColumnWidthsByYPos[anch.Left])
+                            int previousColWidth = this.ColumnWidthsByYPos.TryGetValue(anch.Left, out int previousWidth) ? previousWidth : anch.rcgBounds.Width;
+                            if (anch.rcgBounds.Width > previousColWidth)
                             {
                                 this._writer.WriteAttributeString("hMerge", "1");
                             }
@@ -595,8 +603,9 @@ namespace DocSharp.Binary.PresentationMLMapping
                         {
                             var previouscontainer = table[row - 1, col - 1];
                             var anch = previouscontainer.FirstChildWithType<ChildAnchor>();
+                            int previousColWidth = this.ColumnWidthsByYPos.TryGetValue(anch.Left, out int previousWidth) ? previousWidth : anch.rcgBounds.Width;
 
-                            if (anch.rcgBounds.Width > this.ColumnWidthsByYPos[anch.Left])
+                            if (anch.rcgBounds.Width > previousColWidth)
                             {
                                 this._writer.WriteAttributeString("hMerge", "1");
                             }
@@ -606,7 +615,7 @@ namespace DocSharp.Binary.PresentationMLMapping
                         {
                             var previouscontainer = table[row-1, col];
                             var anch = previouscontainer.FirstChildWithType<ChildAnchor>();
-                            int colWidth = this.ColumnWidthsByYPos[anch.Left];
+                            int colWidth = this.ColumnWidthsByYPos.TryGetValue(anch.Left, out int width) ? width : anch.rcgBounds.Width;
 
                             if (anch.rcgBounds.Width > colWidth)
                             {
@@ -711,8 +720,6 @@ namespace DocSharp.Binary.PresentationMLMapping
 
             }
 
-
-
             int rows = table.GetLength(0);
             int columns = table.GetLength(1);
 
@@ -722,8 +729,8 @@ namespace DocSharp.Binary.PresentationMLMapping
             //bool isTop = (row == 0);
             //bool isBottom = (row == rows - 1);
 
+            int colWidth = this.ColumnWidthsByYPos.TryGetValue(anch.Left, out int width) ? width : anch.rcgBounds.Width;
             int span;
-            int colWidth = this.ColumnWidthsByYPos[anch.Left];
             if (anch.rcgBounds.Height > this.RowHeights[row])
             {
                 //recheck isBottom

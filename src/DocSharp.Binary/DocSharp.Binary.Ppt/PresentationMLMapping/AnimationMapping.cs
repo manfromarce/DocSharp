@@ -493,9 +493,9 @@ namespace DocSharp.Binary.PresentationMLMapping
         {
             if (this._stm != null)
             {
-                if (this._stm.spidToId.ContainsKey((int)c4Id) == true)
+                if (this._stm.spidToId.TryGetValue((int)c4Id, out var id))
                 {
-                    return this._stm.spidToId[(int)c4Id].ToString();
+                    return id.ToString();
                 }
                 else
                 {

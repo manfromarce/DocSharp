@@ -77,7 +77,7 @@ namespace DocSharp.Binary.PresentationMLMapping
         /// <returns>Found MasterMapping or null if none was found.</returns>
         public NotesMasterMapping GetNotesMasterMappingByMasterId(uint masterId)
         {
-            return this.NotesMasterIdToMapping[masterId];
+            return this.NotesMasterIdToMapping.TryGetValue(masterId, out var mapping) ? mapping : null;
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace DocSharp.Binary.PresentationMLMapping
         /// <returns>Found MasterMapping or null if none was found.</returns>
         public HandoutMasterMapping GetHandoutMasterMappingByMasterId(uint masterId)
         {
-            return this.HandoutMasterIdToMapping[masterId];
+            return this.HandoutMasterIdToMapping.TryGetValue(masterId, out var mapping) ? mapping : null;
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace DocSharp.Binary.PresentationMLMapping
         /// <returns>Found MasterMapping or null if none was found.</returns>
         public MasterMapping GetMasterMappingByMasterId(uint masterId)
         {
-            return this.MasterIdToMapping[masterId];
+            return this.MasterIdToMapping.TryGetValue(masterId, out var mapping) ? mapping : null;
         }
 
         /// <summary>
