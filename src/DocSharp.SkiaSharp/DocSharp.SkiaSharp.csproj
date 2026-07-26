@@ -19,9 +19,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="3.119.4" />
-    <PackageReference Include="Svg.Skia" Version="5.0.0" />
+    <PackageReference Include="Svg.Skia" Version="5.1.1" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
-    <PackageReference Include="CoreJ2K.Skia" Version="2.2.2.72" />
+    <PackageReference Include="CoreJ2K.Skia" Version="2.3.3.91" />
     <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
   </ItemGroup>
   <ItemGroup>
