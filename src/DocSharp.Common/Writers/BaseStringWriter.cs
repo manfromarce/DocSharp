@@ -12,6 +12,7 @@ public abstract class BaseStringWriter : IDisposable
     
     public TextWriter? ExternalWriter;
     public StringBuilder StringBuilder => sb;
+    public int Length => sb.Length;
 
     public string NewLine { get; set; } = Environment.NewLine;
 

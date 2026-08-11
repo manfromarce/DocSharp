@@ -64,6 +64,12 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
     /// </summary>
     public bool HorizontalRuleForPageBreaks { get; set; } = false;
 
+    /// <summary>
+    /// Get or set whether paragraphs should be separated by a blank line.
+    /// When false, paragraphs are separated by a single line break only.
+    /// </summary>
+    public bool EmptyLineBetweenParagraphs { get; set; } = false;
+
     internal override void ProcessDocument(Document document, TxtStringWriter sb)
     {
         // Reset state
@@ -308,7 +314,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             return;
         }
 
-        sb.EnsureEmptyLine(); // Add a blank line before the paragraph
+        EnsureParagraphSeparator(sb);
 
         ParagraphBorders? borders = null;
         if (HorizontalRuleForTopBottomBorders)
@@ -355,6 +361,23 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
     }
 
     private readonly Dictionary<int, (int numId, int abstractNumId, int counter)> _listLevelCounters = new();
+
+    private void EnsureParagraphSeparator(TxtStringWriter sb)
+    {
+        if (sb.Length == 0)
+            return;
+
+        if (this.EmptyLineBetweenParagraphs)
+        {
+            sb.EnsureEmptyLine();
+            return;
+        }
+
+        if (!sb.EndsWithNewLine())
+        {
+            sb.WriteLine();
+        }
+    }
 
     internal void ProcessListItem(NumberingProperties numPr, TxtStringWriter sb, bool isHidden = false)
     {
@@ -546,9 +569,7 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             }
             if (!string.IsNullOrWhiteSpace(altText))
             {
-                sb.EnsureEmptyLine();
-                sb.WriteLine(altText);
-                sb.WriteLine();
+                WriteImageAltText(altText, sb);
             }
         }
     }
@@ -585,11 +606,18 @@ public class DocxToTxtConverter : DocxToStringWriterBase<TxtStringWriter>
             }
             if (!string.IsNullOrWhiteSpace(altText))
             {
-                sb.EnsureEmptyLine();
-                sb.WriteLine(altText);
-                sb.WriteLine();
+                WriteImageAltText(altText, sb);
             }
         }
+    }
+
+    internal void WriteImageAltText(string altText, TxtStringWriter sb)
+    {
+        // If the image has an alternate text and the WriteImageDescription option is enabled, 
+        // write the alternate text (after a blank line) in the output plain text.
+        sb.EnsureEmptyLine();
+        sb.WriteLine(altText);
+        sb.WriteLine();
     }
 
     internal override void ProcessFootnoteReference(FootnoteReference footnoteReference, TxtStringWriter sb) 
