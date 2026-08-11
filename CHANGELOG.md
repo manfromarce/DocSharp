@@ -1,8 +1,12 @@
-## 0.20.0 - Not published yet
+## 0.21.0 - Not published yet
 
-- ⏳ Work in progress
+- Fix: Escape parentheses in markdown link URLs in DOCX to MD conversion
+- Fix: Converting PPT to PPTX throw KeyNotFoundException in some cases
+- Fix: Converting PPT with charts produced a PPTX that triggered the repair prompt in MS PowerPoint
+- Minor refactors and bug fixes
+- Updated dependencies
 
-## 0.19.0 - 2026.05.13
+## 0.20.0 - 2026.05.13
 
 - Improve performance in DOCX converters by caching styles
 - Improve highlight detection logic in DOCX ➡️ Markdown converter
