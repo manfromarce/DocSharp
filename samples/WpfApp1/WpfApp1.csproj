@@ -10,12 +10,12 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlToOpenXml.dll" Version="3.5.0" />
-    <PackageReference Include="AngleSharp" Version="1.5.2" />
+    <PackageReference Include="AngleSharp" Version="1.7.1" />
     <PackageReference Include="PreMailer.Net" Version="2.7.3" />
     <PackageReference Include="XlsxToHtmlConverter" Version="2.3.0" />
     <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
     <PackageReference Include="ClosedXML" Version="0.105.1" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
   </ItemGroup>
 
   <ItemGroup>      
