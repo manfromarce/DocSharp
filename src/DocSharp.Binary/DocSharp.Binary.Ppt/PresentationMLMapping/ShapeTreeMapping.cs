@@ -1985,6 +1985,11 @@ namespace DocSharp.Binary.PresentationMLMapping
             this._writer.WriteStartElement("a", "graphicData", OpenXmlNamespaces.DrawingML);
             this._writer.WriteAttributeString("uri", "http://schemas.openxmlformats.org/presentationml/2006/ole");
 
+            this._writer.WriteStartElement("mc", "AlternateContent", "http://schemas.openxmlformats.org/markup-compatibility/2006");
+            this._writer.WriteStartElement("mc", "Choice", "http://schemas.openxmlformats.org/markup-compatibility/2006");
+            this._writer.WriteAttributeString("xmlns", "v", null, OpenXmlNamespaces.VectorML);
+            this._writer.WriteAttributeString("Requires", "v");
+
             EmbeddedObjectPart embPart = null;
             embPart = this.parentSlideMapping.targetPart.AddEmbeddedObjectPart(EmbeddedObjectPart.ObjectType.Other);
             embPart.TargetDirectory = "..\\embeddings";
@@ -2050,6 +2055,26 @@ namespace DocSharp.Binary.PresentationMLMapping
             this._writer.WriteEndElement(); //embed
 
             this._writer.WriteEndElement(); //oleObj
+            this._writer.WriteEndElement(); //mc:Choice
+
+            this._writer.WriteStartElement("mc", "Fallback", "http://schemas.openxmlformats.org/markup-compatibility/2006");
+            this._writer.WriteStartElement("p", "oleObj", OpenXmlNamespaces.PresentationML);
+            this._writer.WriteAttributeString("spid", spid);
+            this._writer.WriteAttributeString("name", name);
+            this._writer.WriteAttributeString("id", OpenXmlNamespaces.Relationships, rId);
+            this._writer.WriteAttributeString("imgW", size.X.ToString());
+            this._writer.WriteAttributeString("imgH", size.Y.ToString());
+            this._writer.WriteAttributeString("progId", progId);
+
+            this._writer.WriteStartElement("p", "embed", OpenXmlNamespaces.PresentationML);
+            this._writer.WriteAttributeString("followColorScheme", "full");
+            this._writer.WriteEndElement(); //embed
+
+            writePic(container);
+
+            this._writer.WriteEndElement(); //p:oleObj
+            this._writer.WriteEndElement(); //mc:Fallback
+            this._writer.WriteEndElement(); //mc:AlternateContent
 
             this._writer.WriteEndElement(); //graphicData
 

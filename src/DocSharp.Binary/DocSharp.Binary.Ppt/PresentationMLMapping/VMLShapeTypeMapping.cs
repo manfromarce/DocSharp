@@ -167,8 +167,6 @@ namespace DocSharp.Binary.PresentationMLMapping
             type.Append("_x0000_t");
             type.Append(shapeType.TypeCode);
             return type.ToString();
-        }
-
-        
+        }    
     }
 }

@@ -65,7 +65,6 @@ namespace DocSharp.Binary.PresentationMLMapping
 
                     var style = new StringBuilder();
 
-
                     style.Append("position:absolute;");
                     style.Append("left:" + (new EmuValue(Utils.MasterCoordToEMU(bounds.Left)).ToPoints()).ToString() + "pt;");
                     style.Append("top:" + (new EmuValue(Utils.MasterCoordToEMU(bounds.Top)).ToPoints()).ToString() + "pt;");

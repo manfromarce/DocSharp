@@ -71,6 +71,12 @@ namespace DocSharp.Binary.OpenXmlLib
 
                 path = path.Replace("/", "\\");
                 if (path == "ppt\\slides\\media") return "ppt\\media";
+                if (path == "ppt\\drawings\\..\\media") return "ppt\\media";
+                if (path == "ppt\\drawings\\media") return "ppt\\media";
+                if (path == "ppt\\slides\\drawings\\..\\media") return "ppt\\media";
+                if (path == "ppt\\notesSlides\\drawings\\..\\media") return "ppt\\media";
+                if (path == "ppt\\slideMasters\\drawings\\..\\media") return "ppt\\media";
+                if (path == "ppt\\slideLayouts\\drawings\\..\\media") return "ppt\\media";
                 if (path == "ppt\\slideLayouts\\media") return "ppt\\media";
                 if (path == "ppt\\notesSlides\\media") return "ppt\\media";
                 if (path == "ppt\\slideMasters\\..\\slideLayouts") return "ppt\\slideLayouts";
